@@ -1,0 +1,15 @@
+﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Jay
+{
+    public static class Extensions
+    {
+        [return: NotNullIfNotNull("enumerable")]
+        public static ObjectEnumerable AsObjectEnumerable([AllowNull] this IEnumerable enumerable)
+        {
+            if (enumerable is null) return null!;
+            return new ObjectEnumerable(enumerable);
+        }
+    }
+}
