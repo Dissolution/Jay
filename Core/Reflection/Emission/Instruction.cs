@@ -2,44 +2,42 @@
 using Jay.Debugging.Dumping;
 using Jay.Text;
 using System;
+using System.Collections;
 using System.Reflection;
 using System.Reflection.Emit;
+#pragma warning disable 618
 
 namespace Jay.Reflection.Emission 
 {
 	public sealed class Instruction : IEquatable<Instruction>
 	{
 		public int Offset { get; internal set; }
-		public ILGeneratorMethod ILGeneratorMethod { get; internal set; }
-		public OpCode OpCode { get; internal set; }
-		public object? Operand { get; internal set; }
+		public ILGeneratorMethod ILGeneratorMethod { get; }
+		public OpCode OpCode { get; }
+		public object? Argument { get; }
 
 		public int Size 
 		{
 			get
 			{
 				if (ILGeneratorMethod != ILGeneratorMethod.None)
+				{
 					return 0;
-				int size = OpCode.Size;
-
+				}
 				switch (OpCode.OperandType) 
 				{
 					case OperandType.InlineSwitch:
 					{
-						if (Operand is Instruction[] instructionArray)
+						if (Argument is Instruction[] instructionArray)
 						{
-							size += (1 + instructionArray.Length) * 4;
+							return OpCode.Size + ((1 + instructionArray.Length) * 4);
 						}
-						else
-						{
-							throw new InvalidOperationException("InlineSwitch operand must be an Instruction[]");
-						}
-						break;
+
+						throw new InvalidOperationException("InlineSwitch operand must be an Instruction[]");
 					}
 					case OperandType.InlineI8:
 					case OperandType.InlineR:
-						size += 8;
-						break;
+						return OpCode.Size + 8;
 					case OperandType.InlineBrTarget:
 					case OperandType.InlineField:
 					case OperandType.InlineI:
@@ -48,46 +46,40 @@ namespace Jay.Reflection.Emission
 					case OperandType.InlineTok:
 					case OperandType.InlineType:
 					case OperandType.ShortInlineR:
-						size += 4;
-						break;
+						return OpCode.Size + 4;
 					case OperandType.InlineVar:
-						size += 2;
-						break;
+						return OpCode.Size + 2;
 					case OperandType.ShortInlineBrTarget:
 					case OperandType.ShortInlineI:
 					case OperandType.ShortInlineVar:
-						size += 1;
-						break;
+						return OpCode.Size + 1;
 					case OperandType.InlineNone:
 					case OperandType.InlinePhi:
 					case OperandType.InlineSig:
 					default:
-						// Do nothing to size
-						break;
+						return OpCode.Size;
 				}
-
-				return size;
 			}
 		}
 
 		internal Instruction(int offset,
 		                     OpCode opcode, 
-		                     object? operand)
+		                     object? argument)
 		{
 			this.Offset = offset;
 			this.ILGeneratorMethod = ILGeneratorMethod.None;
 			this.OpCode = opcode;
-			this.Operand = operand;
+			this.Argument = argument;
 		}
 
 		internal Instruction(int offset,
 		                     ILGeneratorMethod ilGeneratorMethod,
-		                     params object[] methodArgs)
+		                     params object?[] methodArgs)
 		{
 			this.Offset = offset;
 			this.ILGeneratorMethod = ilGeneratorMethod;
 			this.OpCode = default;
-			this.Operand = methodArgs;
+			this.Argument = methodArgs;
 		}
 
 		public bool Equals(Instruction? instruction)
@@ -99,7 +91,7 @@ namespace Jay.Reflection.Emission
 			return instruction.Offset == Offset &&
 			       instruction.ILGeneratorMethod == ILGeneratorMethod &&
 			       instruction.OpCode == OpCode &&
-			       Comparison.Comparison.Equals(instruction.Operand, Operand);
+			       Comparison.Comparison.Equals(instruction.Argument, Argument);
 		}
 		
 		public override bool Equals(object? obj)
@@ -111,13 +103,13 @@ namespace Jay.Reflection.Emission
 
 		public override int GetHashCode()
 		{
-			return Hasher.Create(Offset, ILGeneratorMethod, OpCode, Operand);
+			return Hasher.Create(Offset, ILGeneratorMethod, OpCode, Argument);
 		}
 
 		private static void AppendLabel(TextBuilder builder, Instruction instruction)
 		{
 			builder.Append("IL_")
-			       .AppendFormat(instruction.Offset, "x4");
+			       .AppendFormat(instruction.Offset, "X4");
 		}
 
 		private static void AppendOperand(TextBuilder text, OperandType operandType, object operand)
@@ -143,7 +135,7 @@ namespace Jay.Reflection.Emission
 			    {
 			        if (operand is Instruction[] labels)
 			        {
-			            text.AppendDelimit(',', labels, AppendLabel);
+			            text.AppendDelimit(',', labels, AppendLabel!);
 			        }
 			        else
 			        {
@@ -296,13 +288,13 @@ namespace Jay.Reflection.Emission
 			{
 				text.Append(this.ILGeneratorMethod)
 				    .Append('(');
-				if (this.Operand is object[] args)
+				if (this.Argument is IEnumerable args)
 				{
-					text.AppendDelimit(',', args, (tb, a) => tb.AppendDump(a));
+					text.AppendDelimit(',', args.AsObjectEnumerable(), (tb, a) => tb.AppendDump(a));
 				}
 				else
 				{
-					text.AppendDump(this.Operand);
+					text.AppendDump(this.Argument);
 				}
 
 				text.Append(')');
@@ -313,13 +305,13 @@ namespace Jay.Reflection.Emission
 				AppendLabel(text, this);
 				text.Append(": ")
 				    .Append(opCode.Name);
-				var operand = this.Operand;
+				var operand = this.Argument;
 				if (operand is null)
 					return;
 				AppendOperand(text, opCode.OperandType, operand);
 			}
 		}
 		
-		public override string ToString() => TextBuilder.Build(ToString);
+		public override string ToString() => TextBuilder.Build(ToString!);
 	}
 }

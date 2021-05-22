@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
+using Jay.Text;
 
 namespace Jay
 {
@@ -129,11 +131,16 @@ namespace Jay
 		/// <param name="timeSpan"></param>
 		/// <param name="format"></param>
 		/// <returns></returns>
-		public static string Format(this TimeSpan timeSpan, string format)
+		public static string Format(this TimeSpan timeSpan, string? format)
 		{
 			return Format(timeSpan, format, CultureInfo.CurrentCulture);
 		}
 
+		private static readonly char[] InvalidTimeSpanFormatChars = new char[5]
+		{
+			':', ',', '.', '\\', '/'
+		};
+		
 		/// <summary>
 		/// Converts this <see cref="TimeSpan"/> to a string representation using the specified Format.
 		/// </summary>
@@ -141,7 +148,7 @@ namespace Jay
 		/// <param name="format"></param>
 		/// <param name="formatProvider"></param>
 		/// <returns></returns>
-		public static string Format(this TimeSpan timeSpan, string format, IFormatProvider formatProvider)
+		public static string Format(this TimeSpan timeSpan, string? format, IFormatProvider? formatProvider)
 		{
 			if (string.IsNullOrEmpty(format))
 				return timeSpan.ToString();
@@ -150,10 +157,23 @@ namespace Jay
 
 			/* TimeSpan formatting has gotchas.
 			 * You have to escape certain characters for them to actually appear.
+			 * Prepend backslash -->  '\'
 			 */
-			throw new NotImplementedException();
-			// var text = new TextBuilder().AppendEscape(format, '\\', '.', ':', '-', '+');
-			// return timeSpan.ToString(text, formatProvider);
+			format = TextBuilder.Build(format, (tb, fmt) =>
+			{
+				if (string.IsNullOrWhiteSpace(fmt)) return;
+				tb.EnsureCapacity(fmt.Length * 2);
+				char c;
+				for (var i = 0; i < fmt.Length; i++)
+				{
+					c = fmt[i];
+					if (InvalidTimeSpanFormatChars.Contains(c))
+						tb.Append('\\');
+					tb.Append(c);
+				}
+			});
+
+			return timeSpan.ToString(format, formatProvider);
 		}
 
 		/// <summary>
@@ -162,7 +182,7 @@ namespace Jay
 		/// <param name="timeSpan"></param>
 		/// <param name="format"></param>
 		/// <returns></returns>
-		public static string Format(this TimeSpan? timeSpan, string format)
+		public static string Format(this TimeSpan? timeSpan, string? format)
 		{
 			return Format(timeSpan, format, CultureInfo.CurrentCulture);
 		}
@@ -174,13 +194,13 @@ namespace Jay
 		/// <param name="format"></param>
 		/// <param name="formatProvider"></param>
 		/// <returns></returns>
-		public static string Format(this TimeSpan? timeSpan, string format, IFormatProvider formatProvider)
+		public static string Format(this TimeSpan? timeSpan, string? format, IFormatProvider? formatProvider)
 		{
-			return timeSpan is null ? null : Format(timeSpan.Value, format, formatProvider);
+			return timeSpan is null ? string.Empty : Format(timeSpan.Value, format, formatProvider);
 		}
 
 		/// <summary>
-		/// Get a SQL-compatable representation of this <see cref="TimeSpan"/>
+		/// Get a SQL-compatible representation of this <see cref="TimeSpan"/>
 		/// </summary>
 		/// <param name="timeSpan"></param>
 		/// <returns></returns>
@@ -200,7 +220,7 @@ namespace Jay
 		/// <returns></returns>
 		public static string ToSqlString(this TimeSpan? timeSpan)
 		{
-			return timeSpan is null ? null : ToSqlString(timeSpan.Value);
+			return timeSpan is null ? string.Empty : ToSqlString(timeSpan.Value);
 		}
 		
 		#region Rounding

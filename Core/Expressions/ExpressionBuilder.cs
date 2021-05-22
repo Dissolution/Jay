@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using Jay.Debugging;
 
 namespace Jay.Expressions
 {
@@ -52,7 +53,7 @@ namespace Jay.Expressions
 			//Compile
 			var lambda = Expression.Lambda(body, vParameter);
 			var func = lambda.Compile<Func<TValue, TReturn>>();
-			return func;
+			return func.ThrowIfNull(nameof(lambda), "Could not Compile Lambda");
 		}
 
 		internal static Func<T1, T2, TReturn> CreateFunction<T1, T2, TReturn>(
@@ -111,7 +112,7 @@ namespace Jay.Expressions
 			//Compile
 			var lambda = Expression.Lambda(body, v1Parameter, v2Parameter);
 			var func = lambda.Compile<Func<T1, T2, TReturn>>();
-			return func;
+			return func.ThrowIfNull(nameof(lambda), "Could not Compile Lambda");
 		}
 
 		/// <summary>

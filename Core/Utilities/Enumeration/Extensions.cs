@@ -6,7 +6,7 @@ namespace Jay
     public static class Extensions
     {
         [return: NotNullIfNotNull("enumerable")]
-        public static ObjectEnumerable AsObjectEnumerable([AllowNull] this IEnumerable enumerable)
+        public static ObjectEnumerable AsObjectEnumerable(this IEnumerable? enumerable)
         {
             if (enumerable is null) return null!;
             return new ObjectEnumerable(enumerable);

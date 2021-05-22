@@ -57,12 +57,19 @@ namespace Jay.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void EnsureCapacity(int capacity)
+        private void ResizeTo(int minCapacity)
         {
-            var newArray = _charArrayPool.Rent(capacity);
+            var newArray = _charArrayPool.Rent(minCapacity);
             Written.CopyTo(newArray);
             _charArrayPool.Return(_characters);
             _characters = newArray;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void EnsureCapacity(int minCapacity)
+        {
+            if (minCapacity >= _characters.Length)
+                ResizeTo(minCapacity * 2);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -70,7 +77,7 @@ namespace Jay.Text
         {
             int len = _length;
             if (len >= _characters.Length)
-                EnsureCapacity(len + 1);
+                ResizeTo(len + 1);
             _length = len + 1;
             _characters[len] = c;
         }
@@ -83,7 +90,7 @@ namespace Jay.Text
             {
                 int newLen = _length + textLen;
                 if (newLen > _characters.Length)
-                    EnsureCapacity(newLen);
+                    ResizeTo(newLen);
                 TextHelper.Copy(text, _characters.Slice(_length, textLen));
                 _length = newLen;
             }
@@ -357,6 +364,12 @@ namespace Jay.Text
             return this;
         }
         #endregion
+
+        public TextBuilder Append(BuildText? buildText)
+        {
+            buildText?.Invoke(this);
+            return this;
+        }
         
         #region Append Line
 
@@ -588,7 +601,7 @@ namespace Jay.Text
             return this;
         }
         
-        public TextBuilder AppendDelimit<T>(char delimiter, IEnumerable<T?>? values, Action<TextBuilder, T?>? action)
+        public TextBuilder AppendDelimit<T>(char delimiter, IEnumerable<T?>? values, BuildText<T>? action)
         {
             if (values != null)
             {
@@ -607,7 +620,7 @@ namespace Jay.Text
             return this;
         }
         
-        public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T>? values, Action<TextBuilder, T>? action)
+        public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T>? values, BuildText<T>? action)
         {
             if (values != null)
             {
@@ -699,7 +712,7 @@ namespace Jay.Text
             {
                 var i = _length;
                 var newLen = i + count;
-                EnsureCapacity(newLen);
+                ResizeTo(newLen);
                 for (; i < newLen; i++)
                 {
                     _characters[i] = character;
@@ -716,7 +729,7 @@ namespace Jay.Text
                 var i = _length;
                 var len = text.Length;
                 var newLen = i + (count * len);
-                EnsureCapacity(newLen);
+                ResizeTo(newLen);
                 for (; i < newLen; i+=len)
                 {
                     TextHelper.Copy(text, _characters.Slice(i, len));

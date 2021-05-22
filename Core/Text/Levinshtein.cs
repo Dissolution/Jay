@@ -91,8 +91,8 @@ namespace Jay.Text
 		{
 			if (a is null && b is null)
 				return 0;
-			if (a is null) return b.Length;
-			if (b is null) return a.Length;
+			if (a is null) return b!.Length;
+			if (b is null) return a!.Length;
 
 			if (a.Length < b.Length)
 				return CalculateImpl(a, b, maximumDistance);

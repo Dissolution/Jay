@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Jay.Constraints
 {
     public static class Constraint
     {
-        public static IConstraint<T> Between<T>(T inclusiveMinimum, T inclusiveMaximum)
+        public static IConstraint<T> Between<T>(T? inclusiveMinimum, T? inclusiveMaximum)
             where T : IComparable<T>
         {
             return new FuncConstraint<T>(value => value.IsBetween(inclusiveMinimum, inclusiveMaximum));

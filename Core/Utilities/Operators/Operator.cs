@@ -43,7 +43,7 @@ namespace Jay.Operators
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		public static T Default<T>() => Operator<T>.Default;
+		public static T? Default<T>() => Operator<T>.Default;
 
 		/// <summary>
 		/// Gets the zero value for a type.
@@ -51,7 +51,7 @@ namespace Jay.Operators
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		public static T Zero<T>() => Operator<T>.Zero;
+		public static T? Zero<T>() => Operator<T>.Zero;
 
 		/// <summary>
 		/// Convert a value to a return type using implicit or explicit conversion.

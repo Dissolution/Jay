@@ -29,6 +29,16 @@ namespace Jay.Reflection
             where TDelegate : Delegate
             => CreateDynamicMethod(name, MethodSig.For<TDelegate>());
 
+        public static Delegate Build(Type delegateType, Action<ILEmitter> emission)
+        {
+            if (emission is null) 
+                throw new ArgumentNullException(nameof(emission));
+            var dynamicMethod = CreateDynamicMethod(null, MethodSig.For(delegateType));
+            var emitter = new ILEmitter(dynamicMethod.GetILGenerator());
+            emission(emitter);
+            return dynamicMethod.CreateDelegate(delegateType);
+        }
+        
         public static TDelegate Build<TDelegate>(Action<ILEmitter> emission)
             where TDelegate : Delegate
         {

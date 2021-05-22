@@ -27,8 +27,12 @@ namespace Jay
                 stream.Read(bom, 0, 4);
 				
                 // Analyze the BOM
+#pragma warning disable 618
+                #pragma warning disable SYSLIB0001
                 if (bom[0] == 0x2B && bom[1] == 0x2F && bom[2] == 0x76)
                     return Encoding.UTF7;
+                #pragma warning restore SYSLIB0001
+#pragma warning restore 618
                 if (bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
                     return Encoding.UTF8;
                 if (bom[0] == 0xFF && bom[1] == 0xFE)
@@ -38,7 +42,7 @@ namespace Jay
                 if (bom[0] == 0x0 && bom[1] == 0x0 && bom[2] == 0xFE && bom[3] == 0xFF)
                     return Encoding.UTF32;
 
-                //Attempt to use streamreader, falls back to ASCII
+                //Attempt to use StreamReader, falls back to ASCII
                 if (stream.Position != 0L)
                     stream.Seek(0L, SeekOrigin.Begin);
                 using (var reader = new StreamReader(stream, Encoding.ASCII, true))

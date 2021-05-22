@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Jay.Text
 {
+    public delegate void TextStateBuildText(TextBuilder builder, ReadOnlySpan<char> text);
+
+    public delegate void BuildText([NotNull] TextBuilder builder);
+    public delegate void BuildText<in TState>([NotNull] TextBuilder builder, [AllowNull, MaybeNull] TState state);
+    
     public sealed partial class TextBuilder
     {
-        public delegate void TextStateBuildText(TextBuilder builder, ReadOnlySpan<char> text);
-        
+       
+
         private const int DefaultCapacity = 1024;
         // Keep them out of the Large Object Heap
         private static readonly ArrayPool<char> _charArrayPool = ArrayPool<char>.Create(85_000 / sizeof(char), 50);
@@ -16,7 +22,7 @@ namespace Jay.Text
             
         }
 
-        public static string Build(Action<TextBuilder> buildText)
+        public static string Build(BuildText buildText)
         {
             using (var builder = new TextBuilder())
             {
@@ -25,7 +31,7 @@ namespace Jay.Text
             }
         }
         
-        public static string Build<TState>(TState state, Action<TextBuilder, TState> buildText)
+        public static string Build<TState>([AllowNull] TState state, BuildText<TState> buildText)
         {
             using (var builder = new TextBuilder())
             {

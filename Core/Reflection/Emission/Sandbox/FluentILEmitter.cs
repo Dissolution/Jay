@@ -1,55 +1,58 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
+using Jay.Text;
+// ReSharper disable IdentifierTypo
+// ReSharper disable CommentTypo
 
 namespace Jay.Reflection.Emission.Sandbox
 {
-    public abstract class FluentILEmitter<TEmitter> : IFluentILEmitter<TEmitter>
-        where TEmitter : FluentILEmitter<TEmitter>
+    public abstract class FluentILGenerator : IInstructions
     {
-        protected readonly TEmitter _emitter;
-        protected readonly List<Operation> _operations;
+        /// <summary>
+        /// Gets the correct <see cref="OpCode"/> to call the given <see cref="MethodInfo"/>.
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        protected static OpCode GetCallOpCode(MethodBase method)
+        {
+            //If the method is static, we know it can never be null, so we can Call
+            if (method.IsStatic)
+                return OpCodes.Call;
+            //If the method owner is a struct, it can also never be null, so we can Call
+            if ((method.ReflectedType != null && method.ReflectedType.IsValueType) ||
+                (method.DeclaringType != null && method.DeclaringType.IsValueType))
+            {
+                return OpCodes.Call;
+            }
+            return OpCodes.Callvirt;
+        }
+        
+        
+        protected readonly List<Instruction> _instructions;
 
-        protected FluentILEmitter()
+        /// <inheritdoc />
+        public Instruction this[int index] => _instructions[index];
+        
+        public int Count => _instructions.Count;
+
+        protected FluentILGenerator()
         {
-            _emitter = (this as TEmitter)!;
-            _operations = new List<Operation>(16);
+            _instructions = new List<Instruction>(16);
         }
 
-        public virtual TEmitter Emit(OpCode opCode)
-        {
-            _operations.Add(new Operation(opCode));
-            return _emitter;
-        }
-        
-        public virtual TEmitter Emit(OpCode opCode, byte arg)
-        {
-            _operations.Add(new Operation(opCode, arg));
-            return _emitter;
-        }
-        
-        public virtual TEmitter Emit(OpCode opCode, sbyte arg)
-        {
-            _operations.Add(new Operation(opCode, arg));
-            return _emitter;
-        }
-        
-        public virtual TEmitter Emit(OpCode opCode, short arg)
-        {
-            _operations.Add(new Operation(opCode, arg));
-            return _emitter;
-        }
-        
-        public virtual TEmitter Emit(OpCode opCode, int arg)
-        {
-            _operations.Add(new Operation(opCode, arg));
-            return _emitter;
-        }
-        
-        public virtual TEmitter Emit(OpCode opCode, MethodInfo method)
-        {
-            _operations.Add(new Operation(opCode, method));
-            return _emitter;
-        }
+        /// <inheritdoc />
+        public IEnumerator<Instruction> GetEnumerator() => _instructions.GetEnumerator();
+
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator() => _instructions.GetEnumerator();
     }
+    
+
 }

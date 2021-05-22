@@ -71,6 +71,6 @@ namespace Jay.Reflection.Emission
         /// <summary>
         /// Emitting a <see cref="M:ILGenerator.Calli"/> call
         /// </summary>
-        Calli,
+        EmitCalli,
     }
 }

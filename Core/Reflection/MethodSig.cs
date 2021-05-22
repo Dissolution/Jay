@@ -19,7 +19,8 @@ namespace Jay.Reflection
             if (methodBase is null)
                 throw new ArgumentNullException(nameof(methodBase));
             return new MethodSig(methodBase.GetParameterTypes(),
-                                 methodBase.GetReturnType());
+                                 methodBase.GetReturnType(),
+                                 methodBase.IsStatic);
         }
 
         public static MethodSig For(Delegate @delegate)
@@ -51,12 +52,15 @@ namespace Jay.Reflection
         }
 
         public readonly Type[] ParameterTypes;
+        public int ParameterCount => ParameterTypes.Length;
         public readonly Type ReturnType;
+        public readonly bool IsStatic;
 
-        private MethodSig(Type[] parameterTypes, Type returnType)
+        private MethodSig(Type[] parameterTypes, Type returnType, bool isStatic)
         {
             this.ParameterTypes = parameterTypes;
             this.ReturnType = returnType;
+            this.IsStatic = isStatic;
         }
 
         public bool Equals(MethodSig methodSig)

@@ -469,6 +469,7 @@ namespace Jay
         //   implementation has to change in the future we don't want to worry
         //   about people who might have incorrectly used this type.
 
+        #pragma warning disable 0809
         [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.", error: true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int GetHashCode() => throw new GetHashCodeException(typeof(Hasher));
@@ -476,5 +477,6 @@ namespace Jay
         [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes.", error: true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool Equals(object? obj) => throw new NotSupportedException();
+        #pragma warning restore 0809
     }
 }

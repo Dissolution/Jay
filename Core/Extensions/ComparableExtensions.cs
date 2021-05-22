@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Jay
 {
@@ -101,7 +102,7 @@ namespace Jay
 		/// <param name="minimum">The minimum inclusive value it can be.</param>
 		/// <param name="maximum">The maximum inclusive value it can be.</param>
 		/// <returns></returns>
-		public static bool IsBetween<T>(this T value, T minimum, T maximum)
+		public static bool IsBetween<T>(this T? value, T? minimum, T? maximum)
 			where T : IComparable<T>
 		{
 			if (Comparer<T>.Default.Compare(value, minimum) < 0)

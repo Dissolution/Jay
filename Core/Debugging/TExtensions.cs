@@ -9,7 +9,7 @@ namespace Jay.Debugging
     public static class TExtensions
     {
         [return: NotNull]
-        public static T ThrowIfNull<T>(this T? value,
+        public static T ThrowIfNull<T>([AllowNull, NotNull] this T value,
                                        string? paramName = "value",
                                        string? exceptionMessage = null)
         {
