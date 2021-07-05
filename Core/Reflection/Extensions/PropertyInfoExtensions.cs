@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 namespace Jay.Reflection
 {
@@ -21,5 +22,35 @@ namespace Jay.Reflection
             return GetGetter(propertyInfo)?.IsStatic == true ||
                    GetSetter(propertyInfo)?.IsStatic == true;
         }
+
+        public static Visibility GetVisibility(this PropertyInfo? propertyInfo,
+                                               bool getters = true,
+                                               bool setters = true)
+        {
+            if (propertyInfo is null)
+                throw new ArgumentNullException(nameof(propertyInfo));
+            Visibility visibility = default;
+            if (getters)
+            {
+                visibility |= propertyInfo.GetGetter().GetVisibility();
+            }
+
+            if (setters)
+            {
+                visibility |= propertyInfo.GetSetter().GetVisibility();
+            }
+
+            return visibility;
+        }
+        
+        public static FieldInfo? GetBackingField(this PropertyInfo? propertyInfo)
+        {
+            if (propertyInfo is null)
+                return null;
+            return propertyInfo.GetInstanceType()
+                               .GetField($"<{propertyInfo.Name}>k__BackingField", Reflect.AllFlags);
+        }
+
+    
     }
 }

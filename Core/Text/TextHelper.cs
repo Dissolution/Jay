@@ -1,8 +1,9 @@
 ﻿using Jay.Collections.Pools;
-using Jay.NotSafe;
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
+using InlineIL;
 
 namespace Jay.Text
 {
@@ -35,9 +36,13 @@ namespace Jay.Text
             //         Buffer.MemoryCopy(sourcePtr, destPtr, dest.Length * sizeof(char), source.Length * sizeof(char));
             //     }
             // }
-            Unmanaged.BlockCopy<char>(in source.GetPinnableReference(),
-                                      ref dest.GetPinnableReference(),
-                                      source.Length);
+            NotSafe.Unmanaged.BlockCopy<char>(in source.GetPinnableReference(),
+                                              ref dest.GetPinnableReference(),
+                                              source.Length);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Equals(ReadOnlySpan<char> first, ReadOnlySpan<char> second) 
+            => MemoryExtensions.SequenceEqual(first, second);
     }
 }

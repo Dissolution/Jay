@@ -25,7 +25,17 @@ namespace Jay
         public static bool HasFlag<TEnum>(this TEnum e, TEnum flag)
             where TEnum : struct, Enum =>
             Enums<TEnum>.HasFlag(e, flag);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool HasTheFlag<TEnum>(this TEnum e, TEnum flag)
+            where TEnum : struct, Enum =>
+            Enums<TEnum>.HasFlag(e, flag);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool LacksFlag<TEnum>(this TEnum e, TEnum flag)
+            where TEnum : struct, Enum =>
+            !Enums<TEnum>.HasFlag(e, flag);
+        
         public static TEnum HighestFlag<TEnum>(this TEnum e)
             where TEnum : struct, Enum
         {

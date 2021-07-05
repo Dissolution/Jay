@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using InlineIL;
 using static InlineIL.IL;
 
 namespace Jay
@@ -83,41 +84,85 @@ namespace Jay
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Is<TIn, TOut>(this TIn value, [MaybeNullWhen(false)] out TOut typed)
         {
-            throw new NotImplementedException();
-            // Emit.Ldarg(nameof(typed));
-            // Emit.Ldarg(nameof(value));
-            // Emit.Box(typeof(TIn));
-            // Emit.Isinst(typeof(TOut));
-            // Emit.Stobj(typeof(TOut));
-            // Emit.Ldarg(nameof(typed));
-            // Emit.Ldobj(typeof(TOut));
-            // Emit.Box(typeof(TOut));
-            // Emit.Ldnull();
-            // Emit.Cgt_Un();
-            // Emit.Ret();
-            // throw Unreachable();
-            //
-            // if (value is TOut)
-            // {
-            //     typed = (TOut) value;
-            //     return true;
-            // }
-            // else
-            // {
-            //     typed = default(TOut);
-            //     return false;
-            // }
-            //
-            // //if (value is TOut outTyped)
-            // //{
-            // //    typed = outTyped;
-            // //    return true;
-            // //}
-            // //else
-            // //{
-            // //    typed = default!;
-            // //    return false;
-            // //}
+           // if (value is TOut output)
+           // {
+           //     typed = output;
+           //     return true;
+           // }
+           // else
+           // {
+           //     typed = default(TOut);
+           //     return false;
+           // }
+           
+           /*
+              .locals init (
+      [0] !!1/*TOut* / output
+    )
+
+    // [86 12 - 86 37]
+    IL_0000: ldarg.0      // 'value'
+    IL_0001: box          !!0/*TIn* /
+    IL_0006: isinst       !!1/*TOut* /
+    IL_000b: brfalse.s    IL_0027
+    IL_000d: ldarg.0      // 'value'
+    IL_000e: box          !!0/*TIn* /
+    IL_0013: isinst       !!1/*TOut* /
+    IL_0018: unbox.any    !!1/*TOut* /
+    IL_001d: stloc.0      // output
+
+    // [88 16 - 88 31]
+    IL_001e: ldarg.1      // typed
+    IL_001f: ldloc.0      // output
+    IL_0020: stobj        !!1/*TOut* /
+
+    // [89 16 - 89 28]
+    IL_0025: ldc.i4.1
+    IL_0026: ret
+
+    // [93 16 - 93 38]
+    IL_0027: ldarg.1      // typed
+    IL_0028: initobj      !!1/*TOut* /
+
+    // [94 16 - 94 29]
+    IL_002e: ldc.i4.0
+    IL_002f: ret
+            
+            */
+           
+           DeclareLocals(new LocalVar("output", typeof(TOut)));
+           
+           Emit.Ldarg(nameof(value));
+           Emit.Box<TIn>();
+           Emit.Isinst<TOut>();
+           Emit.Brfalse("isnot");
+           
+           Emit.Ldarg(nameof(value));
+           Emit.Box<TIn>();
+           Emit.Isinst<TOut>();
+           Emit.Unbox_Any<TOut>();
+           Emit.Stloc("output");
+           Emit.Ldarg(nameof(typed));
+           Emit.Ldloc("output");
+           Emit.Stobj<TOut>();
+           Emit.Ldc_I4_1();
+           Emit.Ret();
+           MarkLabel("isnot");
+           Emit.Ldarg(nameof(typed));
+           Emit.Initobj<TOut>();
+           Emit.Ldc_I4_0();
+           Emit.Ret();
+           throw Unreachable();
+        }
+
+        
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TOut As<TIn, TOut>(this TIn value)
+        {
+            if (value is TOut output)
+                return output;
+            throw new ArgumentException("Input value cannot be cast to output type", nameof(value));
         }
     }
 }

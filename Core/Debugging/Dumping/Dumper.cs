@@ -1,70 +1,53 @@
-﻿using Jay.Collections;
-using Jay.Text;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Runtime.CompilerServices;
+using Jay.Constraints;
+using Jay.Text;
 
 namespace Jay.Debugging.Dumping
 {
     public static partial class Dumper
     {
-        public static TextBuilder AppendDump(this TextBuilder textBuilder, object? obj, DumpOptions options = default)
+        private static string FormatImpl(string format, object?[] args)
         {
-            return obj switch
+            using (var builder = TextBuilder.Rent())
             {
-                // Big ol' switch statement
-                null when options.Verbose => textBuilder.Append("null"),
-                null => textBuilder,
-                Type type => AppendDump(textBuilder, type, options),
-                Array array => AppendDump(textBuilder, array, options),
-                string str => textBuilder.Append(str),
-                IEnumerable enumerable => AppendDump(textBuilder, enumerable, options),
-                TimeSpan timeSpan => textBuilder.AppendDump(timeSpan, options),
-                DateTime dateTime => textBuilder.AppendDump(dateTime, options),
-                Guid guid => textBuilder.AppendDump(guid, options),
-                _ => textBuilder.Append(obj)
-            };
-
-            // Default
+                builder.WriteFormat(null, format, args, true);
+                return builder.ToString();
+            }
         }
-    }
-
-    internal static class Dumper<T>
-    {
-        private delegate void Dump(TextBuilder textBuilder, T? value, DumpOptions options);
-
-        private static readonly Dump _dump;
         
-        static Dumper()
+        internal static bool CheckNull<T>(TextBuilder builder,
+                                          [AllowNull, NotNullWhen(true)] T value)
         {
-            var type = typeof(T);
-            var attr = type.GetCustomAttribute<DumpAsAttribute>();
-            if (attr != null && attr.HasRepresentation(out string rep))
+            if (value is null)
             {
-                _dump = (builder, _, _) => builder.Append(rep);
+                builder.Append('(')
+                       .AppendDump(typeof(T), MemberDumpOptions.Default)
+                       .Append(")null");
+                return false;
             }
-            else
+            return true;
+        }
+
+        internal static string DumpObject(object? obj) => Dump(obj, MemberDumpOptions.Default);
+        
+        public static string Dump(object? obj, DumpOptions? options = default)
+        {
+            using (var builder = TextBuilder.Rent())
             {
-                _dump = (builder, value, options) => builder.Append<T>(value);
+                builder.AppendDump(obj, options);
+                return builder.ToString();
             }
         }
 
-
-        public static TextBuilder AppendDump(TextBuilder textBuilder,
-                                             T? value,
-                                             DumpOptions options = default)
+        public static string Format(this FormattableString formattableString)
         {
-            _dump(textBuilder, value, options);
-            return textBuilder;
+            return FormatImpl(formattableString.Format, formattableString.GetArguments());
+        }
+
+        public static string Format(NonFormattableString format, params object?[] args)
+        {
+            return FormatImpl(format.Value, args);
         }
     }
-
-
-   
-
-
 }

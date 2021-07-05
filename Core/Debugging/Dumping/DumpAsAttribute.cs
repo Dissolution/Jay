@@ -7,12 +7,12 @@ namespace Jay.Debugging.Dumping
     {
         private readonly string? _representation;
 
-        public DumpAsAttribute(string? representation)
+        public DumpAsAttribute(string representation)
         {
             _representation = representation;
         }
 
-        internal bool HasRepresentation(out string representation)
+        public bool HasRepresentation(out string representation)
         {
             if (string.IsNullOrWhiteSpace(_representation))
             {
@@ -25,10 +25,11 @@ namespace Jay.Debugging.Dumping
                 return true;
             }
         }
-        
+
+        /// <inheritdoc />
         public override string ToString()
         {
-            return _representation ?? string.Empty;
+            return _representation ?? "T.ToString()";
         }
     }
 }

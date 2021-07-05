@@ -5,11 +5,14 @@ using System;
 using System.Collections;
 using System.Reflection;
 using System.Reflection.Emit;
+using Jay.Reflection.Cloning;
+
 #pragma warning disable 618
 
 namespace Jay.Reflection.Emission 
 {
-	public sealed class Instruction : IEquatable<Instruction>
+	public sealed class Instruction : IEquatable<Instruction>,
+	                                  ICloneable<Instruction>
 	{
 		public int Offset { get; internal set; }
 		public ILGeneratorMethod ILGeneratorMethod { get; }
@@ -62,6 +65,17 @@ namespace Jay.Reflection.Emission
 			}
 		}
 
+		private Instruction(int offset,
+		                    ILGeneratorMethod ilGeneratorMethod,
+		                    OpCode opCode,
+		                    object? argument)
+		{
+			this.Offset = offset;
+			this.ILGeneratorMethod = ilGeneratorMethod;
+			this.OpCode = opCode;
+			this.Argument = argument;
+		}
+		
 		internal Instruction(int offset,
 		                     OpCode opcode, 
 		                     object? argument)
@@ -91,7 +105,7 @@ namespace Jay.Reflection.Emission
 			return instruction.Offset == Offset &&
 			       instruction.ILGeneratorMethod == ILGeneratorMethod &&
 			       instruction.OpCode == OpCode &&
-			       Comparison.Comparison.Equals(instruction.Argument, Argument);
+			       Jay.Comparison.Comparison.Equals(instruction.Argument, Argument);
 		}
 		
 		public override bool Equals(object? obj)
@@ -106,212 +120,104 @@ namespace Jay.Reflection.Emission
 			return Hasher.Create(Offset, ILGeneratorMethod, OpCode, Argument);
 		}
 
-		private static void AppendLabel(TextBuilder builder, Instruction instruction)
+		private static TextBuilder AppendILOffset(TextBuilder builder, Instruction instruction)
 		{
-			builder.Append("IL_")
+			return builder.Append("IL_")
 			       .AppendFormat(instruction.Offset, "X4");
 		}
-
-		private static void AppendOperand(TextBuilder text, OperandType operandType, object operand)
+		
+		private static TextBuilder AppendLabel(TextBuilder builder, Label label)
 		{
-			text.Append(' ');
-			switch (operandType)
-			{
-			    case OperandType.ShortInlineBrTarget:
-			    case OperandType.InlineBrTarget:
-			    {
-			        if (operand is Instruction opInst)
-			        {
-			            AppendLabel(text, opInst);
-			        }
-			        else
-			        {
-			            throw new InvalidOperationException();
-			        }
-
-			        break;
-			    }
-			    case OperandType.InlineSwitch:
-			    {
-			        if (operand is Instruction[] labels)
-			        {
-			            text.AppendDelimit(',', labels, AppendLabel!);
-			        }
-			        else
-			        {
-			            throw new InvalidOperationException();
-			        }
-
-			        break;
-			    }
-			    case OperandType.InlineString:
-			    {
-			        if (!(operand is string str))
-			        {
-			            str = operand.ToString() ?? string.Empty;
-			        }
-
-			        text.Append('"')
-			            .Append(str)
-			            .Append('"');
-			        break;
-			    }
-			    case OperandType.InlineField:
-			    {
-			        if (operand is FieldInfo field)
-			        {
-			            text.AppendDump(field);
-			        }
-			        else
-			        {
-			            throw new InvalidOperationException();
-			        }
-			        break;
-			    }
-			    case OperandType.InlineI:
-			    case OperandType.ShortInlineI:
-			    {
-			        if (operand is IntPtr intPtr)
-			        {
-			            text.AppendFormat(intPtr, "X");
-			        }
-			        else if (operand is int integer)
-			        {
-				        text.Append(integer);
-			        }
-			        else if (operand is sbyte signedByte)
-			        {
-				        text.Append(signedByte);
-			        }
-			        else
-			        {
-			            throw new InvalidOperationException();
-			        }
-
-			        break;
-			    }
-			    case OperandType.InlineI8:
-			    {
-			        if (operand is byte b)
-			        {
-			            text.Append(b)
-			                .Append('b');
-			        }
-			        else
-			        {
-			            throw new InvalidOperationException();
-			        }
-			        break;
-			    }
-			    case OperandType.InlineMethod:
-			    {
-			        if (operand is MethodBase methodBase)
-			        {
-			            text.AppendDump(methodBase);
-			        }
-			        else
-			        {
-			            throw new InvalidOperationException();
-			        }
-			        break;
-			    }
-			    case OperandType.InlineR:
-			    case OperandType.ShortInlineR:
-			    {
-			        if (operand is float f)
-			        {
-			            text.Append(f)
-			                .Append('f');
-			        }
-			        else if (operand is double d)
-			        {
-			            text.Append(d)
-			                .Append('d');
-			        }
-			        else if (operand is decimal m)
-			        {
-			            text.Append(m)
-			                .Append('m');
-			        }
-			        else
-			        {
-			            throw new InvalidOperationException();
-			        }
-			        break;
-			    }
-			    case OperandType.InlineType:
-			    {
-			        if (operand is Type type)
-			        {
-			            text.AppendDump(type);
-			        }
-			        else
-			        {
-			            throw new InvalidOperationException();
-			        }
-			        break;
-			    }
-			    case OperandType.InlineTok:
-			    {
-				    if (operand is MemberInfo member)
-				    {
-					    text.AppendDump(member);
-				    }
-				    else
-				    {
-					    throw new InvalidOperationException();
-				    }
-				    break;
-			    }
-			    case OperandType.InlineVar:
-			    case OperandType.ShortInlineVar:
-			    {
-				    // Variables?
-				    text.AppendDump(operand);
-				    break;
-			    }
-			    case OperandType.InlineNone:
-			    //case OperandType.InlinePhi:
-			    case OperandType.InlineSig:
-			    default:
-			    {
-			        Hold.Debug(operandType, operand);
-			        text.Append(operand);
-			        break;
-			    }
-			}
+			return builder.Append("LABEL_")
+			       .Append(label.GetHashCode())
+			       .Append(':');
 		}
 
-		internal void ToString(TextBuilder text)
+		private static TextBuilder AppendArgument(TextBuilder text, object? operand)
+		{
+			if (operand is null) return text;
+			text.Append(" '");
+			switch (operand)
+			{
+				case Instruction instruction:
+					AppendILOffset(text, instruction);
+					break;
+				case Label label1:
+					AppendLabel(text, label1);
+					break;
+				case Instruction[] instructions:
+					text.AppendDelimit(", ", instructions, (tb, instr) => AppendILOffset(tb, instr));
+					break;
+				case Label[] labels:
+					text.AppendDelimit(", ", labels, (tb, label) => AppendLabel(tb, label));
+					break;
+				case string str:
+					text.Append('"').Append(str).Append('"');
+					break;
+				case MemberInfo memberInfo:
+					text.AppendDump(memberInfo, MemberDumpOptions.Default);
+					break;
+				case IntPtr intPtr:
+					text.AppendFormat(intPtr, "X");
+					break;
+				case int integer:
+					text.Append(integer);
+					break;
+				case sbyte signedByte:
+					text.Append(signedByte);
+					break;
+				case byte b:
+					text.Append(b);
+					break;
+				case float f:
+					text.Append(f).Append('f');
+					break;
+				case double d:
+					text.Append(d).Append('d');
+					break;
+				case decimal m:
+					text.Append(m).Append('m');
+					break;
+				case IEnumerable enumerable:
+					text.AppendDelimit(", ", enumerable.AsObjectEnumerable(), (tb, obj) => AppendArgument(tb, obj));
+					break;
+				default:
+					text.Append(operand);
+					break;
+			}
+
+			return text.Append('\'');
+		}
+
+		internal void Append(TextBuilder text)
 		{
 			if (this.ILGeneratorMethod != ILGeneratorMethod.None)
 			{
-				text.Append(this.ILGeneratorMethod)
-				    .Append('(');
-				if (this.Argument is IEnumerable args)
-				{
-					text.AppendDelimit(',', args.AsObjectEnumerable(), (tb, a) => tb.AppendDump(a));
-				}
-				else
-				{
-					text.AppendDump(this.Argument);
-				}
-
-				text.Append(')');
+				text.Append(this.ILGeneratorMethod).Append('(');
+				AppendArgument(text, this.Argument).Append(')');
 			}
 			else
 			{
 				var opCode = this.OpCode;
-				AppendLabel(text, this);
-				text.Append(": ")
-				    .Append(opCode.Name);
-				var operand = this.Argument;
-				if (operand is null)
-					return;
-				AppendOperand(text, opCode.OperandType, operand);
+				AppendILOffset(text, this);
+				text.Append(": ").Append(opCode.Name);
+				AppendArgument(text, this.Argument);
 			}
 		}
-		
-		public override string ToString() => TextBuilder.Build(ToString!);
+
+		/// <inheritdoc />
+		public Instruction Clone(CloneType cloneType)
+		{
+			if (cloneType == CloneType.Shallow)
+			{
+				return new Instruction(Offset, ILGeneratorMethod, OpCode, Argument);
+			}
+			else
+			{
+				return new Instruction(Offset, ILGeneratorMethod, OpCode, Cloner.Clone(Argument));
+			}
+		}
+
+		public override string ToString() => TextBuilder.Build(Append!);
 	}
 }

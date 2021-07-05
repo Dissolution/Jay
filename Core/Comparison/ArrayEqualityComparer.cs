@@ -5,22 +5,27 @@ using System.Collections.Generic;
 
 namespace Jay.Comparison
 {
-    public class ArrayEqualityComparer : IEqualityComparer<Array>
+    public sealed class ArrayEqualityComparer : EqualityComparerBase<Array, ArrayEqualityComparer>
     {
         private readonly IEqualityComparer<object> _equalityComparer;
 
-        public ArrayEqualityComparer(IEqualityComparer<object>? itemEqualityComparer = null)
+        public ArrayEqualityComparer()
+        {
+            _equalityComparer = EqualityComparer<object>.Default;
+        }
+        
+        public ArrayEqualityComparer(IEqualityComparer<object> itemEqualityComparer)
         {
             _equalityComparer = itemEqualityComparer ?? EqualityComparer<object>.Default;
         }
 
-        public bool Equals(Array? x, Array? y)
+        public override bool Equals(Array? x, Array? y)
         {
             if (ReferenceEquals(x, y)) return true;
             if (x is null || y is null) return false;
             if (x.Length != y.Length) return false;
-            var xe = Arrays.GetEnumerator(x);
-            var ye = Arrays.GetEnumerator(y);
+            using var xe = x.GetArrayEnumerator();
+            using var ye = y.GetArrayEnumerator();
             while (xe.MoveNext() && ye.MoveNext())
             {
                 if (!_equalityComparer.Equals(xe.Current, ye.Current))
@@ -29,7 +34,7 @@ namespace Jay.Comparison
             return true;
         }
 
-        public int GetHashCode(Array? array)
+        public override int GetHashCode(Array? array)
         {
             if (array is null) return 0;
             var hasher = new Hasher();

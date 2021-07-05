@@ -3,11 +3,17 @@ using Jay.Debugging;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace Jay.Text
 {
+    /// <summary>
+    /// A shared builder of text (<see cref="char"/>, <see cref="string"/>, <see cref="ReadOnlySpan{char}"/>) similar to
+    /// <see cref="System.Text.StringBuilder"/>
+    /// </summary>
     public sealed partial class TextBuilder : IDisposable
     {
         private char[] _characters;
@@ -52,34 +58,46 @@ namespace Jay.Text
         
         private TextBuilder()
         {
-            _characters = _charArrayPool.Rent(DefaultCapacity);
+            _characters = CharArrayPool.Rent(DefaultCapacity);
             _length = 0;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void ResizeTo(int minCapacity)
         {
-            var newArray = _charArrayPool.Rent(minCapacity);
-            Written.CopyTo(newArray);
-            _charArrayPool.Return(_characters);
+            var newArray = CharArrayPool.Rent(minCapacity);
+            TextHelper.Copy(Written, newArray);
+            CharArrayPool.Return(_characters);
             _characters = newArray;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void EnsureCapacity(int minCapacity)
         {
-            if (minCapacity >= _characters.Length)
+            if (minCapacity > _characters.Length)
+            {
+                // Since we're a shared pool, if we start getting big needs we want to keep big arrays around
                 ResizeTo(minCapacity * 2);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal int Adding(int charCount)
+        {
+            var len = _length;
+            var newLen = len + charCount;
+            if (newLen > _characters.Length)
+            {
+                ResizeTo(newLen * 2);
+            }
+            _length = newLen;
+            return len;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Write(char c)
         {
-            int len = _length;
-            if (len >= _characters.Length)
-                ResizeTo(len + 1);
-            _length = len + 1;
-            _characters[len] = c;
+            _characters[Adding(1)] = c;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -88,10 +106,13 @@ namespace Jay.Text
             int textLen = text.Length;
             if (textLen > 0)
             {
-                int newLen = _length + textLen;
+                int len = _length;
+                int newLen = len + textLen;
                 if (newLen > _characters.Length)
-                    ResizeTo(newLen);
-                TextHelper.Copy(text, _characters.Slice(_length, textLen));
+                {
+                    ResizeTo(newLen * 2);
+                }
+                TextHelper.Copy(text, _characters.Slice(len, textLen));
                 _length = newLen;
             }
         }
@@ -136,12 +157,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(byte value)
         {
-            if (Formatter<byte>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -150,12 +172,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(sbyte value)
         {
-            if (Formatter<sbyte>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -164,12 +187,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(short value)
         {
-            if (Formatter<short>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -178,12 +202,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(ushort value)
         {
-            if (Formatter<ushort>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -192,12 +217,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(int value)
         {
-            if (Formatter<int>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -206,12 +232,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(uint value)
         {
-            if (Formatter<uint>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -220,12 +247,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(long value)
         {
-            if (Formatter<long>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -234,12 +262,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(ulong value)
         {
-            if (Formatter<ulong>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -248,13 +277,14 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(float value)
         {
-            if (Formatter<float>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
-                Write(value.ToString(CultureInfo.CurrentCulture));
+                // We don't know how big ToString will be until we call it
+                Write(value.ToString());
             }
             return this;
         }
@@ -262,13 +292,14 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(double value)
         {
-            if (Formatter<double>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
-                Write(value.ToString(CultureInfo.CurrentCulture));
+                // We don't know how big ToString will be until we call it
+                Write(value.ToString());
             }
             return this;
         }
@@ -276,13 +307,14 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(decimal value)
         {
-            if (Formatter<decimal>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
-                Write(value.ToString(CultureInfo.CurrentCulture));
+                // We don't know how big ToString will be until we call it
+                Write(value.ToString());
             }
             return this;
         }
@@ -290,12 +322,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(TimeSpan value)
         {
-            if (Formatter<TimeSpan>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -304,13 +337,14 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(DateTime value)
         {
-            if (Formatter<DateTime>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
-                Write(value.ToString(CultureInfo.CurrentCulture));
+                // We don't know how big ToString will be until we call it
+                Write(value.ToString());
             }
             return this;
         }
@@ -318,12 +352,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(DateTimeOffset value)
         {
-            if (Formatter<DateTimeOffset>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -332,12 +367,13 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append(Guid value)
         {
-            if (Formatter<Guid>.TryFormat(value, Available, out int charsWritten))
+            if (value.TryFormat(Available, out int charsWritten))
             {
                 _length += charsWritten;
             }
             else
             {
+                // We don't know how big ToString will be until we call it
                 Write(value.ToString());
             }
             return this;
@@ -353,23 +389,36 @@ namespace Jay.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TextBuilder Append<T>(T? value)
         {
-            if (Formatter<T?>.TryFormat(value, Available, out int charsWritten))
-            {
-                _length += charsWritten;
-            }
-            else
-            {
-                Write(value?.ToString());
-            }
+            Write(value?.ToString());
             return this;
         }
         #endregion
 
-        public TextBuilder Append(BuildText? buildText)
+        #region Append(Delegate)
+        public TextBuilder Append(BuildText buildText)
         {
-            buildText?.Invoke(this);
+            buildText.Invoke(this);
             return this;
         }
+        
+        public TextBuilder Append<TState>(TState state, StateBuildText<TState> buildText)
+        {
+            buildText.Invoke(this, state);
+            return this;
+        }
+        
+        public TextBuilder Append<T>(ReadOnlySpan<T> readOnlySpan, SpanBuildText<T> buildText)
+        {
+            buildText.Invoke(this, readOnlySpan);
+            return this;
+        }
+        
+        public TextBuilder Append(ReadOnlySpan<char> text, TextBuildText buildText)
+        {
+            buildText.Invoke(this, text);
+            return this;
+        }
+        #endregion
         
         #region Append Line
 
@@ -378,11 +427,25 @@ namespace Jay.Text
             Write(Environment.NewLine);
             return this;
         }
+
+        public TextBuilder Terminate(ReadOnlySpan<char> text,
+                                     StringComparison comparison = StringComparison.CurrentCulture)
+        {
+            if (text.Length <= _length)
+            {
+                if (_characters.Slice(_length - text.Length, text.Length).Equals(text, comparison))
+                {
+                    return this;
+                }
+            }
+            Write(text);
+            return this;
+        }
         #endregion
 
         public TextBuilder AppendIf(bool check,
-                                    Action<TextBuilder> ifTrue,
-                                    Action<TextBuilder> ifFalse)
+                                    BuildText ifTrue,
+                                    BuildText ifFalse)
         {
             if (check)
             {
@@ -394,56 +457,14 @@ namespace Jay.Text
             }
             return this;
         }
-        
-        public TextBuilder AppendIf(Func<bool> predicate,
-                                    Action<TextBuilder> ifTrue,
-                                    Action<TextBuilder> ifFalse)
-        {
-            if (predicate())
-            {
-                ifTrue(this);
-            }
-            else
-            {
-                ifFalse(this);
-            }
-            return this;
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TextBuilder AppendFormat<T>(T? value,
-                                           string? format = null,
-                                           IFormatProvider? provider = null)
-        {
-            if (value is not null)
-            {
-                if (Formatter<T>.TryFormat(value, 
-                                           this.Available, 
-                                           out int charsWritten,
-                                           format, 
-                                           provider))
-                {
-                    _length += charsWritten;
-                }
-                else if (value is IFormattable formattable)
-                {
-                    Write(formattable.ToString(format, provider));
-                }
-                else
-                {
-                    Write(value.ToString());
-                }
-            }
-            return this;
-        }
 
-        public TextBuilder AppendJoin<T>(params T?[]? values)
+        public TextBuilder AppendJoin<T>(params T[]? values)
         {
             if (values != null)
             {
                 for (var i = 0; i < values.Length; i++)
                 {
-                    Append<T>(values[i]);
+                    Write(values[i]?.ToString());
                 }
             }
             return this;
@@ -455,43 +476,61 @@ namespace Jay.Text
             {
                 foreach (var value in values)
                 {
-                    Append<T>(value);
+                    Write(value?.ToString());
                 }
             }
             return this;
         }
 
-        public TextBuilder AppendDelimit<T>(char delimiter, params T?[]? values)
+        public TextBuilder AppendDelimit(char delimiter, params string?[]? values)
         {
             if (values != null)
             {
                 int len = values.Length;
                 if (len > 0)
                 {
-                    Append<T>(values[0]);
+                    Write(values[0]);
                 }
                 for (var i = 1; i < len; i++)
                 {
                     Write(delimiter);
-                    Append<T>(values[i]);
+                    Write(values[i]);
                 }
             }
             return this;
         }
         
-        public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, params T?[]? values)
+        public TextBuilder AppendDelimit<T>(char delimiter, params T[]? values)
         {
             if (values != null)
             {
                 int len = values.Length;
                 if (len > 0)
                 {
-                    Append<T>(values[0]);
+                    Write(values[0]?.ToString());
                 }
                 for (var i = 1; i < len; i++)
                 {
                     Write(delimiter);
-                    Append<T>(values[i]);
+                    Write(values[i]?.ToString());
+                }
+            }
+            return this;
+        }
+        
+        public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, params T[]? values)
+        {
+            if (values != null)
+            {
+                int len = values.Length;
+                if (len > 0)
+                {
+                    Write(values[0]?.ToString());
+                }
+                for (var i = 1; i < len; i++)
+                {
+                    Write(delimiter);
+                    Write(values[i]?.ToString());
                 }
             }
             return this;
@@ -502,12 +541,12 @@ namespace Jay.Text
             int len = values.Length;
             if (len > 0)
             {
-                Append<T>(values[0]);
+                Write(values[0]?.ToString());
             }
             for (var i = 1; i < len; i++)
             {
                 Write(delimiter);
-                Append<T>(values[i]);
+                Write(values[i]?.ToString());
             }
             return this;
         }
@@ -517,12 +556,31 @@ namespace Jay.Text
             int len = values.Length;
             if (len > 0)
             {
-                Append<T>(values[0]);
+                Write(values[0]?.ToString());
             }
             for (var i = 1; i < len; i++)
             {
                 Write(delimiter);
-                Append<T>(values[i]);
+                Write(values[i]?.ToString());
+            }
+            return this;
+        }
+        
+        public TextBuilder AppendDelimit(char delimiter, IEnumerable<string?>? values)
+        {
+            if (values != null)
+            {
+                using (var e = values.GetEnumerator())
+                {
+                    if (!e.MoveNext())
+                        return this;
+                    Write(e.Current);
+                    while (e.MoveNext())
+                    {
+                        Write(delimiter);
+                        Write(e.Current);
+                    }
+                }
             }
             return this;
         }
@@ -535,11 +593,11 @@ namespace Jay.Text
                 {
                     if (!e.MoveNext())
                         return this;
-                    Append<T>(e.Current);
+                    Write(e.Current?.ToString());
                     while (e.MoveNext())
                     {
                         Write(delimiter);
-                        Append<T>(e.Current);
+                        Write(e.Current?.ToString());
                     }
                 }
             }
@@ -554,11 +612,11 @@ namespace Jay.Text
                 {
                     if (!e.MoveNext())
                         return this;
-                    Append<T>(e.Current);
+                    Write(e.Current?.ToString());
                     while (e.MoveNext())
                     {
                         Write(delimiter);
-                        Append<T>(e.Current);
+                        Write(e.Current?.ToString());
                     }
                 }
             }
@@ -601,7 +659,7 @@ namespace Jay.Text
             return this;
         }
         
-        public TextBuilder AppendDelimit<T>(char delimiter, IEnumerable<T?>? values, BuildText<T>? action)
+        public TextBuilder AppendDelimit<T>(char delimiter, IEnumerable<T>? values, StateBuildText<T>? action)
         {
             if (values != null)
             {
@@ -620,7 +678,7 @@ namespace Jay.Text
             return this;
         }
         
-        public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T>? values, BuildText<T>? action)
+        public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T>? values, StateBuildText<T>? action)
         {
             if (values != null)
             {
@@ -712,7 +770,7 @@ namespace Jay.Text
             {
                 var i = _length;
                 var newLen = i + count;
-                ResizeTo(newLen);
+                EnsureCapacity(newLen);
                 for (; i < newLen; i++)
                 {
                     _characters[i] = character;
@@ -729,7 +787,7 @@ namespace Jay.Text
                 var i = _length;
                 var len = text.Length;
                 var newLen = i + (count * len);
-                ResizeTo(newLen);
+                EnsureCapacity(newLen);
                 for (; i < newLen; i+=len)
                 {
                     TextHelper.Copy(text, _characters.Slice(i, len));
@@ -739,9 +797,82 @@ namespace Jay.Text
             return this;
         }
         
+        
+        #region Trim
+        public TextBuilder Trim()
+        {
+            return TrimStart().TrimEnd();
+        }
+
+        public TextBuilder TrimStart()
+        {
+            int i = 0;
+            int len = _length;
+            while (i < len && char.IsWhiteSpace(_characters[i]))
+            {
+                i++;
+            }
+            TextHelper.Copy(Written.Slice(i, len - i), _characters);
+            return this;
+        }
+
+        public TextBuilder TrimEnd()
+        {
+            int i = _length - 1;
+            while (i >= 0 && char.IsWhiteSpace(_characters[i]))
+            {
+                i--;
+            }
+            _length = i + 1;
+            return this;
+        }
+        #endregion
+        
+        public TextBuilder Clear()
+        {
+            _length = 0;
+            return this;
+        }
+        
+        #region Transform
+
+        public TextBuilder Transform(Func<char, char> transform)
+        {
+            if (_length > 0)
+            {
+                var chars = _characters;
+                int i = 0;
+                ref char c = ref chars[i];
+                do
+                {
+                    c = transform(c);
+                    i++;
+                } while (i < _length);
+            }
+            return this;
+        }
+
+        public TextBuilder Transform(Func<char, int, char> transform)
+        {
+            if (_length > 0)
+            {
+                var chars = _characters;
+                int i = 0;
+                ref char c = ref chars[i];
+                do
+                {
+                    c = transform(c, i);
+                    i++;
+                } while (i < _length);
+            }
+            return this;
+        }
+        
+        #endregion
+        
         public void Dispose()
         {
-            _charArrayPool.Return(_characters);
+            CharArrayPool.Return(_characters);
             _characters = Array.Empty<char>();
             _length = 0;
         }

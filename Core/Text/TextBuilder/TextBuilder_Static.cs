@@ -4,22 +4,24 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Jay.Text
 {
-    public delegate void TextStateBuildText(TextBuilder builder, ReadOnlySpan<char> text);
-
-    public delegate void BuildText([NotNull] TextBuilder builder);
-    public delegate void BuildText<in TState>([NotNull] TextBuilder builder, [AllowNull, MaybeNull] TState state);
-    
     public sealed partial class TextBuilder
     {
-       
-
+        public static implicit operator string(TextBuilder? textBuilder)
+        {
+            if (textBuilder is null)
+                return string.Empty;
+            return new string(textBuilder._characters, 0, textBuilder._length);
+        }
+        
         private const int DefaultCapacity = 1024;
-        // Keep them out of the Large Object Heap
-        private static readonly ArrayPool<char> _charArrayPool = ArrayPool<char>.Create(85_000 / sizeof(char), 50);
+
+        internal static readonly ArrayPool<char> CharArrayPool;
 
         static TextBuilder()
         {
-            
+            // The Large Object Heap is 85,000 bytes, we want to stay out of that
+            const int maxBytes = 85_000 / sizeof(char);
+            CharArrayPool = ArrayPool<char>.Create(maxBytes, 50); // 50 is the default
         }
 
         public static string Build(BuildText buildText)
@@ -31,24 +33,34 @@ namespace Jay.Text
             }
         }
         
-        public static string Build<TState>([AllowNull] TState state, BuildText<TState> buildText)
+        public static string Build<TState>(TState state, StateBuildText<TState> stateBuildText)
         {
             using (var builder = new TextBuilder())
             {
-                buildText(builder, state);
+                stateBuildText(builder, state);
                 return builder.ToString();
             }
         }
-        
-        public static string Build(ReadOnlySpan<char> text, TextStateBuildText buildText)
+
+        public static string Build<T>(ReadOnlySpan<T> readOnlySpan, SpanBuildText<T> spanBuildText)
         {
             using (var builder = new TextBuilder())
             {
-                buildText(builder, text);
+                spanBuildText(builder, readOnlySpan);
                 return builder.ToString();
             }
         }
 
         public static TextBuilder Rent() => new TextBuilder();
+
+        public static string Start(ReadOnlySpan<char> text, BuildText buildText)
+        {
+            using (var builder = new TextBuilder())
+            {
+                builder.Write(text);
+                buildText(builder);
+                return builder.ToString();
+            }
+        }
     }
 }

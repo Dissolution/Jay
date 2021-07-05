@@ -296,6 +296,40 @@ namespace Jay
             }
         }
         
+        public static int Create<T>(params T?[] values)
+        {
+            switch (values.Length)
+            {
+                case 0:
+                    return 0;
+                case 1:
+                    return Create(values[0]);
+                case 2:
+                    return Create(values[0], values[1]);
+                case 3:
+                    return Create(values[0], values[1], values[2]);
+                case 4:
+                    return Create(values[0], values[1], values[2], values[3]);
+                case 5:
+                    return Create(values[0], values[1], values[2], values[3], values[4]);
+                case 6:
+                    return Create(values[0], values[1], values[2], values[3], values[4], values[5]);
+                case 7:
+                    return Create(values[0], values[1], values[2], values[3], values[4], values[5], values[6]);
+                case 8:
+                    return Create(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7]);
+                default:
+                {
+                    var hasher = new Hasher();
+                    for (var i = 0; i < values.Length; i++)
+                    {
+                        hasher.Add(values[i]);
+                    }
+                    return hasher.ToHashCode();
+                }
+            }
+        }
+        
         
         // State variables
         private uint _v1, _v2, _v3, _v4;

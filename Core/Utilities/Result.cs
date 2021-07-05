@@ -79,6 +79,34 @@ namespace Jay
         public static Result<T> Try<T>(Func<T?>? func)
             => Result<T>.Try(func);
 
+        [return: MaybeNull]
+        public static TResult Swallow<TResult>(Func<TResult?>? function, TResult? defaultResult = default)
+        {
+            if (function is null)
+                return defaultResult;
+            try
+            {
+                return function();
+            }
+            catch // (Exception ex)
+            {
+                return defaultResult;
+            }
+        }
+        
+        public static Result Dispose(IDisposable? disposable)
+        {
+            try
+            {
+                disposable?.Dispose();
+                return True;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+        
         public static Result Dispose<T>(T? value)
         {
             if (value is IDisposable disposable)

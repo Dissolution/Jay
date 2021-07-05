@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace Jay
@@ -20,6 +21,24 @@ namespace Jay
                 if (!char.IsWhiteSpace(text[i])) return false;
             }
             return true;
+        }
+
+        public static ReadOnlySpan<char> Slice(this string? text, int start)
+        {
+            ReadOnlySpan<char> span = text;
+            return span.Slice(start);
+        }
+        
+        public static ReadOnlySpan<char> Slice(this string? text, int start, int length)
+        {
+            ReadOnlySpan<char> span = text;
+            return span.Slice(start, length);
+        }
+        
+        public static ReadOnlySpan<char> Slice(this string? text, Range range)
+        {
+            ReadOnlySpan<char> span = text;
+            return span[range];
         }
     }
 }

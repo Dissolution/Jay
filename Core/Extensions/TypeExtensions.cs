@@ -1,7 +1,9 @@
 ﻿using Jay.Reflection;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
+using Jay.Debugging;
 
 namespace Jay
 {
@@ -59,7 +61,43 @@ namespace Jay
             return type is null || !type.IsValueType || (type.IsGenericType && type.GetGenericTypeDefinition() != typeof(Nullable<>));
         }
 
-        public static MethodInfo? GetInvokeMethod(this Type? type) 
-            => type?.GetMethod("Invoke", Reflect.InstanceFlags);
+        public static bool IsByRef(this Type? type, out Type underlyingType)
+        {
+            if (type is null)
+            {
+                underlyingType = typeof(void);
+                return false;
+            }
+
+            if (type.IsByRef)
+            {
+                underlyingType = type.GetElementType()
+                                     .ThrowIfNull();
+                return true;
+            }
+
+            underlyingType = type;
+            return false;
+        }
+
+        public static (bool ByRef, Type UnderlyingType) IsByRef(this Type? type)
+        {
+            if (type is null)
+            {
+                return (false, typeof(void));
+            }
+
+            if (type.IsByRef)
+            {
+                return (true, type.GetElementType()!);
+            }
+
+            return (false, type);
+        }
+
+        public static bool HasInterface(this Type type, Type interfaceType)
+        {
+            return type.GetInterfaces().Any(t => t == interfaceType);
+        }
     }
 }

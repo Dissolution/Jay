@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using Jay.Reflection.Emission;
+
 
 namespace Jay.Reflection
 {
@@ -35,18 +37,5 @@ namespace Jay.Reflection
         public const BindingFlags StaticFlags = BindingFlags.Public | BindingFlags.NonPublic |
                                              BindingFlags.Static |
                                              BindingFlags.IgnoreCase;
-
-
-
-
-        
-        public static TValue? GetValue<TInstance, TValue>(this PropertyInfo property,
-                                                          TInstance? instance)
-        {
-            object? value = property.GetValue((object?) instance);
-            if (value is TValue typed)
-                return typed;
-            return default(TValue);
-        }
     }
 }

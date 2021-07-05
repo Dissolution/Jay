@@ -30,6 +30,8 @@ namespace Jay.Randomization
         DateTime DateTime(DateTimeKind kind = DateTimeKind.Local);
         DateTimeOffset DateTimeOffset();
         Guid Guid();
+
+        string GuidString() => Guid().ToString("N").ToUpper();
                 
         float PercentFloat();
         double PercentDouble();

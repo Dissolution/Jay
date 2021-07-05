@@ -11,5 +11,12 @@ namespace Jay
             if (enumerable is null) return null!;
             return new ObjectEnumerable(enumerable);
         }
+        
+        [return: NotNullIfNotNull("enumerable")]
+        public static DictionaryEnumerable AsDictionaryEnumerable(this IDictionary? dictionary)
+        {
+            if (dictionary is null) return null!;
+            return new DictionaryEnumerable(dictionary);
+        }
     }
 }

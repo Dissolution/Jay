@@ -1,5 +1,4 @@
-﻿using Jay.NotSafe;
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -8,7 +7,7 @@ namespace Jay.Randomization
 {
     public abstract partial class Randomizer
     {
-        public static Randomizer Instance { get; } = Default.Raw<Randomizer>();
+        public static IRandomizer Instance { get; } = new Xoshiro256StarStarRandomizer();
         
         /// <summary>
         /// Gets a crypto-random <see langword="unmanaged"/> <typeparamref name="T"/> seed.
@@ -18,7 +17,7 @@ namespace Jay.Randomization
         {
             using (var rng = new RNGCryptoServiceProvider())
             {
-                Span<byte> bytes = stackalloc byte[Unmanaged.SizeOf<T>()];
+                Span<byte> bytes = stackalloc byte[NotSafe.SizeOf<T>()];
                 rng.GetBytes(bytes);
                 return Unsafe.ReadUnaligned<T>(ref bytes.GetPinnableReference());
             }

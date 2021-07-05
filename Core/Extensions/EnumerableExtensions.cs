@@ -151,5 +151,27 @@ namespace Jay
 				}
 			}
 		}
+
+		public static T? OneOrDefault<T>(this IEnumerable<T?> source, T? @default = default(T))
+		{
+			if (source is null) return @default;
+			if (source is IList<T> list)
+			{
+				if (list.Count == 1)
+				{
+					return list[0];
+				}
+			}
+
+			using (var e = source.GetEnumerator())
+			{
+				if (!e.MoveNext())
+					return @default;
+				var value = e.Current;
+				if (e.MoveNext())
+					return @default;
+				return value;
+			}
+		}
     }
 }

@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using Jay.Debugging.Dumping;
+using Jay.Reflection;
+using Jay.Reflection.Emission;
+using Jay.Text;
 
 namespace Jay.Debugging
 {
@@ -9,6 +14,8 @@ namespace Jay.Debugging
     /// </summary>
     public static class Hold
     {
+        [Conditional("DEBUG")]
+        public static void Debug() { }
         [Conditional("DEBUG")]
         public static void Debug<T1>(T1? value1) { }
         [Conditional("DEBUG")]
@@ -34,5 +41,32 @@ namespace Jay.Debugging
         public static void Debug<T>(Span<T> span) { }
         [Conditional("DEBUG")]
         public static void Debug<T>(ReadOnlySpan<T> readOnlySpan) { }
+        
+        public static string Dump<T>([AllowNull] T value)
+        {
+#if DEBUG
+            using (var text = TextBuilder.Rent())
+            {
+                var options = MemberDumpOptions.Default;
+                text.AppendDump(typeof(T), options).Append(" \"");
+                if (value is null)
+                {
+                    return text.Append("null\"");
+                }
+                text.Append(value.ToString()).Append('"').AppendLine();
+                foreach (var property in typeof(T).GetProperties(Reflect.InstanceFlags))
+                {
+                    text.Append(property.Name)
+                        .Append(": \"")
+                        .Append(property.GetValue<T, object?>(ref value))
+                        .Append('"')
+                        .AppendLine();
+                }
+                return text;
+            }
+#else
+            return value?.ToString() ?? string.Empty;
+#endif
+        }
     }
 }

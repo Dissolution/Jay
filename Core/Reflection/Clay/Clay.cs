@@ -59,3 +59,12 @@ namespace Jay.Reflection
         }
     }
 }*/
+
+
+namespace Jay.Reflection
+{
+    public static partial class Clay
+    {
+    
+    }
+}

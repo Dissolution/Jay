@@ -1,72 +1,41 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
+using Jay.Reflection.Emission;
 
 namespace Jay.Reflection
 {
     public static class MemberInfoExtensions
     {
+        public static bool IsStatic(this MemberInfo? memberInfo)
+        {
+            return memberInfo switch
+                   {
+                       FieldInfo fieldInfo => fieldInfo.IsStatic,
+                       PropertyInfo propertyInfo => propertyInfo.IsStatic(),
+                       EventInfo eventInfo => eventInfo.IsStatic(),
+                       MethodBase methodBase => methodBase.IsStatic,
+                       _ => false
+                   };
+        }
+        
         public static Visibility GetVisibility(this MemberInfo? memberInfo)
         {
-            if (memberInfo is null)
-                throw new ArgumentNullException(nameof(memberInfo));
-            if (memberInfo is FieldInfo fieldInfo)
-                return GetVisibility(fieldInfo);
-            if (memberInfo is PropertyInfo propertyInfo)
-                return GetVisibility(propertyInfo);
-            if (memberInfo is EventInfo eventInfo)
-                return GetVisibility(eventInfo);
-            if (memberInfo is MethodBase methodBase)
-                return GetVisibility(methodBase);
-            return default;
+            return memberInfo switch
+                   {
+                       FieldInfo fieldInfo => fieldInfo.GetVisibility(),
+                       PropertyInfo propertyInfo => propertyInfo.GetVisibility(),
+                       EventInfo eventInfo => eventInfo.GetVisibility(),
+                       MethodBase methodBase => methodBase.GetVisibility(),
+                       _ => default
+                   };
         }
         
-        public static Visibility GetVisibility(this FieldInfo? fieldInfo)
-        {
-            Visibility visibility = default;
-            if (fieldInfo is null)
-                return visibility;
-            if (fieldInfo.IsPrivate)
-                visibility |= Visibility.Private;
-            if (fieldInfo.IsFamily)
-                visibility |= Visibility.Protected;
-            if (fieldInfo.IsAssembly)
-                visibility |= Visibility.Internal;
-            if (fieldInfo.IsFamilyAndAssembly || fieldInfo.IsFamilyOrAssembly)
-                visibility |= (Visibility.Protected | Visibility.Internal);
-            if (fieldInfo.IsPublic)
-                visibility |= Visibility.Public;
-            return visibility;
-        }
         
-        public static Visibility GetVisibility(this PropertyInfo? propertyInfo,
-                                               bool getters = true,
-                                               bool setters = true)
-        {
-            if (propertyInfo is null)
-                throw new ArgumentNullException(nameof(propertyInfo));
-            Visibility visibility = default;
-            if (getters)
-            {
-                visibility |= GetVisibility(propertyInfo.GetGetMethod(false) ?? propertyInfo.GetGetMethod(true));
-            }
-
-            if (setters)
-            {
-                visibility |= GetVisibility(propertyInfo.GetSetMethod(false) ?? propertyInfo.GetSetMethod(true));
-            }
-
-            return visibility;
-        }
         
-        public static Visibility GetVisibility(this EventInfo? eventInfo)
-        {
-            if (eventInfo is null)
-                throw new ArgumentNullException(nameof(eventInfo));
-            return GetVisibility(eventInfo.GetAddMethod(false)) |
-                   GetVisibility(eventInfo.GetAddMethod(true)) |
-                   GetVisibility(eventInfo.GetRemoveMethod(false)) |
-                   GetVisibility(eventInfo.GetRemoveMethod(true));
-        }
+     
+        
+     
         
         public static Visibility GetVisibility(this MethodBase? methodBase)
         {
@@ -84,6 +53,60 @@ namespace Jay.Reflection
             if (methodBase.IsPublic)
                 visibility |= Visibility.Public;
             return visibility;
+        }
+        
+        internal static Type GetInstanceType(this MemberInfo memberInfo)
+        {
+            Type? instanceType = memberInfo.ReflectedType;
+            if (instanceType is null)
+            {
+                instanceType = memberInfo.DeclaringType;
+                if (instanceType is null)
+                {
+                    return typeof(void);
+                }
+            }
+            return instanceType;
+        }
+        
+        internal static ArgumentType GetInstanceAdapterType(this MemberInfo memberInfo)
+        {
+            Type? instanceType = memberInfo.ReflectedType;
+            if (instanceType is null)
+            {
+                instanceType = memberInfo.DeclaringType;
+                if (instanceType is null)
+                {
+                    return new ArgumentType(typeof(void));
+                }
+            }
+
+            if (instanceType.IsValueType)
+            {
+                return new ArgumentType(instanceType.MakeByRefType());
+            }
+
+            return new ArgumentType(instanceType);
+        }
+        
+        public static Type GetReturnType(this MemberInfo? member)
+        {
+            if (member is null)
+                return typeof(void);
+            if (member is FieldInfo fieldInfo)
+                return fieldInfo.FieldType;
+            if (member is PropertyInfo propertyInfo)
+                return propertyInfo.PropertyType;
+            if (member is EventInfo eventInfo)
+                return eventInfo.EventHandlerType ?? typeof(MulticastDelegate);
+            if (member is ConstructorInfo constructorInfo)
+                return constructorInfo.DeclaringType ?? typeof(void);
+            if (member is MethodInfo methodInfo)
+                return methodInfo.ReturnType;
+            if (member is Type type)
+                return type;
+            Debugger.Break();
+            return typeof(void);
         }
     }
 }

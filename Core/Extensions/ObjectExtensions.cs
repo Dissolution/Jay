@@ -1,6 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Jay.Conversion;
 using static InlineIL.IL;
+using ConversionException = Jay.Reflection.Emission.ConversionException;
 
 namespace Jay
 {
@@ -60,6 +63,17 @@ namespace Jay
             Emit.Ret();
             
             throw Unreachable();
+        }
+        
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NotNullIfNotNull("input")]
+        public static TOut? As<TOut>(this object? input)
+        {
+            if (input is TOut outType)
+                return outType;
+            if (input is null && typeof(TOut).CanBeNull())
+                return default;
+            throw Jay.Conversion.ConversionException.Create<object, TOut>(input);
         }
     }
 }
