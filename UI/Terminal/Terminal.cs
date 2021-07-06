@@ -1,19 +1,14 @@
-﻿using Jay.CLI.Native;
-using Jay.Concurrency;
-using Jay.Geometry;
-using Jay.Reflection;
-using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Drawing;
 
-namespace Jay.CLI
+namespace Jay.UI.Terminal
 {
     public sealed class Terminal : TerminalSection<Terminal>
     {
         public static TerminalBuffer Buffer { get; } = new TerminalBuffer();
 
         public Terminal()
-            : base(Rectangle.FromPointSize(Point.Empty, new Size(Buffer.Width, Buffer.Height)))
+            : base(new Rectangle(Point.Empty, new Size(Buffer.Width, Buffer.Height)))
         {
             
         }

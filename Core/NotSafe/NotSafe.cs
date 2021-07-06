@@ -255,6 +255,13 @@ namespace Jay
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TTo As<TFrom, TTo>(TFrom source)
+        {
+            Emit.Ldarg(nameof(source));
+            return Return<TTo>();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ref T AsRef<T>(void* source)
         {
             Push(source);

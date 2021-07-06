@@ -1,8 +1,8 @@
-﻿using Jay.CLI.Native;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
+using Jay.UI.Terminal.Native;
 
-namespace Jay.CLI
+namespace Jay.UI.Terminal
 {
     internal static class NativeMethods
     {
@@ -10,7 +10,7 @@ namespace Jay.CLI
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool WriteConsoleOutput(
             IntPtr hConsoleOutput, 
-            TermPos[] lpBuffer, 
+            Coxel[] lpBuffer, 
             USize dwBufferSize, 
             UPoint dwBufferCoord, 
             ref URect lpWriteRegion);
@@ -18,7 +18,7 @@ namespace Jay.CLI
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool ReadConsoleOutput(IntPtr hConsoleOutput, 
-                                                    [Out] TermPos[] lpBuffer, 
+                                                    [Out] Coxel[] lpBuffer, 
                                                     USize dwBufferSize, 
                                                     UPoint dwBufferCoord,
                                                     ref URect lpReadRegion);
@@ -76,7 +76,7 @@ namespace Jay.CLI
         
         private const int STD_OUTPUT_HANDLE = -11;
 
-        [DllImportAttribute("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern IntPtr GetStdHandle(int nStdHandle);
         
         public static IntPtr GetConsoleOutHandle()

@@ -1,7 +1,7 @@
-﻿using Jay.Text;
-using System;
+﻿using System;
+using Jay.Text;
 
-namespace Jay.CLI.Interfaces
+namespace Jay.UI.Terminal.Interfaces
 {
     public readonly struct TerminalKeyInfo : IEquatable<TerminalKeyInfo>
     {

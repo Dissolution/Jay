@@ -1,28 +1,24 @@
-﻿using Jay.CLI.Native;
-using Jay.Concurrency;
-using Jay.Geometry;
+﻿using System;
+using System.Drawing;
 using Jay.Text;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
+using Jay.UI.Terminal.Native;
 
-namespace Jay.CLI.Scratch
+namespace Jay.UI.Terminal
 {
     public interface ITerminalReader : IDisposable
     {
-        TermPos this[int index] { get; }
-        TermPos this[int x, int y] { get; }
-        TermPos this[Point point] { get; }
+        Coxel this[int index] { get; }
+        Coxel this[int x, int y] { get; }
+        Coxel this[Point point] { get; }
         
         int Width { get; }
         int Height { get; }
         int Length { get; }
         Size Size { get; }
 
-        ReadOnlySpan<TermPos> Slice() => Slice(0, Length);
-        ReadOnlySpan<TermPos> Slice(int index) => Slice(index, Length - index);
-        ReadOnlySpan<TermPos> Slice(int index, int length);
+        ReadOnlySpan<Coxel> Slice() => Slice(0, Length);
+        ReadOnlySpan<Coxel> Slice(int index) => Slice(index, Length - index);
+        ReadOnlySpan<Coxel> Slice(int index, int length);
 
         string ToString() => ToString(Range.All, Environment.NewLine);
         string ToString(Range range) => ToString(range, Environment.NewLine);
@@ -36,27 +32,27 @@ namespace Jay.CLI.Scratch
 
     public interface ITerminalWriter : ITerminalReader, IDisposable
     {
-        new ref TermPos this[int index] { get; }
-        new ref TermPos this[int x, int y] { get; }
-        new ref TermPos this[Point point] { get; }
+        new ref Coxel this[int index] { get; }
+        new ref Coxel this[int x, int y] { get; }
+        new ref Coxel this[Point point] { get; }
         
-        new Span<TermPos> Slice() => Slice(0, Length);
-        new Span<TermPos> Slice(int index) => Slice(index, Length - index);
-        new Span<TermPos> Slice(int index, int length);
+        new Span<Coxel> Slice() => Slice(0, Length);
+        new Span<Coxel> Slice(int index) => Slice(index, Length - index);
+        new Span<Coxel> Slice(int index, int length);
 
         void Write(int index, ReadOnlySpan<char> text);
-        void Write(int index, ReadOnlySpan<TermPos> terminalPositions);
+        void Write(int index, ReadOnlySpan<Coxel> terminalPositions);
     }
 
     internal class TerminalReader : ITerminalReader,
                                     IDisposable
     {
         protected readonly TerminalBuffer _terminalBuffer;
-        protected readonly TermPos[] _buffer;
+        protected readonly Coxel[] _buffer;
 
-        TermPos ITerminalReader.this[int index] => _buffer[index];
-        TermPos ITerminalReader.this[int x, int y] => _buffer[GetIndex(x, y)];
-        TermPos ITerminalReader.this[Point point] => _buffer[GetIndex(point)];
+        Coxel ITerminalReader.this[int index] => _buffer[index];
+        Coxel ITerminalReader.this[int x, int y] => _buffer[GetIndex(x, y)];
+        Coxel ITerminalReader.this[Point point] => _buffer[GetIndex(point)];
 
         public int Width => _terminalBuffer.Width;
         public int Height => _terminalBuffer.Height;
@@ -77,9 +73,9 @@ namespace Jay.CLI.Scratch
             _terminalBuffer.ExitReadLock();
         }
 
-        public ReadOnlySpan<TermPos> Slice(int index, int length)
+        public ReadOnlySpan<Coxel> Slice(int index, int length)
         {
-            return new ReadOnlySpan<TermPos>(_buffer, index, length);
+            return new ReadOnlySpan<Coxel>(_buffer, index, length);
         }
 
         public string ToString(Range range, ReadOnlySpan<char> newLine)
@@ -118,9 +114,9 @@ namespace Jay.CLI.Scratch
                                     ITerminalWriter,
                                     IDisposable
     {
-        ref TermPos ITerminalWriter.this[int index] => ref _buffer[index];
-        ref TermPos ITerminalWriter.this[int x, int y] => ref _buffer[GetIndex(x, y)];
-        ref TermPos ITerminalWriter.this[Point point] => ref _buffer[GetIndex(point)];
+        ref Coxel ITerminalWriter.this[int index] => ref _buffer[index];
+        ref Coxel ITerminalWriter.this[int x, int y] => ref _buffer[GetIndex(x, y)];
+        ref Coxel ITerminalWriter.this[Point point] => ref _buffer[GetIndex(point)];
 
         
         internal TerminalWriter(TerminalBuffer buffer)
@@ -129,7 +125,7 @@ namespace Jay.CLI.Scratch
             
         }
      
-        public new Span<TermPos> Slice(int index, int length)
+        public new Span<Coxel> Slice(int index, int length)
         {
             return _buffer.Slice(index, length);
         }
@@ -142,7 +138,7 @@ namespace Jay.CLI.Scratch
             }
         }
 
-        public void Write(int index, ReadOnlySpan<TermPos> terminalPositions)
+        public void Write(int index, ReadOnlySpan<Coxel> terminalPositions)
         {
             for (var i = 0; i < terminalPositions.Length; i++)
             {

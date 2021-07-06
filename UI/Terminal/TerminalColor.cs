@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Jay.CLI
+namespace Jay.UI.Terminal
 {
     [Flags]
     public enum TerminalColor : byte

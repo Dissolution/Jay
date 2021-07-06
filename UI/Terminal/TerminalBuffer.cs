@@ -1,24 +1,23 @@
-﻿using Jay.CLI.Native;
-using Jay.CLI.Scratch;
-using Jay.Concurrency;
-using Jay.Geometry;
-using System;
+﻿using System;
 using System.Diagnostics;
+using System.Drawing;
+using System.Threading;
+using Jay.UI.Terminal.Native;
 
-namespace Jay.CLI
+namespace Jay.UI.Terminal
 {
     public sealed class TerminalBuffer
     {
         private readonly object RING = new object();
-        private ReadWriteLock _lock = new ReadWriteLock();
+        private ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
         
         private readonly IntPtr _consoleOutHandle;
-        internal readonly TermPos[] _buffer;
+        internal readonly Coxel[] _buffer;
         
         public int Width { get; }
         public int Height { get; }
         
-        public TermPos DefaultTerminalPosition { get; } = new TermPos(' ', TerminalColor.Gray, TerminalColor.Black);
+        public Coxel DefaultTerminalPosition { get; } = new Coxel(' ', TerminalColor.Gray, TerminalColor.Black);
 
         public ITerminalReader Read
         {
@@ -33,7 +32,7 @@ namespace Jay.CLI
         {
             get
             {
-                _lock.EnterWriteLock(RING);
+                _lock.EnterWriteLock();
                 return new TerminalWriter(this);
             }
         }
@@ -45,7 +44,7 @@ namespace Jay.CLI
             this.Width = Console.BufferWidth;
             this.Height = Console.BufferHeight;
             _consoleOutHandle = NativeMethods.GetConsoleOutHandle();
-            _buffer = new TermPos[Width * Height];
+            _buffer = new Coxel[Width * Height];
             
             ReadFromConsole();
         }
@@ -94,7 +93,7 @@ namespace Jay.CLI
 
         internal void ExitWriteLock()
         {
-            _lock.ExitWriteLock(RING);
+            _lock.ExitWriteLock();
         }
         
         public void Flush()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using InlineIL;
@@ -99,6 +100,25 @@ namespace Jay
                 return Return<T>();
             }
             
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool Equal<T>(T a, T b)
+                where T : unmanaged
+            {
+                Emit.Ldarg(nameof(a));
+                Emit.Ldarg(nameof(b));
+                Emit.Ceq();
+                return Return<bool>();
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool NotEqual<T>(T a, T b)
+                where T : unmanaged
+            {
+                Emit.Ldarg(nameof(a));
+                Emit.Ldarg(nameof(b));
+                Emit.Ceq();
+                Emit.Not();
+                return Return<bool>();
+            }
         }
     }
 

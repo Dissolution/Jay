@@ -1,6 +1,6 @@
-﻿using Jay.Geometry;
+﻿using System.Drawing;
 
-namespace Jay.CLI
+namespace Jay.UI.Terminal
 {
     public class TerminalWindow
     {

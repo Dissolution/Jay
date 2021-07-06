@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Jay.CLI.Interfaces
+namespace Jay.UI.Terminal.Interfaces
 {
     public interface ITerminalSection
     {
