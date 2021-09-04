@@ -1,8 +1,27 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{38260385-16C3-4272-BF52-8BB8E0929635}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sandbox", "Sandbox", "{1FE21B4E-5628-4B94-B19F-8527B5FFB8D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terminal", "Sandbox\Terminal\Terminal.csproj", "{C8595309-8CA2-4CFB-9CBB-EE1332F4D40D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{38260385-16C3-4272-BF52-8BB8E0929635}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38260385-16C3-4272-BF52-8BB8E0929635}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38260385-16C3-4272-BF52-8BB8E0929635}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38260385-16C3-4272-BF52-8BB8E0929635}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8595309-8CA2-4CFB-9CBB-EE1332F4D40D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8595309-8CA2-4CFB-9CBB-EE1332F4D40D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8595309-8CA2-4CFB-9CBB-EE1332F4D40D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8595309-8CA2-4CFB-9CBB-EE1332F4D40D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C8595309-8CA2-4CFB-9CBB-EE1332F4D40D} = {1FE21B4E-5628-4B94-B19F-8527B5FFB8D3}
 	EndGlobalSection
 EndGlobal
