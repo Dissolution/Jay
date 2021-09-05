@@ -11,20 +11,27 @@ namespace Jay.Sandbox
     {
         public static int Main(params string?[] args)
         {
-            var testEnumTypes = Assembly.GetExecutingAssembly()
-                    .ExportedTypes
-                    .Where(type => type.Name.StartsWith("TestEnum", StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            foreach (var type in testEnumTypes)
-            {
-                var method = typeof(Enums<>).MakeGenericType(type)
-                                            .GetMethod(nameof(Enums<TestEnumByte>.ULong), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-                var eValue = Enum.ToObject(type, 3);
-                var value = method.Invoke(null, new object?[] {eValue});
+            Result result = true;
+            throw result;
             
-                Hold.Debug(eValue, value);
-            }
             
+            // var testEnumTypes = Assembly.GetExecutingAssembly()
+            //         .ExportedTypes
+            //         .Where(type => type.Name.StartsWith("TestEnum", StringComparison.OrdinalIgnoreCase))
+            //         .ToList();
+            // foreach (var type in testEnumTypes)
+            // {
+            //     var method = typeof(Enums<>).MakeGenericType(type)
+            //                                 .GetMethod(nameof(Enums<TestEnumByte>.ULong), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            //     var eValue = Enum.ToObject(type, 3);
+            //     var value = method.Invoke(null, new object?[] {eValue});
+            //
+            //     Hold.Debug(eValue, value);
+            // }
+            //
+            //
+            // Result result = new Result();
+            // throw result;
 
 
             // Do not close the Console window automatically

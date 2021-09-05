@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 using static InlineIL.IL;
@@ -8,27 +9,75 @@ using static InlineIL.IL;
 
 namespace Jay
 {
-    public static class Enums
+    internal sealed class EnumInfo<TEnum>
+        where TEnum : unmanaged, Enum
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TEnum And<TEnum>(this TEnum @enum, TEnum flag)
-            where TEnum : unmanaged, Enum
-            => Enums<TEnum>.And(@enum, flag);
+        internal readonly FieldInfo _member;
+        internal readonly ulong _value;
+        
+        public TEnum Enum { get; }
+        public string Name { get; }
+        public Attribute[] Attributes { get; }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int FlagCount<TEnum>(this TEnum @enum)
-            where TEnum : unmanaged, Enum
-            => Enums<TEnum>.FlagCount(@enum);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddFlag<TEnum>(this ref TEnum @enum, TEnum flag)
-            where TEnum : unmanaged, Enum
-            => @enum = Enums<TEnum>.Combine(@enum, flag);
+        public EnumInfo(FieldInfo member)
+        {
+            _member = member;
+            this.Enum = (TEnum) member.GetValue(null)!;
+            _value = Enums<TEnum>.ULong(Enum);
+            this.Name = member.Name;
+            this.Attributes = Attribute.GetCustomAttributes(member, true);
+        }
     }
-
+    
+    
     public static class Enums<TEnum>
         where TEnum : unmanaged, Enum
     {
+        private static readonly EnumInfo<TEnum>[] _infos;
+
+        static Enums()
+        {
+            var enumType = typeof(TEnum);
+            var fields = enumType.GetFields(BindingFlags.Public | BindingFlags.Static);
+            int len = fields.Length;
+            _infos = new EnumInfo<TEnum>[len];
+            for (var i = 0; i < len; i++)
+            {
+                _infos[i] = new EnumInfo<TEnum>(fields[i]);
+            }
+        }
+        
+        public static bool TryParse(ulong value, out TEnum @enum)
+        {
+            foreach (var info in _infos)
+            {
+                if (info._value == value)
+                {
+                    @enum = info.Enum;
+                    return true;
+                }
+            }
+
+            @enum = default;
+            return false;
+        }
+
+        public static bool TryParse(ReadOnlySpan<char> text, out TEnum @enum)
+        {
+            foreach (var info in _infos)
+            {
+                if (MemoryExtensions.Equals(info.Name, text, StringComparison.OrdinalIgnoreCase))
+                {
+                    @enum = info.Enum;
+                    return true;
+                }
+            }
+
+            @enum = default;
+            return false;
+        }
+        
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static ulong ULong(TEnum @enum)
         {
@@ -62,6 +111,30 @@ namespace Jay
             Emit.Ldarg(nameof(flag3));
             Emit.Or();
             return Return<TEnum>();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TEnum Combine(TEnum flag1, TEnum flag2, TEnum flag3, TEnum flag4)
+        {
+            Emit.Ldarg(nameof(flag1));
+            Emit.Ldarg(nameof(flag2));
+            Emit.Or();
+            Emit.Ldarg(nameof(flag3));
+            Emit.Or();
+            Emit.Ldarg(nameof(flag4));
+            Emit.Or();
+            return Return<TEnum>();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TEnum Combine(params TEnum[] flags)
+        {
+            TEnum @enum = default;
+            foreach (var flag in flags)
+            {
+                @enum = Or(@enum, flag);
+            }
+            return @enum;
         }
 
         /// <summary>
