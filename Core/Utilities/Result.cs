@@ -1,42 +1,39 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace Jay
 {
     /// <summary>
     /// Represents the result of an operation as a Pass or a Failure with <see cref="Exception"/> information.
     /// </summary>
-    /// <remarks>
-    /// For determining fields, default(Result) == default(bool) == false
-    /// </remarks>
     public readonly struct Result : IEquatable<Result>
     {
-        public static implicit operator Result(bool pass) => pass ? True : new Result(false, new Exception("Invalid Operation"));
-        public static implicit operator Result(Exception? exception) => new Result(false, exception ?? new Exception("Invalid Operation"));
-
-        public static implicit operator bool(Result result) => result.Pass;
-        public static bool operator true(Result result) => result.Pass;
-        public static bool operator false(Result result) => !result.Pass;
-        public static explicit operator Exception(Result result) => result.Exception ?? new Exception("Invalid Operation");
-
-        public static bool operator ==(Result x, Result y) => x.Pass == y.Pass;
-        public static bool operator !=(Result x, Result y) => x.Pass != y.Pass;
-        public static bool operator ==(Result x, bool y) => x.Pass == y;
-        public static bool operator !=(Result x, bool y) => x.Pass != y;
-
-        public static bool operator |(Result x, Result y) => x.Pass || y.Pass;
-        public static bool operator |(Result x, bool y) => x.Pass || y;
-        public static bool operator &(Result x, Result y) => x.Pass && y.Pass;
-        public static bool operator &(Result x, bool y) => x.Pass && y;
-        public static bool operator ^(Result x, Result y) => x.Pass ^ y.Pass;
-        public static bool operator ^(Result x, bool y) => x.Pass ^ y;
-        public static bool operator !(Result result) => !result.Pass;
+        internal const string DefaultErrorMessage = "Operation Failed";
         
-        internal static readonly Result True = new Result(true, null);
-            
-        public static Result Failed(Exception? exception) => new Result(false, exception);
+#region Static
+        public static implicit operator Result(bool pass) => pass ? Pass : new Result(false, new Exception(DefaultErrorMessage));
+        public static implicit operator Result(Exception? exception) => new Result(false, exception ?? new Exception(DefaultErrorMessage));
+        public static implicit operator bool(Result result) => result._pass;
+        public static implicit operator Exception(Result result) => result._error ?? new Exception(DefaultErrorMessage);
+
+        public static bool operator ==(Result x, Result y) => x._pass == y._pass;
+        public static bool operator !=(Result x, Result y) => x._pass != y._pass;
+        public static bool operator ==(Result x, bool y) => x._pass == y;
+        public static bool operator !=(Result x, bool y) => x._pass != y;
+
+        public static bool operator |(Result x, Result y) => x._pass || y._pass;
+        public static bool operator |(Result x, bool y) => y || x._pass;
+        public static bool operator &(Result x, Result y) => x._pass && y._pass;
+        public static bool operator &(Result x, bool y) => y && x._pass;
+        public static bool operator ^(Result x, Result y) => x._pass ^ y._pass;
+        public static bool operator ^(Result x, bool y) => x._pass ^ y;
+        
+        public static bool operator true(Result result) => result._pass;
+        public static bool operator false(Result result) => !result._pass;
+        public static bool operator !(Result result) => !result._pass;
+        
+        public static readonly Result Pass = new Result(true, null);
+        public static Result Fail(Exception? exception) => new Result(false, exception ?? new Exception(DefaultErrorMessage));
         
         public static Result Try(Action? action)
         {
@@ -44,11 +41,10 @@ namespace Jay
             {
                 return new ArgumentNullException(nameof(action));
             }
-
             try
             {
                 action.Invoke();
-                return True;
+                return Pass;
             }
             catch (Exception ex)
             {
@@ -66,7 +62,7 @@ namespace Jay
             try
             {
                 value = func.Invoke();
-                return True;
+                return Pass;
             }
             catch (Exception ex)
             {
@@ -77,102 +73,41 @@ namespace Jay
 
         public static Result<T> Try<T>(Func<T?>? func)
             => Result<T>.Try(func);
+#endregion
+        
+        // _pass is the field (rather than _fail) because default(Result) should be a failure
+        internal readonly bool _pass;
+        internal readonly Exception? _error;
 
-        [return: MaybeNull]
-        public static TResult Swallow<TResult>(Func<TResult?>? function, TResult? defaultResult = default)
+        internal Result(bool pass, Exception? error)
         {
-            if (function is null)
-                return defaultResult;
-            try
-            {
-                return function();
-            }
-            catch // (Exception ex)
-            {
-                return defaultResult;
-            }
-        }
-        
-        public static Result Dispose(IDisposable? disposable)
-        {
-            try
-            {
-                disposable?.Dispose();
-                return True;
-            }
-            catch (Exception ex)
-            {
-                return ex;
-            }
-        }
-        
-        public static Result Dispose<T>(T? value)
-        {
-            if (value is IDisposable disposable)
-            {
-                try
-                {
-                    disposable.Dispose();
-                    return True;
-                }
-                catch (Exception ex)
-                {
-                    return ex;
-                }
-            }
-            // else if (value is IAsyncDisposable asyncDisposable)
-            // {
-            //     try
-            //     {
-            //         asyncDisposable.DisposeAsync().AsTask().GetAwaiter().GetResult();
-            //         return True;
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         return ex;
-            //     }
-            // }
-            else
-            {
-                return True;
-            }
-        }
-        
-        internal readonly bool Pass;
-        internal readonly Exception? Exception;
-
-        internal Result(bool pass, Exception? exception)
-        {
-            this.Pass = pass;
-            this.Exception = exception;
+            _pass = pass;
+            _error = error;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ThrowIfFailed()
         {
-            if (!Pass)
-                throw Exception ?? new Exception("Invalid Operation");
+            if (!_pass)
+            {
+                throw (_error ?? new Exception(DefaultErrorMessage));
+            }
         }
         
-        public bool TryGetError([MaybeNullWhen(false)] out Exception error)
+        public bool TryGetError([NotNullWhen(true)] out Exception? error)
         {
-            if (!Pass)
-            {
-                error = Exception ?? new Exception("Invalid Operation")!;
-                return true;
-            }
-            else
+            if (_pass)
             {
                 error = null;
                 return false;
             }
-        }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Result result) => result.Pass == Pass;
+            error = (_error ?? new Exception(DefaultErrorMessage));
+            return true;
+        }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(bool pass) => pass == Pass;
+        public bool Equals(Result result) => result._pass == _pass;
+        
+        public bool Equals(bool pass) => pass == _pass;
 
         public override bool Equals(object? obj)
         {
@@ -183,15 +118,15 @@ namespace Jay
             return false;
         }
 
-        public override int GetHashCode() => Pass ? 1 : 0;
+        public override int GetHashCode() => _pass ? 1 : 0;
 
         public override string ToString()
         {
-            if (Pass)
-                return bool.TrueString;
-            if (Exception is null)
-                return bool.FalseString;
-            return Exception.ToString();
+            if (_pass)
+                return "Pass";
+            if (_error is null)
+                return "Fail";
+            return $"Fail: {_error}";
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Jay.Text
 
         internal Span<char> Written
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
             get => new Span<char>(_characters, 0, _length);
         }
 
@@ -87,13 +87,13 @@ namespace Jay.Text
         }
 
         #region Write
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override void Write(char c)
         {
             _characters[Adding(1)] = c;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override void Write(ReadOnlySpan<char> text)
         {
             int textLen = text.Length;
@@ -164,7 +164,6 @@ namespace Jay.Text
         
         #region Append
         #region Append Value
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override TextBuilder Append(byte value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -179,7 +178,6 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override TextBuilder Append(sbyte value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -194,7 +192,6 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override TextBuilder Append(short value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -209,7 +206,6 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override TextBuilder Append(ushort value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -224,7 +220,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(int value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -239,7 +235,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(uint value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -254,7 +250,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(long value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -269,7 +265,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(ulong value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -284,7 +280,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(float value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -299,7 +295,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(double value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -314,7 +310,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(decimal value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -329,7 +325,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(TimeSpan value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -344,7 +340,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(DateTime value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -359,7 +355,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(DateTimeOffset value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -374,7 +370,7 @@ namespace Jay.Text
             return this;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override TextBuilder Append(Guid value)
         {
             if (value.TryFormat(Available, out int charsWritten))
@@ -687,7 +683,7 @@ namespace Jay.Text
             return false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public override string ToString() => new string(_characters, 0, _length);
     }
 }

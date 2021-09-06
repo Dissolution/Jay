@@ -18,7 +18,7 @@ namespace Jay.Reflection.Emission
             var emitter = new FluentILEmitter(dynamicMethod);
             var result = TryEmitAdapt(emitter, MemberDelegateCache.GetInvokeMethod(delegateType), targetMethod, safety);
             if (!result)
-                return result.Exception;
+                return result._error;
             try
             {
                 Delegate del = dynamicMethod.CreateDelegate(delegateType);
@@ -38,7 +38,7 @@ namespace Jay.Reflection.Emission
             var emitter = dynamicMethod.GetEmitter();
             var result = TryEmitAdapt(emitter, MemberDelegateCache.GetInvokeMethod<TDelegate>(), targetMethod, safety);
             if (!result)
-                return result.Exception;
+                return result._error;
             try
             {
                 TDelegate del = dynamicMethod.CreateDelegate();

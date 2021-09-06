@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 
 using static InlineIL.IL;
+// ReSharper disable EntityNameCapturedOnly.Global
 
 namespace Jay
 {

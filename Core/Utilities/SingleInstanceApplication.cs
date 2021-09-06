@@ -9,7 +9,7 @@ namespace Jay
     /// </summary>
     public sealed class SingleInstanceApplication : IDisposable
     {
-        private static string GetName()
+        private static string GetAssemblyName()
         {
             return Assembly.GetExecutingAssembly()
                            .GetName()
@@ -18,12 +18,12 @@ namespace Jay
         
         private readonly string _name;
         private readonly Mutex _mutex;
-        private bool _first;
+        private bool _isFirst;
 
         /// <summary>
         /// Is this the first instance of this application?
         /// </summary>
-        public bool FirstInstance => _first;
+        public bool IsFirstInstance => _isFirst;
 
         /// <summary>
         /// Gets the Name this Single Instance Mutex is registered under
@@ -36,8 +36,8 @@ namespace Jay
         /// <param name="name"></param>
         public SingleInstanceApplication(string? name)
         {
-            _name = name ?? GetName();
-            _mutex = new Mutex(true, name, out _first);
+            _name = name ?? GetAssemblyName();
+            _mutex = new Mutex(true, name, out _isFirst);
         }
         /// <inheritdoc />
         ~SingleInstanceApplication()
@@ -53,7 +53,9 @@ namespace Jay
         {
             var waited = _mutex.WaitOne();
             if (waited)
-                _first = true;
+            {
+                _isFirst = true;
+            }
             return waited;
         }
         
@@ -65,7 +67,9 @@ namespace Jay
         {
             var waited = _mutex.WaitOne(timeout);
             if (waited)
-                _first = true;
+            {
+                _isFirst = true;
+            }
             return waited;
         }
 

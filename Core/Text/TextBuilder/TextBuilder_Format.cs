@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Jay.Constraints;
 using Jay.Debugging;
 using Jay.Debugging.Dumping;
 using JetBrains.Annotations;
@@ -322,7 +321,7 @@ namespace Jay.Text
         [StringFormatMethod("format")]
         public override TextBuilder AppendFormat(NonFormattableString format, params object?[] args)
         {
-            WriteFormat(null, format.Value, args, false);
+            WriteFormat(null, format.String, args, false);
             return this;
         }
 

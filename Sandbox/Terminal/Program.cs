@@ -280,14 +280,14 @@ namespace Jay.Sandbox
                 _randomizer.Shuffle(_deck);
             }
 
-            public Card DrawCard()
+            public bool TryDrawCard(out Card card)
             {
                 int lastIndex = _deck.Count - 1;
                 if (lastIndex >= 0)
                 {
-                    byte card = _deck[lastIndex];
+                    card = _deck[lastIndex];
                     _deck.RemoveAt(lastIndex);
-                    return card;
+                    return true;
                 }
                 _deck.AddRange(_winnings);
                 _randomizer.Shuffle(_deck);
@@ -295,14 +295,16 @@ namespace Jay.Sandbox
                 lastIndex = _deck.Count - 1;
                 if (lastIndex >= 0)
                 {
-                    byte card = _deck[lastIndex];
+                    card = _deck[lastIndex];
                     _deck.RemoveAt(lastIndex);
-                    return card;
+                    return true;
                 }
-                Debugger.Break();
-                return 0;
-            }
 
+                card = default;
+                return false;
+            }
+            
+         
             public void AddWinnings(params Card[] cards)
             {
                 _winnings.AddRange(cards);
@@ -312,56 +314,56 @@ namespace Jay.Sandbox
         
         public static int Main(params string?[] args)
         {
-            //RouletteTests();
-            var text = new ConsoleText();
-            var rand = Randomizer.New();
-            var playerA = new WarPlayer(rand);
-            var playerB = new WarPlayer(rand);
-
-            CoxelColor aColor = CoxelColor.Red;
-            CoxelColor bColor = CoxelColor.Blue;
-            
-            WarPlayer GetWinner()
-            {
-                var cardA = playerA.DrawCard();
-                var cardARank = cardA.Rank;
-                var cardB = playerB.DrawCard();
-                var cardBRank = cardB.Rank;
-                if (cardARank > cardBRank)
-                {
-                    text.ColorAppend(aColor, null, "Player A")
-                        .Append(": ")
-                        .ColorAppend(CoxelColor.White, null, cardA)
-                        .Append(" > ")
-                        .ColorAppend(CoxelColor.White, null, cardB);
-                    playerA.AddWinnings(cardA, cardB);
-                    return playerA;
-                }
-                else if (cardARank < cardBRank)
-                {
-                    playerB.AddWinnings(cardA, cardB);
-                    return playerB;
-                }
-                else
-                {
-                    var winner = GetWinner();
-                    winner.AddWinnings(cardA, cardB);
-                    return winner;
-                } 
-            }
-
-            ulong round = 0UL;
-            while (true)
-            {
-                GetWinner();
-                round += 1UL;
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine($"Round #{round}");
-                Console.WriteLine($"Player A: {playerA.Count,-3}");
-                Console.WriteLine($"Player B: {playerB.Count,-3}");
-                if (Console.KeyAvailable)
-                    Debugger.Break();
-            }
+            RouletteTests();
+            // var text = new ConsoleText();
+            // var rand = Randomizer.New();
+            // var playerA = new WarPlayer(rand);
+            // var playerB = new WarPlayer(rand);
+            //
+            // CoxelColor aColor = CoxelColor.Red;
+            // CoxelColor bColor = CoxelColor.Blue;
+            //
+            // WarPlayer GetWinner()
+            // {
+            //     var cardA = playerA.DrawCard();
+            //     var cardARank = cardA.Rank;
+            //     var cardB = playerB.DrawCard();
+            //     var cardBRank = cardB.Rank;
+            //     if (cardARank > cardBRank)
+            //     {
+            //         text.ColorAppend(aColor, null, "Player A")
+            //             .Append(": ")
+            //             .ColorAppend(CoxelColor.White, null, cardA)
+            //             .Append(" > ")
+            //             .ColorAppend(CoxelColor.White, null, cardB);
+            //         playerA.AddWinnings(cardA, cardB);
+            //         return playerA;
+            //     }
+            //     else if (cardARank < cardBRank)
+            //     {
+            //         playerB.AddWinnings(cardA, cardB);
+            //         return playerB;
+            //     }
+            //     else
+            //     {
+            //         var winner = GetWinner();
+            //         winner.AddWinnings(cardA, cardB);
+            //         return winner;
+            //     } 
+            // }
+            //
+            // ulong round = 0UL;
+            // while (true)
+            // {
+            //     GetWinner();
+            //     round += 1UL;
+            //     Console.SetCursorPosition(0, 0);
+            //     Console.WriteLine($"Round #{round}");
+            //     Console.WriteLine($"Player A: {playerA.Count,-3}");
+            //     Console.WriteLine($"Player B: {playerB.Count,-3}");
+            //     if (Console.KeyAvailable)
+            //         Debugger.Break();
+            // }
             
             
             // var summary = BenchmarkHelper.RunAndOpen<CharWriterBenchmarks>();

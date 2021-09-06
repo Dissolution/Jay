@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Jay.Constraints;
 using Jay.Reflection.Emission;
 using Jay.Text;
 
@@ -89,7 +88,7 @@ namespace Jay.Debugging.Dumping
 
         public static string Format(NonFormattableString format, params object?[] args)
         {
-            return FormatImpl(format.Value, args);
+            return FormatImpl(format.String, args);
         }
     }
 }

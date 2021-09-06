@@ -92,7 +92,7 @@ namespace Jay.Conversion
                         Debugger.Break();
                         Hold.Debug(delegateType, result);
                     }
-                    _cache[(genericTypes[0], genericTypes[1])] = result.Value!;
+                    _cache[(genericTypes[0], genericTypes[1])] = result._value!;
                 }
                 else
                 {

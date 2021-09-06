@@ -1,6 +1,8 @@
 ﻿namespace Jay
 {
-    // Force static class qualifier or using static
+    /// <summary>
+    /// Constraints upon generic types
+    /// </summary>
     public static class GenericTypeConstraints
     {
         public readonly struct IsClass<T> where T : class { }

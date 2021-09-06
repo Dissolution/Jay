@@ -93,7 +93,7 @@ namespace Jay.Threading
 			task.ContinueWith(_ =>
 			{
 				registeredWaitHandle.Unregister(null);
-				Result.Dispose(tokenRegistration);
+				tokenRegistration.Dispose();
 			}, token);
 			//Done
 			return task;

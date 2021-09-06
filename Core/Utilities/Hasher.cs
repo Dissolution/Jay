@@ -10,17 +10,12 @@ using Jay.Exceptions;
 namespace Jay
 {
     /// <summary>
-    /// A HashCode Creator
+    /// A HashCode generator similar to <see cref="System.HashCode"/> with more methods available
     /// </summary>
-    /// <remarks>
-    /// Hasher is mostly used statically, but there are some cases where an instance is required.
-    /// I don't want those instances to persist, but I do want fluent chaining.
-    /// `readonly ref` solves both of those issues 
-    /// </remarks>
     public ref struct Hasher
     {
         // Generate a random global seed each run
-        private static readonly uint Seed = Randomizer.GetCryptoRandomSeed<uint>();
+        private static readonly uint _seed = Randomizer.GetCryptoRandomSeed<uint>();
         
         // Primes from HashCode
         private const uint Prime1 = 2654435761U;
@@ -34,10 +29,10 @@ namespace Jay
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Initialize(out uint v1, out uint v2, out uint v3, out uint v4)
         {
-            v1 = Seed + Prime1 + Prime2;
-            v2 = Seed + Prime2;
-            v3 = Seed;
-            v4 = Seed - Prime1;
+            v1 = _seed + Prime1 + Prime2;
+            v2 = _seed + Prime2;
+            v3 = _seed;
+            v4 = _seed - Prime1;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,7 +60,7 @@ namespace Jay
         
         private static uint MixEmptyState()
         {
-            return Seed + Prime5;
+            return _seed + Prime5;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -359,9 +354,9 @@ namespace Jay
         {
             if (array is null) return 0;
             var hasher = new Hasher();
-            for (var i = 0; i < array.Length; i++)
+            foreach (var item in array)
             {
-                hasher.Add(array.GetValue(i));
+                hasher.Add(item);
             }
             return hasher.ToHashCode();
         }

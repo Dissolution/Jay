@@ -122,7 +122,7 @@ namespace Jay.Text
                 var result = MethodAdapter.TryAdapt<TryFormatObject>(tryFormatMethods[0], Safety.IgnoreExtraParams);
                 if (result)
                 {
-                    tryFormatObject = result.Value!;
+                    tryFormatObject = result._value!;
                 }
                 else
                 {
@@ -151,7 +151,7 @@ namespace Jay.Text
                 var result = MethodAdapter.TryAdapt<FormatObject>(toStringMethods[0], Safety.IgnoreExtraParams);
                 if (result)
                 {
-                    formatObject = result.Value;
+                    formatObject = result._value;
                     break;
                 }
             }

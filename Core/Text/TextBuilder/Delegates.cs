@@ -12,6 +12,6 @@ namespace Jay.Text
     public delegate void WriteSpanText<in TWriter, T>(TWriter textWriter, ReadOnlySpan<T> span)
         where TWriter : ITextWriter<TWriter>;
     
-    public delegate void WriteSpanCharText<in TWriter>(TWriter textWriter, ReadOnlySpan<char> text)
+    public delegate void WriteCharSpanText<in TWriter>(TWriter textWriter, ReadOnlySpan<char> text)
         where TWriter : ITextWriter<TWriter>;
 }

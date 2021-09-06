@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using Jay.Constraints;
 using Jay.Exceptions;
 
 namespace Jay.Text
@@ -83,7 +82,21 @@ namespace Jay.Text
             Write(boolean ? bool.TrueString : bool.FalseString);
             return _this;
         }
-        
+
+        /// <inheritdoc />
+        public virtual TWriter Append(nint nativeInt)
+        {
+            Write(nativeInt.ToString());
+            return _this;
+        }
+
+        /// <inheritdoc />
+        public virtual TWriter Append(nuint nativeUInt)
+        {
+            Write(nativeUInt.ToString());
+            return _this;
+        }
+
         public virtual TWriter Append(byte value)
         {
             Write(value.ToString());
@@ -249,7 +262,7 @@ namespace Jay.Text
             return _this;
         }
         
-        public TWriter Append(ReadOnlySpan<char> text, WriteSpanCharText<TWriter> writeText)
+        public TWriter Append(ReadOnlySpan<char> text, WriteCharSpanText<TWriter> writeText)
         {
             writeText.Invoke(_this, text);
             return _this;

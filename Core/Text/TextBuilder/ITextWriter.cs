@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Jay.Constraints;
 
 namespace Jay.Text
 {
@@ -9,16 +8,24 @@ namespace Jay.Text
         where TWriter : ITextWriter<TWriter>
     {
         /// <summary>
-        /// Writes a character
+        /// Writes a single character
         /// </summary>
-        /// <param name="c"></param>
+        /// <param name="c">The character to write</param>
         void Write(char c);
         /// <summary>
         /// Writes a span of characters
         /// </summary>
-        /// <param name="text"></param>
+        /// <param name="text">The <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> to write</param>
         void Write(ReadOnlySpan<char> text);
+        /// <summary>
+        /// Writes an array of characters
+        /// </summary>
+        /// <param name="text">The <see cref="Array"/>of <see cref="char"/>s to write</param>
         void Write(params char[] text);
+        /// <summary>
+        /// Writes a string
+        /// </summary>
+        /// <param name="text">The <see cref="string"/> to write</param>
         void Write(string? text);
         
         TWriter Append(char c);
@@ -28,6 +35,8 @@ namespace Jay.Text
         TWriter Append(IEnumerable<char> text);
         
         TWriter Append(bool boolean);
+        TWriter Append(nint nativeInt);
+        TWriter Append(nuint nativeUInt);
         TWriter Append(byte value);
         TWriter Append(sbyte value);
         TWriter Append(short value);
@@ -49,7 +58,7 @@ namespace Jay.Text
         TWriter Append(WriteText<TWriter> writeText);
         TWriter Append<TState>(TState state, WriteStateText<TWriter, TState> writeText);
         TWriter Append<T>(ReadOnlySpan<T> readOnlySpan, WriteSpanText<TWriter, T> writeText);
-        TWriter Append(ReadOnlySpan<char> text, WriteSpanCharText<TWriter> writeText);
+        TWriter Append(ReadOnlySpan<char> text, WriteCharSpanText<TWriter> writeText);
         
         TWriter AppendFormat(FormattableString formattableString);
         TWriter AppendFormat(NonFormattableString format, params object?[] args);

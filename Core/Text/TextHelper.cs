@@ -92,6 +92,6 @@ namespace Jay.Text
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Equals(ReadOnlySpan<char> first, ReadOnlySpan<char> second, StringComparison comparison)
-            => first.Equals(second, comparison);
+            => MemoryExtensions.Equals(first, second, comparison);
     }
 }
