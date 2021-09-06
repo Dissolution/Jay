@@ -1,0 +1,202 @@
+﻿using InlineIL;
+using Jay.Debugging;
+using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using static InlineIL.IL;
+// ReSharper disable StaticMemberInGenericType
+// ReSharper disable ConvertToAutoProperty
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+
+namespace Jay
+{
+    public static class Bits
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int HalfRoundUp(int value)
+        {
+            return (value >> 1) + (value & 1);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int HalfRoundDown(int value)
+        {
+            return (value >> 1);
+        }
+    }
+    
+    public static class Bits<T> where T : unmanaged
+    {
+        private static readonly int _byteSize;
+        private static readonly int _bitSize;
+        private static readonly T _one;
+
+        public static int BitSize => _bitSize;
+        public static T Zero => default;
+        public static T One => _one;
+        
+        static Bits()
+        {
+            unsafe
+            {
+                _byteSize = sizeof(T);
+                _bitSize = sizeof(T) * 8;
+            }
+            _one = AsT(1UL);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static T AsT(ulong value)
+        {
+            Emit.Ldarg(nameof(value));
+            return Return<T>();
+        }
+        
+        public static void SetBit(ref T value, int bit)
+        {
+            if ((uint) bit >= _bitSize)
+                throw new ArgumentOutOfRangeException(nameof(bit));
+            T mask = LeftShift(One, bit);
+            value = Or(value, mask);
+        }
+        
+        public static void ClearBit(ref T value, int bit)
+        {
+            if ((uint) bit >= _bitSize)
+                throw new ArgumentOutOfRangeException(nameof(bit));
+            T mask = Not(LeftShift(One, bit));
+            value = And(value, mask);
+        }
+        
+        public static void ToggleBit(ref T value, int bit)
+        {
+            if ((uint) bit >= _bitSize)
+                throw new ArgumentOutOfRangeException(nameof(bit));
+            T mask = LeftShift(One, bit);
+            value = Xor(value, mask);
+        }
+        
+        public static bool IsBitSet(T value, int bit)
+        {
+            if ((uint) bit >= _bitSize)
+                throw new ArgumentOutOfRangeException(nameof(bit));
+            return Equals(And(RightShift(value, bit), One), One);
+        }
+        
+        public static void SetBit(ref T value, int bit, bool yn)
+        {
+            if ((uint) bit >= _bitSize)
+                throw new ArgumentOutOfRangeException(nameof(bit));
+            // number = (number & ~(1UL << n)) | (x << n);
+            var leftLeft = value;
+            var leftRight = Not(LeftShift(One, bit));
+            var left = And(leftLeft, leftRight);
+            var right = LeftShift((yn ? One : Zero), bit);
+            value = Or(left, right);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T And(T x, T y)
+        {
+            Emit.Ldarg(nameof(x));
+            Emit.Ldarg(nameof(y));
+            Emit.And();
+            return IL.Return<T>();
+        }
+
+        private static Span<byte> ToBytes(ref T value)
+        {
+            unsafe
+            {
+                return new Span<byte>(NotSafe.AsVoidPointer(ref value), _byteSize);
+            }
+        }
+        private static T FromBytes(ReadOnlySpan<byte> bytes)
+        {
+            return MemoryMarshal.Read<T>(bytes);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Or(T x, T y)
+        {
+            var xBytes = ToBytes(ref x);
+            var yBytes = ToBytes(ref y);
+            var len = xBytes.Length;
+            Debug.Assert(len == yBytes.Length);
+            Span<byte> dest = stackalloc byte[len];
+            for (var i = 0; i < len; i++)
+            {
+                dest[i] = (byte) (xBytes[i] | yBytes[i]);
+            }
+
+            // var xSpan = ToInts(x);
+            // var ySpan = ToInts(y);
+            // var len = xSpan.Length;
+            // Span<int> output = stackalloc int[len];
+            // for (var i = 0; i < len; i++)
+            // {
+            //     output[i] = xSpan[i] | ySpan[i];
+            // }
+            //
+            // T outT = FromInts(output);
+            //
+            // Hold.Debug(outT);
+            //
+            // return outT;
+            throw new NotImplementedException();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Xor(T x, T y)
+        {
+            Emit.Ldarg(nameof(x));
+            Emit.Ldarg(nameof(y));
+            Emit.Xor();
+            return IL.Return<T>();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Not(T value)
+        {
+            Emit.Ldarg(nameof(value));
+            Emit.Not();
+            return IL.Return<T>();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Neg(T value)
+        {
+            Emit.Ldarg(nameof(value));
+            Emit.Neg();
+            return IL.Return<T>();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T LeftShift(T value, int count)
+        {
+            Emit.Ldarg(nameof(value));
+            Emit.Ldarg(nameof(count));
+            Emit.Shl();
+            return Return<T>();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T RightShift(T value, int count)
+        {
+            Emit.Ldarg(nameof(value));
+            Emit.Ldarg(nameof(count));
+            Emit.Shr();
+            return Return<T>();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Equals(T x, T y)
+        {
+            Emit.Ldarg(nameof(x));
+            Emit.Ldarg(nameof(y));
+            Emit.Ceq();
+            return Return<bool>();
+        }
+    }
+}

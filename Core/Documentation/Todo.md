@@ -1,0 +1,3 @@
+﻿Known NotImplemented:
+- [ ] `Randomizer`
+- [ ] `HashIds`
