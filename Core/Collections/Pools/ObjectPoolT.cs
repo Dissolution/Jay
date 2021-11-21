@@ -204,9 +204,9 @@ namespace Jay.Collections.Pools
         /// <summary>
         /// Rents a <typeparamref name="T"/> instance that will be returned the result of this operation is disposed.
         /// </summary>
-        /// <param name="value">A fresh instance to be used, it will automatically be returned upon disposal.</param>
-        /// <returns>An <see cref="IDisposable"/> that will return the <paramref name="value"/>. </returns>
-        /// <remarks><paramref name="value"/> must not be used after this is disposed.</remarks>
+        /// <param name="instance">A fresh instance to be used, it will automatically be returned upon disposal.</param>
+        /// <returns>An <see cref="IDisposable"/> that will return the <paramref name="instance"/>. </returns>
+        /// <remarks><paramref name="instance"/> must not be used after this is disposed.</remarks>
         public IDisposable Borrow(out T instance)
         {
             instance = Rent();

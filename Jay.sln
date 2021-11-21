@@ -1,24 +1,29 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{3C56525F-55FB-46B0-AB02-B3E9F99164F3}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{3C56525F-55FB-46B0-AB02-B3E9F99164F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox.Terminal", "Sandbox\Terminal\Sandbox.Terminal.csproj", "{DE5DA19D-BF77-4AFD-B348-2B7E8CD239CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sandbox.Terminal", "Sandbox\Terminal\Sandbox.Terminal.csproj", "{DE5DA19D-BF77-4AFD-B348-2B7E8CD239CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.Benchmarks", "Jay.Benchmarks\Jay.Benchmarks.csproj", "{5CEC76D7-EDDE-4817-ACDE-1F970D8CD6E8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jay.Benchmarks", "Jay.Benchmarks\Jay.Benchmarks.csproj", "{5CEC76D7-EDDE-4817-ACDE-1F970D8CD6E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IO", "IO\IO.csproj", "{9468E93F-40AD-4810-A9A3-97960EA8A246}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IO", "IO\IO.csproj", "{9468E93F-40AD-4810-A9A3-97960EA8A246}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Logging", "Logging", "{1905308E-6718-4F2D-82F0-71282914E914}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Logging\Core\Core.csproj", "{FA752BEA-21E9-4AF7-A4E0-E5B514A33227}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Logging\Core\Core.csproj", "{FA752BEA-21E9-4AF7-A4E0-E5B514A33227}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gambling", "Gambling", "{04167751-F34A-442D-8014-CA086A5FFA65}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Roulette", "Roulette\Roulette\Roulette.csproj", "{50893AE3-425C-4664-B82B-F75192CF7C2D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Roulette", "Roulette\Roulette\Roulette.csproj", "{50893AE3-425C-4664-B82B-F75192CF7C2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geometry", "Geometry\Geometry.csproj", "{C1B1D3E4-D06E-426E-A09A-E9B81AEC14CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Geometry", "Geometry\Geometry.csproj", "{C1B1D3E4-D06E-426E-A09A-E9B81AEC14CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cards", "Gambling\Cards\Cards.csproj", "{441B0658-C33E-4792-A749-C57E2B0D64A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cards", "Gambling\Cards\Cards.csproj", "{441B0658-C33E-4792-A749-C57E2B0D64A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conversion", "Conversion\Conversion.csproj", "{FF7CD0A6-16B7-4B50-9DA9-15E46014ACE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,10 +63,20 @@ Global
 		{441B0658-C33E-4792-A749-C57E2B0D64A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{441B0658-C33E-4792-A749-C57E2B0D64A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{441B0658-C33E-4792-A749-C57E2B0D64A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF7CD0A6-16B7-4B50-9DA9-15E46014ACE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF7CD0A6-16B7-4B50-9DA9-15E46014ACE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF7CD0A6-16B7-4B50-9DA9-15E46014ACE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF7CD0A6-16B7-4B50-9DA9-15E46014ACE2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{FA752BEA-21E9-4AF7-A4E0-E5B514A33227} = {1905308E-6718-4F2D-82F0-71282914E914}
 		{50893AE3-425C-4664-B82B-F75192CF7C2D} = {04167751-F34A-442D-8014-CA086A5FFA65}
 		{441B0658-C33E-4792-A749-C57E2B0D64A3} = {04167751-F34A-442D-8014-CA086A5FFA65}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {91199BB9-E069-491E-8926-AACD745A8BC3}
 	EndGlobalSection
 EndGlobal

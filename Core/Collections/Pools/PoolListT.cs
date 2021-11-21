@@ -30,7 +30,10 @@ namespace Jay.Collections.Pools
 
         public IEnumerator<T> GetEnumerator()
         {
-            throw new NotImplementedException();
+            for (var i = 0; i < _length; i++)
+            {
+                yield return _items[i];
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
