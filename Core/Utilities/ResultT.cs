@@ -17,7 +17,8 @@ namespace Jay
         public static implicit operator Result<T>(Exception? exception) => new Result<T>(false, default(T), exception ?? new Exception(Result.DefaultErrorMessage));
         public static implicit operator bool(Result<T> result) => result._pass;
         public static explicit operator T?(Result<T> result) => result.GetValue();
-        public static implicit operator Exception(Result<T> result) => result.GetException();
+
+        public static implicit operator Exception(Result<T> result) => result._error ?? new Exception(Result.DefaultErrorMessage);
 
         public static bool operator ==(Result<T> x, Result<T> y) => x._pass == y._pass;
         public static bool operator !=(Result<T> x, Result<T> y) => x._pass != y._pass;
@@ -52,7 +53,7 @@ namespace Jay
         /// </summary>
         /// <param name="exception">The failing <see cref="_error"/>.</param>
         /// <returns>A failed <see cref="Result{T}"/>.</returns>
-        public static Result<T> Fail(Exception? exception) => new Result<T>(false, default(T), exception ?? new Exception(Result.DefaultErrorMessage));
+        public static Result<T> Fail(Exception? exception = null) => new Result<T>(false, default(T), exception ?? new Exception(Result.DefaultErrorMessage));
 
         /// <summary>
         /// Try to execute the given <paramref name="func"/>, attempt to store its result in <paramref name="value"/>,
@@ -64,7 +65,7 @@ namespace Jay
         /// A passing <see cref="Result"/> if the <paramref name="func"/> executed successfully or a failed one containing
         /// the caught error if it did not.
         /// </returns>
-        public static Result Try(Func<T?>? func, out T? value)
+        public static Result Try(Func<T>? func, [MaybeNullWhen(false)] out T value)
             => Result.Try<T>(func, out value);
         
         /// <summary>
@@ -110,11 +111,6 @@ namespace Jay
             throw new InvalidOperationException("A failed Result has no Value");
         }
 
-        internal Exception GetException()
-        {
-            return _error ?? new Exception(Result.DefaultErrorMessage);
-        }
-
         public Result TryGetValue(out T? value)
         {
             value = _value;
@@ -124,10 +120,12 @@ namespace Jay
         public void ThrowIfFailed()
         {
             if (!_pass)
-                throw GetException();
+                throw _error ?? new Exception(Result.DefaultErrorMessage);
         }
-        
-        public bool TryGetError([NotNullWhen(true)] out Exception? error)
+
+        public bool Failed() => !_pass;
+
+        public bool Failed([NotNullWhen(true)] out Exception? error)
         {
             if (_pass)
             {

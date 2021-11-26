@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using Jay.Comparison;
 
 namespace Jay.Reflection.Comparison
 {
-    public sealed class TypeComplexityComparer : ComparerBase<Type, TypeComplexityComparer>
+    public sealed class TypeComplexityComparer : Comparer<Type>
     {
         private static int Count(Type? type)
         {
@@ -19,7 +20,7 @@ namespace Jay.Reflection.Comparison
         }
         
         /// <inheritdoc />
-        protected override int CompareImpl(Type left, Type right)
+        public override int Compare(Type? left, Type? right)
         {
             return Count(left).CompareTo(Count(right));
         }

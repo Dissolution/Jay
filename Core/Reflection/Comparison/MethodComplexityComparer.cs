@@ -1,12 +1,13 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using Jay.Comparison;
 
 namespace Jay.Reflection.Comparison
 {
-    public sealed class MethodComplexityComparer : ComparerBase<MethodBase, MethodComplexityComparer>
+    public sealed class MethodComplexityComparer : Comparer<MethodBase>
     {
         /// <inheritdoc />
-        protected override int CompareImpl(MethodBase x, MethodBase y)
+        public override int Compare(MethodBase? x, MethodBase? y)
         {
             if (x.IsPublic != y.IsPublic)
             {

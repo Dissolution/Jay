@@ -1,14 +1,15 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using Jay.Comparison;
 using Jay.Reflection;
 using ParameterModifier = Jay.Reflection.Emission.ParameterModifier;
 
 namespace Jay.Reflection.Comparison
 {
-    public sealed class ParameterComplexityComparer : ComparerBase<ParameterInfo, ParameterComplexityComparer>
+    public sealed class ParameterComplexityComparer : Comparer<ParameterInfo>
     {
         /// <inheritdoc />
-        protected override int CompareImpl(ParameterInfo left, ParameterInfo right)
+        public override int Compare(ParameterInfo? left, ParameterInfo? right)
         {
             var lMod = left.GetParameterModifier();
             var rMod = right.GetParameterModifier();

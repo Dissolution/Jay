@@ -33,7 +33,8 @@ namespace Jay
         public static bool operator !(Result result) => !result._pass;
         
         public static readonly Result Pass = new Result(true, null);
-        public static Result Fail(Exception? exception) => new Result(false, exception ?? new Exception(DefaultErrorMessage));
+
+        public static Result Fail(Exception? exception = null) => new Result(false, exception ?? new Exception(DefaultErrorMessage));
         
         public static Result Try(Action? action)
         {
@@ -52,7 +53,7 @@ namespace Jay
             }
         }
         
-        public static Result Try<T>(Func<T?>? func, out T? value)
+        public static Result Try<T>(Func<T>? func, [MaybeNullWhen(false)] out T value)
         {
             if (func is null)
             {
@@ -92,8 +93,10 @@ namespace Jay
                 throw (_error ?? new Exception(DefaultErrorMessage));
             }
         }
+
+        public bool Failed() => !_pass;
         
-        public bool TryGetError([NotNullWhen(true)] out Exception? error)
+        public bool Failed([NotNullWhen(true)] out Exception? error)
         {
             if (_pass)
             {

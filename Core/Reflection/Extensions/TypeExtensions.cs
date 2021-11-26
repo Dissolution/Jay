@@ -61,12 +61,9 @@ namespace Jay.Reflection
                 .ThrowIfNull(exceptionMessage: $"Unable to find {nameof(RuntimeHelpers.IsReferenceOrContainsReferences)}")
                 .MakeGenericMethod(type);
             var result = MethodAdapter.TryAdapt<Func<bool>>(method);
-            if (!result.TryGetValue(out var func))
-            {
-                Debugger.Break();
-                throw result.GetException();
-            }
-            return func!();
+            var got = result.TryGetValue(out var func);
+            if (got) return func!();
+            throw got;
         }
 
         public static ConstructorInfo? GetConstructor(this Type type, BindingFlags bindingAttr, params Type[] types)

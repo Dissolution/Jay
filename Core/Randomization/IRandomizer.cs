@@ -26,6 +26,7 @@ namespace Jay.Randomization
         float Float();
         double Double();
         decimal Decimal();
+        decimal Decimal(int scale);
         
         TimeSpan TimeSpan();
         DateTime DateTime(DateTimeKind kind = DateTimeKind.Unspecified);
@@ -34,6 +35,8 @@ namespace Jay.Randomization
         bool Boolean();
         char Character();
         Guid Guid();
+        nint NInt();
+        nuint NUInt();
 
         TEnum Enum<TEnum>() where TEnum : unmanaged, Enum;
         
@@ -66,6 +69,12 @@ namespace Jay.Randomization
         /// <param name="exclusiveMaximum"></param>
         /// <returns></returns>
         uint ZeroTo(uint exclusiveMaximum);
+        /// <summary>
+        /// Generates a <see cref="int"/> value from 0 up to (but not including) the <paramref name="exclusiveMaximum"/>
+        /// </summary>
+        /// <param name="exclusiveMaximum"></param>
+        /// <returns></returns>
+        int ZeroTo(int exclusiveMaximum);
         /// <summary>
         /// Generates a <see cref="ulong"/> value from 0 up to (but not including) the <paramref name="exclusiveMaximum"/>
         /// </summary>

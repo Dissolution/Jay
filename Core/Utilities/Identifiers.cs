@@ -1,28 +1,21 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
+﻿using System;
+using System.Collections.Concurrent;
 
 namespace Jay
 {
     internal static class Identifiers
     {
-        private static readonly ConcurrentDictionary<string, int> _stringIdentifierCache =
-            new ConcurrentDictionary<string, int>();
+        private static readonly ConcurrentDictionary<Type, int> _stringIdentifierCache =
+            new ConcurrentDictionary<Type, int>();
 
         static Identifiers()
         {
             
         }
 
-        public static int GetNextId(string? key)
+        public static int GetNextId<T>(T? instance = default)
         {
-            return _stringIdentifierCache.AddOrUpdate(key ?? string.Empty, k => 0, (k, id) => id + 1);
-        }
-        
-        public static void GetMyId<T>([AllowNull] T instance, out int id)
-        {
-            id = GetNextId(typeof(T).GUID.ToString("N"));
+            return _stringIdentifierCache.AddOrUpdate(typeof(T), _ => 1, (_, i) => i + 1);
         }
     }
     
