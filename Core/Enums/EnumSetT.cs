@@ -1,1 +1,0 @@
-﻿// Idea: ISet<TEnum> wrapper around an Enum value!
