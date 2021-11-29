@@ -17,21 +17,21 @@ namespace Jay.Gambling.Cards
     [StructLayout(LayoutKind.Explicit, Size = 1)]
     public readonly struct Card : IEquatable<Card>
     {
-        private static readonly Display[] _displays;
+        //private static readonly Display[] _displays;
 
         static Card()
         {
-            _displays = new Display[byte.MaxValue];
-            for (Suit suit = Cards.Suit.Spade; suit <= Cards.Suit.Diamond; suit++)
-            {
-                char suitChar = suit.ToString()[0];
-                
-                for (Rank rank = Cards.Rank.Ace; rank <= Cards.Rank.King; rank++)
-                {
-                    byte card = (byte) (((int) rank) & ((int) suit << 4));
-                    //_displays[card] = new Display()
-                }
-            }
+            // _displays = new Display[byte.MaxValue];
+            // for (Suit suit = Cards.Suit.Spade; suit <= Cards.Suit.Diamond; suit++)
+            // {
+            //     char suitChar = suit.ToString()[0];
+            //     
+            //     for (Rank rank = Cards.Rank.Ace; rank <= Cards.Rank.King; rank++)
+            //     {
+            //         byte card = (byte) (((int) rank) & ((int) suit << 4));
+            //         //_displays[card] = new Display()
+            //     }
+            // }
         }
         
         //private (char Char, string Unicode)
@@ -44,7 +44,8 @@ namespace Jay.Gambling.Cards
             {
                 for (Rank rank = Rank.Ace; rank <= Rank.King; rank++)
                 {
-                    cards[i++] = (Card) ((int) rank & ((int) suit) << 4 & ((int) face << 6));
+                    int b =  ((int) rank | ((int) suit) << 4 | ((int) face << 6));
+                    cards[i++] = (Card) b;
                 }
             }
             return cards;

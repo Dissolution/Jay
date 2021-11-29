@@ -3,15 +3,19 @@
 //#define ASYNC
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Jay.Collections.Uber;
+using Jay.Comparison;
 using Jay.Debugging;
 using Jay.Gambling.Cards;
+using Jay.Logging;
 using Jay.Randomization;
 using Jay.Roulette;
 using Jay.Roulette.Gamblers;
@@ -180,6 +184,157 @@ namespace Jay.Sandbox
 
         }
 
+        
+        
+        internal static void AcesUp()
+        {
+            var rand = Randomizer.New();
+            var terminal = new TerminalText(TerminalBuffer.Instance);
+            var rankComparer = new FuncComparer<Rank>((x, y) =>
+            {
+                if (x == Rank.Ace)
+                    return 1;
+                if (y == Rank.Ace)
+                    return -1;
+                return x.CompareTo(y);
+            });
+            
+            
+            var cards = Card.GetDeck(Face.Up);
+            rand.Shuffle(cards);
+
+            var deck = new Stack<Card>(cards);
+            var piles = new Stack<Card>[4];
+            for (var i = 0; i < 4; i++)
+            {
+                piles[i] = new Stack<Card>();
+            }
+
+            Card card0;
+            Card card1;
+            Card card2;
+            Card card3;
+            
+            while (deck.Count > 0)
+            {
+                card0 = deck.Pop();
+                terminal.Append(card0).Append(" | ");
+                piles[0].Push(card0);
+                
+                card1 = deck.Pop();
+                terminal.Append(card1).Append(" | ");
+                piles[1].Push(card1);
+                
+                card2 = deck.Pop();
+                terminal.Append(card2).Append(" | ");
+                piles[2].Push(card2);
+                
+                card3 = deck.Pop();
+                terminal.Append(card3).NewLine();
+                piles[3].Push(card3);
+
+                TerminalBuffer.Instance.Flush();
+                
+                // Reduce
+                while (true)
+                {
+                    if (piles[0].TryPeek(out card0))
+                    {
+                        if (piles[1].TryPeek(out card1))
+                        {
+                            if (card0.Suit == card1.Suit)
+                            {
+                                var c = rankComparer.Compare(card0.Rank, card1.Rank);
+                                if (c < 0)
+                                    piles[0].Pop();
+                                else if (c > 0)
+                                    piles[1].Pop();
+                                continue;
+                            }
+                        }
+
+                        if (piles[2].TryPeek(out card2))
+                        {
+                            if (card0.Suit == card2.Suit)
+                            {
+                                var c = rankComparer.Compare(card0.Rank, card2.Rank);
+                                if (c < 0)
+                                    piles[0].Pop();
+                                else if (c > 0)
+                                    piles[2].Pop();
+                                continue;
+                            }
+                        }
+                        
+                        if (piles[3].TryPeek(out card3))
+                        {
+                            if (card0.Suit == card3.Suit)
+                            {
+                                var c = rankComparer.Compare(card0.Rank, card3.Rank);
+                                if (c < 0)
+                                    piles[0].Pop();
+                                else if (c > 0)
+                                    piles[3].Pop();
+                                continue;
+                            }
+                        }
+                    }
+                    if (piles[1].TryPeek(out card1))
+                    {
+                        if (piles[2].TryPeek(out card2))
+                        {
+                            if (card1.Suit == card2.Suit)
+                            {
+                                var c = rankComparer.Compare(card1.Rank, card2.Rank);
+                                if (c < 0)
+                                    piles[1].Pop();
+                                else if (c > 0)
+                                    piles[2].Pop();
+                                continue;
+                            }
+                        }
+                        
+                        if (piles[3].TryPeek(out card3))
+                        {
+                            if (card1.Suit == card3.Suit)
+                            {
+                                var c = rankComparer.Compare(card1.Rank, card3.Rank);
+                                if (c < 0)
+                                    piles[1].Pop();
+                                else if (c > 0)
+                                    piles[3].Pop();
+                                continue;
+                            }
+                        }
+                    }
+                    if (piles[2].TryPeek(out card2))
+                    {
+                        if (piles[3].TryPeek(out card3))
+                        {
+                            if (card2.Suit == card3.Suit)
+                            {
+                                var c = rankComparer.Compare(card2.Rank, card3.Rank);
+                                if (c < 0)
+                                    piles[2].Pop();
+                                else if (c > 0)
+                                    piles[3].Pop();
+                                continue;
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                if (piles.Any(p => p.Count == 0))
+                {
+                    // TODO: Logic to move card to empty piles
+                    Debugger.Break();
+                }
+                
+                Hold.Debug(deck);
+            }
+        }
+
         internal static void RouletteTests()
         {
               var rand = new Xoshiro256StarStarRandomizer();
@@ -314,7 +469,9 @@ namespace Jay.Sandbox
         
         public static int Main(params string?[] args)
         {
-            RouletteTests();
+            AcesUp();
+            
+            //RouletteTests();
             // var text = new ConsoleText();
             // var rand = Randomizer.New();
             // var playerA = new WarPlayer(rand);
