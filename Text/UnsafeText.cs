@@ -8,16 +8,15 @@ using System.Threading.Tasks;
 
 using static InlineIL.IL;
 
-namespace Jay.Text
+namespace Jay.Text;
+
+internal  static unsafe class UnsafeText
 {
-    internal  static unsafe class UnsafeText
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void WriteTwoChars(text source, Span<char> dest)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteTwoChars(text source, Span<char> dest)
-        {
-            Unsafe.WriteUnaligned(
-                ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(source)),
-                Unsafe.ReadUnaligned<int>(ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(dest))));
-        }
+        Unsafe.WriteUnaligned(
+                              ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(source)),
+                              Unsafe.ReadUnaligned<int>(ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(dest))));
     }
 }
