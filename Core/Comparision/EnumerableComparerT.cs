@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections;
 
 namespace Jay.Comparision;
 
@@ -81,23 +76,40 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T[]>,
         return false;
     }
 
-    public int GetHashCode(T[] obj)
+    public int GetHashCode(T[]? values)
     {
-        throw new NotImplementedException();
+        if (values is null) return 0;
+        var hashCode = new HashCode();
+        for (var i = 0; i < values.Length; i++)
+        {
+            hashCode.Add(values[i], _equalityComparer);
+        }
+        return hashCode.ToHashCode();
     }
 
-    public int GetHashCode(IEnumerable<T> obj)
+    public int GetHashCode(IEnumerable<T>? values)
     {
-        throw new NotImplementedException();
+        if (values is null) return 0;
+        var hashCode = new HashCode();
+        foreach (var value in values)
+        {
+            hashCode.Add(value, _equalityComparer);
+        }
+        return hashCode.ToHashCode();
     }
 
-    public int GetHashCode(T obj)
+    public int GetHashCode(T? value)
     {
-        throw new NotImplementedException();
+        if (value is null) return 0;
+        return _equalityComparer.GetHashCode(value);
     }
 
-    int IEqualityComparer.GetHashCode(object obj)
+    int IEqualityComparer.GetHashCode(object? obj)
     {
-        throw new NotImplementedException();
+        if (obj is null) return 0;
+        if (obj is T value) return GetHashCode(value);
+        if (obj is T[] array) return GetHashCode(array);
+        if (obj is IEnumerable<T> values) return GetHashCode(values);
+        return obj.GetHashCode();
     }
 }
