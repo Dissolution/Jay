@@ -1,89 +1,143 @@
-﻿using System.Diagnostics;
+﻿using System.Globalization;
 using System.Reflection;
 using System.Reflection.Emit;
+using Jay.Text;
 
-namespace Jay.Reflection.Building
+namespace Jay.Reflection.Building;
+
+public static class RuntimeBuilder
 {
-    public readonly struct MethodSig : IEquatable<MethodSig>
+    private static int _counter = 0;
+
+    public static AssemblyBuilder AssemblyBuilder { get; }
+    public static ModuleBuilder ModuleBuilder { get; }
+
+    static RuntimeBuilder()
     {
-        public static MethodSig Of<TDelegate>()
-            where TDelegate : Delegate
-        {
-            var invokeMethod = typeof(TDelegate).GetMethod("Invoke",
-                                                           BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
-            Debug.Assert(invokeMethod != null);
-            return MethodSig.Of(invokeMethod);
-        }
-
-        public static MethodSig Of(MethodBase method)
-        {
-            return new MethodSig(method.GetParameters(), method.ReturnType());
-        }
-
-        public static MethodSig Of(Type delegateType)
-        {
-            var invokeMethod = delegateType.GetMethod("Invoke",
-                                                      BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
-            if (invokeMethod is null)
-                throw new ArgumentException("Invalid Delegate Type: Does not have an Invoke method", nameof(delegateType));
-            return MethodSig.Of(invokeMethod);
-        }
-
-        public readonly Type ReturnType;
-        public readonly ParameterInfo[] Parameters;
-        public readonly Type[] ParameterTypes;
-        public int ParameterCount => Parameters.Length;
-
-        private MethodSig(ParameterInfo[] parameters, Type? returnType)
-        {
-            this.ReturnType = returnType ?? typeof(void);
-            this.Parameters = parameters;
-            this.ParameterTypes = new Type[parameters.Length];
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                ParameterTypes[i] = parameters[i].ParameterType;
-            }
-        }
-
-        public bool Equals(MethodSig sig)
-        {
-            return sig.ReturnType == this.ReturnType &&
-                Arraye
-        }
-
-        public override bool Equals(object? obj)
-        {
-            if (obj is MethodSig sig)
-                return Equals(sig);
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return base.ToString();
-        }
-
-       
+        AssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Jay.Reflection.Building.Dynamic"), AssemblyBuilderAccess.Run);
+        ModuleBuilder = AssemblyBuilder.DefineDynamicModule("RuntimeModuleBuilder");
     }
 
-    public static class RuntimeBuilder
+    //https://stackoverflow.com/questions/950616/what-characters-are-allowed-in-c-sharp-class-name
+    private static bool IsValidNameFirstChar(char ch)
     {
-        public static AssemblyBuilder AssemblyBuilder { get; }
-        public static ModuleBuilder ModuleBuilder { get; }
+        var category = char.GetUnicodeCategory(ch);
+        return ch == '_' ||
+               category == UnicodeCategory.UppercaseLetter ||
+               category == UnicodeCategory.LowercaseLetter ||
+               category == UnicodeCategory.TitlecaseLetter ||
+               category == UnicodeCategory.ModifierLetter ||
+               category == UnicodeCategory.OtherLetter;
+    }
 
-        static RuntimeBuilder()
+    private static bool IsValidNameChar(char ch)
+    {
+        var category = char.GetUnicodeCategory(ch);
+        return category == UnicodeCategory.UppercaseLetter ||
+               category == UnicodeCategory.LowercaseLetter ||
+               category == UnicodeCategory.TitlecaseLetter ||
+               category == UnicodeCategory.ModifierLetter ||
+               category == UnicodeCategory.OtherLetter ||
+               category == UnicodeCategory.LetterNumber ||
+               category == UnicodeCategory.NonSpacingMark ||
+               category == UnicodeCategory.SpacingCombiningMark ||
+               category == UnicodeCategory.DecimalDigitNumber ||
+               category == UnicodeCategory.ConnectorPunctuation ||
+               category == UnicodeCategory.Format;
+    }
+
+    private static bool TryBuildName(string? name, TextBuilder builder)
+    {
+        if (name is null || name.Length == 0)
+            return false;
+        int start;
+        char ch = name[0];
+        if (IsValidNameFirstChar(ch))
         {
-            AssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Jay.Reflection.Building.Dynamic"), AssemblyBuilderAccess.Run);
-            ModuleBuilder = AssemblyBuilder.DefineDynamicModule("RuntimeModuleBuilder");
+            builder.Append(ch);
+            start = 1;
+        }
+        else
+        {
+            builder.Append('_');
+            start = 0;
         }
 
-        public static DynamicMethod CreateDynamicMethod(string? name)
+        for (var i = start; i < name.Length; i++)
         {
-
+            ch = name[i];
+            if (IsValidNameChar(ch))
+            {
+                builder.Append(ch);
+            }
         }
+        return builder.Length > start;
+    }
+
+    public static string FormatMethodName(string? name, MethodSig methodSig)
+    {
+        using var builder = new TextBuilder();
+        if (!TryBuildName(name, builder))
+        {
+            builder.Clear();
+            if (methodSig.IsAction)
+            {
+                builder.Append("Action_");
+            }
+            else
+            {
+                builder.Append("Func_");
+            }
+            var ctr = Interlocked.Increment(ref _counter);
+            builder.Append(ctr);
+        }
+        return builder.ToString();
+    }
+
+    public static string FormatTypeName(string? name, TypeAttributes typeAttributes)
+    {
+        using var builder = new TextBuilder();
+        if (!TryBuildName(name, builder))
+        {
+            builder.Clear();
+            if (typeAttributes == TypeAttributes.Class ||
+                typeAttributes == TypeAttributes.AnsiClass ||
+                typeAttributes == TypeAttributes.AutoClass ||
+                typeAttributes == TypeAttributes.UnicodeClass)
+            {
+                builder.Append("Class_");
+            }
+            else
+            {
+                builder.Append("Struct_");
+            }
+            var ctr = Interlocked.Increment(ref _counter);
+            builder.Append(ctr);
+        }
+        return builder.ToString();
+    }
+
+    public static DynamicMethod CreateDynamicMethod(string? name,
+                                                    MethodSig methodSig)
+    {
+        return new DynamicMethod(FormatMethodName(name, methodSig),
+            MethodAttributes.Public | MethodAttributes.Static,
+            CallingConventions.Standard,
+            methodSig.ReturnType,
+            methodSig.ParameterTypes,
+            ModuleBuilder,
+            true);
+    }
+
+    public static DynamicMethod<TDelegate> CreateDynamicMethod<TDelegate>(string? name)
+        where TDelegate : Delegate
+    {
+        return new DynamicMethod<TDelegate>(CreateDynamicMethod(name, MethodSig.Of<TDelegate>()));
+    }
+
+    public static TypeBuilder DefineType(string? name, TypeAttributes typeAttributes)
+    {
+        return ModuleBuilder.DefineType(FormatTypeName(name, typeAttributes),
+            typeAttributes, typeof(RuntimeBuilder));
     }
 }

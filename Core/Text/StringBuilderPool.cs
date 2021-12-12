@@ -2,34 +2,33 @@
 using Jay.Collections.Pools;
 using System;
 
-namespace Jay.Text
+namespace Jay.Text;
+
+public static class StringBuilderPool
 {
-    public static class StringBuilderPool
+    private static readonly ObjectPool<StringBuilder> _pool;
+
+    static StringBuilderPool()
     {
-        private static readonly ObjectPool<StringBuilder> _pool;
+        _pool = new ObjectPool<StringBuilder>(() => new StringBuilder(1024),
+            sb => sb.Clear());
+    }
 
-        static StringBuilderPool()
-        {
-            _pool = new ObjectPool<StringBuilder>(() => new StringBuilder(1024),
-                                                  sb => sb.Clear());
-        }
-
-        public static string Build(Action<StringBuilder> buildText)
-        {
-            var sb = _pool.Rent();
-            buildText(sb);
-            string str = sb.ToString();
-            _pool.Return(sb);
-            return str;
-        }
+    public static string Build(Action<StringBuilder> buildText)
+    {
+        var sb = _pool.Rent();
+        buildText(sb);
+        string str = sb.ToString();
+        _pool.Return(sb);
+        return str;
+    }
         
-        public static string Build<TState>(TState state, Action<StringBuilder, TState> buildText)
-        {
-            var sb = _pool.Rent();
-            buildText(sb, state);
-            string str = sb.ToString();
-            _pool.Return(sb);
-            return str;
-        }
+    public static string Build<TState>(TState state, Action<StringBuilder, TState> buildText)
+    {
+        var sb = _pool.Rent();
+        buildText(sb, state);
+        string str = sb.ToString();
+        _pool.Return(sb);
+        return str;
     }
 }

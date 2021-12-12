@@ -1,29 +1,28 @@
 ﻿using System.Reflection;
 
-namespace Jay.Reflection
+namespace Jay.Reflection;
+
+public static class PropertyInfoExtensions
 {
-    public static class PropertyInfoExtensions
+    public static MethodInfo? GetGetter(this PropertyInfo? propertyInfo)
     {
-        public static MethodInfo? GetGetter(this PropertyInfo? propertyInfo)
-        {
-            return propertyInfo?.GetGetMethod(false) ??
-                   propertyInfo?.GetGetMethod(true);
-        }
+        return propertyInfo?.GetGetMethod(false) ??
+               propertyInfo?.GetGetMethod(true);
+    }
         
-        public static MethodInfo? GetSetter(this PropertyInfo? propertyInfo)
-        {
-            return propertyInfo?.GetSetMethod(false) ??
-                   propertyInfo?.GetSetMethod(true);
-        }
+    public static MethodInfo? GetSetter(this PropertyInfo? propertyInfo)
+    {
+        return propertyInfo?.GetSetMethod(false) ??
+               propertyInfo?.GetSetMethod(true);
+    }
         
-        public static Access Access(this PropertyInfo? propertyInfo)
-        {
-            Access access = Reflection.Access.None;
-            if (propertyInfo is null)
-                return access;
-            access |= propertyInfo.GetGetter().Access();
-            access |= propertyInfo.GetSetter().Access();
+    public static Access Access(this PropertyInfo? propertyInfo)
+    {
+        Access access = Reflection.Access.None;
+        if (propertyInfo is null)
             return access;
-        }
+        access |= propertyInfo.GetGetter().Access();
+        access |= propertyInfo.GetSetter().Access();
+        return access;
     }
 }

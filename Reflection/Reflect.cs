@@ -1,12 +1,11 @@
 ﻿using System.Reflection;
 
-namespace Jay.Reflection
+namespace Jay.Reflection;
+
+public class Reflect
 {
-    public class Reflect
-    {
-        public const BindingFlags AllFlags = BindingFlags.Public | BindingFlags.NonPublic |
-                                             BindingFlags.Static | BindingFlags.Instance |
-                                             BindingFlags.IgnoreCase;
+    public const BindingFlags AllFlags = BindingFlags.Public | BindingFlags.NonPublic |
+                                         BindingFlags.Static | BindingFlags.Instance |
+                                         BindingFlags.IgnoreCase;
         
-    }
 }

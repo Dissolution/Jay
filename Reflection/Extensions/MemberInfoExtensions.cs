@@ -1,31 +1,43 @@
 ﻿using System;
 using System.Reflection;
 
-namespace Jay.Reflection
+namespace Jay.Reflection;
+
+public static class MemberInfoExtensions
 {
-    public static class MemberInfoExtensions
+    public static Type? OwnerType(this MemberInfo? memberInfo)
     {
-        public static Type? OwnerType(this MemberInfo? memberInfo)
+        return memberInfo?.ReflectedType ??
+               memberInfo?.DeclaringType;
+    }
+
+    public static bool TryGetInstanceType(this MemberInfo? memberInfo, out Type? instanceType)
+    {
+        var ownerType = memberInfo.OwnerType();
+        if (ownerType is null)
         {
-            return memberInfo?.ReflectedType ??
-                   memberInfo?.DeclaringType;
+            instanceType = null;
+            return false;
         }
 
-        public static Access Access(this MemberInfo? memberInfo)
-        {
-            if (memberInfo is FieldInfo fieldInfo)
-                return fieldInfo.Access();
-            if (memberInfo is PropertyInfo propertyInfo)
-                return propertyInfo.Access();
-            if (memberInfo is EventInfo eventInfo)
-                return eventInfo.Access();
-            if (memberInfo is ConstructorInfo constructorInfo)
-                return constructorInfo.Access();
-            if (memberInfo is MethodBase methodBase)
-                return methodBase.Access();
-            if (memberInfo is Type type)
-                return type.Access();
-            return Reflection.Access.None;
-        }
+        instanceType = ownerType;
+        return !instanceType.IsStatic();
+    }
+
+    public static Access Access(this MemberInfo? memberInfo)
+    {
+        if (memberInfo is FieldInfo fieldInfo)
+            return fieldInfo.Access();
+        if (memberInfo is PropertyInfo propertyInfo)
+            return propertyInfo.Access();
+        if (memberInfo is EventInfo eventInfo)
+            return eventInfo.Access();
+        if (memberInfo is ConstructorInfo constructorInfo)
+            return constructorInfo.Access();
+        if (memberInfo is MethodBase methodBase)
+            return methodBase.Access();
+        if (memberInfo is Type type)
+            return type.Access();
+        return Reflection.Access.None;
     }
 }
