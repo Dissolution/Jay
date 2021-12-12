@@ -19,5 +19,16 @@ namespace Jay.Reflection
                 access |= Reflection.Access.Public;
             return access;
         }
+
+        public static Type ReturnType(this MethodBase? method)
+        {
+            if (method is null)
+                return typeof(void);
+            if (method is MethodInfo methodInfo)
+                return methodInfo.ReturnType;
+            if (method is ConstructorInfo constructorInfo)
+                return constructorInfo.DeclaringType!;
+            return typeof(void);
+        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 // ReSharper disable MethodOverloadWithOptionalParameter
 
@@ -19,27 +20,27 @@ namespace Jay.Collections.Pools
     ///     - Not returning objects to the pool in not detrimental to the pool's work, but is a bad practice. 
     ///       - If there is no intent for reusing the object, do not use pool
     /// </remarks>
-    public sealed class ObjectPool<T> : IDisposable
+    public sealed class AsyncObjectPool<T> : IAsyncDisposable
         where T : class
     {
         /// <summary>
         ///     An <see cref="IDisposable"/> wrapper around returning an instance to an object pool
         /// </summary>
-        private sealed class PoolReturner : IDisposable
+        private sealed class PoolReturner : IAsyncDisposable
         {
-            private readonly ObjectPool<T> _pool;
+            private readonly AsyncObjectPool<T> _pool;
             private T? _instance;
 
-            public PoolReturner(ObjectPool<T> pool, T instance)
+            public PoolReturner(AsyncObjectPool<T> pool, T instance)
             {
                 _pool = pool;
                 _instance = instance;
             }
 
-            public void Dispose()
+            public async ValueTask DisposeAsync()
             {
                 T? instance = Interlocked.Exchange(ref _instance, null);
-                _pool.Return(instance);
+                await _pool.ReturnAsync(instance);
             }
         }
         
@@ -71,23 +72,23 @@ namespace Jay.Collections.Pools
         /// <summary>
         /// Value creation factory.
         /// </summary>
-        private readonly Func<T> _factory;
+        private readonly AsyncFunc<T> _factory;
 
-        private readonly Action<T>? _clean;
+        private readonly AsyncAction<T>? _clean;
 
-        private readonly Action<T>? _dispose;
+        private readonly AsyncAction<T>? _dispose;
 
-        public ObjectPool(Func<T> factory,
-                          Action<T>? clean = null,
-                          Action<T>? dispose = null)
+        public AsyncObjectPool(AsyncFunc<T> factory,
+                               AsyncAction<T>? clean = null,
+                               AsyncAction<T>? dispose = null)
             : this(Pool.DefaultCapacity, factory, clean, dispose)
         {
         }
 
-        public ObjectPool(int capacity,
-                          Func<T> factory,
-                          Action<T>? clean = null,
-                          Action<T>? dispose = null)
+        public AsyncObjectPool(int capacity,
+                               AsyncFunc<T> factory,
+                               AsyncAction<T>? clean = null,
+                               AsyncAction<T>? dispose = null)
         {
             if (capacity < 1 || capacity > Pool.MaxCapacity)
             {
@@ -101,10 +102,6 @@ namespace Jay.Collections.Pools
             // We have a _firstItem
             _items = new Item[capacity - 1];
         }
-        ~ObjectPool()
-        {
-            this.Dispose();
-        }
 
         internal bool IsDisposed
         {
@@ -115,7 +112,7 @@ namespace Jay.Collections.Pools
         /// <summary>
         /// When we cannot find an available item quickly with Rent()
         /// </summary>
-        private T RentSlow()
+        private async Task<T> RentSlowAsync()
         {
             var items = _items;
             T? instance;
@@ -137,10 +134,10 @@ namespace Jay.Collections.Pools
             }
 
             //Just create a new value.
-            return _factory();
+            return await _factory();
         }
 
-        private void ReturnSlow(T instance)
+        private async Task ReturnSlowAsync(T instance)
         {
             var items = _items;
             for (var i = 0; i < items.Length; i++)
@@ -157,17 +154,20 @@ namespace Jay.Collections.Pools
             }
 
             // We couldn't store this value
-            _dispose?.Invoke(instance);
+            if (_dispose != null)
+            {
+                await _dispose(instance);
+            }
         }
 
         /// <summary>
-        /// Rents a <typeparamref name="T"/> instance that should be <see cref="Return"/>ed once it is done being used.
+        /// Rents a <typeparamref name="T"/> instance that should be <see cref="ReturnAsync"/>ed once it is done being used.
         /// </summary>
         /// <remarks>
         /// Search strategy is a simple linear probing which is chosen for it cache-friendliness.
         /// Note that Free will try to store recycled objects close to the start thus statistically reducing how far we will typically search.
         /// </remarks>
-        public T Rent()
+        public async Task<T> RentAsync()
         {
             if (IsDisposed)
                 throw new ObjectDisposedException(this.GetType().Name);
@@ -181,7 +181,7 @@ namespace Jay.Collections.Pools
             T? instance = _firstItem;
             if (instance is null || instance != Interlocked.CompareExchange<T?>(ref _firstItem, null, instance))
             {
-                instance = RentSlow();
+                instance = await RentSlowAsync();
             }
             return instance;
         }
@@ -194,12 +194,15 @@ namespace Jay.Collections.Pools
         /// Note that Free will try to store recycled objects close to the start thus statistically 
         /// reducing how far we will typically search in Allocate.
         /// </remarks>
-        public void Return(T? instance)
+        public async Task ReturnAsync(T? instance)
         {
             if (instance is null) return;
 
             // Always clean the item
-            _clean?.Invoke(instance);
+            if (_clean != null)
+            {
+                await _clean(instance);
+            }
             
             // Disposed check
             if (IsDisposed)
@@ -217,25 +220,13 @@ namespace Jay.Collections.Pools
             }
 
             // We have to try to return it to the pool (and this will also clean it up if it cannot be)
-            ReturnSlow(instance);
-        }
-
-        /// <summary>
-        /// Rents a <typeparamref name="T"/> instance that will be returned the result of this operation is disposed.
-        /// </summary>
-        /// <param name="instance">A fresh instance to be used, it will automatically be returned upon disposal.</param>
-        /// <returns>An <see cref="IDisposable"/> that will return the <paramref name="instance"/>. </returns>
-        /// <remarks><paramref name="instance"/> must not be used after this is disposed.</remarks>
-        public IDisposable Borrow(out T instance)
-        {
-            instance = Rent();
-            return new PoolReturner(this, instance);
+            await ReturnSlowAsync(instance);
         }
         
         /// <summary>
         /// Frees all stored <typeparamref name="T"/> instances.
         /// </summary>
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             if (Interlocked.Increment(ref _disposed) > 1) return;
             if (_dispose != null)
@@ -243,17 +234,16 @@ namespace Jay.Collections.Pools
                 var dispose = _dispose!;
                 T? item = Reference.Exchange(ref _firstItem, null);
                 if (item != null)
-                    dispose(item);
+                    await dispose(item);
                 var items = _items;
                 for (var i = 0; i < items.Length; i++)
                 {
                     item = Reference.Exchange(ref items[i].Value, null);
                     if (item != null)
-                        dispose(item);
+                        await dispose(item);
                 }
             }
             Debug.Assert(_items.All(item => item.Value is null));
-            GC.SuppressFinalize(this);
         }
     }
 }

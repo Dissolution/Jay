@@ -1,9 +1,8 @@
-﻿using System;
-using Jay.Text;
+﻿using Jay.Text;
 
 namespace Jay.Reflection
 {
-    public readonly struct NameMatch
+    public readonly struct NameMatch : IRenderable
     {
         public static implicit operator NameMatch(string name) => new NameMatch(name, MatchType.Exact);
         public static implicit operator NameMatch((string Name, MatchType MatchType) tuple) => new NameMatch(tuple.Name, tuple.MatchType);
@@ -68,27 +67,38 @@ namespace Jay.Reflection
             return hasher.ToHashCode();
         }
 
-        /// <inheritdoc />
         public override string ToString()
         {
-            if (Name is null) return "*";
-            return StringBuilderPool.Build(this, (text, nm) =>
+            return IRenderable.Render(this);
+        }
+
+        public void Render(ref StringHandler handler)
+        {
+            if (Name is null)
             {
-                if (nm.MatchType.HasFlag<MatchType>(MatchType.EndsWith))
-                    text.Append('*');
-                
-                if (nm.MatchType.HasFlag<MatchType>(MatchType.IgnoreCase))
+                handler.Append('*');
+            }
+            else
+            {
+                if (this.MatchType.HasFlag<MatchType>(MatchType.EndsWith))
                 {
-                    text.Append(nm.Name!.ToUpper());
+                    handler.Append('*');
+                }
+
+                if (this.MatchType.HasFlag<MatchType>(MatchType.IgnoreCase))
+                {
+                    handler.Append(Name!.ToUpper());
                 }
                 else
                 {
-                    text.Append(nm.Name!);
+                    handler.Append(this.Name!);
                 }
 
-                if (nm.MatchType.HasFlag<MatchType>(MatchType.BeginsWith))
-                    text.Append('*');
-            });
+                if (this.MatchType.HasFlag<MatchType>(MatchType.BeginsWith))
+                {
+                    handler.Append('*');
+                }
+            }
         }
     }
 }
