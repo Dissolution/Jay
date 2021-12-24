@@ -235,7 +235,9 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
             int index = _length;
             if (index < chars.Length - 1)
             {
-                UnsafeText.WriteTwoChars(value, Available);
+                TextHelper.CopyTo(in value.GetPinnableReference(),
+                                  ref chars[index],
+                                  2);
                 _length = index + 2;
             }
             else

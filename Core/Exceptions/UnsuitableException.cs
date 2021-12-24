@@ -34,7 +34,7 @@ namespace Jay.Exceptions
         }
 
         /// <summary>
-        /// Throws a new <see cref="UnsuitableForGetHashCodeException"/>
+        /// Throws a new <see cref="UnsuitableForComparisonException"/>
         /// </summary>
         [DoesNotReturn]
         public static bool ThrowEquals<T>(T? instance = default)
@@ -43,7 +43,7 @@ namespace Jay.Exceptions
         }
 
         /// <summary>
-        /// Throws a new <see cref="UnsuitableForGetHashCodeException"/> for the given <paramref name="instanceType"/>
+        /// Throws a new <see cref="UnsuitableForComparisonException"/> for the given <paramref name="instanceType"/>
         /// </summary>
         [DoesNotReturn]
         public static bool ThrowEquals(Type instanceType)
