@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Jay;
 
@@ -83,6 +84,7 @@ public readonly struct Result : IEquatable<Result>
         _error = error;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ThrowIfFailed()
     {
         if (!_pass)

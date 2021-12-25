@@ -1,10 +1,61 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Jay.Reflection.Building.Emission;
 
-public interface IEmitter<TEmitter>
+public interface IInstructionStreamer
+{
+    InstructionStream Instructions { get; }
+}
+
+internal abstract class InstructionStreamer : IInstructionStreamer
+{
+    protected readonly InstructionStream _instructions;
+    protected readonly IInstructionFactory _instructionFactory;
+
+    public InstructionStream Instructions => _instructions;
+
+    protected InstructionStreamer(IInstructionFactory instructionFactory)
+    {
+        _instructions = new InstructionStream();
+        _instructionFactory = instructionFactory;
+    }
+
+    protected virtual void AddInstruction(OpCode opCode, object? operand = null)
+    {
+        var instruction = _instructionFactory.Create(opCode, operand);
+        _instructions.AddLast(instruction);
+    }
+
+    protected virtual void AddInstruction(ILGeneratorMethod method, object? arg = null)
+    {
+        var instruction = _instructionFactory.Create(method, arg);
+        _instructions.AddLast(instruction);
+    }
+}
+
+internal abstract class Emitter<T> : InstructionStreamer,
+                                     IEmitter<T>
+    where T : Emitter<T>
+{
+    protected T _this;
+
+    protected Emitter(IInstructionFactory instructionFactory)
+        : base(instructionFactory)
+    {
+        _this = (T)this;
+    }
+
+    public T Emit(OpCode opCode)
+    {
+        AddInstruction(opCode);
+        return _this;
+    }
+}
+
+public interface IEmitter<TEmitter> : IInstructionStreamer
     where TEmitter : IEmitter<TEmitter>
 {
     TEmitter Emit(OpCode opCode);

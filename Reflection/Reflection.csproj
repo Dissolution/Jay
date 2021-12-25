@@ -24,8 +24,4 @@
     <ProjectReference Include="..\Text\Text.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Building\Emission\" />
-  </ItemGroup>
-
 </Project>
