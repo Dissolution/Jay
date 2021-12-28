@@ -2,38 +2,22 @@
 using System.Text;
 
 using Jay.Extensions;
+using Jay.Text;
 
 namespace Jay.Reflection.Building.Emission;
 
-public class InstructionStream : LinkedList<Instruction>
+public class InstructionStream : LinkedList<IInstruction>
 {
-    public Instruction? FindInstruction(int offset)
+    public IOpCodeInstruction? FindOpCodeInstructionWithOffset(int offset)
     {
         if (offset < 0 || this.Count == 0)
             return null;
-        var last = this.Last!;
-        if (offset > last.Value.Offset)
-            return null;
-        var first = this.First!;
-        if (offset - first.Value.Offset <= last.Value.Offset - offset)
+        foreach (var node in this.OfType<IOpCodeInstruction>())
         {
-            var node = first;
-            while (node is not null)
-            {
-                if (node.Value.Offset == offset)
-                    return node.Value;
-                node = node.Next;
-            }
-        }
-        else
-        {
-            var node = last;
-            while (node is not null)
-            {
-                if (node.Value.Offset == offset)
-                    return node.Value;
-                node = node.Previous;
-            }
+            if (node.Offset == offset)
+                return node;
+            if (node.Offset > offset)
+                return null;
         }
         return null;
     }
@@ -42,47 +26,93 @@ public class InstructionStream : LinkedList<Instruction>
 public enum ILGeneratorMethod
 {
     None = 0,
+
+    MarkLabel, // arg = Label
 }
 
 public interface IInstructionFactory
 {
-    public Instruction Create(OpCode opCode, object? operand = null);
-    public Instruction Create(ILGeneratorMethod method, object? arg = null);
+
 }
 
-public sealed class Instruction
+public interface IOpCodeInstructionFactory : IInstructionFactory
 {
-    private static void AppendLabel(StringBuilder builder, Instruction instruction)
+    IOpCodeInstruction Create(OpCode opCode, object? operand = null);
+}
+
+public interface IGeneratorInstructionFactory : IInstructionFactory
+{
+    IGeneratorInstruction Create(ILGeneratorMethod method, object? arg = null);
+}
+
+public interface IInstruction : IEquatable<IInstruction>, IRenderable
+{
+
+}
+
+public interface IOpCodeInstruction : IInstruction, IEquatable<IOpCodeInstruction>
+{
+    int Offset { get; }
+    OpCode OpCode { get; }
+    object? Operand { get; }
+}
+
+public interface IGeneratorInstruction : IInstruction
+{
+    ILGeneratorMethod Method { get; }
+    object? Arg { get; }
+}
+
+internal class GeneratorInstructionFactory : IGeneratorInstructionFactory
+{
+    protected readonly ILGenerator _ilGenerator;
+
+    public GeneratorInstructionFactory(ILGenerator ilGenerator)
     {
-        if (instruction.Offset.TryGetValue(out var offset))
-        {
-            builder.Append("IL_")
-                .Append(offset.ToString("x4"));
-        }
-        else
-        {
-            builder.Append("       ");   // 7 spaces
-        }
+        _ilGenerator = ilGenerator;
     }
 
-    public int? Offset { get; }
+    public IGeneratorInstruction Create(ILGeneratorMethod method, object? arg = null)
+    {
+        switch (method)
+        {
+            case ILGeneratorMethod.None:
+                throw new NotImplementedException();
+            case ILGeneratorMethod.MarkLabel:
+            {
+                if (arg is not Label lbl)
+                    throw new ArgumentException("MarkLabel must be accompanied by a Label", nameof(arg));
+                return new MarkLabelInstruction(lbl);
+            }
+            default:
+                throw new NotImplementedException();
+        }
+    }
+}
+
+internal sealed class OpCodeInstruction : IOpCodeInstruction
+{
+    private static TextBuilder AppendLabel(TextBuilder builder, IOpCodeInstruction instruction)
+    {
+        return builder.Append("IL_")
+               .Append(instruction.Offset.ToString("x4"));
+    }
+
+    public int Offset { get; }
     public OpCode OpCode { get; }
-    public ILGeneratorMethod ILGeneratorMethod { get; }
     public object? Operand { get; internal set; }
 
     public int Size
     {
         get
         {
-            if (ILGeneratorMethod != ILGeneratorMethod.None)
-                return 0;
             int size = OpCode.Size;
 
             switch (OpCode.OperandType)
             {
                 case OperandType.InlineSwitch:
                     {
-                        if (!(Operand is Instruction[] instructions))
+                        if (!(Operand is IInstruction[] instructions))
                             throw new InvalidOperationException();
                         size += (1 + instructions.Length) * 4;
                         break;
@@ -115,85 +145,110 @@ public sealed class Instruction
         }
     }
 
-    internal Instruction(int offset, OpCode opCode, object? operand = null)
+    public OpCodeInstruction(int offset, OpCode opCode, object? operand = null)
     {
         this.Offset = offset;
         this.OpCode = opCode;
-        this.ILGeneratorMethod = ILGeneratorMethod.None;
-        this.Operand = operand;
-    }
-    internal Instruction(ILGeneratorMethod ilGeneratorMethod, object? operand = null)
-    {
-        this.Offset = null;
-        this.OpCode = default;
-        this.ILGeneratorMethod = ilGeneratorMethod;
         this.Operand = operand;
     }
 
-    public override string ToString()
+    public bool Equals(IInstruction? instruction)
     {
-        var instruction = new StringBuilder();
+        return instruction is IOpCodeInstruction opCodeInstruction && Equals(opCodeInstruction);
+    }
 
-        AppendLabel(instruction, this);
-        instruction.Append(':');
-        instruction.Append(' ');
-        if (ILGeneratorMethod != ILGeneratorMethod.None)
+    public bool Equals(IOpCodeInstruction? instruction)
+    {
+        return instruction is not null &&
+               instruction.Offset == this.Offset &&
+               instruction.OpCode == this.OpCode &&
+               Equals(instruction.Operand, this.Operand);
+    }
+
+    public void Render(TextBuilder text)
+    {
+        AppendLabel(text, this).Append(": ").Append(OpCode.Name);
+        if (Operand is not null)
         {
-            instruction.Append(ILGeneratorMethod)
-                .Append('(');
-            if (Operand is Array array)
+            text.Append(' ');
+
+            switch (OpCode.OperandType)
             {
-                for (var i = 0; i < array.Length; i++)
-                {
-                    if (i > 0)
+                case OperandType.ShortInlineBrTarget:
+                case OperandType.InlineBrTarget:
+                    AppendLabel(text, (IOpCodeInstruction)Operand);
+                    break;
+                case OperandType.InlineSwitch:
+                    var labels = (IOpCodeInstruction[])Operand;
+                    for (int i = 0; i < labels.Length; i++)
                     {
-                        instruction.Append(',');
-                    }
-                    instruction.Append(array.GetValue(i));
-                }
-            }
-            else
-            {
-                instruction.Append(Operand);
-            }
-        }
-        else
-        {
-            instruction.Append(OpCode.Name);
-
-            if (Operand is not null)
-            {
-                instruction.Append(' ');
-
-                switch (OpCode.OperandType)
-                {
-                    case OperandType.ShortInlineBrTarget:
-                    case OperandType.InlineBrTarget:
-                        AppendLabel(instruction, (Instruction)Operand);
-                        break;
-                    case OperandType.InlineSwitch:
-                        var labels = (Instruction[])Operand;
-                        for (int i = 0; i < labels.Length; i++)
+                        if (i > 0)
                         {
-                            if (i > 0)
-                                instruction.Append(',');
-
-                            AppendLabel(instruction, labels[i]);
+                            text.Append(',');
                         }
+                        AppendLabel(text, labels[i]);
+                    }
 
-                        break;
-                    case OperandType.InlineString:
-                        instruction.Append('\"');
-                        instruction.Append(Operand);
-                        instruction.Append('\"');
-                        break;
-                    default:
-                        instruction.Append(Operand);
-                        break;
-                }
+                    break;
+                case OperandType.InlineString:
+                    text.Append('\"').Append(Operand).Append('\"');
+                    break;
+                default:
+                    text.Append(Operand);
+                    break;
             }
         }
+    }
 
-        return instruction.ToString();
+    public override bool Equals(object? obj)
+    {
+        if (obj is IOpCodeInstruction instruction)
+            return Equals(instruction);
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Offset, OpCode, Operand);
+    }
+}
+
+public abstract class GeneratorInstruction : IGeneratorInstruction
+{
+    public ILGeneratorMethod Method { get; }
+    public object? Arg { get; }
+
+    protected GeneratorInstruction(ILGeneratorMethod method, object? arg)
+    {
+        Method = method;
+        Arg = arg;
+    }
+
+    public bool Equals(IInstruction? instruction)
+    {
+        return instruction is GeneratorInstruction generatorInstruction && 
+               generatorInstruction.Method == this.Method &&
+               Equals(generatorInstruction.Arg, this.Arg);
+    }
+
+    public virtual void Render(TextBuilder builder)
+    {
+        builder.Append(Method).Append('(').Append(Arg).Append(')');
+    }
+}
+
+public sealed class MarkLabelInstruction : GeneratorInstruction
+{
+    public Label Label { get; }
+
+    public MarkLabelInstruction(Label label)
+        : base(ILGeneratorMethod.MarkLabel, label)
+    {
+        this.Label = label;
+    }
+
+    public override void Render(TextBuilder builder)
+    {
+        builder.Append("MarkLabel IL_").AppendFormat(Label.GetHashCode(), "X4");
     }
 }
