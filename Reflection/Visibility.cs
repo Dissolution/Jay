@@ -3,7 +3,7 @@
 namespace Jay.Reflection;
 
 [Flags]
-public enum Access
+public enum Visibility
 {
     None = 0,
     Private = 1 << 0,

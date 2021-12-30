@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
 
 namespace Jay.Reflection;
@@ -45,12 +47,85 @@ internal class MethodAdapter : IMethodAdapter
         this.Safety = safety;
     }
 
-    protected Result TryLoadInstance(InstructionStream ilStream, MethodBase method, ref int pOffset)
+    protected Result ThinkWeCanLoadArgs(MethodBase method, MethodSig sig, int pOffset)
     {
 
     }
 
-    public Result TryAdapt(Type delegateType, MethodBase method, [NotNullWhen(true)] out Delegate? @delegate)
+    protected Result TryLoadInstance(InstructionStream ilStream, Type instanceType, MethodSig sig, out int pOffset)
+    {
+        Debug.Assert(instanceType != null);
+        Debug.Assert(instanceType != typeof(void));
+        Debug.Assert(!instanceType.IsStatic());
+        if (sig.ParameterCount == 0)
+        {
+            pOffset = default;
+            return new ArgumentException("No instance parameter provided");
+        }
+        Debug.Assert(sig.ParameterCount >= 1);
+        var sigInstance = sig.Parameters[0];
+        var sigInstAccess = sigInstance.GetAccess(out var sigInstType);
+        // If we have exactly what we need
+        if (instanceType.IsValueType)
+        {
+            // We really want to get a ref instance for a value type, it produces no side effects
+            if (sigInstAccess == ParameterInfoExtensions.Access.In ||
+                sigInstAccess == ParameterInfoExtensions.Access.Ref)
+            {
+
+            }
+        }
+    }
+
+    protected Result TryLoadInstance(InstructionStream ilStream, MethodBase method, MethodSig sig, out int pOffset)
+    {
+        // Static method?
+        if (method.IsStatic)
+        {
+            // We do not have to load an instance
+            if (sig.ParameterCount == 0)
+            {
+                // All good
+                pOffset = 0;
+                return true;
+            }
+
+            Debug.Assert(sig.ParameterCount >= 1);
+
+            // We want to check if a throwaway one was provided
+            var possibleInstanceType = sig.Parameters[0].ParameterType;
+            if (possibleInstanceType == typeof(void) || possibleInstanceType == typeof(Static))
+            {
+                // Use this throwaway
+                pOffset = 1;
+                return true;
+            }
+            // We can accept Type in only specific circumstances
+            if (possibleInstanceType == typeof(Type))
+            {
+                var result = ThinkWeCanLoadArgs(method, sig, 1);
+                if (result)
+                {
+                    pOffset = 1;
+                    return result;
+                }
+            }
+            
+            // Assume none was provided
+            pOffset = 0;
+            return true;
+        }
+
+
+
+        var owner = method.ReflectedType;
+        if (owner is not null)
+        {
+
+        }
+    }
+
+    public Result TryAdapt(MethodBase method, Type delegateType, [NotNullWhen(true)] out Delegate? @delegate)
     {
         throw new NotImplementedException();
     }
@@ -58,7 +133,7 @@ internal class MethodAdapter : IMethodAdapter
     public Result TryAdapt<TDelegate>(MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate) 
         where TDelegate : Delegate
     {
-        var result = TryAdapt(typeof(TDelegate), method, out var del);
+        var result = TryAdapt(method, typeof(TDelegate), out var del);
         if (!result)
         {
             @delegate = default;

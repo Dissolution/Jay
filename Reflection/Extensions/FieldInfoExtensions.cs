@@ -4,20 +4,20 @@ namespace Jay.Reflection;
 
 public static class FieldInfoExtensions
 {
-    public static Access Access(this FieldInfo? fieldInfo)
+    public static Visibility Access(this FieldInfo? fieldInfo)
     {
-        Access access = Reflection.Access.None;
+        Visibility visibility = Reflection.Visibility.None;
         if (fieldInfo is null)
-            return access;
+            return visibility;
         if (fieldInfo.IsPrivate)
-            access |= Reflection.Access.Private;
+            visibility |= Reflection.Visibility.Private;
         if (fieldInfo.IsFamily)
-            access |= Reflection.Access.Protected;
+            visibility |= Reflection.Visibility.Protected;
         if (fieldInfo.IsAssembly)
-            access |= Reflection.Access.Internal;
+            visibility |= Reflection.Visibility.Internal;
         if (fieldInfo.IsPublic)
-            access |= Reflection.Access.Public;
-        return access;
+            visibility |= Reflection.Visibility.Public;
+        return visibility;
     }
 
     public static StaticGetter<TValue> CreateStaticGetter<TValue>(this FieldInfo fieldInfo)

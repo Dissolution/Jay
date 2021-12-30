@@ -22,14 +22,14 @@ public static class EventInfoExtensions
                eventInfo?.GetRaiseMethod(true);
     }
         
-    public static Access Access(this EventInfo? eventInfo)
+    public static Visibility Access(this EventInfo? eventInfo)
     {
-        Access access = Reflection.Access.None;
+        Visibility visibility = Reflection.Visibility.None;
         if (eventInfo is null)
-            return access;
-        access |= eventInfo.GetAdder().Access();
-        access |= eventInfo.GetRemover().Access();
-        access |= eventInfo.GetRaiser().Access();
-        return access;
+            return visibility;
+        visibility |= eventInfo.GetAdder().Access();
+        visibility |= eventInfo.GetRemover().Access();
+        visibility |= eventInfo.GetRaiser().Access();
+        return visibility;
     }
 }

@@ -1,9 +1,15 @@
 ﻿namespace Jay.Reflection;
 
+/// <summary>
+/// Represents a placeholder <see cref="Type"/> for accessing <see langword="static"/> methods
+/// </summary>
 public struct Static
 {
     private static Static _instance = default;
 
+    /// <summary>
+    /// Gets a <see langword="ref"/> to an instance of <see cref="Static"/> for use in accessing <see langword="static"/> methods
+    /// </summary>
     public static ref Static Instance => ref _instance;
 }
 

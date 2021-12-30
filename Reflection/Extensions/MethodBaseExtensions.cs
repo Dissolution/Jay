@@ -4,20 +4,20 @@ namespace Jay.Reflection;
 
 public static class MethodBaseExtensions
 {
-    public static Access Access(this MethodBase? method)
+    public static Visibility Access(this MethodBase? method)
     {
-        Access access = Reflection.Access.None;
+        Visibility visibility = Reflection.Visibility.None;
         if (method is null)
-            return access;
+            return visibility;
         if (method.IsPrivate)
-            access |= Reflection.Access.Private;
+            visibility |= Reflection.Visibility.Private;
         if (method.IsFamily)
-            access |= Reflection.Access.Protected;
+            visibility |= Reflection.Visibility.Protected;
         if (method.IsAssembly)
-            access |= Reflection.Access.Internal;
+            visibility |= Reflection.Visibility.Internal;
         if (method.IsPublic)
-            access |= Reflection.Access.Public;
-        return access;
+            visibility |= Reflection.Visibility.Public;
+        return visibility;
     }
 
     public static Type ReturnType(this MethodBase? method)

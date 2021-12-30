@@ -16,13 +16,13 @@ public static class PropertyInfoExtensions
                propertyInfo?.GetSetMethod(true);
     }
         
-    public static Access Access(this PropertyInfo? propertyInfo)
+    public static Visibility Access(this PropertyInfo? propertyInfo)
     {
-        Access access = Reflection.Access.None;
+        Visibility visibility = Reflection.Visibility.None;
         if (propertyInfo is null)
-            return access;
-        access |= propertyInfo.GetGetter().Access();
-        access |= propertyInfo.GetSetter().Access();
-        return access;
+            return visibility;
+        visibility |= propertyInfo.GetGetter().Access();
+        visibility |= propertyInfo.GetSetter().Access();
+        return visibility;
     }
 }

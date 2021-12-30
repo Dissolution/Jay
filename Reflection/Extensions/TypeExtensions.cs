@@ -7,9 +7,9 @@ namespace Jay.Reflection;
 
 public static class TypeExtensions
 {
-    public static Access Access(this Type? type)
+    public static Visibility Access(this Type? type)
     {
-        Access access = Reflection.Access.None;
+        Visibility visibility = Reflection.Visibility.None;
         if (type is null)
         {
                 
@@ -17,25 +17,25 @@ public static class TypeExtensions
         else if (type.IsNested)
         {
             if (type.IsNestedPrivate)
-                access |= Reflection.Access.Private;
+                visibility |= Reflection.Visibility.Private;
             if (type.IsNestedFamily)
-                access |= Reflection.Access.Protected;
+                visibility |= Reflection.Visibility.Protected;
             if (type.IsNestedAssembly)
-                access |= Reflection.Access.Internal;
+                visibility |= Reflection.Visibility.Internal;
             if (type.IsNestedPublic)
-                access |= Reflection.Access.Public;
+                visibility |= Reflection.Visibility.Public;
         }
         else
         {
             if (type.IsPublic)
-                access |= Reflection.Access.Public;
+                visibility |= Reflection.Visibility.Public;
             if (type.IsNotPublic)
             {
                 Debugger.Break();
-                access |= Reflection.Access.NonPublic;
+                visibility |= Reflection.Visibility.NonPublic;
             }
         }
-        return access;
+        return visibility;
     }
 
     public static bool IsStatic(this Type type)

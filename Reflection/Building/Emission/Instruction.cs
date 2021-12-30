@@ -21,6 +21,8 @@ public class InstructionStream : LinkedList<IInstruction>
         }
         return null;
     }
+
+
 }
 
 public enum ILGeneratorMethod

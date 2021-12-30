@@ -24,7 +24,7 @@ public static class MemberInfoExtensions
         return !instanceType.IsStatic();
     }
 
-    public static Access Access(this MemberInfo? memberInfo)
+    public static Visibility Access(this MemberInfo? memberInfo)
     {
         if (memberInfo is FieldInfo fieldInfo)
             return fieldInfo.Access();
@@ -38,6 +38,6 @@ public static class MemberInfoExtensions
             return methodBase.Access();
         if (memberInfo is Type type)
             return type.Access();
-        return Reflection.Access.None;
+        return Reflection.Visibility.None;
     }
 }
