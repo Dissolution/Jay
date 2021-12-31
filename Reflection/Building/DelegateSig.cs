@@ -5,29 +5,32 @@ using Jay.Text;
 
 namespace Jay.Reflection.Building;
 
-public readonly struct MethodSig : IEquatable<MethodSig>, IRenderable
+public readonly struct DelegateSig : IEquatable<DelegateSig>, IRenderable
 {
-    public static MethodSig Of<TDelegate>()
+    public static bool operator ==(DelegateSig x, DelegateSig y) => x.Equals(y);
+    public static bool operator !=(DelegateSig x, DelegateSig y) => !x.Equals(y);
+
+    public static DelegateSig Of<TDelegate>()
         where TDelegate : Delegate
     {
         var invokeMethod = typeof(TDelegate).GetMethod("Invoke",
             BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
         Debug.Assert(invokeMethod != null);
-        return MethodSig.Of(invokeMethod);
+        return DelegateSig.Of(invokeMethod);
     }
 
-    public static MethodSig Of(MethodBase method)
+    public static DelegateSig Of(MethodBase method)
     {
-        return new MethodSig(method.GetParameters(), method.ReturnType());
+        return new DelegateSig(method.GetParameters(), method.ReturnType());
     }
 
-    public static MethodSig Of(Type delegateType)
+    public static DelegateSig Of(Type delegateType)
     {
         var invokeMethod = delegateType.GetMethod("Invoke",
             BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
         if (invokeMethod is null)
             throw new ArgumentException("Invalid Delegate Type: Does not have an Invoke method", nameof(delegateType));
-        return MethodSig.Of(invokeMethod);
+        return DelegateSig.Of(invokeMethod);
     }
 
     public readonly Type ReturnType;
@@ -37,7 +40,7 @@ public readonly struct MethodSig : IEquatable<MethodSig>, IRenderable
     public bool IsAction => ReturnType == typeof(void);
     public bool IsFunc => ReturnType != typeof(void);
 
-    private MethodSig(ParameterInfo[] parameters, Type? returnType)
+    private DelegateSig(ParameterInfo[] parameters, Type? returnType)
     {
         this.ReturnType = returnType ?? typeof(void);
         this.Parameters = parameters;
@@ -48,7 +51,7 @@ public readonly struct MethodSig : IEquatable<MethodSig>, IRenderable
         }
     }
 
-    public bool Equals(MethodSig sig)
+    public bool Equals(DelegateSig sig)
     {
         return sig.ReturnType == this.ReturnType &&
                EnumerableEqualityComparer<ParameterInfo>.Default.Equals(sig.Parameters, this.Parameters);
@@ -56,7 +59,7 @@ public readonly struct MethodSig : IEquatable<MethodSig>, IRenderable
 
     public override bool Equals(object? obj)
     {
-        if (obj is MethodSig sig)
+        if (obj is DelegateSig sig)
             return Equals(sig);
         if (obj is MethodBase method)
             return Equals(Of(method));

@@ -74,13 +74,13 @@ public static class RuntimeBuilder
         return builder.Length > start;
     }
 
-    public static string FormatMethodName(string? name, MethodSig methodSig)
+    public static string FormatMethodName(string? name, DelegateSig delegateSig)
     {
         using var builder = new TextBuilder();
         if (!TryBuildName(name, builder))
         {
             builder.Clear();
-            if (methodSig.IsAction)
+            if (delegateSig.IsAction)
             {
                 builder.Append("Action_");
             }
@@ -118,13 +118,13 @@ public static class RuntimeBuilder
     }
 
     public static DynamicMethod CreateDynamicMethod(string? name,
-                                                    MethodSig methodSig)
+                                                    DelegateSig delegateSig)
     {
-        return new DynamicMethod(FormatMethodName(name, methodSig),
+        return new DynamicMethod(FormatMethodName(name, delegateSig),
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
-            methodSig.ReturnType,
-            methodSig.ParameterTypes,
+            delegateSig.ReturnType,
+            delegateSig.ParameterTypes,
             ModuleBuilder,
             true);
     }
@@ -132,7 +132,7 @@ public static class RuntimeBuilder
     public static DynamicMethod<TDelegate> CreateDynamicMethod<TDelegate>(string? name)
         where TDelegate : Delegate
     {
-        return new DynamicMethod<TDelegate>(CreateDynamicMethod(name, MethodSig.Of<TDelegate>()));
+        return new DynamicMethod<TDelegate>(CreateDynamicMethod(name, DelegateSig.Of<TDelegate>()));
     }
 
     public static TypeBuilder DefineType(string? name, TypeAttributes typeAttributes)

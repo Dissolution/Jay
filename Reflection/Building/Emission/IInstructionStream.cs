@@ -11,7 +11,7 @@ public interface IEmitter
 }
 
 public interface IEmitter<TEmitter> : IEmitter
-    where TEmitter : IEmitter<TEmitter>
+    where TEmitter : IEmitter
 {
     TEmitter AppendAll(InstructionStream instructions);
 
@@ -61,6 +61,44 @@ public interface IEmitter<TEmitter> : IEmitter
 
 }
 
+public interface IGenEmitter<TEmitter> : IEmitter
+    where TEmitter : IEmitter
+{
+    IFluentEmitter<TEmitter> Fluent { get; }
+    IOpEmitter<TEmitter> OpEmitter { get; }
+}
+
+public interface IOpEmitter<TEmitter> : IEmitter<TEmitter>
+    where TEmitter : IEmitter
+{
+    IFluentEmitter<TEmitter> Fluent { get; }
+
+    // TODO:
+    // All OpCode methods here
+}
+
+public interface IFluentEmitter<TEmitter> : IEmitter
+    where TEmitter : IEmitter
+{
+    IOpEmitter<TEmitter> OpEmitter { get; }
+}
+
+internal interface IAllEmitter : IGenEmitter<IAllEmitter>,
+                                 IOpEmitter<IAllEmitter>,
+                                 IFluentEmitter<IAllEmitter>
+{
+
+}
+
+public static class Test
+{
+    static Test()
+    {
+        IFluentEmitter<IAllEmitter> emitter = default!;
+        emitter.
+    }
+}
+
 internal abstract class Emitter : IEmitter
 {
     protected readonly InstructionStream _instructions;
@@ -72,18 +110,6 @@ internal abstract class Emitter : IEmitter
     {
         _instructions = new InstructionStream();
         _instructionFactory = instructionFactory;
-    }
-
-    protected virtual void AddInstruction(OpCode opCode, object? operand = null)
-    {
-        var instruction = _instructionFactory.Create(opCode, operand);
-        _instructions.AddLast(instruction);
-    }
-
-    protected virtual void AddInstruction(ILGeneratorMethod method, object? arg = null)
-    {
-        var instruction = _instructionFactory.Create(method, arg);
-        _instructions.AddLast(instruction);
     }
 }
 

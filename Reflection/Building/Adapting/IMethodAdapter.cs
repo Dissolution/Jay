@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Reflection;
+using System.Reflection.Emit;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
 
@@ -28,6 +30,42 @@ public enum MethodAdapterSafety
     
 }
 
+public interface IDelegateMemberBuilder
+{
+    DelegateSig DelegateSig { get; }
+    MemberInfo Member { get; }
+    MethodAdapterSafety Safety { get; }
+
+    Result TryBuild([NotNullWhen(true)] out Delegate? @delegate);
+}
+
+internal abstract class DelegateMemberBuilder : IDelegateMemberBuilder
+{
+    public DelegateSig DelegateSig { get; }
+    public MemberInfo Member { get; }
+    public MethodAdapterSafety Safety { get; }
+
+    protected DelegateMemberBuilder(DelegateSig sig, MemberInfo member, MethodAdapterSafety safety)
+    {
+        this.DelegateSig = sig;
+        this.Member = member;
+        this.Safety = safety;
+    }
+
+    protected DynamicMethod CreateDynamicMethod()
+    {
+        return RuntimeBuilder.CreateDynamicMethod(null, this.DelegateSig);
+    }
+}
+
+public interface IDelegateMemberBuilder<TDelegate> : IDelegateMemberBuilder
+    where TDelegate : Delegate
+{
+    Result TryAdapt([NotNullWhen(true)] out TDelegate? @delegate);
+}
+
+
+
 public interface IMethodAdapter
 {
     MethodAdapterSafety Safety { get; }
@@ -47,12 +85,12 @@ internal class MethodAdapter : IMethodAdapter
         this.Safety = safety;
     }
 
-    protected Result ThinkWeCanLoadArgs(MethodBase method, MethodSig sig, int pOffset)
+    protected Result ThinkWeCanLoadArgs(MethodBase method, DelegateSig sig, int pOffset)
     {
 
     }
 
-    protected Result TryLoadInstance(InstructionStream ilStream, Type instanceType, MethodSig sig, out int pOffset)
+    protected Result TryLoadInstance(InstructionStream ilStream, Type instanceType, DelegateSig sig, out int pOffset)
     {
         Debug.Assert(instanceType != null);
         Debug.Assert(instanceType != typeof(void));
@@ -77,7 +115,7 @@ internal class MethodAdapter : IMethodAdapter
         }
     }
 
-    protected Result TryLoadInstance(InstructionStream ilStream, MethodBase method, MethodSig sig, out int pOffset)
+    protected Result TryLoadInstance(InstructionStream ilStream, MethodBase method, DelegateSig sig, out int pOffset)
     {
         // Static method?
         if (method.IsStatic)
