@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace Jay.Reflection;
+namespace Jay.Reflection.Adapting;
 
 public sealed class DelegateMemberCache : ConcurrentDictionary<DelegateMember, Delegate?>
 {

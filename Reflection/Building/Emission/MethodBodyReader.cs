@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Jay.Reflection.Building.Emission;
+namespace Jay.Reflection.Emission;
 
 public class MethodBodyReader
 {
@@ -36,7 +36,7 @@ public class MethodBodyReader
     private readonly ParameterInfo _thisParameter;
     private readonly ParameterInfo[] _parameters;
     private readonly IList<LocalVariableInfo> _locals;
-    private readonly InstructionStream _instructions;
+    private readonly InstructionStream<OpCodeInstruction> _instructions;
 
     public MethodBodyReader(MethodBase method)
     {
@@ -53,19 +53,19 @@ public class MethodBodyReader
             _typeArguments = method.DeclaringType.GetGenericArguments();
 
         if (!method.IsStatic)
-            this._thisParameter = new ThisParameter(method);
-        this._parameters = method.GetParameters();
-        this._locals = _body.LocalVariables;
-        this._module = method.Module;
-        this._il = new ByteBuffer(bytes);
-        this._instructions = new InstructionStream(); //(bytes.Length + 1) / 2);
+            _thisParameter = new ThisParameter(method);
+        _parameters = method.GetParameters();
+        _locals = _body.LocalVariables;
+        _module = method.Module;
+        _il = new ByteBuffer(bytes);
+        _instructions = new(); //(bytes.Length + 1) / 2);
     }
 
     private void ReadInstructions()
     {
         while (_il.Position < _il.Length)
         {
-            var instruction = new Instruction(_il.Position, ReadOpCode());
+            var instruction = new OpCodeInstruction(_il.Position, ReadOpCode());
 
             ReadOperand(instruction);
 
@@ -75,7 +75,7 @@ public class MethodBodyReader
         ResolveBranches();
     }
 
-    private void ReadOperand(Instruction instruction)
+    private void ReadOperand(OpCodeInstruction instruction)
     {
         switch (instruction.OpCode.OperandType)
         {
@@ -145,13 +145,15 @@ public class MethodBodyReader
             {
                 case OperandType.ShortInlineBrTarget:
                 case OperandType.InlineBrTarget:
-                    instruction.Operand = _instructions.FindInstruction((int)instruction.Operand!);
+                    instruction.Operand = _instructions.FindWithOffset((int)instruction.Operand!);
                     break;
                 case OperandType.InlineSwitch:
                     var offsets = (int[])instruction.Operand;
-                    var branches = new Instruction[offsets.Length];
+                    var branches = new OpCodeInstruction[offsets.Length];
                     for (int j = 0; j < offsets.Length; j++)
-                        branches[j] = _instructions.FindInstruction(offsets[j]);
+                        {
+                        branches[j] = _instructions.FindWithOffset(offsets[j]);
+                    }
 
                     instruction.Operand = branches;
                     break;
@@ -160,7 +162,7 @@ public class MethodBodyReader
     }
 
 
-    private object GetVariable(Instruction instruction, int index)
+    private object GetVariable(OpCodeInstruction instruction, int index)
     {
         return TargetsLocalVariable(instruction.OpCode)
             ? (object)GetLocalVariable(index)
@@ -196,7 +198,7 @@ public class MethodBodyReader
             : _twoByteOpCodes[_il.ReadByte()];
     }
 
-    public static InstructionStream GetInstructions(MethodBase method)
+    public static InstructionStream<OpCodeInstruction> GetInstructions(MethodBase method)
     {
         var reader = new MethodBodyReader(method);
         reader.ReadInstructions();

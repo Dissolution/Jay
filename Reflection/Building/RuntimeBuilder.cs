@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Text;
 
-namespace Jay.Reflection.Building;
+namespace Jay.Reflection;
 
 public static class RuntimeBuilder
 {
@@ -133,6 +133,14 @@ public static class RuntimeBuilder
         where TDelegate : Delegate
     {
         return new DynamicMethod<TDelegate>(CreateDynamicMethod(name, DelegateSig.Of<TDelegate>()));
+    }
+
+    public static TDelegate CreateDelegate<TDelegate>(string? name, Action<DynamicMethod<TDelegate>> buildDelegate)
+        where TDelegate : Delegate
+    {
+        var dm = CreateDynamicMethod<TDelegate>(name);
+        buildDelegate(dm);
+        return dm.CreateDelegate();
     }
 
     public static TypeBuilder DefineType(string? name, TypeAttributes typeAttributes)

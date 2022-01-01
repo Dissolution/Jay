@@ -37,7 +37,7 @@ public delegate void ClassSetter<in TClass, in TValue>(TClass? instance, TValue?
 // TODO: Event delegates
 
 public delegate TInstance Constructor<out TInstance>(params object?[] args);
-
-public delegate void Action<TInstance>(ref TInstance? instance, params object?[] args);
-
-public delegate TResult? Func<TInstance, out TResult>(ref TInstance? instance, params object?[] args);
+//
+// public delegate void Action<TInstance>(ref TInstance? instance, params object?[] args);
+//
+// public delegate TResult? Func<TInstance, out TResult>(ref TInstance? instance, params object?[] args);

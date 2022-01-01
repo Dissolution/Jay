@@ -3,7 +3,7 @@ using System.Reflection;
 using Jay.Comparision;
 using Jay.Text;
 
-namespace Jay.Reflection.Building;
+namespace Jay.Reflection;
 
 public readonly struct DelegateSig : IEquatable<DelegateSig>, IRenderable
 {

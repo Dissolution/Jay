@@ -1,6 +1,7 @@
 ﻿using System.Reflection.Emit;
+using Jay.Reflection.Emission;
 
-namespace Jay.Reflection.Building;
+namespace Jay.Reflection;
 
 public class DynamicMethod<TDelegate>
     where TDelegate : Delegate
@@ -9,8 +10,11 @@ public class DynamicMethod<TDelegate>
         dynamicMethod._dynamicMethod;
 
     protected readonly DynamicMethod _dynamicMethod;
+    protected ILGenerator? _ilGenerator;
 
-    public ILGenerator ILGenerator => _dynamicMethod.GetILGenerator();
+    public ILGenerator ILGenerator => _ilGenerator ??= _dynamicMethod.GetILGenerator();
+    public IILGeneratorEmitter Emitter => new GenEmitter(this.ILGenerator);
+    public IILGeneratorFluentEmitter FluentEmitter => new GenEmitter(this.ILGenerator);
 
     public DynamicMethod(DynamicMethod dynamicMethod)
     {

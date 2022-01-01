@@ -2,7 +2,7 @@
 
 namespace Jay.Reflection;
 
-public readonly struct NameMatch : IRenderable
+public readonly struct NameMatch 
 {
     public static implicit operator NameMatch(string name) => new NameMatch(name, MatchType.Exact);
     public static implicit operator NameMatch((string Name, MatchType MatchType) tuple) => new NameMatch(tuple.Name, tuple.MatchType);
@@ -69,35 +69,32 @@ public readonly struct NameMatch : IRenderable
 
     public override string ToString()
     {
-        return IRenderable.Render(this);
-    }
-
-    public void Render(ref StringHandler handler)
-    {
+        using var text = new TextBuilder();
         if (Name is null)
         {
-            handler.Append('*');
+            text.Append('*');
         }
         else
         {
             if (this.MatchType.HasFlag<MatchType>(MatchType.EndsWith))
             {
-                handler.Append('*');
+                text.Append('*');
             }
 
             if (this.MatchType.HasFlag<MatchType>(MatchType.IgnoreCase))
             {
-                handler.Append(Name!.ToUpper());
+                text.Append(Name!.ToUpper());
             }
             else
             {
-                handler.Append(this.Name!);
+                text.Append(this.Name!);
             }
 
             if (this.MatchType.HasFlag<MatchType>(MatchType.BeginsWith))
             {
-                handler.Append('*');
+                text.Append('*');
             }
         }
+        return text.ToString();
     }
 }

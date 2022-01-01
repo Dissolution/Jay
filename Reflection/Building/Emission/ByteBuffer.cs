@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Jay.Reflection.Building.Emission;
+namespace Jay.Reflection.Emission;
 
 public sealed class ByteBuffer
 {

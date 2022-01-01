@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Jay.Reflection.Emission;
 
 namespace Jay.Reflection;
 
@@ -22,13 +23,25 @@ public static class FieldInfoExtensions
 
     public static StaticGetter<TValue> CreateStaticGetter<TValue>(this FieldInfo fieldInfo)
     {
-        throw new NotImplementedException();
+        Validation.IsStatic(fieldInfo);
+        var dynMethod = RuntimeBuilder.CreateDynamicMethod<StaticGetter<TValue>>($"get_{fieldInfo.OwnerType()}.{fieldInfo.Name}");
+        dynMethod.Emitter.Ldsfld(fieldInfo)
+                         .Cast(fieldInfo.FieldType, typeof(TValue))
+                         .Ret();
+        return dynMethod.CreateDelegate();
     }
 
     public static StructGetter<TStruct, TValue> CreateStructGetter<TStruct, TValue>(this FieldInfo fieldInfo)
         where TStruct : struct
     {
-        throw new NotImplementedException();
+        Validation.IsValue(fieldInfo?.FieldType);
+        var dynMethod = RuntimeBuilder.CreateDynamicMethod<StaticGetter<TValue>>($"get_{fieldInfo.OwnerType()}_{fieldInfo.Name}");
+        dynMethod.Emitter
+            .Ldarg(0)
+            .Ldfld(fieldInfo)
+            .Cast(fieldInfo.FieldType, typeof(TValue))
+            .Ret();
+        return dynMethod.CreateDelegate();
     }
 
     public static ObjectGetter<TValue> CreateObjectGetter<TValue>(this FieldInfo fieldInfo)
