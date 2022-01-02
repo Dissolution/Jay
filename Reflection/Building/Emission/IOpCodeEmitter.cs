@@ -1,7 +1,251 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Jay.Reflection.Emission;
+
+public class ILCaster
+{
+    public ILCaster()
+    {
+
+    }
+
+    private Result TryEmitCast(IOpCodeOnlyEmitter emitter, ParameterInfo input, ParameterInfo output)
+    {
+        throw new NotImplementedException();
+    }
+
+    private Result TryEmitCast(IOpCodeOnlyEmitter emitter, ParameterInfo input, Type? outputType)
+    {
+        if (outputType is null || outputType == typeof(void))
+        {
+            // Output requires nothing, we have nothing loaded
+            return true;
+        }
+
+        if (outputType == typeof(void*))
+        {
+            return new NotImplementedException("Does not support void*");
+        }
+
+        if (input.ParameterType == typeof(void))
+        {
+            // We're expecting a value that we're not given
+            return new ArgumentException("We're expecting a value that we're not given", nameof(input));
+        }
+
+        if (input.ParameterType == typeof(void*))
+        {
+            return new NotImplementedException("Does not support void*");
+        }
+
+        var inputAccess = input.GetAccess(out var inputType);
+        bool inputIsRef = inputAccess != ParameterInfoExtensions.Access.Default;
+
+        bool outputIsRef = outputType.IsByRef;
+        if (outputIsRef)
+            outputType = outputType.GetElementType()!;
+
+        // If we have exactly what we need, it's fairly easy
+        if (inputType == outputType)
+        {
+            if (inputIsRef == outputIsRef)
+            {
+                // Exactly what we want
+                emitter.Ldarg(input.Position);
+            }
+            else if (!inputIsRef)
+            {
+                // out is ref
+                // todo: safety shit
+                emitter.Ldarga(input.Position);
+            }
+            else
+            {
+                Debug.Assert(!outputIsRef);
+                // in is ref
+                // todo: safety shit
+                emitter.Ldarg(input.Position)
+                       .Ldind(outputType);
+            }
+            return true;
+        }
+
+        if (inputIsRef)
+        {
+            return new NotImplementedException("Non-default inputs are not yet supported");
+        }
+
+        if (outputIsRef)
+        {
+            return new NotImplementedException("Non-default outputs are not yet supported");
+        }
+
+        // Coming from object?
+        if (inputType == typeof(object))
+        {
+            if (outputType.IsValueType)
+            {
+                emitter.Ldarg(input.Position)
+                       .Unbox_Any(outputType);
+            }
+            else
+            {
+                emitter.Ldarg(input.Position)
+                       .Castclass(outputType);
+            }
+            return true;
+        }
+
+        // Going to object?
+        if (outputType == typeof(object))
+        {
+            if (inputType.IsValueType)
+            {
+                emitter.Ldarg(input.Position)
+                       .Box(inputType);
+            }
+            else
+            {
+                // Is already object
+                emitter.Ldarg(input.Position);
+            }
+            return true;
+        }
+
+        // Implements?
+        // TODO: More advanced logic here?
+        if (inputType.IsAssignableTo(outputType))
+        {
+            Debug.Assert(inputType.IsClass);
+            Debug.Assert(outputType.IsClass);
+            emitter.Ldarg(input.Position)
+                   .Castclass(outputType);
+            return true;
+        }
+
+        return new NotImplementedException($"Cannot cast from {input} to {outputType}");
+
+    }
+    private Result TryEmitCast(IOpCodeOnlyEmitter emitter, Type input, ParameterInfo output)
+    {
+        throw new NotImplementedException();
+    }
+    private Result TryEmitCast(IOpCodeOnlyEmitter emitter, Type? inputType, Type? outputType)
+    {
+        if (outputType is null || outputType == typeof(void))
+        {
+            // Output requires nothing, we have nothing loaded
+            return true;
+        }
+
+        if (inputType is null || inputType == typeof(void))
+        {
+            // We're expecting a value that we're not given
+            return new ArgumentException("We're expecting a value that we're not given", nameof(inputType));
+        }
+
+        bool isRef = inputType.IsByRef;
+        if (isRef)
+        {
+            inputType = inputType.GetElementType()!;
+        }
+
+        // If we have exactly what we need, it's fairly easy
+        if (inputType == outputType)
+        {
+            if (!isRef)
+            {
+                // Already on the stack
+            }
+            else
+            {
+                // TODO: Safety checks
+                emitter.Ldarga(input.Position);
+            }
+            return true;
+        }
+
+        if (inputAccess != ParameterInfoExtensions.Access.Default)
+        {
+            return new NotImplementedException("Non-default inputs are not yet supported");
+        }
+
+        // Coming from object?
+        if (inputType == typeof(object))
+        {
+            if (outputType.IsValueType)
+            {
+                emitter.Ldarg(input.Position)
+                       .Unbox_Any(outputType);
+            }
+            else
+            {
+                emitter.Ldarg(input.Position)
+                       .Castclass(outputType);
+            }
+            return true;
+        }
+
+        // Going to object?
+        if (outputType == typeof(object))
+        {
+            if (inputType.IsValueType)
+            {
+                emitter.Ldarg(input.Position)
+                       .Box(inputType);
+            }
+            else
+            {
+                // Is already object
+                emitter.Ldarg(input.Position);
+            }
+            return true;
+        }
+
+        // Implements?
+        // TODO: More advanced logic here?
+        if (inputType.IsAssignableTo(outputType))
+        {
+            Debug.Assert(inputType.IsClass);
+            Debug.Assert(outputType.IsClass);
+            emitter.Ldarg(input.Position)
+                   .Castclass(outputType);
+            return true;
+        }
+
+        return new NotImplementedException($"Cannot cast from {input} to {outputType}");
+    }
+
+    public Result TryEmitCast(IOpCodeOnlyEmitter emitter,
+                              Either<ParameterInfo, Type> input,
+                              Either<Type, ParameterInfo> output)
+    {
+        if (input.Is<ParameterInfo>(out var inputParameter))
+        {
+            if (output.Is<ParameterInfo>(out var outputParameter))
+            {
+                return TryEmitCast(emitter, inputParameter, outputParameter);
+            }
+            else
+            {
+                return TryEmitCast(emitter, inputParameter, (Type)output);
+            }
+        }
+        else
+        {
+            if (output.Is<ParameterInfo>(out var outputParameter))
+            {
+                return TryEmitCast(emitter, (Type)input, outputParameter);
+            }
+            else
+            {
+                return TryEmitCast(emitter, (Type)input, (Type)output);
+            }
+        }
+    }
+}
 
 public static class OpCodeEmitterExtensions
 {
