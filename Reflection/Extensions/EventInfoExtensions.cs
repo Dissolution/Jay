@@ -32,4 +32,13 @@ public static class EventInfoExtensions
         visibility |= eventInfo.GetRaiser().Access();
         return visibility;
     }
+
+    public static bool IsStatic(this EventInfo? eventInfo)
+    {
+        if (eventInfo is null)
+            return false;
+        return eventInfo.GetAdder().IsStatic() ||
+               eventInfo.GetRemover().IsStatic() ||
+               eventInfo.GetRaiser().IsStatic();
+    }
 }

@@ -20,6 +20,11 @@ public static class MethodBaseExtensions
         return visibility;
     }
 
+    public static bool IsStatic(this MethodBase? method)
+    {
+        return method is not null && method.IsStatic;
+    }
+
     public static Type ReturnType(this MethodBase? method)
     {
         if (method is null)

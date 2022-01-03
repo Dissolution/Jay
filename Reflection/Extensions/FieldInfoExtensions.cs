@@ -26,7 +26,7 @@ public static class FieldInfoExtensions
         Validation.IsStatic(fieldInfo);
         var dynMethod = RuntimeBuilder.CreateDynamicMethod<StaticGetter<TValue>>($"get_{fieldInfo.OwnerType()}.{fieldInfo.Name}");
         dynMethod.Emitter.Ldsfld(fieldInfo)
-                         .Cast(fieldInfo.FieldType, typeof(TValue))
+                         .LoadOrCast(fieldInfo.FieldType, typeof(TValue))
                          .Ret();
         return dynMethod.CreateDelegate();
     }
@@ -34,20 +34,20 @@ public static class FieldInfoExtensions
     public static StructGetter<TStruct, TValue> CreateStructGetter<TStruct, TValue>(this FieldInfo fieldInfo)
         where TStruct : struct
     {
-        Validation.IsValue(fieldInfo?.FieldType);
-        var dynMethod = RuntimeBuilder.CreateDynamicMethod<StaticGetter<TValue>>($"get_{fieldInfo.OwnerType()}_{fieldInfo.Name}");
+        var result = fieldInfo.TryGetInstanceType(out var instanceType);
+        result.ThrowIfFailed();
+        Validation.IsValue(instanceType, nameof(fieldInfo));
+        var sig = DelegateSig.Of<StructGetter<TStruct, TValue>>();
+        var dynMethod = RuntimeBuilder.CreateDynamicMethod<StructGetter<TStruct, TValue>>($"get_{instanceType}_{fieldInfo.Name}");
         dynMethod.Emitter
-            .Ldarg(0)
-            .Ldfld(fieldInfo)
-            .Cast(fieldInfo.FieldType, typeof(TValue))
-            .Ret();
+                 // We want structs as refs
+                 .LoadOrCast(sig.Parameters[0], instanceType)
+                 .Ldfld(fieldInfo)
+                 .LoadOrCast(fieldInfo.FieldType, typeof(TValue))
+                 .Ret();
         return dynMethod.CreateDelegate();
     }
 
-    public static ObjectGetter<TValue> CreateObjectGetter<TValue>(this FieldInfo fieldInfo)
-    {
-        throw new NotImplementedException();
-    }
 
     public static ClassGetter<TClass, TValue> CreateClassGetter<TClass, TValue>(this FieldInfo fieldInfo)
         where TClass : class

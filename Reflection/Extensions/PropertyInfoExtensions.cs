@@ -25,4 +25,12 @@ public static class PropertyInfoExtensions
         visibility |= propertyInfo.GetSetter().Access();
         return visibility;
     }
+
+    public static bool IsStatic(this PropertyInfo? propertyInfo)
+    {
+        if (propertyInfo is null)
+            return false;
+        return propertyInfo.GetGetter().IsStatic() ||
+               propertyInfo.GetSetter().IsStatic();
+    }
 }

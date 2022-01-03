@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Jay.Reflection;
@@ -11,17 +12,40 @@ public static class MemberInfoExtensions
                memberInfo?.DeclaringType;
     }
 
-    public static bool TryGetInstanceType(this MemberInfo? memberInfo, out Type? instanceType)
+    internal static Result TryGetInstanceType(this MemberInfo? memberInfo, [NotNullWhen(true)] out Type? instanceType)
     {
-        var ownerType = memberInfo.OwnerType();
-        if (ownerType is null)
+        if (memberInfo is null)
         {
-            instanceType = null;
-            return false;
+            instanceType = default;
+            return new ArgumentNullException(nameof(memberInfo));
         }
 
-        instanceType = ownerType;
-        return !instanceType.IsStatic();
+        if (memberInfo.IsStatic())
+        {
+            instanceType = default;
+            return new ArgumentException("The given member is static or belongs to a static instance",
+                                         nameof(memberInfo));
+        }
+
+        instanceType = memberInfo.OwnerType();
+        if (instanceType is null)
+        {
+            return new ArgumentException("The given member does not have a ReflectedType nor DeclaringType",
+                                         nameof(memberInfo));
+        }
+
+        if (instanceType.IsStatic())
+        {
+            return new ArgumentException("The given member is static or belongs to a static instance",
+                                         nameof(memberInfo));
+        }
+
+        // We want ref instance for structs
+        if (instanceType.IsValueType)
+        {
+            instanceType = instanceType.MakeByRefType();
+        }
+        return true;
     }
 
     public static Visibility Access(this MemberInfo? memberInfo)
@@ -39,5 +63,22 @@ public static class MemberInfoExtensions
         if (memberInfo is Type type)
             return type.Access();
         return Reflection.Visibility.None;
+    }
+
+    public static bool IsStatic(this MemberInfo? memberInfo)
+    {
+        if (memberInfo is FieldInfo fieldInfo)
+            return fieldInfo.IsStatic;
+        if (memberInfo is PropertyInfo propertyInfo)
+            return propertyInfo.IsStatic();
+        if (memberInfo is EventInfo eventInfo)
+            return eventInfo.IsStatic();
+        // if (memberInfo is ConstructorInfo constructorInfo)
+        //     return constructorInfo.IsStatic;
+        if (memberInfo is MethodBase methodBase)
+            return methodBase.IsStatic;
+        if (memberInfo is Type type)
+            return type.IsStatic();
+        return false;
     }
 }

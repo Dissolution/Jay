@@ -33,9 +33,9 @@ public static class Tester
     {
         //var emitter = new OpCodeEmitter();
         IILGeneratorFluentEmitter emitter = default!;
-        
-            
 
+
+        ClassGetter<object, object> getter = new();
 
     }
 }

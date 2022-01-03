@@ -11,10 +11,4 @@ public interface IFluentOpEmitter<TEmitter, TOp> : IEmitter
         OpCode.Ldarg(index);
         return (TEmitter)this;
     }
-
-    TEmitter Cast(Type sourceType, Type destType)
-    {
-        OpCode.Cast(sourceType, destType);
-        return (TEmitter)this;
-    }
 }
