@@ -5,7 +5,7 @@ using Jay.Text;
 
 namespace Jay.Reflection;
 
-public readonly struct DelegateSig : IEquatable<DelegateSig>, IRenderable
+public readonly struct DelegateSig : IEquatable<DelegateSig>
 {
     public static bool operator ==(DelegateSig x, DelegateSig y) => x.Equals(y);
     public static bool operator !=(DelegateSig x, DelegateSig y) => !x.Equals(y);
@@ -81,11 +81,24 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>, IRenderable
         return hashcode.ToHashCode();
     }
 
-    public void Render(TextBuilder builder)
+    public override string ToString()
     {
-        builder.Append(ReturnType)
-            .Append(" (")
-            .AppendDelimit(", ", Parameters)
-            .Append(')');
+        using var text = new TextBuilder();
+        if (ReturnType != typeof(void))
+        {
+            text.Append("Func<");
+        }
+        else
+        {
+            text.Append("Action<");
+        }
+        text.AppendDelimit(",", ParameterTypes);
+        if (ReturnType != typeof(void))
+        {
+            text.Append(',')
+                .Append(ReturnType);
+        }
+        text.Append('>');
+        return text.ToString();
     }
 }

@@ -3,9 +3,8 @@ using System.Reflection;
 
 namespace Jay.Reflection.Emission;
 
-internal static class ILCaster
+internal static class EmitterCastExtensions
 {
-
     private static Result TryEmitCast<TEmitter>(TEmitter emitter,
                                                 ParameterInfo input, ParameterInfo output)
         where TEmitter : IOpCodeEmitter<TEmitter>
@@ -308,6 +307,26 @@ internal static class ILCaster
     public static TEmitter LoadOrCast<TEmitter>(this TEmitter emitter,
                                               Either<ParameterInfo, Type> input,
                                               Either<Type, ParameterInfo> output)
+        where TEmitter : IOpCodeEmitter<TEmitter>
+    {
+        var result = TryEmitCast(emitter, input, output);
+        result.ThrowIfFailed();
+        return emitter;
+    }
+
+    public static TEmitter LoadAs<TEmitter>(this TEmitter emitter,
+                                            ParameterInfo input,
+                                            Type output)
+        where TEmitter : IOpCodeEmitter<TEmitter>
+    {
+        var result = TryEmitCast(emitter, input, output);
+        result.ThrowIfFailed();
+        return emitter;
+    }
+
+    public static TEmitter Cast<TEmitter>(this TEmitter emitter,
+                                          Type input,
+                                          Type output)
         where TEmitter : IOpCodeEmitter<TEmitter>
     {
         var result = TryEmitCast(emitter, input, output);

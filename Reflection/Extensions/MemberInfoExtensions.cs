@@ -51,15 +51,15 @@ public static class MemberInfoExtensions
     public static Visibility Access(this MemberInfo? memberInfo)
     {
         if (memberInfo is FieldInfo fieldInfo)
-            return fieldInfo.Access();
+            return fieldInfo.Visibility();
         if (memberInfo is PropertyInfo propertyInfo)
-            return propertyInfo.Access();
+            return propertyInfo.Visibility();
         if (memberInfo is EventInfo eventInfo)
             return eventInfo.Access();
         if (memberInfo is ConstructorInfo constructorInfo)
-            return constructorInfo.Access();
+            return constructorInfo.Visibility();
         if (memberInfo is MethodBase methodBase)
-            return methodBase.Access();
+            return methodBase.Visibility();
         if (memberInfo is Type type)
             return type.Access();
         return Reflection.Visibility.None;

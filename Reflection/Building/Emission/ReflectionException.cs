@@ -38,6 +38,37 @@ internal static class Validation
             throw new ArgumentException($"{paramName} is not a static Field");
         }
     }
+
+    public static void IsStatic([AllowNull, NotNull] MethodInfo? method,
+                                [CallerArgumentExpression("method")]
+                                string? paramName = null)
+    {
+        ArgumentNullException.ThrowIfNull(method, paramName);
+        if (!method.IsStatic)
+        {
+            throw new ArgumentException($"{paramName} is not a static Method");
+        }
+    }
+
+    public static void IsInstance([AllowNull, NotNull] MethodInfo? method,
+                                [CallerArgumentExpression("method")]
+                                string? paramName = null)
+    {
+        ArgumentNullException.ThrowIfNull(method, paramName);
+        if (!method.IsStatic)
+        {
+            throw new ArgumentException($"{paramName} is not a static Method");
+        }
+    }
+
+    public static void DelegateCreated<TDelegate>([AllowNull, NotNull] TDelegate @delegate,
+                                                  [CallerArgumentExpression("delegate")] string? paramName = null)
+    {
+        if (@delegate is null)
+        {
+            throw new InvalidOperationException($"Unable to create a {typeof(TDelegate)}");
+        }
+    }
 }
 
 public class ReflectionException : SystemException

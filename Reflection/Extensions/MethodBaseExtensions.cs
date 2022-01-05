@@ -4,7 +4,7 @@ namespace Jay.Reflection;
 
 public static class MethodBaseExtensions
 {
-    public static Visibility Access(this MethodBase? method)
+    public static Visibility Visibility(this MethodBase? method)
     {
         Visibility visibility = Reflection.Visibility.None;
         if (method is null)

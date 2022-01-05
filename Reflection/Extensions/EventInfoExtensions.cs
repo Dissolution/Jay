@@ -27,9 +27,9 @@ public static class EventInfoExtensions
         Visibility visibility = Reflection.Visibility.None;
         if (eventInfo is null)
             return visibility;
-        visibility |= eventInfo.GetAdder().Access();
-        visibility |= eventInfo.GetRemover().Access();
-        visibility |= eventInfo.GetRaiser().Access();
+        visibility |= eventInfo.GetAdder().Visibility();
+        visibility |= eventInfo.GetRemover().Visibility();
+        visibility |= eventInfo.GetRaiser().Visibility();
         return visibility;
     }
 

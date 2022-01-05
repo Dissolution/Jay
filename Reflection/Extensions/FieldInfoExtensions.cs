@@ -1,11 +1,12 @@
 ﻿using System.Reflection;
+using Jay.Reflection.Adapting;
 using Jay.Reflection.Emission;
 
 namespace Jay.Reflection;
 
 public static class FieldInfoExtensions
 {
-    public static Visibility Access(this FieldInfo? fieldInfo)
+    public static Visibility Visibility(this FieldInfo? fieldInfo)
     {
         Visibility visibility = Reflection.Visibility.None;
         if (fieldInfo is null)
@@ -24,11 +25,14 @@ public static class FieldInfoExtensions
     public static StaticGetter<TValue> CreateStaticGetter<TValue>(this FieldInfo fieldInfo)
     {
         Validation.IsStatic(fieldInfo);
-        var dynMethod = RuntimeBuilder.CreateDynamicMethod<StaticGetter<TValue>>($"get_{fieldInfo.OwnerType()}.{fieldInfo.Name}");
-        dynMethod.Emitter.Ldsfld(fieldInfo)
-                         .LoadOrCast(fieldInfo.FieldType, typeof(TValue))
-                         .Ret();
-        return dynMethod.CreateDelegate();
+        return RuntimeBuilder.CreateDelegate<StaticGetter<TValue>>(
+            $"get_{fieldInfo.OwnerType()}.{fieldInfo.Name}", method =>
+            {
+                method.Emitter
+                      .Ldsfld(fieldInfo)
+                      .Cast(fieldInfo.FieldType, typeof(TValue))
+                      .Ret();
+            });
     }
 
     public static StructGetter<TStruct, TValue> CreateStructGetter<TStruct, TValue>(this FieldInfo fieldInfo)
@@ -37,50 +41,55 @@ public static class FieldInfoExtensions
         var result = fieldInfo.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
         Validation.IsValue(instanceType, nameof(fieldInfo));
-        var sig = DelegateSig.Of<StructGetter<TStruct, TValue>>();
-        var dynMethod = RuntimeBuilder.CreateDynamicMethod<StructGetter<TStruct, TValue>>($"get_{instanceType}_{fieldInfo.Name}");
-        dynMethod.Emitter
-                 // We want structs as refs
-                 .LoadOrCast(sig.Parameters[0], instanceType)
-                 .Ldfld(fieldInfo)
-                 .LoadOrCast(fieldInfo.FieldType, typeof(TValue))
-                 .Ret();
-        return dynMethod.CreateDelegate();
+        return RuntimeBuilder.CreateDelegate<StructGetter<TStruct, TValue>>(
+            $"get_{instanceType}_{fieldInfo.Name}", method =>
+            {
+                method.Emitter
+                      .LoadAs(method.Parameters[0], instanceType)
+                      .Ldfld(fieldInfo)
+                      .Cast(fieldInfo.FieldType, typeof(TValue))
+                      .Ret();
+            });
     }
-
 
     public static ClassGetter<TClass, TValue> CreateClassGetter<TClass, TValue>(this FieldInfo fieldInfo)
         where TClass : class
     {
-        throw new NotImplementedException();
+        var result = fieldInfo.TryGetInstanceType(out var instanceType);
+        result.ThrowIfFailed();
+        Validation.IsClass(instanceType, nameof(fieldInfo));
+        return RuntimeBuilder.CreateDelegate<ClassGetter<TClass, TValue>>(
+            $"get_{instanceType}_{fieldInfo.Name}", method =>
+        {
+            method.Emitter
+                  .LoadAs(method.Parameters[0], instanceType)
+                  .Ldfld(fieldInfo)
+                  .Cast(fieldInfo.FieldType, typeof(TValue))
+                  .Ret();
+        });
     }
 
-    public static TValue? GetValue<TStruct, TValue>(this FieldInfo fieldInfo,
-                                                      ref TStruct instance)
+    public static TValue? GetValue<TStruct, TValue>(this FieldInfo fieldInfo, ref TStruct instance)
         where TStruct : struct
     {
-        var getter = CreateStructGetter<TStruct, TValue>(fieldInfo);
+        var getter = DelegateMemberCache.Instance
+                                        .GetOrAdd(fieldInfo, CreateStructGetter<TStruct, TValue>);
         return getter(ref instance);
-    }
-
-    public static TValue? GetValue<TValue>(this FieldInfo fieldInfo,
-                                                    object? instance)
-    {
-        var getter = CreateObjectGetter<TValue>(fieldInfo);
-        return getter(instance);
     }
 
     public static TValue? GetValue<TClass, TValue>(this FieldInfo fieldInfo,
                                                    TClass? instance)
         where TClass : class
     {
-        var getter = CreateClassGetter<TClass, TValue>(fieldInfo);
+        var getter = DelegateMemberCache.Instance
+            .GetOrAdd(fieldInfo, CreateClassGetter<TClass, TValue>);
         return getter(instance);
     }
 
-    public static TValue? GetValue<TValue>(this FieldInfo fieldInfo)
+    public static TValue? GetStaticValue<TValue>(this FieldInfo fieldInfo)
     {
-        var getter = CreateStaticGetter<TValue>(fieldInfo);
+        var getter = DelegateMemberCache.Instance
+            .GetOrAdd(fieldInfo, CreateStaticGetter<TValue>);
         return getter();
     }
 
@@ -88,24 +97,49 @@ public static class FieldInfoExtensions
 
     public static StaticSetter<TValue> CreateStaticSetter<TValue>(this FieldInfo fieldInfo)
     {
-        throw new NotImplementedException();
+        Validation.IsStatic(fieldInfo);
+        return RuntimeBuilder.CreateDelegate<StaticSetter<TValue>>(
+            $"set_{fieldInfo.OwnerType()}.{fieldInfo.Name}", method =>
+            {
+                method.Emitter
+                      .LoadAs(method.Parameters[0], fieldInfo.FieldType)
+                      .Stsfld(fieldInfo)
+                      .Ret();
+            });
     }
 
     public static StructSetter<TStruct, TValue> CreateStructSetter<TStruct, TValue>(this FieldInfo fieldInfo)
         where TStruct : struct
     {
-        throw new NotImplementedException();
-    }
-
-    public static ObjectSetter<TValue> CreateObjectSetter<TValue>(this FieldInfo fieldInfo)
-    {
-        throw new NotImplementedException();
+        var result = fieldInfo.TryGetInstanceType(out var instanceType);
+        result.ThrowIfFailed();
+        Validation.IsValue(instanceType, nameof(fieldInfo));
+        return RuntimeBuilder.CreateDelegate<StructSetter<TStruct, TValue>>(
+            $"get_{instanceType}_{fieldInfo.Name}", method =>
+            {
+                method.Emitter
+                      .LoadAs(method.Parameters[0], instanceType)
+                      .LoadAs(method.Parameters[1], fieldInfo.FieldType)
+                      .Stfld(fieldInfo)
+                      .Ret();
+            });
     }
 
     public static ClassSetter<TClass, TValue> CreateClassSetter<TClass, TValue>(this FieldInfo fieldInfo)
         where TClass : class
     {
-        throw new NotImplementedException();
+        var result = fieldInfo.TryGetInstanceType(out var instanceType);
+        result.ThrowIfFailed();
+        Validation.IsClass(instanceType, nameof(fieldInfo));
+        return RuntimeBuilder.CreateDelegate<ClassSetter<TClass, TValue>>(
+            $"get_{instanceType}_{fieldInfo.Name}", method =>
+            {
+                method.Emitter
+                      .LoadAs(method.Parameters[0], instanceType)
+                      .LoadAs(method.Parameters[1], fieldInfo.FieldType)
+                      .Stfld(fieldInfo)
+                      .Ret();
+            });
     }
 
     public static void SetValue<TStruct, TValue>(this FieldInfo fieldInfo,
@@ -113,31 +147,27 @@ public static class FieldInfoExtensions
                                                  TValue? value)
         where TStruct : struct
     {
-        var setter = CreateStructSetter<TStruct, TValue>(fieldInfo);
+        var setter = DelegateMemberCache.Instance
+                                        .GetOrAdd(fieldInfo, CreateStructSetter<TStruct, TValue>);
         setter(ref instance, value);
     }
 
-    public static void SetValue<TValue>(this FieldInfo fieldInfo,
-                                           object? instance,
-                                           TValue? value)
-    {
-        var setter = CreateObjectSetter<TValue>(fieldInfo);
-        setter(instance, value);
-    }
 
     public static void SetValue<TClass, TValue>(this FieldInfo fieldInfo,
                                                    TClass? instance,
                                                    TValue? value)
         where TClass : class
     {
-        var setter = CreateClassSetter<TClass, TValue>(fieldInfo);
+        var setter = DelegateMemberCache.Instance
+                                        .GetOrAdd(fieldInfo, CreateClassSetter<TClass, TValue>);
         setter(instance, value);
     }
 
-    public static void SetValue<TValue>(this FieldInfo fieldInfo,
+    public static void SetStaticValue<TValue>(this FieldInfo fieldInfo,
                                         TValue? value)
     {
-        var setter = CreateStaticSetter<TValue>(fieldInfo);
+        var setter = DelegateMemberCache.Instance
+                                        .GetOrAdd(fieldInfo, CreateStaticSetter<TValue>);
         setter(value);
     }
 }
