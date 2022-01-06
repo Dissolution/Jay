@@ -5,24 +5,23 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Jay.Extensions
+namespace Jay.Extensions;
+
+public static class NullableExtensions
 {
-    public static class NullableExtensions
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGetValue<T>(this T? nullable, out T value)
+        where T : struct
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryGetValue<T>(this T? nullable, out T value)
-            where T : struct
+        if (nullable.HasValue)
         {
-            if (nullable.HasValue)
-            {
-                value = nullable.Value;
-                return true;
-            }
-            else
-            {
-                value = default;
-                return false;
-            }
+            value = nullable.Value;
+            return true;
+        }
+        else
+        {
+            value = default;
+            return false;
         }
     }
 }

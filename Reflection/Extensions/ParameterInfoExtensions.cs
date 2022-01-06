@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -39,5 +40,9 @@ public static class ParameterInfoExtensions
         }
         return Access.Default;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsParams(this ParameterInfo parameter) 
+        => Attribute.IsDefined(parameter, typeof(ParamArrayAttribute), true);
 
 }

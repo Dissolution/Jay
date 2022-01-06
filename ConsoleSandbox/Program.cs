@@ -1,5 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System;
+using System.Diagnostics;
+using Jay.Reflection;
 
-Console.WriteLine("Hello, World!");
+
+StaticInvoke<VOID> invoke;
+invoke = objects => 

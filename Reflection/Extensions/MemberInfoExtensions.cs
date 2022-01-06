@@ -61,7 +61,7 @@ public static class MemberInfoExtensions
         if (memberInfo is MethodBase methodBase)
             return methodBase.Visibility();
         if (memberInfo is Type type)
-            return type.Access();
+            return type.Visibility();
         return Reflection.Visibility.None;
     }
 

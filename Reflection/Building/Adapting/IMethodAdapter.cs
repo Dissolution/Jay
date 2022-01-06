@@ -1,10 +1,12 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
+using Jay.Reflection.Emission;
 
 namespace Jay.Reflection.Adapting;
 
-public enum MethodAdapterSafety
+public enum Safety
 {
     // Safe
     Safe = 0,
@@ -26,161 +28,71 @@ public enum MethodAdapterSafety
     
 }
 
-public interface IDelegateMemberBuilder
+public class AdapterException : ReflectionException
 {
-    DelegateSig DelegateSig { get; }
-    MemberInfo Member { get; }
-    MethodAdapterSafety Safety { get; }
-
-    Result TryBuild([NotNullWhen(true)] out Delegate? @delegate);
+    public AdapterException(string? message = null, Exception? innerException = null) 
+        : base(message, innerException)
+    {
+    }
 }
 
-internal abstract class DelegateMemberBuilder : IDelegateMemberBuilder
+public class DelegateMethodAdapter
 {
-    public DelegateSig DelegateSig { get; }
-    public MemberInfo Member { get; }
-    public MethodAdapterSafety Safety { get; }
+    public DelegateSig DelegateSignature { get; }
+    public MethodBase Method { get; }
+    public Safety Safety { get; }
 
-    protected DelegateMemberBuilder(DelegateSig sig, MemberInfo member, MethodAdapterSafety safety)
+    public DelegateMethodAdapter(DelegateSig delegateSig,
+                                 MethodBase method,
+                                 Safety safety = Safety.Safe)
     {
-        this.DelegateSig = sig;
-        this.Member = member;
+        this.DelegateSignature = delegateSig;
+        this.Method = method ?? throw new ArgumentNullException(nameof(method));
         this.Safety = safety;
     }
 
-    protected DynamicMethod CreateDynamicMethod()
+    protected Result TryLoadArgs<TEmitter>(TEmitter emitter)
+        where TEmitter : IOpCodeEmitter<TEmitter>, IGenEmitter<TEmitter>
     {
-        return RuntimeBuilder.CreateDynamicMethod(null, this.DelegateSig);
+        var methodSig = DelegateSig.Of(Method);
+
+        // Static method
+        if (Method.IsStatic)
+        {
+            // Does not need an instance passed in
+            if (methodSig.ParameterCount > DelegateSignature.ParameterCount)
+            {
+                // More args needed than provided
+                return new AdapterException($"{methodSig.ParameterCount} parameters were needed but only {DelegateSignature.ParameterCount} were provided");
+            }
+
+            if (methodSig.ParameterCount == 0)
+            {
+                Debug.Assert(DelegateSignature.ParameterCount == 0);
+                // Nothing to load
+                return true;
+            }
+
+
+        }
     }
 
-    public abstract Result TryBuild([NotNullWhen(true)] out Delegate? @delegate);
+    public Result TryAdapt<TEmitter>(TEmitter emitter)
+        where TEmitter : IOpCodeEmitter<TEmitter>, IGenEmitter<TEmitter>
+    {
+        var methodSig = DelegateSig.Of(Method);
+
+        // Static method
+        if (Method.IsStatic)
+        {
+            // Does not need an instance passed in
+            if (DelegateSignature.ParameterCount == 0)
+            {
+                if (methodSig.ParameterCount == 0)
+                {
+                    // Nothing to load
+                }
+            }
+        }
+    }
 }
-
-public interface IDelegateMemberBuilder<TDelegate> : IDelegateMemberBuilder
-    where TDelegate : Delegate
-{
-    Result TryAdapt([NotNullWhen(true)] out TDelegate? @delegate);
-}
-
-
-
-// public interface IMethodAdapter
-// {
-//     MethodAdapterSafety Safety { get; }
-//
-//     Result TryAdapt(Type delegateType, MethodBase method, [NotNullWhen(true)] out Delegate? @delegate);
-//
-//     Result TryAdapt<TDelegate>(MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate)
-//         where TDelegate : Delegate;
-// }
-//
-// internal class MethodAdapter : IMethodAdapter
-// {
-//     public MethodAdapterSafety Safety { get; }
-//
-//     public MethodAdapter(MethodAdapterSafety safety = MethodAdapterSafety.Safe)
-//     {
-//         this.Safety = safety;
-//     }
-//
-//     protected Result ThinkWeCanLoadArgs(MethodBase method, DelegateSig sig, int pOffset)
-//     {
-//
-//     }
-//
-//     protected Result TryLoadInstance(InstructionStream ilStream, Type instanceType, DelegateSig sig, out int pOffset)
-//     {
-//         Debug.Assert(instanceType != null);
-//         Debug.Assert(instanceType != typeof(void));
-//         Debug.Assert(!instanceType.IsStatic());
-//         if (sig.ParameterCount == 0)
-//         {
-//             pOffset = default;
-//             return new ArgumentException("No instance parameter provided");
-//         }
-//         Debug.Assert(sig.ParameterCount >= 1);
-//         var sigInstance = sig.Parameters[0];
-//         var sigInstAccess = sigInstance.GetAccess(out var sigInstType);
-//         // If we have exactly what we need
-//         if (instanceType.IsValueType)
-//         {
-//             // We really want to get a ref instance for a value type, it produces no side effects
-//             if (sigInstAccess == ParameterInfoExtensions.Access.In ||
-//                 sigInstAccess == ParameterInfoExtensions.Access.Ref)
-//             {
-//
-//             }
-//         }
-//     }
-//
-//     protected Result TryLoadInstance(InstructionStream ilStream, MethodBase method, DelegateSig sig, out int pOffset)
-//     {
-//         // Static method?
-//         if (method.IsStatic)
-//         {
-//             // We do not have to load an instance
-//             if (sig.ParameterCount == 0)
-//             {
-//                 // All good
-//                 pOffset = 0;
-//                 return true;
-//             }
-//
-//             Debug.Assert(sig.ParameterCount >= 1);
-//
-//             // We want to check if a throwaway one was provided
-//             var possibleInstanceType = sig.Parameters[0].ParameterType;
-//             if (possibleInstanceType == typeof(void) || possibleInstanceType == typeof(Static))
-//             {
-//                 // Use this throwaway
-//                 pOffset = 1;
-//                 return true;
-//             }
-//             // We can accept Type in only specific circumstances
-//             if (possibleInstanceType == typeof(Type))
-//             {
-//                 var result = ThinkWeCanLoadArgs(method, sig, 1);
-//                 if (result)
-//                 {
-//                     pOffset = 1;
-//                     return result;
-//                 }
-//             }
-//             
-//             // Assume none was provided
-//             pOffset = 0;
-//             return true;
-//         }
-//
-//
-//
-//         var owner = method.ReflectedType;
-//         if (owner is not null)
-//         {
-//
-//         }
-//     }
-//
-//     public Result TryAdapt(MethodBase method, Type delegateType, [NotNullWhen(true)] out Delegate? @delegate)
-//     {
-//         throw new NotImplementedException();
-//     }
-//
-//     public Result TryAdapt<TDelegate>(MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate) 
-//         where TDelegate : Delegate
-//     {
-//         var result = TryAdapt(method, typeof(TDelegate), out var del);
-//         if (!result)
-//         {
-//             @delegate = default;
-//             return result;
-//         }
-//
-//         if (!del.Is<TDelegate>(out @delegate))
-//         {
-//             return new InvalidOperationException($"Could not cast {del?.GetType()} to {typeof(TDelegate)}");
-//         }
-//
-//         return result;
-//     }
-// }

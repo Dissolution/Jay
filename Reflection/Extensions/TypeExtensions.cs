@@ -7,7 +7,7 @@ namespace Jay.Reflection;
 
 public static class TypeExtensions
 {
-    public static Visibility Access(this Type? type)
+    public static Visibility Visibility(this Type? type)
     {
         Visibility visibility = Reflection.Visibility.None;
         if (type is null)

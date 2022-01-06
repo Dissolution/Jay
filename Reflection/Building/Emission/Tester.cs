@@ -35,7 +35,7 @@ public static class Tester
         IILGeneratorFluentEmitter emitter = default!;
 
 
-        ClassGetter<object, object> getter = new();
+
 
     }
 }

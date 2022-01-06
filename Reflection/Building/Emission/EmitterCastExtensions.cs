@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace Jay.Reflection.Emission;
 
@@ -330,6 +331,69 @@ internal static class EmitterCastExtensions
         where TEmitter : IOpCodeEmitter<TEmitter>
     {
         var result = TryEmitCast(emitter, input, output);
+        result.ThrowIfFailed();
+        return emitter;
+    }
+
+    public static Result TryLoadParams<TEmitter>(this TEmitter emitter,
+                                                 ParameterInfo paramsParameter,
+                                                 ParameterInfo[] parameters)
+        where TEmitter : IOpCodeEmitter<TEmitter>, IGenEmitter<TEmitter>
+    {
+        if (emitter is null)
+            return new ArgumentNullException(nameof(emitter));
+        if (paramsParameter is null)
+            return new ArgumentNullException(nameof(paramsParameter));
+        if (!paramsParameter.IsParams() || paramsParameter.ParameterType != typeof(object[]))
+            return new ArgumentException("Parameter is not params", nameof(paramsParameter));
+        if (parameters is null)
+            return new ArgumentNullException(nameof(parameters));
+        var count = parameters.Length;
+
+        emitter.DefineLabel(out Label lblOk)
+               // Load the params value (object[])
+               .Ldarg(paramsParameter.Position)
+               // Load its Length
+               .Ldlen()
+               // Check that it is equal to the number of parameters we have to fill
+               .Ldc_I4(count)
+               .Beq(lblOk)
+               // They weren't, throw
+               //TODO: Build better thrower
+               .ThrowException<InvalidOperationException>()
+               .MarkLabel(lblOk);
+        // Load each item in turn and cast it to the parameter
+        for (var i = 0; i < count; i++)
+        {
+            // Load object[]
+            emitter.Ldarg(paramsParameter.Position)
+                   // Load element index
+                   .Ldc_I4(i);
+            var parameter = parameters[i];
+            var access = parameter.GetAccess(out var parameterType);
+            // TODO: Test this!
+            if (access == ParameterInfoExtensions.Access.Default)
+            {
+                // Load the element
+                emitter.Ldelem(parameterType);
+            }
+            else
+            {
+                // TODO: Safety checks
+                // Load the element reference
+                emitter.Ldelema(parameterType);
+            }
+        }
+        // All params are loaded in order with nothing extra laying on the stack
+        return true;
+    }
+
+    public static TEmitter LoadParams<TEmitter>(this TEmitter emitter,
+                                                ParameterInfo paramsParameter,
+                                                ParameterInfo[] parameters)
+        where TEmitter : IOpCodeEmitter<TEmitter>, IGenEmitter<TEmitter>
+    {
+        var result = TryLoadParams(emitter, paramsParameter, parameters);
         result.ThrowIfFailed();
         return emitter;
     }
