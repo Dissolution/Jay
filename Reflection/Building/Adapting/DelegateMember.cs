@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Jay.Reflection.Adapting;
+﻿namespace Jay.Reflection.Adapting;
 
 public sealed class DelegateMember : IEquatable<DelegateMember>
 {

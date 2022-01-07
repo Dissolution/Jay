@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Emit;
 using Jay.Reflection.Emission;
 
@@ -27,4 +27,18 @@ public class DynamicMethod<TDelegate>
     }
 
     public TDelegate CreateDelegate() => _dynamicMethod.CreateDelegate<TDelegate>();
+
+    public Result TryCreateDelegate([NotNullWhen(true)] out TDelegate? @delegate)
+    {
+        try
+        {
+            @delegate = _dynamicMethod.CreateDelegate<TDelegate>();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            @delegate = null;
+            return ex;
+        }
+    }
 }

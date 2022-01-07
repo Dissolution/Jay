@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-
-namespace Jay.Reflection;
+﻿namespace Jay.Reflection;
 
 public readonly struct MemberSearch
 {
@@ -25,7 +22,7 @@ public readonly struct MemberSearch
     public bool Matches(MemberInfo member)
     {
         ArgumentNullException.ThrowIfNull(member);
-        if (!this.Visibility.HasAnyFlags<Visibility>(member.Access()))
+        if (!this.Visibility.HasAnyFlags<Visibility>(member.Visibility()))
             return false;
         if (!this.NameMatch.Matches(member.Name))
             return false;

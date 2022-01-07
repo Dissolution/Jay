@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
 using Jay.Comparision;
 using Jay.Text;
 
@@ -28,6 +27,14 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>
     {
         var invokeMethod = delegateType.GetMethod("Invoke",
             BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+        if (invokeMethod is null)
+            throw new ArgumentException("Invalid Delegate Type: Does not have an Invoke method", nameof(delegateType));
+        return DelegateSig.Of(invokeMethod);
+    }
+    public static DelegateSig Of(Type delegateType, out MethodInfo invokeMethod)
+    {
+        invokeMethod = delegateType.GetMethod("Invoke",
+                                              BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
         if (invokeMethod is null)
             throw new ArgumentException("Invalid Delegate Type: Does not have an Invoke method", nameof(delegateType));
         return DelegateSig.Of(invokeMethod);

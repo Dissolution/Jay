@@ -1,8 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace Jay.Reflection.Emission;
+namespace Jay.Reflection;
 
 internal static class Validation
 {
@@ -51,8 +50,8 @@ internal static class Validation
     }
 
     public static void IsInstance([AllowNull, NotNull] MethodInfo? method,
-                                [CallerArgumentExpression("method")]
-                                string? paramName = null)
+                                  [CallerArgumentExpression("method")]
+                                  string? paramName = null)
     {
         ArgumentNullException.ThrowIfNull(method, paramName);
         if (!method.IsStatic)
@@ -68,14 +67,5 @@ internal static class Validation
         {
             throw new InvalidOperationException($"Unable to create a {typeof(TDelegate)}");
         }
-    }
-}
-
-public class ReflectionException : SystemException
-{
-    public ReflectionException(string? message = null, Exception? innerException = null)
-        : base(message, innerException)
-    {
-
     }
 }

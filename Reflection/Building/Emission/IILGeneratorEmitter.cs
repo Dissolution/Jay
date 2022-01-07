@@ -1,7 +1,6 @@
 ﻿namespace Jay.Reflection.Emission;
 
-public interface IILGeneratorEmitter : IGenEmitter<IILGeneratorEmitter>,
-                                       IOpCodeEmitter<IILGeneratorEmitter>
+public interface IILGeneratorEmitter : IFullEmitter<IILGeneratorEmitter>
 {
 
 }

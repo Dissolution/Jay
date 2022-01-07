@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Jay.Reflection.Adapting;
+﻿using Jay.Reflection.Adapting;
 using Jay.Reflection.Emission;
 
 namespace Jay.Reflection;

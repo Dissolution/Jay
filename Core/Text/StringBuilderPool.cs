@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Jay.Collections.Pools;
-using System;
 
 namespace Jay.Text;
 

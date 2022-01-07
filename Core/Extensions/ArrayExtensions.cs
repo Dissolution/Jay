@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Jay;
+﻿namespace Jay;
 
 public static class ArrayExtensions
 {

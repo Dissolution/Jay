@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Jay.Reflection;
+﻿namespace Jay.Reflection;
 
 [Flags]
 public enum Visibility

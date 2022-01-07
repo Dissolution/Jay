@@ -1,21 +1,13 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Jay.Reflection.Emission;
 
 internal static class EmitterCastExtensions
 {
-    private static Result TryEmitCast<TEmitter>(TEmitter emitter,
-                                                ParameterInfo input, ParameterInfo output)
-        where TEmitter : IOpCodeEmitter<TEmitter>
-    {
-        return new NotImplementedException();
-    }
-
     //Always the most up-to-date
-    private static Result TryEmitCast<TEmitter>(TEmitter emitter,
-                                                ParameterInfo input, Type? outputType)
+    public static Result TryLoadAs<TEmitter>(this TEmitter emitter,
+                                             ParameterInfo input, Type? outputType)
         where TEmitter : IOpCodeEmitter<TEmitter>
     {
         if (outputType is null || outputType == typeof(void))
@@ -145,14 +137,9 @@ internal static class EmitterCastExtensions
         return new NotImplementedException($"Cannot cast from {input} to {outputType}");
 
     }
-    private static Result TryEmitCast<TEmitter>(TEmitter emitter,
-                                                Type input, ParameterInfo output)
-        where TEmitter : IOpCodeEmitter<TEmitter>
-    {
-        return new NotImplementedException();
-    }
-    private static Result TryEmitCast<TEmitter>(TEmitter emitter,
-                                                Type? inputType, Type? outputType)
+   
+    public static Result TryCast<TEmitter>(this TEmitter emitter,
+                                           Type? inputType, Type? outputType)
         where TEmitter : IOpCodeEmitter<TEmitter>
     {
         if (outputType is null || outputType == typeof(void))
@@ -276,51 +263,12 @@ internal static class EmitterCastExtensions
         return new NotImplementedException($"Cannot cast from {inputType} to {outputType}");
     }
 
-    public static Result TryEmitCast<TEmitter>(TEmitter emitter,
-                                     Either<ParameterInfo, Type> input,
-                                     Either<Type, ParameterInfo> output)
-    where TEmitter : IOpCodeEmitter<TEmitter>
-    {
-        if (input.Is<ParameterInfo>(out var inputParameter))
-        {
-            if (output.Is<ParameterInfo>(out var outputParameter))
-            {
-                return TryEmitCast(emitter, inputParameter, outputParameter);
-            }
-            else
-            {
-                return TryEmitCast(emitter, inputParameter, (Type)output);
-            }
-        }
-        else
-        {
-            if (output.Is<ParameterInfo>(out var outputParameter))
-            {
-                return TryEmitCast(emitter, (Type)input, outputParameter);
-            }
-            else
-            {
-                return TryEmitCast(emitter, (Type)input, (Type)output);
-            }
-        }
-    }
-
-    public static TEmitter LoadOrCast<TEmitter>(this TEmitter emitter,
-                                              Either<ParameterInfo, Type> input,
-                                              Either<Type, ParameterInfo> output)
-        where TEmitter : IOpCodeEmitter<TEmitter>
-    {
-        var result = TryEmitCast(emitter, input, output);
-        result.ThrowIfFailed();
-        return emitter;
-    }
-
     public static TEmitter LoadAs<TEmitter>(this TEmitter emitter,
                                             ParameterInfo input,
                                             Type output)
         where TEmitter : IOpCodeEmitter<TEmitter>
     {
-        var result = TryEmitCast(emitter, input, output);
+        var result = TryLoadAs(emitter, input, output);
         result.ThrowIfFailed();
         return emitter;
     }
@@ -330,7 +278,7 @@ internal static class EmitterCastExtensions
                                           Type output)
         where TEmitter : IOpCodeEmitter<TEmitter>
     {
-        var result = TryEmitCast(emitter, input, output);
+        var result = TryCast(emitter, input, output);
         result.ThrowIfFailed();
         return emitter;
     }
@@ -338,13 +286,13 @@ internal static class EmitterCastExtensions
     public static Result TryLoadParams<TEmitter>(this TEmitter emitter,
                                                  ParameterInfo paramsParameter,
                                                  ParameterInfo[] parameters)
-        where TEmitter : IOpCodeEmitter<TEmitter>, IGenEmitter<TEmitter>
+        where TEmitter : IFullEmitter<TEmitter>
     {
         if (emitter is null)
             return new ArgumentNullException(nameof(emitter));
         if (paramsParameter is null)
             return new ArgumentNullException(nameof(paramsParameter));
-        if (!paramsParameter.IsParams() || paramsParameter.ParameterType != typeof(object[]))
+        if (/*!paramsParameter.IsParams() || */paramsParameter.ParameterType != typeof(object[]))
             return new ArgumentException("Parameter is not params", nameof(paramsParameter));
         if (parameters is null)
             return new ArgumentNullException(nameof(parameters));
@@ -391,10 +339,108 @@ internal static class EmitterCastExtensions
     public static TEmitter LoadParams<TEmitter>(this TEmitter emitter,
                                                 ParameterInfo paramsParameter,
                                                 ParameterInfo[] parameters)
-        where TEmitter : IOpCodeEmitter<TEmitter>, IGenEmitter<TEmitter>
+        where TEmitter : IFullEmitter<TEmitter>
     {
         var result = TryLoadParams(emitter, paramsParameter, parameters);
         result.ThrowIfFailed();
         return emitter;
+    }
+
+    public static TEmitter LoadDefault<TEmitter>(this TEmitter emitter,
+                                                 Type type)
+        where TEmitter : IFullEmitter<TEmitter>
+    {
+        if (type.IsValueType)
+        {
+            emitter.DeclareLocal(type, out var def)
+                   .Ldloca(def)
+                   .Initobj(type)
+                   .Ldloc(def);
+        }
+        else
+        {
+            emitter.Ldnull();
+        }
+
+        return emitter;
+    }
+
+    public static TEmitter LoadDefault<TEmitter, T>(this TEmitter emitter)
+        where TEmitter : IFullEmitter<TEmitter>
+        => LoadDefault<TEmitter>(emitter, typeof(T));
+
+    internal static bool IsObjectArray(this ParameterInfo parameter)
+    {
+        return !parameter.IsIn &&
+               !parameter.IsOut &&
+               parameter.ParameterType == typeof(object[]);
+    }
+    internal static bool IsObjectArray(this Type type)
+    {
+        return !type.IsByRef &&
+               type == typeof(object[]);
+    }
+
+    public static Result TryLoadInstance<TEmitter>(this TEmitter emitter,
+                                                   ParameterInfo? possibleInstanceParameter,
+                                                   MemberInfo member,
+                                                   out int offset)
+        where TEmitter : IFullEmitter<TEmitter>
+    {
+        // Assume offset 0 for fast return
+        offset = 0;
+
+        // Static method?
+        if (member.IsStatic())
+        {
+            // Null possible is okay
+            if (possibleInstanceParameter is null)
+                return true;
+
+            // Fast get actual instance type minus in/out/ref
+            possibleInstanceParameter.GetAccess(out var instanceType);
+           
+            // Look for a throwaway instance type
+            // TODO: Allow for throwaway object/Type   [null, typeof(member.OwnerType()]
+            if (instanceType == typeof(Static) || instanceType == typeof(VOID) || 
+                instanceType == typeof(void) || instanceType == member.OwnerType())
+            {
+                // This is a throwaway
+                offset = 1;
+                return true;
+            }
+
+            // Assume there is no throwaway
+            return true;
+        }
+        else
+        {
+            if (possibleInstanceParameter is null)
+                return new ArgumentNullException(nameof(possibleInstanceParameter));
+
+            Result result = member.TryGetInstanceType(out var methodInstanceType);
+            if (!result) return result;
+
+            result = emitter.TryLoadAs(possibleInstanceParameter, methodInstanceType!);
+            if (!result) return result;
+
+            // We loaded the instance, the rest of the parameters are used
+            offset = 1;
+            return true;
+        }
+
+    }
+
+    private static readonly Lazy<MethodInfo> _typeGetTypeFromHandleMethod
+        = new Lazy<MethodInfo>(() => typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle),
+                                                            BindingFlags.Public | BindingFlags.Static)!);
+
+    public static TEmitter LoadType<TEmitter>(this TEmitter emitter,
+                                              Type type)
+        where TEmitter : IFullEmitter<TEmitter>
+    {
+        return emitter.Ldtoken(type)
+               .Call(_typeGetTypeFromHandleMethod.Value);
+
     }
 }

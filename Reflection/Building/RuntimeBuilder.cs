@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Text;
 
@@ -46,7 +45,7 @@ public static class RuntimeBuilder
                category == UnicodeCategory.Format;
     }
 
-    private static bool TryBuildName(string? name, TextBuilder builder)
+    private static bool TryAppendName(string? name, TextBuilder builder)
     {
         if (name is null || name.Length == 0)
             return false;
@@ -74,45 +73,46 @@ public static class RuntimeBuilder
         return builder.Length > start;
     }
 
-    public static string FormatMethodName(string? name, DelegateSig delegateSig)
+    public static string CreateMethodName(string? name, DelegateSig delegateSig)
     {
         using var builder = new TextBuilder();
-        if (!TryBuildName(name, builder))
+        if (!TryAppendName(name, builder))
         {
             builder.Clear();
             if (delegateSig.IsAction)
             {
-                builder.Append("Action_");
+                builder.Write("Action_");
             }
             else
             {
-                builder.Append("Func_");
+                builder.Write("Func_");
             }
             var ctr = Interlocked.Increment(ref _counter);
-            builder.Append(ctr);
+            builder.Write(ctr);
         }
         return builder.ToString();
     }
 
-    public static string FormatTypeName(string? name, TypeAttributes typeAttributes)
+    public static string CreateTypeName(string? name, TypeAttributes typeAttributes)
     {
         using var builder = new TextBuilder();
-        if (!TryBuildName(name, builder))
+        if (!TryAppendName(name, builder))
         {
             builder.Clear();
-            if (typeAttributes == TypeAttributes.Class ||
-                typeAttributes == TypeAttributes.AnsiClass ||
-                typeAttributes == TypeAttributes.AutoClass ||
-                typeAttributes == TypeAttributes.UnicodeClass)
+            if (typeAttributes.HasAnyFlags(TypeAttributes.Interface))
             {
-                builder.Append("Class_");
+                builder.Write("Interface_");
+            }
+            else if (typeAttributes.HasAnyFlags(TypeAttributes.Abstract, TypeAttributes.AnsiClass, TypeAttributes.AutoClass, TypeAttributes.Class, TypeAttributes.UnicodeClass))
+            {
+                builder.Write("Class_");
             }
             else
             {
-                builder.Append("Struct_");
+                builder.Write("Struct_");
             }
             var ctr = Interlocked.Increment(ref _counter);
-            builder.Append(ctr);
+            builder.Write(ctr);
         }
         return builder.ToString();
     }
@@ -120,7 +120,7 @@ public static class RuntimeBuilder
     public static DynamicMethod CreateDynamicMethod(string? name,
                                                     DelegateSig delegateSig)
     {
-        return new DynamicMethod(FormatMethodName(name, delegateSig),
+        return new DynamicMethod(CreateMethodName(name, delegateSig),
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
             delegateSig.ReturnType,
@@ -145,7 +145,7 @@ public static class RuntimeBuilder
 
     public static TypeBuilder DefineType(string? name, TypeAttributes typeAttributes)
     {
-        return ModuleBuilder.DefineType(FormatTypeName(name, typeAttributes),
+        return ModuleBuilder.DefineType(CreateTypeName(name, typeAttributes),
             typeAttributes, typeof(RuntimeBuilder));
     }
 }

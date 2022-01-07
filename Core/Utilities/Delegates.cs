@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Jay;
+﻿namespace Jay;
 
 public delegate Task AsyncAction();
 public delegate Task AsyncAction<in T>(T arg);

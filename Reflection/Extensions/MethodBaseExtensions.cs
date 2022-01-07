@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Jay.Reflection;
+﻿namespace Jay.Reflection;
 
 public static class MethodBaseExtensions
 {

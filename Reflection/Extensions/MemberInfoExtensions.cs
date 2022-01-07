@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Jay.Reflection;
 
@@ -48,14 +46,14 @@ public static class MemberInfoExtensions
         return true;
     }
 
-    public static Visibility Access(this MemberInfo? memberInfo)
+    public static Visibility Visibility(this MemberInfo? memberInfo)
     {
         if (memberInfo is FieldInfo fieldInfo)
             return fieldInfo.Visibility();
         if (memberInfo is PropertyInfo propertyInfo)
             return propertyInfo.Visibility();
         if (memberInfo is EventInfo eventInfo)
-            return eventInfo.Access();
+            return eventInfo.Visibility();
         if (memberInfo is ConstructorInfo constructorInfo)
             return constructorInfo.Visibility();
         if (memberInfo is MethodBase methodBase)
@@ -73,8 +71,6 @@ public static class MemberInfoExtensions
             return propertyInfo.IsStatic();
         if (memberInfo is EventInfo eventInfo)
             return eventInfo.IsStatic();
-        // if (memberInfo is ConstructorInfo constructorInfo)
-        //     return constructorInfo.IsStatic;
         if (memberInfo is MethodBase methodBase)
             return methodBase.IsStatic;
         if (memberInfo is Type type)

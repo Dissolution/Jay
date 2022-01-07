@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿global using System.Reflection;
+
 using System.Runtime.InteropServices;
 
 namespace Jay.Reflection;
@@ -42,6 +43,16 @@ public delegate void ClassSetter<in TClass, in TValue>(TClass instance, TValue? 
 
 
 // TODO: Event delegates
+public delegate void EventAdder<TInstance, in THandler>(ref TInstance instance, THandler handler)
+    where THandler : Delegate;
+
+public delegate void EventRemover<TInstance, in THandler>(ref TInstance instance, THandler handler)
+    where THandler : Delegate;
+
+public delegate void EventRaiser<TInstance, in TEventArgs>(ref TInstance instance, TEventArgs args)
+    where TEventArgs : EventArgs;
+
+public delegate void EventDisposer<TInstance>(ref TInstance instance);
 
 
 public delegate TInstance Constructor<out TInstance>(params object?[] args);
@@ -54,7 +65,3 @@ public delegate TResult StructInvoke<TStruct, out TResult>(ref TStruct instance,
 public delegate TResult ClassInvoke<TClass, out TResult>(TClass instance, params object[] args)
     where TClass : class;
 
-//
-// public delegate void Action<TInstance>(ref TInstance? instance, params object?[] args);
-//
-// public delegate TResult? Func<TInstance, out TResult>(ref TInstance? instance, params object?[] args);

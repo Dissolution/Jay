@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Reflection.Emit;
+﻿using System.Reflection.Emit;
 
 namespace Jay.Reflection.Emission;
 
@@ -1167,7 +1166,7 @@ public interface IOpCodeEmitter<TEmitter> : IEmitter
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.castclass"/>
     TEmitter Castclass(Type classType)
     {
-        Validation.IsValue(classType);
+        Validation.IsClass(classType);
         return Emit(OpCodes.Castclass, classType);
     }
 
