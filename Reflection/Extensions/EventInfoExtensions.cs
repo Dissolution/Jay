@@ -1,7 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Reflection.Emit;
-using System.Security.Principal;
-using Jay.Reflection.Adapting;
 using Jay.Reflection.Emission;
 
 namespace Jay.Reflection;
@@ -17,7 +14,7 @@ public static class EventInfoExtensions
                 .GetMethod(nameof(Delegate.GetInvocationList),
                            BindingFlags.Public | BindingFlags.Instance);
             if (getInvocationListMethod is null)
-                throw new RuntimeException($"Delegate.GetInvocationList() does not exist");
+                throw new RuntimeException("Delegate.GetInvocationList() does not exist");
             return getInvocationListMethod;
         });
     }
@@ -130,7 +127,7 @@ public static class EventInfoExtensions
                  result.ThrowIfFailed();
                  Debug.Assert(offset == 1);
 
-                 // Check if we have any to raise
+                 // Check for null backing field
                  emitter.Ldfld(backingField)
                         .DefineLabel(out var lblEnd)
                         .Brfalse(lblEnd);
@@ -209,8 +206,6 @@ public static class EventInfoExtensions
     {
         ArgumentNullException.ThrowIfNull(eventInfo);
         // We're just going to set the backing field to null
-
-
         var backingField = eventInfo.GetBackingField();
         if (backingField is null)
             throw new ReflectionException($"Unable to find {eventInfo}'s backing field for a Raiser");

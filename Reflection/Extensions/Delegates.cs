@@ -56,6 +56,7 @@ public delegate void EventDisposer<TInstance>(ref TInstance instance);
 
 
 public delegate TInstance Constructor<out TInstance>(params object?[] args);
+public delegate TReturn Invoker<TInstance, out TReturn>(ref TInstance instance, params object?[] args);
 
 public delegate TResult StaticInvoke<out TResult>(params object?[] args);
 

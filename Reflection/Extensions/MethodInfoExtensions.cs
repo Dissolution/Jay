@@ -30,4 +30,17 @@ public static class MethodInfoExtensions
                                       return del!;
                                   });
     }
+
+    public static TReturn Invoke<TInstance, TReturn>(this MethodInfo method,
+                                                     ref TInstance instance,
+                                                     params object?[] args)
+    {
+        var del = DelegateMemberCache.Instance
+                                     .GetOrAdd<Invoker<TInstance, TReturn>>(method, _ =>
+                                     {
+                                         TryAdapt<Invoker<TInstance, TReturn>>(method, out var del).ThrowIfFailed();
+                                         return del!;
+                                     });
+        return del(ref instance, args);
+    }
 }
