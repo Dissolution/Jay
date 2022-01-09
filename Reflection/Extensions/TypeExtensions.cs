@@ -50,4 +50,15 @@ public static class TypeExtensions
                 yield return member;
         }
     }
+
+    public static bool Implements<T>(this Type? type) => Implements(type, typeof(T));
+
+    public static bool Implements(this Type? type, Type? otherType)
+    {
+        if (type == otherType) return true;
+        if (type is null || otherType is null) return false;
+        if (type.IsAssignableTo(otherType)) return true;
+        // TODO: OTHER CHECKS w/INTERFACES
+        return false;
+    }
 }
