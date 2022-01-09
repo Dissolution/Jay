@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq.Expressions;
 
 namespace Jay.Reflection;
 
@@ -60,5 +61,13 @@ public static class TypeExtensions
         if (type.IsAssignableTo(otherType)) return true;
         // TODO: OTHER CHECKS w/INTERFACES
         return false;
+    }
+
+
+    public static Result TryFind<TMember>(thk)
+
+    public static TMember? Find<TMember>(this Type type, Expression<Func<Type, TMember>> findMember)
+    {
+
     }
 }

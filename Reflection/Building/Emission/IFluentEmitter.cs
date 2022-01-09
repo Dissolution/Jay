@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+#pragma warning disable CS8321
 
 // ReSharper disable IdentifierTypo
 
@@ -38,12 +39,17 @@ public interface IFluentEmitter<TEmitter> : IOpEmitter<TEmitter>
     TEmitter ThrowException<TException>(params object?[] ctorArgs)
         where TException : Exception
     {
+        var argTypes = ctorArgs.ToTypeArray();
+        var ctor = EmitterHelpers.FindConstructors(typeof(TException), argTypes)
+                                 .FirstOrDefault(ctor => ctor.GetParameters().All(p => CanLoad(p.ParameterType)));
+        if (ctor is null)
+            throw new ArgumentException($"Cannot construct a {typeof(TException)} exception with these arguments",
+                                        nameof(argTypes));
+        foreach (var arg in ctorArgs)
         {
-            var argTypes = ctorArgs.ToTypeArray();
-            var ctor = EmitterHelpers.FindConstructors(typeof(TException), argTypes)
-                                      .FirstOrDefault();
-            throw new NotImplementedException();
+            Load(arg);
         }
+        return Newobj(ctor).Throw();
     }
 
     TEmitter Br(out Label label) => DefineLabel(out label).Br(label);
@@ -80,8 +86,6 @@ public interface IFluentEmitter<TEmitter> : IOpEmitter<TEmitter>
         {
             return true;
         }
-
-
         return false;
     }
 
@@ -705,22 +709,20 @@ public interface IFluentEmitter<TEmitter> : IOpEmitter<TEmitter>
                             Emit(opCode, str);
                             continue;
                         case Label label:
-
-
-
-                            Emit(opCode, label);
+                            var lbl = lblTranslation[label];
+                            Emit(opCode, lbl);
                             continue;
                         case Label[] labels:
-
-
-
-                            Emit(opCode, labels);
+                            var tLabels = new Label[labels.Length];
+                            for (var i = 0; i < labels.Length; i++)
+                            {
+                                tLabels[i] = lblTranslation[labels[i]];
+                            }
+                            Emit(opCode, tLabels);
                             continue;
                         case LocalBuilder local:
-
-
-
-                            Emit(opCode, local);
+                            var lcl = localTranslation[local];
+                            Emit(opCode, lcl);
                             continue;
                         case FieldInfo field:
                             Emit(opCode, field);
