@@ -123,8 +123,7 @@ public static class EventInfoExtensions
              method =>
              {
                  var emitter = method.Emitter;
-                 var result = emitter.TryLoadInstance(method.Parameters[0], backingField, out int offset);
-                 result.ThrowIfFailed();
+                 emitter.LoadInstance(method.Parameters[0], backingField, out int offset);
                  Debug.Assert(offset == 1);
 
                  // Check for null backing field
@@ -143,13 +142,13 @@ public static class EventInfoExtensions
                  }
                  else
                  {
-                     emitter.TryLoadInstance(method.Parameters[0], backingField, out offset);
+                     emitter.LoadInstance(method.Parameters[0], backingField, out offset);
                      emitter.Stloc(sender);
                  }
 
                  // Load and store our Delegate[] into a local variables
-                 emitter.TryLoadInstance(method.Parameters[0], backingField, out offset);
-                 emitter.Ldfld(backingField)
+                 emitter.LoadInstance(method.Parameters[0], backingField, out offset)
+                        .Ldfld(backingField)
                         .Cast(backingField.FieldType, typeof(MulticastDelegate))
                         .Call(_multicastDelegateGetInvocationListMethod.Value)
                         .Stloc(delegates)
@@ -214,8 +213,7 @@ public static class EventInfoExtensions
                                                                        method =>
                                                                        {
                                                                            var emitter = method.Emitter;
-                                                                           var result = emitter.TryLoadInstance(method.Parameters[0], backingField, out int offset);
-                                                                           result.ThrowIfFailed();
+                                                                           emitter.LoadInstance(method.Parameters[0], backingField, out int offset);
                                                                            Debug.Assert(offset == 1);
                                                                                // Store null in the backing field
                                                                                emitter.Ldnull()

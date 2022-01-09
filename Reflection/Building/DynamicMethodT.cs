@@ -14,8 +14,8 @@ public class DynamicMethod<TDelegate>
     protected ILGenerator? _ilGenerator;
 
     public ILGenerator ILGenerator => _ilGenerator ??= _dynamicMethod.GetILGenerator();
-    public IILGeneratorEmitter Emitter => new GenEmitter(this.ILGenerator);
-    public IILGeneratorFluentEmitter FluentEmitter => new GenEmitter(this.ILGenerator);
+    public IILGeneratorEmitter Emitter => new ILGeneratorEmitter(this.ILGenerator);
+    //public IILGeneratorFluentEmitter FluentEmitter => new ILGeneratorEmitter(this.ILGenerator);
     public DelegateSig DelegateSignature { get; }
     public ParameterInfo[] Parameters => DelegateSignature.Parameters;
     public Type ReturnType => DelegateSignature.ReturnType;

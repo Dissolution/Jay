@@ -12,10 +12,10 @@ public static class DynamicMethodExtensions
 
     public static IILGeneratorEmitter Emitter(this DynamicMethod dynamicMethod)
     {
-        return new GenEmitter(dynamicMethod.GetILGenerator());
+        return new ILGeneratorEmitter(dynamicMethod.GetILGenerator());
     }
-    public static IILGeneratorFluentEmitter FluentEmitter(this DynamicMethod dynamicMethod)
-    {
-        return new GenEmitter(dynamicMethod.GetILGenerator());
-    }
+    // public static IILGeneratorFluentEmitter FluentEmitter(this DynamicMethod dynamicMethod)
+    // {
+    //     return new ILGeneratorEmitter(dynamicMethod.GetILGenerator());
+    // }
 }

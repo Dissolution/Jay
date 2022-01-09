@@ -35,7 +35,7 @@ public class MethodBodyReader
     private readonly ParameterInfo _thisParameter;
     private readonly ParameterInfo[] _parameters;
     private readonly IList<LocalVariableInfo> _locals;
-    private readonly InstructionStream<OpCodeInstruction> _instructions;
+    private readonly InstructionStream _instructions;
 
     public MethodBodyReader(MethodBase method)
     {
@@ -64,7 +64,7 @@ public class MethodBodyReader
     {
         while (_il.Position < _il.Length)
         {
-            var instruction = new OpCodeInstruction(_il.Position, ReadOpCode());
+            var instruction = new Instruction(_il.Position, ReadOpCode());
 
             ReadOperand(instruction);
 
@@ -74,7 +74,7 @@ public class MethodBodyReader
         ResolveBranches();
     }
 
-    private void ReadOperand(OpCodeInstruction instruction)
+    private void ReadOperand(Instruction instruction)
     {
         switch (instruction.OpCode.OperandType)
         {
@@ -87,49 +87,49 @@ public class MethodBodyReader
                 for (int i = 0; i < length; i++)
                     branches[i] = _il.Read<int>() + baseOffset;
 
-                instruction.Operand = branches;
+                instruction.Arg = branches;
                 break;
             case OperandType.ShortInlineBrTarget:
-                instruction.Operand = (((sbyte)_il.ReadByte()) + _il.Position);
+                instruction.Arg = (((sbyte)_il.ReadByte()) + _il.Position);
                 break;
             case OperandType.InlineBrTarget:
-                instruction.Operand = _il.Read<int>() + _il.Position;
+                instruction.Arg = _il.Read<int>() + _il.Position;
                 break;
             case OperandType.ShortInlineI:
                 if (instruction.OpCode == OpCodes.Ldc_I4_S)
-                    instruction.Operand = (sbyte)_il.ReadByte();
+                    instruction.Arg = (sbyte)_il.ReadByte();
                 else
-                    instruction.Operand = _il.ReadByte();
+                    instruction.Arg = _il.ReadByte();
                 break;
             case OperandType.InlineI:
-                instruction.Operand = _il.Read<int>();
+                instruction.Arg = _il.Read<int>();
                 break;
             case OperandType.ShortInlineR:
-                instruction.Operand = _il.Read<float>();
+                instruction.Arg = _il.Read<float>();
                 break;
             case OperandType.InlineR:
-                instruction.Operand = _il.Read<double>();
+                instruction.Arg = _il.Read<double>();
                 break;
             case OperandType.InlineI8:
-                instruction.Operand = _il.Read<long>();
+                instruction.Arg = _il.Read<long>();
                 break;
             case OperandType.InlineSig:
-                instruction.Operand = _module.ResolveSignature(_il.Read<int>());
+                instruction.Arg = _module.ResolveSignature(_il.Read<int>());
                 break;
             case OperandType.InlineString:
-                instruction.Operand = _module.ResolveString(_il.Read<int>());
+                instruction.Arg = _module.ResolveString(_il.Read<int>());
                 break;
             case OperandType.InlineTok:
             case OperandType.InlineType:
             case OperandType.InlineMethod:
             case OperandType.InlineField:
-                instruction.Operand = _module.ResolveMember(_il.Read<int>(), _typeArguments, _methodArguments);
+                instruction.Arg = _module.ResolveMember(_il.Read<int>(), _typeArguments, _methodArguments);
                 break;
             case OperandType.ShortInlineVar:
-                instruction.Operand = GetVariable(instruction, _il.ReadByte());
+                instruction.Arg = GetVariable(instruction, _il.ReadByte());
                 break;
             case OperandType.InlineVar:
-                instruction.Operand = GetVariable(instruction, _il.Read<short>());
+                instruction.Arg = GetVariable(instruction, _il.Read<short>());
                 break;
             default:
                 throw new NotSupportedException();
@@ -144,24 +144,24 @@ public class MethodBodyReader
             {
                 case OperandType.ShortInlineBrTarget:
                 case OperandType.InlineBrTarget:
-                    instruction.Operand = _instructions.FindWithOffset((int)instruction.Operand!);
+                    instruction.Arg = _instructions.FindWithOffset((int)instruction.Arg!);
                     break;
                 case OperandType.InlineSwitch:
-                    var offsets = (int[])instruction.Operand;
-                    var branches = new OpCodeInstruction[offsets.Length];
+                    var offsets = (int[])instruction.Arg;
+                    var branches = new Instruction[offsets.Length];
                     for (int j = 0; j < offsets.Length; j++)
                         {
-                        branches[j] = _instructions.FindWithOffset(offsets[j]);
+                        branches[j] = _instructions.FindWithOffset(offsets[j])!;
                     }
 
-                    instruction.Operand = branches;
+                    instruction.Arg = branches;
                     break;
             }
         }
     }
 
 
-    private object GetVariable(OpCodeInstruction instruction, int index)
+    private object GetVariable(Instruction instruction, int index)
     {
         return TargetsLocalVariable(instruction.OpCode)
             ? (object)GetLocalVariable(index)
@@ -197,7 +197,7 @@ public class MethodBodyReader
             : _twoByteOpCodes[_il.ReadByte()];
     }
 
-    public static InstructionStream<OpCodeInstruction> GetInstructions(MethodBase method)
+    public static InstructionStream GetInstructions(MethodBase method)
     {
         var reader = new MethodBodyReader(method);
         reader.ReadInstructions();

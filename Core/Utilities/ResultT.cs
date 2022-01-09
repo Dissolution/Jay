@@ -16,6 +16,7 @@ public readonly struct Result<T> : IEquatable<Result<T>>,
     public static implicit operator bool(Result<T> result) => result._pass;
     public static explicit operator T?(Result<T> result) => result.GetValue();
     public static explicit operator Exception?(Result<T> result) => result._pass ? null : result._error ?? new Exception(Result.DefaultErrorMessage);
+    public static implicit operator Result(Result<T> result) => new Result(result._pass, result._error);
 
     public static bool operator ==(Result<T> x, Result<T> y) => x._pass == y._pass;
     public static bool operator !=(Result<T> x, Result<T> y) => x._pass != y._pass;

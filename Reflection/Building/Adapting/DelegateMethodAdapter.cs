@@ -21,7 +21,7 @@ public class DelegateMethodAdapter
     }
 
     protected Result TryLoadArgs<TEmitter>(TEmitter emitter, int offset)
-        where TEmitter : IFullEmitter<TEmitter>
+        where TEmitter : class, IFluentEmitter<TEmitter>
     {
         // None?
         if (MethodSignature.ParameterCount == 0)
@@ -39,8 +39,7 @@ public class DelegateMethodAdapter
                  DelegateSignature.Parameters[offset].IsObjectArray() &&
                  !MethodSignature.Parameters[0].IsObjectArray())
         {
-            Result result = emitter.TryLoadParams(DelegateSignature.Parameters[offset], MethodSignature.Parameters);
-            return result;
+            return Result.Try(() => emitter.LoadParams(DelegateSignature.Parameters[offset], MethodSignature.Parameters));
         }
         // Check for optional method params
         else if (MethodSignature.Parameters.Reverse().Any(p => p.HasDefaultValue))
@@ -55,7 +54,7 @@ public class DelegateMethodAdapter
     }
 
     protected Result TryCastReturn<TEmitter>(TEmitter emitter)
-        where TEmitter : IFullEmitter<TEmitter>
+        where TEmitter : class, IFluentEmitter<TEmitter>
     {
         // Does delegate have one?
         if (DelegateSignature.ReturnType != typeof(void))
@@ -63,8 +62,7 @@ public class DelegateMethodAdapter
             // Does method?
             if (MethodSignature.ReturnType != typeof(void))
             {
-                Result result = emitter.TryCast(MethodSignature.ReturnType, DelegateSignature.ReturnType);
-                return result;
+                return Result.Try(() => emitter.Cast(MethodSignature.ReturnType, DelegateSignature.ReturnType));
             }
             else
             {
@@ -97,7 +95,7 @@ public class DelegateMethodAdapter
     }
 
     public Result TryAdapt<TEmitter>(TEmitter emitter)
-        where TEmitter : IFullEmitter<TEmitter>
+        where TEmitter : class, IFluentEmitter<TEmitter>
     {
         Result result;
         ParameterInfo? possibleInstanceParam;
@@ -109,7 +107,8 @@ public class DelegateMethodAdapter
         {
             possibleInstanceParam = null;
         }
-        result = emitter.TryLoadInstance(possibleInstanceParam, Method, out int offset);
+        int offset = default;
+        result = Result.Try(() => emitter.LoadInstance(possibleInstanceParam, Method, out offset));
         if (!result) return result;
         result = TryLoadArgs(emitter, offset);
         if (!result) return result;

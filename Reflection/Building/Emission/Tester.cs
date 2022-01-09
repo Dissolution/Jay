@@ -32,7 +32,7 @@ public static class Tester
     static Tester()
     {
         //var emitter = new OpCodeEmitter();
-        IILGeneratorFluentEmitter emitter = default!;
+        //IILGeneratorFluentEmitter emitter = default!;
 
 
 
