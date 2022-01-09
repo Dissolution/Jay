@@ -1,7 +1,6 @@
 ﻿using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 
-
 namespace Jay.Reflection.Emission;
 
 public class ILGeneratorEmitter : IILGeneratorEmitter
@@ -315,9 +314,6 @@ public class ILGeneratorEmitter : IILGeneratorEmitter
         _ilGenerator.Emit(opCode, labels);
         return _this;
     }
-}
 
-public interface IILGeneratorEmitter : IFluentEmitter<IILGeneratorEmitter>
-{
-
+    public override string ToString() => Instructions.ToString();
 }

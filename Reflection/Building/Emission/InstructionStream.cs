@@ -1,4 +1,6 @@
-﻿namespace Jay.Reflection.Emission;
+﻿using Jay.Text;
+
+namespace Jay.Reflection.Emission;
 
 public class InstructionStream : LinkedList<Instruction>
 {
@@ -16,4 +18,10 @@ public class InstructionStream : LinkedList<Instruction>
         return null;
     }
 
+    public override string ToString()
+    {
+        var text = new TextBuilder();
+        text.AppendDelimit<Instruction>(Environment.NewLine, this);
+        return text.ToString();
+    }
 }

@@ -1,4 +1,6 @@
-﻿namespace Jay.Reflection;
+﻿using Jay.Reflection.Emission;
+
+namespace Jay.Reflection;
 
 public static class MethodBaseExtensions
 {
@@ -32,5 +34,10 @@ public static class MethodBaseExtensions
         if (method is ConstructorInfo constructorInfo)
             return constructorInfo.DeclaringType!;
         return typeof(void);
+    }
+
+    public static InstructionStream GetInstructions(this MethodBase method)
+    {
+        return MethodBodyReader.GetInstructions(method);
     }
 }

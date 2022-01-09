@@ -4,12 +4,13 @@ namespace Jay.Reflection.Emission;
 
 internal static class EmitterHelpers
 {
-    public static Lazy<MethodInfo> RuntimeHelpersGetUninitializedObject { get; }
+    public static Lazy<MethodInfo> RuntimeHelpersGetUninitializedObjectMethod { get; }
     public static Lazy<MethodInfo> TypeGetTypeFromHandleMethod { get; }
+    public static Lazy<MethodInfo> MulticastDelegateGetInvocationListMethod { get; }
 
     static EmitterHelpers()
     {
-        RuntimeHelpersGetUninitializedObject = new Lazy<MethodInfo>(() =>
+        RuntimeHelpersGetUninitializedObjectMethod = new Lazy<MethodInfo>(() =>
         {
             var method = typeof(RuntimeHelpers).GetMethod(nameof(RuntimeHelpers.GetUninitializedObject),
                 Reflect.AllFlags,
@@ -26,6 +27,15 @@ internal static class EmitterHelpers
             if (method is null)
                 throw new RuntimeException("Cannot find Type.GetTypeFromHandle(RuntimeTypeHandle)");
             return method;
+        });
+        MulticastDelegateGetInvocationListMethod = new Lazy<MethodInfo>(() =>
+        {
+            var getInvocationListMethod = typeof(MulticastDelegate)
+                .GetMethod(nameof(Delegate.GetInvocationList),
+                    BindingFlags.Public | BindingFlags.Instance);
+            if (getInvocationListMethod is null)
+                throw new RuntimeException("Delegate.GetInvocationList() does not exist");
+            return getInvocationListMethod;
         });
     }
 

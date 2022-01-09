@@ -5,20 +5,6 @@ namespace Jay.Reflection;
 
 public static class EventInfoExtensions
 {
-    private static readonly Lazy<MethodInfo> _multicastDelegateGetInvocationListMethod;
-    static EventInfoExtensions()
-    {
-        _multicastDelegateGetInvocationListMethod = new Lazy<MethodInfo>(() =>
-        {
-            var getInvocationListMethod = typeof(MulticastDelegate)
-                .GetMethod(nameof(Delegate.GetInvocationList),
-                           BindingFlags.Public | BindingFlags.Instance);
-            if (getInvocationListMethod is null)
-                throw new RuntimeException("Delegate.GetInvocationList() does not exist");
-            return getInvocationListMethod;
-        });
-    }
-
     public static MethodInfo? GetAdder(this EventInfo? eventInfo)
     {
         return eventInfo?.GetAddMethod(false) ??
@@ -150,7 +136,7 @@ public static class EventInfoExtensions
                  emitter.LoadInstance(method.Parameters[0], backingField, out offset)
                         .Ldfld(backingField)
                         .Cast(backingField.FieldType, typeof(MulticastDelegate))
-                        .Call(_multicastDelegateGetInvocationListMethod.Value)
+                        .Call(EmitterHelpers.MulticastDelegateGetInvocationListMethod.Value)
                         .Stloc(delegates)
 
                         // For loop
@@ -208,7 +194,6 @@ public static class EventInfoExtensions
         var backingField = eventInfo.GetBackingField();
         if (backingField is null)
             throw new ReflectionException($"Unable to find {eventInfo}'s backing field for a Raiser");
-
         return RuntimeBuilder.CreateDelegate<EventDisposer<TInstance>>($"{typeof(TInstance)}.{eventInfo.Name}.Dispose",
                                                                        method =>
                                                                        {

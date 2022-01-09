@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 
 // ReSharper disable IdentifierTypo
 
@@ -129,7 +130,7 @@ public interface IFluentEmitter<TEmitter> : IOpEmitter<TEmitter>
     {
         ArgumentNullException.ThrowIfNull(type);
         return LoadType(type)
-               .Call(EmitterHelpers.RuntimeHelpersGetUninitializedObject.Value)
+               .Call(EmitterHelpers.RuntimeHelpersGetUninitializedObjectMethod.Value)
                .Cast(typeof(object), type);
     }
     TEmitter LoadUninitialized<T>() => LoadUninitialized(typeof(T));
@@ -448,10 +449,7 @@ public interface IFluentEmitter<TEmitter> : IOpEmitter<TEmitter>
         return Ldnull();
     }
     TEmitter LoadDefault<T>() => LoadDefault(typeof(T));
-
-
-  
-
+    
     TEmitter LoadInstance(ParameterInfo? possibleInstanceParameter,
                           MemberInfo member,
                           out int offset)
@@ -495,5 +493,256 @@ public interface IFluentEmitter<TEmitter> : IOpEmitter<TEmitter>
             return (TEmitter)this;
         }
 
+        TEmitter EmitInstructions(IEnumerable<Instruction> instructions)
+        {
+            var lblTranslation = new Dictionary<Label, Label>(0);
+            var localTranslation = new Dictionary<LocalBuilder, LocalBuilder>(0);
+
+            foreach (var instruction in instructions)
+            {
+                if (instruction.GenMethod != ILGeneratorMethod.None)
+                {
+                    switch (instruction.GenMethod)
+                    {
+                        case ILGeneratorMethod.BeginCatchBlock:
+                        {
+                            if (instruction.Arg is not Type exceptionType)
+                                throw new ReflectionException();
+                            BeginCatchBlock(exceptionType);
+                            continue;
+                        }
+                        case ILGeneratorMethod.BeginExceptFilterBlock:
+                        {
+                            if (instruction.Arg is not null)
+                                throw new ReflectionException();
+                            BeginExceptFilterBlock();
+                            continue;
+                        }
+                        case ILGeneratorMethod.BeginExceptionBlock:
+                        {
+                            if (instruction.Arg is not Label label)
+                                throw new ReflectionException();
+                            BeginExceptionBlock(out var lbl);
+                            lblTranslation[label] = lbl;
+                            continue;
+                        }
+                        case ILGeneratorMethod.EndExceptionBlock:
+                        {
+                            if (instruction.Arg is not null)
+                                throw new ReflectionException();
+                            EndExceptionBlock();
+                            continue;
+                        }
+                        case ILGeneratorMethod.BeginFaultBlock:
+                        {
+                            if (instruction.Arg is not null)
+                                throw new ReflectionException();
+                            BeginFaultBlock();
+                            continue;
+                        }
+                        case ILGeneratorMethod.BeginFinallyBlock:
+                        {
+                            if (instruction.Arg is not null)
+                                throw new ReflectionException();
+                            BeginFinallyBlock();
+                            continue;
+                        }
+                        case ILGeneratorMethod.BeginScope:
+                        {
+                            if (instruction.Arg is not null)
+                                throw new ReflectionException();
+                            BeginScope();
+                            continue;
+                        }
+                        case ILGeneratorMethod.EndScope:
+                        {
+                            if (instruction.Arg is not null)
+                                throw new ReflectionException();
+                            EndScope();
+                            continue;
+                        }
+                        case ILGeneratorMethod.UsingNamespace:
+                        {
+                            if (instruction.Arg is not string usingNamespace)
+                                throw new ReflectionException();
+                            UsingNamespace(usingNamespace);
+                            continue;
+                        }
+                        case ILGeneratorMethod.DeclareLocal:
+                        {
+                            if (instruction.Arg is not object[] args)
+                                throw new ReflectionException();
+                            if (args.Length == 2)
+                            {
+                                var type = args[0] as Type;
+                                if (type is null) throw new ReflectionException();
+                                var lb = args[1] as LocalBuilder;
+                                if (lb is null) throw new ReflectionException();
+                                DeclareLocal(type, out var localBuilder);
+                                localTranslation[lb] = localBuilder;
+                                continue;
+                            }
+                            if (args.Length == 3)
+                            {
+                                var type = args[0] as Type;
+                                if (type is null) throw new ReflectionException();
+                                if (args[1] is not bool pinned)
+                                    throw new ReflectionException();
+                                var lb = args[2] as LocalBuilder;
+                                if (lb is null) throw new ReflectionException();
+                                DeclareLocal(type, pinned, out var localBuilder);
+                                localTranslation[lb] = localBuilder;
+                                continue;
+                            }
+                            throw new ReflectionException();
+                        }
+                        case ILGeneratorMethod.DefineLabel:
+                        {
+                            if (instruction.Arg is not Label label)
+                                throw new ReflectionException();
+                            DefineLabel(out var lbl);
+                            lblTranslation[label] = lbl;
+                            continue;
+                        }
+                        case ILGeneratorMethod.MarkLabel:
+                        {
+                            if (instruction.Arg is not Label label)
+                                throw new ReflectionException();
+                            var lbl = lblTranslation[label];
+                            MarkLabel(lbl);
+                            continue;
+                        }
+                        case ILGeneratorMethod.EmitCall:
+                        {
+                            if (instruction.Arg is not object[] args)
+                                throw new ReflectionException();
+                            var method = args[0] as MethodInfo;
+                            if (method is null) throw new ReflectionException();
+                            var types = args[1] as Type[];
+                            if (types is null) throw new ReflectionException();
+                            EmitCall(method, types);
+                            continue;
+                        }
+                        case ILGeneratorMethod.EmitCalli:
+                        {
+                            if (instruction.Arg is not object[] args)
+                                throw new ReflectionException();
+                            if (args.Length == 3)
+                            {
+                                var cc = (CallingConvention)args[0];
+                                var returnType = args[1] as Type;
+                                if (returnType is null) throw new ReflectionException();
+                                var parameterTypes = args[2] as Type[];
+                                if (parameterTypes is null) throw new ReflectionException();
+                                EmitCalli(cc, returnType, parameterTypes);
+                                continue;
+                            }
+                            if (args.Length == 4)
+                            {
+                                var cc = (CallingConventions)args[0];
+                                var returnType = args[1] as Type;
+                                if (returnType is null) throw new ReflectionException();
+                                var parameterTypes = args[2] as Type[];
+                                if (parameterTypes is null) throw new ReflectionException();
+                                var optionalParameterTypes = args[3] as Type[];
+                                if (optionalParameterTypes is null) throw new ReflectionException();
+                                EmitCalli(cc, returnType, parameterTypes, optionalParameterTypes);
+                                continue;
+                            }
+                            throw new ReflectionException();
+                        }
+                        case ILGeneratorMethod.WriteLine:
+                            throw new NotImplementedException();
+                            break;
+                        case ILGeneratorMethod.ThrowException:
+                        {
+                            if (instruction.Arg is not Type exceptionType)
+                                throw new ReflectionException();
+                            ThrowException(exceptionType);
+                            continue;
+                        }
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+                else
+                {
+                    var opCode = instruction.OpCode;
+                    var arg = instruction.Arg;
+                    switch (arg)
+                    {
+                        case null:
+                            Emit(opCode);
+                            continue;
+                        case byte b:
+                            Emit(opCode, b);
+                            continue;
+                        case sbyte sb:
+                            Emit(opCode, sb);
+                            continue;
+                        case short s:
+                            Emit(opCode, s);
+                            continue;
+                        case ushort us:
+                            Emit(opCode, us);
+                            continue;
+                        case int i:
+                            Emit(opCode, i);
+                            continue;
+                        case uint ui:
+                            Emit(opCode, ui);
+                            continue;
+                        case long l:
+                            Emit(opCode, l);
+                            continue;
+                        case float f:
+                            Emit(opCode, f);
+                            continue;
+                        case double d:
+                            Emit(opCode, d);
+                            continue;
+                        case string str:
+                            Emit(opCode, str);
+                            continue;
+                        case Label label:
+
+
+
+                            Emit(opCode, label);
+                            continue;
+                        case Label[] labels:
+
+
+
+                            Emit(opCode, labels);
+                            continue;
+                        case LocalBuilder local:
+
+
+
+                            Emit(opCode, local);
+                            continue;
+                        case FieldInfo field:
+                            Emit(opCode, field);
+                            continue;
+                        case ConstructorInfo ctor:
+                            Emit(opCode, ctor);
+                            continue;
+                        case MethodInfo method:
+                            Emit(opCode, method);
+                            continue;
+                        case Type type:
+                            Emit(opCode, type);
+                            continue;
+                        case SignatureHelper signature:
+                            Emit(opCode, signature);
+                            continue;
+                        default:
+                            throw new ReflectionException();
+                    }
+                }
+            }
+            return (TEmitter)this;
+        }
     }
 }

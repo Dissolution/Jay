@@ -1,5 +1,7 @@
-﻿using Jay.Reflection.Adapting;
+﻿using System.Reflection.Emit;
+using Jay.Reflection.Adapting;
 using Jay.Reflection.Emission;
+using Jay.Text;
 
 namespace Jay.Reflection;
 
@@ -33,6 +35,69 @@ public static class PropertyInfoExtensions
             return false;
         return propertyInfo.GetGetter().IsStatic() ||
                propertyInfo.GetSetter().IsStatic();
+    }
+
+    private static string GetBackingFieldName(PropertyInfo property) => $"<{property.Name}>k__BackingField";
+
+    public static FieldInfo? GetBackingField(this PropertyInfo? propertyInfo)
+    {
+        if (propertyInfo is null) return null;
+        var owner = propertyInfo.DeclaringType;
+        if (owner is null) return null;
+        var flags = BindingFlags.NonPublic;
+        flags |= propertyInfo.IsStatic() ? BindingFlags.Static : BindingFlags.Instance;
+        var field = owner.GetField(GetBackingFieldName(propertyInfo), flags);
+        if (field is null)
+        {
+            var getter = propertyInfo.GetGetter();
+            if (getter is not null)
+            {
+                field = getter.GetInstructions()
+                              .Where(inst =>
+                                  inst.OpCode == OpCodes.Ldfld || inst.OpCode == OpCodes.Ldflda ||
+                                  inst.OpCode == OpCodes.Ldsfld || inst.OpCode == OpCodes.Ldsflda)
+                              .SelectWhere((Instruction inst, out FieldInfo fld) =>
+                              {
+                                  if (inst.Arg.Is(out fld) &&
+                                      fld.DeclaringType == owner &&
+                                      fld.FieldType == propertyInfo.PropertyType)
+                                  {
+                                      return true;
+                                  }
+
+                                  fld = null;
+                                  return false;
+                              })
+                              .OrderBy(fld => Levenshtein.Calculate(fld.Name, propertyInfo.Name))
+                              .FirstOrDefault();
+            }
+        }
+
+        if (field is null)
+        {
+            var setter = propertyInfo.GetSetter();
+            if (setter is not null)
+            {
+                field = setter.GetInstructions()
+                              .Where(inst => inst.OpCode == OpCodes.Stfld || inst.OpCode == OpCodes.Stsfld)
+                              .SelectWhere((Instruction inst, out FieldInfo fld) =>
+                              {
+                                  if (inst.Arg.Is(out fld) &&
+                                      fld.DeclaringType == owner &&
+                                      fld.FieldType == propertyInfo.PropertyType)
+                                  {
+                                      return true;
+                                  }
+
+                                  fld = null;
+                                  return false;
+                              })
+                              .OrderBy(fld => Levenshtein.Calculate(fld.Name, propertyInfo.Name))
+                              .FirstOrDefault();
+            }
+        }
+
+        return field;
     }
 
     public static StaticGetter<TValue> CreateStaticGetter<TValue>(this PropertyInfo property)

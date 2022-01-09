@@ -90,14 +90,14 @@ public class MethodBodyReader
                 instruction.Arg = branches;
                 break;
             case OperandType.ShortInlineBrTarget:
-                instruction.Arg = (((sbyte)_il.ReadByte()) + _il.Position);
+                instruction.Arg = (_il.Read<sbyte>() + _il.Position);
                 break;
             case OperandType.InlineBrTarget:
                 instruction.Arg = _il.Read<int>() + _il.Position;
                 break;
             case OperandType.ShortInlineI:
                 if (instruction.OpCode == OpCodes.Ldc_I4_S)
-                    instruction.Arg = (sbyte)_il.ReadByte();
+                    instruction.Arg = _il.Read<sbyte>();
                 else
                     instruction.Arg = _il.ReadByte();
                 break;
@@ -150,7 +150,7 @@ public class MethodBodyReader
                     var offsets = (int[])instruction.Arg;
                     var branches = new Instruction[offsets.Length];
                     for (int j = 0; j < offsets.Length; j++)
-                        {
+                    {
                         branches[j] = _instructions.FindWithOffset(offsets[j])!;
                     }
 
