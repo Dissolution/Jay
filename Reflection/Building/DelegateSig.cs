@@ -6,6 +6,9 @@ namespace Jay.Reflection;
 
 public readonly struct DelegateSig : IEquatable<DelegateSig>
 {
+    public static implicit operator DelegateSig(MethodBase method) => Of(method);
+    public static implicit operator DelegateSig(Type delegateType) => Of(delegateType);
+
     public static bool operator ==(DelegateSig x, DelegateSig y) => x.Equals(y);
     public static bool operator !=(DelegateSig x, DelegateSig y) => !x.Equals(y);
 
@@ -20,21 +23,22 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>
 
     public static DelegateSig Of(MethodBase method)
     {
+        ArgumentNullException.ThrowIfNull(method);
         return new DelegateSig(method.GetParameters(), method.ReturnType());
     }
 
     public static DelegateSig Of(Type delegateType)
     {
-        var invokeMethod = delegateType.GetMethod("Invoke",
-            BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+        ArgumentNullException.ThrowIfNull(delegateType);
+        var invokeMethod = delegateType.GetMethod("Invoke", Reflect.PublicFlags);
         if (invokeMethod is null)
             throw new ArgumentException("Invalid Delegate Type: Does not have an Invoke method", nameof(delegateType));
         return DelegateSig.Of(invokeMethod);
     }
     public static DelegateSig Of(Type delegateType, out MethodInfo invokeMethod)
     {
-        invokeMethod = delegateType.GetMethod("Invoke",
-                                              BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+        ArgumentNullException.ThrowIfNull(delegateType);
+        invokeMethod = delegateType.GetMethod("Invoke", Reflect.PublicFlags);
         if (invokeMethod is null)
             throw new ArgumentException("Invalid Delegate Type: Does not have an Invoke method", nameof(delegateType));
         return DelegateSig.Of(invokeMethod);
@@ -91,7 +95,7 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>
     public override string ToString()
     {
         using var text = new TextBuilder();
-        if (ReturnType != typeof(void))
+        if (IsFunc)
         {
             text.Append("Func<");
         }
@@ -100,7 +104,7 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>
             text.Append("Action<");
         }
         text.AppendDelimit(",", ParameterTypes);
-        if (ReturnType != typeof(void))
+        if (IsFunc)
         {
             text.Append(',')
                 .Append(ReturnType);

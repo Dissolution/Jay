@@ -109,7 +109,7 @@ public static class EventInfoExtensions
              method =>
              {
                  var emitter = method.Emitter;
-                 emitter.LoadInstance(method.Parameters[0], backingField, out int offset);
+                 emitter.LoadInstanceFor(method.Parameters[0], backingField, out int offset);
                  Debug.Assert(offset == 1);
 
                  // Check for null backing field
@@ -128,12 +128,12 @@ public static class EventInfoExtensions
                  }
                  else
                  {
-                     emitter.LoadInstance(method.Parameters[0], backingField, out offset);
+                     emitter.LoadInstanceFor(method.Parameters[0], backingField, out offset);
                      emitter.Stloc(sender);
                  }
 
                  // Load and store our Delegate[] into a local variables
-                 emitter.LoadInstance(method.Parameters[0], backingField, out offset)
+                 emitter.LoadInstanceFor(method.Parameters[0], backingField, out offset)
                         .Ldfld(backingField)
                         .Cast(backingField.FieldType, typeof(MulticastDelegate))
                         .Call(EmitterHelpers.MulticastDelegateGetInvocationListMethod.Value)
@@ -198,7 +198,7 @@ public static class EventInfoExtensions
                                                                        method =>
                                                                        {
                                                                            var emitter = method.Emitter;
-                                                                           emitter.LoadInstance(method.Parameters[0], backingField, out int offset);
+                                                                           emitter.LoadInstanceFor(method.Parameters[0], backingField, out int offset);
                                                                            Debug.Assert(offset == 1);
                                                                                // Store null in the backing field
                                                                                emitter.Ldnull()

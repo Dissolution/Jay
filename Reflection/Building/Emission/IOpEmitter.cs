@@ -1,9 +1,11 @@
 ﻿using System.Reflection.Emit;
 // ReSharper disable IdentifierTypo
+// ReSharper disable UnusedMember.Global
+// ReSharper disable CommentTypo
 
 namespace Jay.Reflection.Emission;
 
-public interface IOpEmitter<TEmitter> : IILGenerator<TEmitter>
+public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     where TEmitter : class, IOpEmitter<TEmitter>
 {
     #region Try/Catch/Finally

@@ -1,6 +1,7 @@
 ﻿using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 // ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace Jay.Reflection.Emission;
 

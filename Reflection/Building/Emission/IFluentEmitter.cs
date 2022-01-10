@@ -1,13 +1,14 @@
 ﻿using System.Diagnostics;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+// ReSharper disable UnusedMember.Global
 #pragma warning disable CS8321
 
 // ReSharper disable IdentifierTypo
 
 namespace Jay.Reflection.Emission;
 
-public interface IFluentEmitter<TEmitter> : IOpEmitter<TEmitter>
+public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
     where TEmitter : class, IFluentEmitter<TEmitter>
 {
     TEmitter DefineAndMarkLabel(out Label label) => DefineLabel(out label).MarkLabel(label);
@@ -106,7 +107,7 @@ public interface IFluentEmitter<TEmitter> : IOpEmitter<TEmitter>
         if (value is int i)
             return Ldc_I4(i);
         if (value is uint ui)
-            return Ldc_I8((long)ui);
+            return Ldc_I8(ui);
         if (value is long l)
             return Ldc_I8(l);
         if (value is ulong ul)
@@ -454,9 +455,9 @@ public interface IFluentEmitter<TEmitter> : IOpEmitter<TEmitter>
     }
     TEmitter LoadDefault<T>() => LoadDefault(typeof(T));
     
-    TEmitter LoadInstance(ParameterInfo? possibleInstanceParameter,
-                          MemberInfo member,
-                          out int offset)
+    TEmitter LoadInstanceFor(ParameterInfo? possibleInstanceParameter,
+                             MemberInfo member,
+                             out int offset)
     {
         // Assume offset 0 for fast return
         offset = 0;

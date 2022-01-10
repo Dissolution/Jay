@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Reflection.Metadata;
+using Jay.Reflection.Expressions;
 
 namespace Jay.Reflection;
 
@@ -41,13 +44,13 @@ public static class TypeExtensions
         return type.IsAbstract && type.IsSealed;
     }
 
-    public static IEnumerable<MemberInfo> Search(this Type? type, MemberSearch memberSearch)
+    public static IEnumerable<MemberInfo> Search(this Type? type, MemberMatch memberMatch)
     {
         if (type is null)
             yield break;
         foreach (var member in type.GetMembers(Reflect.AllFlags))
         {
-            if (memberSearch.Matches(member))
+            if (memberMatch.Matches(member))
                 yield return member;
         }
     }
@@ -64,10 +67,56 @@ public static class TypeExtensions
     }
 
 
-    public static Result TryFind<TMember>(thk)
-
-    public static TMember? Find<TMember>(this Type type, Expression<Func<Type, TMember>> findMember)
+    public static Result TryFind<TMember>(this Type type, 
+                                          Expression memberExpression,
+                                          [NotNullWhen(true)] out TMember? member)
+        where TMember : MemberInfo
     {
-
+        member = memberExpression.ExtractMember<TMember>();
+        if (member is null)
+        {
+            
+            Debugger.Break();
+            return new MissingMemberException();
+        }
+        return true;
     }
+
+    // public static Result TryFind<TMember>(this Type type, 
+    //                                       Expression<Func<Type, TMember>> findMember,
+    //                                       [NotNullWhen(true)] out TMember? member)
+    //     where TMember : MemberInfo
+    // {
+    //     member = default;
+    //     if (type is null) return new ArgumentNullException(nameof(type));
+    //     if (findMember is null) return new ArgumentNullException(nameof(findMember));
+    //     Func<Type, TMember> func;
+    //     try
+    //     {
+    //         func = findMember.Compile();
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return ex;
+    //     }
+    //     try
+    //     {
+    //         member = func(type);
+    //         if (member is null)
+    //             return new ReflectionException($"Unable to find a non-null {typeof(TMember)}");
+    //         return true;
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Debugger.Break();
+    //
+    //         return ex;
+    //     }
+    //
+    //
+    //
+    //     Debugger.Break();
+    // }
+
+   
 }

@@ -144,14 +144,14 @@ public class MethodBodyReader
             {
                 case OperandType.ShortInlineBrTarget:
                 case OperandType.InlineBrTarget:
-                    instruction.Arg = _instructions.FindWithOffset((int)instruction.Arg!);
+                    instruction.Arg = _instructions.FindByOffset((int)instruction.Arg!);
                     break;
                 case OperandType.InlineSwitch:
                     var offsets = (int[])instruction.Arg;
                     var branches = new Instruction[offsets.Length];
                     for (int j = 0; j < offsets.Length; j++)
                     {
-                        branches[j] = _instructions.FindWithOffset(offsets[j])!;
+                        branches[j] = _instructions.FindByOffset(offsets[j])!;
                     }
 
                     instruction.Arg = branches;

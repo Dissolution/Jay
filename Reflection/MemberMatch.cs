@@ -1,18 +1,18 @@
 ﻿namespace Jay.Reflection;
 
-public readonly struct MemberSearch
+public readonly struct MemberMatch
 {
-    public static implicit operator MemberSearch(Visibility visibility) => new MemberSearch(visibility, NameMatch.Any, MemberTypes.All);
-    public static implicit operator MemberSearch(string? name) => new MemberSearch(Visibility.Any, new NameMatch(name), MemberTypes.All);
-    public static implicit operator MemberSearch(MemberTypes memberTypes) => new MemberSearch(Visibility.Any, NameMatch.Any, memberTypes);
+    public static implicit operator MemberMatch(Visibility visibility) => new MemberMatch(visibility, NameMatch.Any, MemberTypes.All);
+    public static implicit operator MemberMatch(string? name) => new MemberMatch(Visibility.Any, new NameMatch(name), MemberTypes.All);
+    public static implicit operator MemberMatch(MemberTypes memberTypes) => new MemberMatch(Visibility.Any, NameMatch.Any, memberTypes);
         
-    public static readonly MemberSearch All = new MemberSearch(Visibility.Any, NameMatch.Any, MemberTypes.All);
+    public static readonly MemberMatch All = new MemberMatch(Visibility.Any, NameMatch.Any, MemberTypes.All);
         
     public readonly Visibility Visibility;
     public readonly NameMatch NameMatch;
     public readonly MemberTypes MemberTypes;
 
-    public MemberSearch(Visibility visibility, NameMatch nameMatch, MemberTypes memberTypes)
+    public MemberMatch(Visibility visibility, NameMatch nameMatch, MemberTypes memberTypes)
     {
         Visibility = visibility;
         NameMatch = nameMatch;
@@ -34,7 +34,7 @@ public readonly struct MemberSearch
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        if (obj is MemberSearch search)
+        if (obj is MemberMatch search)
             return search.Visibility == this.Visibility &&
                    search.NameMatch == this.NameMatch &&
                    search.MemberTypes == this.MemberTypes;

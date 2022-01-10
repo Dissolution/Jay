@@ -1,18 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using Jay.Reflection;
-//
-//
-// var thing = new Thing();
-// var idProperty = typeof(Thing).GetProperty(nameof(Thing.Id), BindingFlags.Public | BindingFlags.Instance)!;
-// var backingField = idProperty.GetBackingField();
+using System.Runtime.CompilerServices;
+using Jay.Reflection.Search;
 
 
-object? a = 147;
+var result = MemberSearch.TryFind<MethodInfo>(() => RuntimeHelpers.GetUninitializedObject(default), out var method);
 
-string tOne = Scope.GetType(a);
-string tTwo = Scope.GetGenType(a);
-string tThree = Scope.GetGenValueType(a);
 
 Debugger.Break();
 

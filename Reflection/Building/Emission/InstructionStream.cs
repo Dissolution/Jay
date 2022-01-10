@@ -4,7 +4,7 @@ namespace Jay.Reflection.Emission;
 
 public class InstructionStream : LinkedList<Instruction>
 {
-    public Instruction? FindWithOffset(int offset)
+    public Instruction? FindByOffset(int offset)
     {
         if (offset < 0 || this.Count == 0)
             return null;
