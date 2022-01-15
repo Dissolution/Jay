@@ -45,4 +45,18 @@ public sealed class DelegateMemberCache : ConcurrentDictionary<DelegateMember, D
         }
         return typedDelegate;
     }
+
+    public TDelegate GetOrAdd<TMember, TDelegate>(TMember member,
+                                                  Action<DynamicMethod<TDelegate>> buildMethod)
+        where TMember : MemberInfo
+        where TDelegate : Delegate
+    {
+        var del = base.GetOrAdd(DelegateMember.Create<TDelegate>(member),
+            key => RuntimeBuilder.CreateDelegate(key.ToString(), buildMethod));
+        if (del is not TDelegate typedDelegate)
+        {
+            throw new ReflectionException("An existing delegate with a signature was encountered");
+        }
+        return typedDelegate;
+    }
 }

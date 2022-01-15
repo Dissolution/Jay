@@ -30,11 +30,31 @@ public readonly struct NameMatch
     {
         if (Name is null) return true;
         if (string.IsNullOrWhiteSpace(name)) return false;
+        StringComparison comparison;
         if (MatchType.HasFlag(MatchType.IgnoreCase))
         {
-            return string.Equals(Name, name, StringComparison.OrdinalIgnoreCase);
+            comparison = StringComparison.OrdinalIgnoreCase;
         }
-        return string.Equals(Name, name);
+        else
+        {
+            comparison = StringComparison.Ordinal;
+        }
+
+        if (MatchType.HasFlag(MatchType.Contains))
+        {
+            return name.Contains(this.Name, comparison);
+        }
+
+        if (MatchType.HasFlag(MatchType.BeginsWith))
+        {
+            return name.StartsWith(this.Name, comparison);
+        }
+        if (MatchType.HasFlag(MatchType.EndsWith))
+        {
+            return name.EndsWith(this.Name, comparison);
+        }
+
+        return name.Equals(this.Name, comparison);
     }
         
     public bool Equals(NameMatch nameMatch)

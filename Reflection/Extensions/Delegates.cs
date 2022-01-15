@@ -1,27 +1,6 @@
 ﻿global using System.Reflection;
 
-using System.Runtime.InteropServices;
-
 namespace Jay.Reflection;
-
-/// <summary>
-/// Represents a placeholder <see cref="Type"/> for accessing <see langword="static"/> methods
-/// </summary>
-public struct Static
-{
-    private static Static _instance = default;
-
-    /// <summary>
-    /// Gets a <see langword="ref"/> to an instance of <see cref="Static"/> for use in accessing <see langword="static"/> methods
-    /// </summary>
-    public static ref Static Instance => ref _instance;
-}
-
-[StructLayout(LayoutKind.Explicit, Size = 0)]
-public readonly struct VOID
-{
-
-}
 
 public delegate TValue Getter<TInstance, out TValue>(ref TInstance instance);
 public delegate TValue StaticGetter<out TValue>();
