@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Jay;
+namespace Jay.Utilities;
 
 /// <summary>
 /// Represents the result of an operation as a Pass or a Failure with <see cref="Exception"/> information.

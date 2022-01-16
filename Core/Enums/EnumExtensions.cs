@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using InlineIL;
 using static InlineIL.IL;
 
-namespace Jay;
+namespace Jay.Enums;
 
 public static class EnumExtensions
 {

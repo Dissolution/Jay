@@ -1,4 +1,4 @@
-﻿namespace Jay;
+﻿namespace Jay.Utilities;
 
 public delegate Task AsyncAction();
 public delegate Task AsyncAction<in T>(T arg);

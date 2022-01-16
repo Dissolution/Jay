@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Jay.Extensions;
+namespace Jay;
 
 public static class NullableExtensions
 {

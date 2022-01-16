@@ -9,6 +9,9 @@
     <ApplicationIcon>jay.ico</ApplicationIcon>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <Authors />
   </PropertyGroup>
 
   <ItemGroup>

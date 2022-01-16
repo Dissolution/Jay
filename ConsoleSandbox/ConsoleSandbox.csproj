@@ -17,11 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
-    <ProjectReference Include="..\Dumping\Dumping.csproj" />
-    <ProjectReference Include="..\JORM\JORM.csproj" />
-    <ProjectReference Include="..\Logging\Logging.csproj" />
-    <ProjectReference Include="..\Reflection\Reflection.csproj" />
-    <ProjectReference Include="..\Text\Text.csproj" />
   </ItemGroup>
 
 </Project>
