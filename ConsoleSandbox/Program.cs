@@ -10,7 +10,6 @@ using Jay.Text.Dumping;
 
 var type = typeof(List<int>);
 
-string rep = new TypeDumper().GetRep(type);
 
 Debugger.Break();
 

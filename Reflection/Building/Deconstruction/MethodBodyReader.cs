@@ -27,7 +27,6 @@ public class MethodBodyReader
     }
 
     private readonly MethodBase _method;
-    private readonly MethodBody _body;
     private readonly Module _module;
     private readonly Type[] _typeArguments;
     private readonly Type[] _methodArguments;
@@ -39,11 +38,11 @@ public class MethodBodyReader
 
     public MethodBodyReader(MethodBase method)
     {
-        this._method = method;
+        _method = method ?? throw new ArgumentNullException(nameof(method));
 
-        this._body = method.GetMethodBody() ?? throw new ArgumentException("Method has no body");
+        var body = method.GetMethodBody() ?? throw new ArgumentException("Method has no body");
         
-        byte[] bytes = _body.GetILAsByteArray() ?? throw new ArgumentException("Can not get the body of the method");
+        byte[] bytes = body.GetILAsByteArray() ?? throw new ArgumentException("Can not get the body of the method");
         
         if (!(method is ConstructorInfo))
             _methodArguments = method.GetGenericArguments();
@@ -54,7 +53,7 @@ public class MethodBodyReader
         if (!method.IsStatic)
             _thisParameter = new ThisParameter(method);
         _parameters = method.GetParameters();
-        _locals = _body.LocalVariables;
+        _locals = body.LocalVariables;
         _module = method.Module;
         _il = new ByteBuffer(bytes);
         _instructions = new(); //(bytes.Length + 1) / 2);
