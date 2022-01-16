@@ -1,6 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using Jay.Reflection.Exceptions;
-using Jay.Reflection.Extensions;
 
 namespace Jay.Reflection.Building.Emission;
 
@@ -65,7 +65,7 @@ internal static class EmitterHelpers
 
     public static IEnumerable<ConstructorInfo> FindConstructors(Type instanceType, params Type[] argTypes)
     {
-        return instanceType.GetConstructors(Reflect.InstanceFlags)
+        return instanceType.GetConstructors((BindingFlags)Reflect.InstanceFlags)
                            // Limit to only ones with the same number of params
                            .Where(ctor =>
                            {

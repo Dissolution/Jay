@@ -1,5 +1,4 @@
-﻿using Jay.Enums;
-using Jay.Text;
+﻿using Jay.Text;
 
 namespace Jay.Reflection;
 

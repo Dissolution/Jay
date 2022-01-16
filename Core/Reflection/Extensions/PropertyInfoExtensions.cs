@@ -1,10 +1,11 @@
-﻿using System.Reflection.Emit;
+﻿using System.Reflection;
+using System.Reflection.Emit;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Adapting;
 using Jay.Reflection.Building.Emission;
 using Jay.Text;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class PropertyInfoExtensions
 {

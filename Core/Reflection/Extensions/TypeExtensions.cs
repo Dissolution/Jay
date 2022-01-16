@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Reflection;
 using Jay.Reflection.Expressions;
-using Jay.Utilities;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class TypeExtensions
 {
@@ -48,7 +48,7 @@ public static class TypeExtensions
     {
         if (type is null)
             yield break;
-        foreach (var member in type.GetMembers(Reflect.AllFlags))
+        foreach (var member in type.GetMembers((BindingFlags)Reflect.AllFlags))
         {
             if (memberMatch.Matches(member))
                 yield return member;

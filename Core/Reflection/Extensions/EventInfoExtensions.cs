@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Exceptions;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class EventInfoExtensions
 {

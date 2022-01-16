@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace Jay.Text;
 
-//TODO:
-//[InterpolatedStringHandler]
+/*TODO:
+[InterpolatedStringHandler]
 public ref struct StringHandler
 {
     private char[]? _charArray;
@@ -273,4 +273,10 @@ public ref struct StringHandler
     {
         return new string(Written);
     }
+}*/
+
+[InterpolatedStringHandler]
+public ref struct TextHandler
+{
+
 }

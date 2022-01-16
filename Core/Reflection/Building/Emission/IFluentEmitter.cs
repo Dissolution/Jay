@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using Jay.Reflection.Exceptions;
-using Jay.Reflection.Extensions;
-using Jay.Utilities;
 
 // ReSharper disable UnusedMember.Global
 #pragma warning disable CS8321

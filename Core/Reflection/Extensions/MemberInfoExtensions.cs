@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Jay.Utilities;
+using System.Reflection;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class MemberInfoExtensions
 {

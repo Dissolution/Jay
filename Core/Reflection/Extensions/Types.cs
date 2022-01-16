@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using Jay.Reflection.Exceptions;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class Types
 {

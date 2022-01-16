@@ -1,6 +1,6 @@
-﻿using System.Reflection.Emit;
+﻿using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
-using Jay.Reflection.Extensions;
 
 namespace Jay.Reflection.Building.Emission;
 

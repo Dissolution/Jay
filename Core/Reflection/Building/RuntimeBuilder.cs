@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
+using System.Reflection;
 using System.Reflection.Emit;
-using Jay.Enums;
 using Jay.Text;
 
 namespace Jay.Reflection.Building;

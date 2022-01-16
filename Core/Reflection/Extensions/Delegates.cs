@@ -1,4 +1,4 @@
-﻿namespace Jay.Reflection.Extensions;
+﻿namespace Jay.Reflection;
 
 public delegate TValue Getter<TInstance, out TValue>(ref TInstance instance);
 public delegate TValue StaticGetter<out TValue>();

@@ -1,51 +1,47 @@
-﻿namespace Jay.Utilities
+﻿namespace Jay;
+
+public static class Disposable
 {
-    public static class Disposable
+    private sealed class ActionDisposable : IDisposable
     {
-        private sealed class ActionDisposable : IDisposable
+        private readonly Action? _action;
+
+        public ActionDisposable(Action? action)
         {
-            private readonly Action? _action;
-
-            public ActionDisposable(Action? action)
-            {
-                _action = action;
-            }
-
-            public void Dispose()
-            {
-                _action?.Invoke();
-            }
+            _action = action;
         }
 
-        private sealed class TaskDisposable : IAsyncDisposable
+        public void Dispose()
         {
-            private readonly Task? _task;
-
-            public TaskDisposable(Task? task)
-            {
-                _task = task;
-            }
-
-            public async ValueTask DisposeAsync()
-            {
-                if (_task is not null)
-                {
-                    await _task;
-                }
-            }
-        }
-
-        public static IDisposable Action(Action? action)
-        {
-            return new ActionDisposable(action);
-        }
-
-        public static IAsyncDisposable Task(Task? task)
-        {
-            return new TaskDisposable(task);
+            _action?.Invoke();
         }
     }
 
+    private sealed class TaskDisposable : IAsyncDisposable
+    {
+        private readonly Task? _task;
 
-    
+        public TaskDisposable(Task? task)
+        {
+            _task = task;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_task is not null)
+            {
+                await _task;
+            }
+        }
+    }
+
+    public static IDisposable Action(Action? action)
+    {
+        return new ActionDisposable(action);
+    }
+
+    public static IAsyncDisposable Task(Task? task)
+    {
+        return new TaskDisposable(task);
+    }
 }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Jay.Exceptions;
 
 namespace Jay.Text;
 
@@ -38,6 +39,15 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         get => _charArray.AsSpan(_length);
     }
     
+    public ref char this[int index]
+    {
+        get
+        {
+            if ((uint)index >= (uint)_length)
+                throw new IndexOutOfRangeException();
+            return ref _charArray![index];
+        }
+    }
     char IList<char>.this[int index]
     {
         get
@@ -60,16 +70,6 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
             if ((uint)index >= (uint)_length)
                 throw new IndexOutOfRangeException();
             return _charArray![index];
-        }
-    }
-
-    public ref char this[int index]
-    {
-        get
-        {
-            if ((uint)index >= (uint)_length)
-                throw new IndexOutOfRangeException();
-            return ref _charArray![index];
         }
     }
 
@@ -188,7 +188,6 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             chars[index] = ch;
             _length = index + 1;
-
         }
         else
         {
@@ -213,11 +212,6 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     public void Write<T>(T? value)
     {
         string? s;
-        // if (value is IRenderable)
-        // {
-        //     ((IRenderable)value).Render(this);
-        //     return;
-        // }
         if (value is IFormattable)
         {
             // If the value can format itself directly into our buffer, do so.
@@ -277,11 +271,6 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
             // constrained call avoiding boxing for value types
             s = ((IFormattable)value).ToString(format, provider);
-        }
-        else if (value is IRenderable)
-        {
-            ((IRenderable)value).Render(this);
-            return;
         }
         else
         {
@@ -469,7 +458,6 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         _length = 0;
         return this;
     }
-
     void ICollection<char>.Clear() => this.Clear();
     
 
@@ -490,8 +478,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     {
         return Written.TryCopyTo(destination);
     }
-
-
+    
     public IEnumerator<char> GetEnumerator()
     {
         for (var i = 0; i < _length; i++)
@@ -514,12 +501,12 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public override bool Equals(object? obj)
     {
-        throw new InvalidOperationException();
+        return UnsuitableException.ThrowEquals(this);
     }
 
     public override int GetHashCode()
     {
-        throw new InvalidOperationException();
+        return UnsuitableException.ThrowGetHashCode(this);
     }
 
     public override string ToString()

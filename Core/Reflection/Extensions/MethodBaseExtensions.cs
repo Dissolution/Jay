@@ -1,7 +1,8 @@
-﻿using Jay.Reflection.Building.Deconstruction;
+﻿using System.Reflection;
+using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Building.Emission;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class MethodBaseExtensions
 {
