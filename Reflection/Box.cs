@@ -16,7 +16,10 @@ namespace Jay.Reflection
 
         public ref T Ref<T>()
         {
-            
+            Emit.Ldarg(0);
+            Emit.Ldfld(FieldRef.Field(typeof(Box), nameof(_box)));
+            Emit.Unbox<T>();
+            return ref ReturnRef<T>();
         }
     }
 }

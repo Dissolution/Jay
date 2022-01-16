@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
 using Jay.Collections;
 using Jay.Validation;
 
-namespace Jay.Text.Expressions;
+namespace Jay.Text.Dumping;
 
 public static class Dumpers
 {
@@ -11,7 +10,7 @@ public static class Dumpers
     {
         public bool CanDump(Type type) => true;
 
-        public void Dump(TextBuilder text, object? value)
+        public void Dump(TextBuilder text, object? value, DumpLevel level = DumpLevel.Self)
         {
             text.Write(value);
         }
@@ -29,7 +28,7 @@ public static class Dumpers
                                 .GetAssemblies()
                                 .SelectMany(assembly => assembly.DefinedTypes)
                                 .Where(type => type.IsAssignableTo(typeof(IDumper)))
-                                .Where(type => type.IsClass && !type.IsAbstract && !type.IsInterface);
+                                .Where(type => type.IsClass && !type.IsAbstract && !type.IsInterface && !type.IsNested);
         foreach (var dumperType in dumperTypes)
         {
             try
@@ -67,29 +66,37 @@ public static class Dumpers
 
     internal static IDumper<T> GetDumper<T>() => (GetDumper(typeof(T)) as IDumper<T>).ThrowIfNull();
 
-    public static void Dump<T>(TextBuilder text, T? value)
+    public static void Dump<T>(TextBuilder text, T? value, DumpLevel level = DumpLevel.Self)
     {
-        GetDumper<T>().Dump(text, value);
+        GetDumper<T>().Dump(text, value, level);
     }
 
-    public static string Dump<T>(T? value)
+    public static string Dump<T>(T? value, DumpLevel level = DumpLevel.Self)
     {
         using var text = new TextBuilder();
-        GetDumper<T>().Dump(text, value);
+        GetDumper<T>().Dump(text, value, level);
         return text.ToString();
     }
+}
+
+[Flags]
+public enum DumpLevel
+{
+    Self = 0,
+    Details = 1 << 0,
+    Surroundings = 1 << 1,
 }
 
 public interface IDumper
 {
     bool CanDump(Type type);
 
-    void Dump(TextBuilder text, object? value);
+    void Dump(TextBuilder text, object? value, DumpLevel level = DumpLevel.Self);
 
-    string Dump(object? value)
+    string Dump(object? value, DumpLevel level = DumpLevel.Self)
     {
         using var text = new TextBuilder();
-        Dump(text, value);
+        Dump(text, value, level);
         return text.ToString();
     }
 }
@@ -101,24 +108,26 @@ public interface IDumper<in T> : IDumper
         return type.IsAssignableTo(typeof(T));
     }
 
-    void IDumper.Dump(TextBuilder text, object? value)
+    void IDumper.Dump(TextBuilder text, object? value, DumpLevel level)
     {
         if (value is T typed)
         {
-            Dump(text, typed);
+            Dump(text, typed, level);
         }
         else
         {
-            Dumpers.Dump(text, value);
+            Dumpers.Dump(text, value, level);
         }
     }
 
-    void Dump(TextBuilder text, T? value);
+    void Dump(TextBuilder text, T? value, DumpLevel level = DumpLevel.Self);
 
-    string Dump(T? value)
+    string Dump(T? value, DumpLevel level = DumpLevel.Self)
     {
         using var text = new TextBuilder();
-        Dump(text, value);
+        Dump(text, value, level);
         return text.ToString();
     }
 }
+
+

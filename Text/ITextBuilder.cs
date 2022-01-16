@@ -213,11 +213,11 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     public void Write<T>(T? value)
     {
         string? s;
-        if (value is IRenderable)
-        {
-            ((IRenderable)value).Render(this);
-            return;
-        }
+        // if (value is IRenderable)
+        // {
+        //     ((IRenderable)value).Render(this);
+        //     return;
+        // }
         if (value is IFormattable)
         {
             // If the value can format itself directly into our buffer, do so.
@@ -244,7 +244,14 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
         if (s is not null)
         {
-            Write(s);
+            if (s.TryCopyTo(Available))
+            {
+                _length += s.Length;
+            }
+            else
+            {
+                GrowThenCopy(s);
+            }
         }
     }
 
@@ -361,6 +368,23 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
                 {
                     Write(delimiter);
                     Write(e.Current);
+                }
+            }
+        }
+        return this;
+    }
+
+    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T> values, Action<TextBuilder, T> appendValue)
+    {
+        using (var e = values.GetEnumerator())
+        {
+            if (e.MoveNext())
+            {
+                appendValue(this, e.Current);
+                while (e.MoveNext())
+                {
+                    Write(delimiter);
+                    appendValue(this, e.Current);
                 }
             }
         }

@@ -474,7 +474,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
 
             // Look for a throwaway instance type
             // TODO: Allow for throwaway object/Type   [null, typeof(member.OwnerType()]
-            if (instanceType == typeof(Static) || instanceType == typeof(VOID) ||
+            if (instanceType == typeof(Types.Static) || instanceType == typeof(Types.Void) ||
                 instanceType == typeof(void) || instanceType == member.OwnerType())
             {
                 // This is a throwaway
