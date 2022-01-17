@@ -4,19 +4,9 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>Jay</AssemblyName>
-    <RootNamespace>Jay</RootNamespace>
-    <ApplicationIcon>jay.ico</ApplicationIcon>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <SignAssembly>False</SignAssembly>
-    <GenerateDocumentationFile>False</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Authors />
+    <AssemblyName>Jay.$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>Jay.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Content Include="jay.ico" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Fody" Version="6.6.0">
@@ -24,8 +14,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="InlineIL.Fody" Version="1.7.1" >
-        <PrivateAssets>all</PrivateAssets>
+	    <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Dumping\Dumping.csproj" />
+    <ProjectReference Include="..\Text\Text.csproj" />
   </ItemGroup>
 
 </Project>
