@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Jay.Collections;
+using Jay.Reflection;
 using Jay.Text;
 using Jay.Validation;
 
@@ -43,7 +45,7 @@ public static class Dumpers
 
         public void Dump<T>(TextBuilder text, T? value, DumpLevel level = DumpLevel.Self)
         {
-            if (Dumper.DumpNull(text, value, level)) return;
+            if (Dumpers.DumpNull(text, value, level)) return;
             text.AppendFormat(value, GetFormat(value.GetType(), level), null);
         }
     }
@@ -55,27 +57,46 @@ public static class Dumpers
 
     static Dumpers()
     {
-        _dumpers = new List<IDumper>();
         _dumperMap = new ConcurrentTypeDictionary<IDumper>();
         var dumperTypes = AppDomain.CurrentDomain
                                    .GetAssemblies()
-                                   .SelectMany(assembly => assembly.DefinedTypes)
-                                   .Where(type => type.IsAssignableTo(typeof(IDumper)))
-                                   .Where(type => type.IsClass && !type.IsAbstract && !type.IsInterface && !type.IsNested);
-        foreach (var dumperType in dumperTypes)
+                                   .SelectMany(assembly => assembly.ExportedTypes)
+                                   .Where(type => type.Implements<IDumper>())
+                                   .Where(type => type.IsClass && !type.IsAbstract && !type.IsInterface && !type.IsNested)
+                                   .SelectWhere((Type type, out IDumper dumper) =>
+                                   {
+                                       try
+                                       {
+                                           if (Activator.CreateInstance(type).Is(out dumper))
+                                           {
+                                               return true;
+                                           }
+                                           return false;
+                                       }
+                                       catch (Exception ex)
+                                       {
+                                           Debugger.Break();
+                                           dumper = null!;
+                                           return false;
+                                       }
+                                   });
+        _dumpers = new List<IDumper>(dumperTypes);
+    }
+
+    internal static bool DumpNull<T>(TextBuilder text, [NotNullWhen(false)] T? value, DumpLevel level)
+    {
+        if (value is null)
         {
-            try
+            if (level.HasFlag<DumpLevel>(DumpLevel.Surroundings))
             {
-                if (Activator.CreateInstance(dumperType) is IDumper dumper)
-                {
-                    _dumpers.Add(dumper);
-                }
+                text.Append('(')
+                    .AppendDump(typeof(T))
+                    .Write(')');
             }
-            catch (Exception ex)
-            {
-                Debugger.Break();
-            }
+            text.Write("null");
+            return true;
         }
+        return false;
     }
 
     internal static IDumper GetDumper(Type type)
@@ -110,10 +131,5 @@ public static class Dumpers
         using var text = new TextBuilder();
         GetDumper<T>().Dump(text, value, level);
         return text.ToString();
-    }
-
-    public static void DumpDefault<T>(TextBuilder text, T? value, DumpLevel level = DumpLevel.Self)
-    {
-        Default.Dump<T>(text, value, level);
     }
 }

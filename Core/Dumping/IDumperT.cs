@@ -11,6 +11,7 @@ public interface IDumper<in T> : IDumper
 
     void IDumper.Dump(TextBuilder text, object? value, DumpLevel level)
     {
+        if (Dumpers.DumpNull(text, value, level)) return;
         if (value is T typed)
         {
             Dump(text, typed, level);
@@ -22,13 +23,6 @@ public interface IDumper<in T> : IDumper
     }
 
     void Dump(TextBuilder text, T? value, DumpLevel level = DumpLevel.Self);
-
-    string Dump(T? value, DumpLevel level = DumpLevel.Self)
-    {
-        using var text = new TextBuilder();
-        Dump(text, value, level);
-        return text.ToString();
-    }
 }
 
 

@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleSandbox", "ConsoleSandbox\ConsoleSandbox.csproj", "{D8C648B5-5A77-402C-B3D4-D15628626297}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dumping", "Dumping\Dumping.csproj", "{03A9C16C-D8F1-4A70-85BD-442C3733B2B1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{D8C648B5-5A77-402C-B3D4-D15628626297}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8C648B5-5A77-402C-B3D4-D15628626297}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8C648B5-5A77-402C-B3D4-D15628626297}.Release|Any CPU.Build.0 = Release|Any CPU
-		{03A9C16C-D8F1-4A70-85BD-442C3733B2B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{03A9C16C-D8F1-4A70-85BD-442C3733B2B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{03A9C16C-D8F1-4A70-85BD-442C3733B2B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{03A9C16C-D8F1-4A70-85BD-442C3733B2B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

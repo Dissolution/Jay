@@ -5,14 +5,14 @@ using Jay.Text;
 
 namespace Jay.Dumping;
 
-public class MemberDumper : Dumper<MemberInfo>
+public class MemberDumper : IDumper<MemberInfo>
 {
     private static void Dump(TextBuilder text, Type type, DumpLevel level = DumpLevel.Self)
     {
         switch (Type.GetTypeCode(type))
         {
             case TypeCode.Empty:
-                DumpNull<Type>(text, null, level);
+                Dumpers.DumpNull<Type>(text, null, level);
                 return;
             case TypeCode.DBNull:
                 text.Write("DBNull");
@@ -77,7 +77,7 @@ public class MemberDumper : Dumper<MemberInfo>
             var idx = name.LastIndexOf('`');
             Debug.Assert(idx >= 0);
             text.Append(name.Slice(0, idx)).Append('<')
-                .AppendDelimit(",", argTypes, (tb, argType) => Dump(tb, argType, DumpLevel.Self))
+                .AppendDelimit(",", argTypes, (tb, argType) => Dump(tb, argType))
                 .Append('>');
             return;
         }
@@ -94,12 +94,12 @@ public class MemberDumper : Dumper<MemberInfo>
             text.Append(field.Visibility()).Append(' ');
         }
 
-        text.AppendDump(field.FieldType, DumpLevel.Self)
+        text.AppendDump(field.FieldType)
             .Write(' ');
 
         if (level.HasFlag(DumpLevel.Surroundings))
         {
-            text.AppendDump(field.OwnerType(), DumpLevel.Self)
+            text.AppendDump(field.OwnerType())
                 .Write('.');
         }
         text.Write(field.Name);
@@ -114,12 +114,12 @@ public class MemberDumper : Dumper<MemberInfo>
             Visibility highVis = getVis >= setVis ? getVis : setVis;
             text.Append(highVis)
                 .Append(' ')
-                .AppendDump(property.PropertyType, DumpLevel.Self)
+                .AppendDump(property.PropertyType)
                 .Write(' ');
 
             if (level.HasFlag(DumpLevel.Surroundings))
             {
-                text.AppendDump(property.OwnerType(), DumpLevel.Self)
+                text.AppendDump(property.OwnerType())
                     .Write('.');
             }
 
@@ -127,14 +127,16 @@ public class MemberDumper : Dumper<MemberInfo>
                 .Write(" { ");
             if (getVis != Visibility.None)
             {
-                text.Append(getVis)
-                    .Write(" get; ");
+                if (getVis != highVis)
+                    text.Write(getVis);
+                text.Write(" get; ");
             }
 
             if (setVis != Visibility.None)
             {
-                text.Append(setVis)
-                    .Write(" set; ");
+                if (setVis != highVis)
+                    text.Append(setVis);
+                text.Write(" set; ");
             }
             text.Write('}');
         }
@@ -142,7 +144,7 @@ public class MemberDumper : Dumper<MemberInfo>
         {
             if (level.HasFlag(DumpLevel.Surroundings))
             {
-                text.AppendDump(property.OwnerType(), DumpLevel.Self)
+                text.AppendDump(property.OwnerType())
                     .Write('.');
             }
 
@@ -158,12 +160,12 @@ public class MemberDumper : Dumper<MemberInfo>
         }
 
         text.Append("event ")
-            .AppendDump(eventInfo.EventHandlerType, DumpLevel.Self)
+            .AppendDump(eventInfo.EventHandlerType)
             .Write(' ');
 
         if (level.HasFlag(DumpLevel.Surroundings))
         {
-            text.AppendDump(eventInfo.OwnerType(), DumpLevel.Self)
+            text.AppendDump(eventInfo.OwnerType())
                 .Write('.');
         }
 
@@ -176,7 +178,7 @@ public class MemberDumper : Dumper<MemberInfo>
         {
             text.Append(constructor.Visibility()).Append(' ');
         }
-        text.AppendDump(constructor.DeclaringType!, DumpLevel.Self)
+        text.AppendDump(constructor.DeclaringType!)
             .Append('(')
             .AppendDelimit(",", constructor.GetParameters(), (tb, param) => tb.AppendDump(param, level))
             .Append(')');
@@ -192,7 +194,7 @@ public class MemberDumper : Dumper<MemberInfo>
 
         if (level.HasFlag(DumpLevel.Surroundings))
         {
-            text.AppendDump(method.OwnerType(), DumpLevel.Self)
+            text.AppendDump(method.OwnerType())
                 .Write('.');
         }
 
@@ -202,9 +204,9 @@ public class MemberDumper : Dumper<MemberInfo>
             .Append(')');
     }
 
-    public override void Dump(TextBuilder text, MemberInfo? value, DumpLevel level = DumpLevel.Self)
+    public void Dump(TextBuilder text, MemberInfo? value, DumpLevel level = DumpLevel.Self)
     {
-        if (DumpNull(text, value, level)) return;
+        if (Dumpers.DumpNull(text, value, level)) return;
         switch (value)
         {
             case Type type:
