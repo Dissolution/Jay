@@ -163,8 +163,8 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
             Grow(length);
         }
         int right = len - index;
-        _charArray.AsSpan(index, right)
-                  .CopyTo(_charArray.AsSpan(index + length, right));
+        TextHelper.CopyTo(_charArray.AsSpan(index, right),
+                          _charArray.AsSpan(index + length, right));
         _length = len + length;
         return _charArray.AsSpan(index, length);
     }
@@ -172,10 +172,10 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemoveSpan(int index, int length)
     {
-        int rIndex = index + length;
-        int rLength = _length - rIndex;
-        _charArray.AsSpan(rIndex, rLength)
-                  .CopyTo(_charArray.AsSpan(index, rLength));
+        int right = index + length;
+        int rLength = _length - right;
+        TextHelper.CopyTo(_charArray.AsSpan(right, rLength),
+                          _charArray.AsSpan(index, rLength));
         _length -= length;
     }
 
@@ -452,6 +452,116 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         return false;
     }
 
+    public TextBuilder RemoveRange(int index, int length)
+    {
+        if (index < 0 || (index > _length))
+            throw new ArgumentOutOfRangeException(nameof(index));
+        if (length <= 0) return this;
+        if (index + length > _length)
+            throw new ArgumentOutOfRangeException(nameof(length));
+        RemoveSpan(index, length);
+        return this;
+    }
+
+    public TextBuilder RemoveRange(Range range)
+    {
+        (int offset, int length) = range.GetOffsetAndLength(_length);
+        RemoveSpan(offset, length);
+        return this;
+    }
+
+    #region Trim
+    public TextBuilder TrimStart()
+    {
+        var i = 0;
+        var text = Written;
+        var len = Written.Length;
+        while (i < len && char.IsWhiteSpace(text[i]))
+        {
+            i++;
+        }
+
+        if (i > 0)
+        {
+            RemoveSpan(0, i);
+        }
+
+        return this;
+    }
+
+    public TextBuilder TrimStart(char ch)
+    {
+        var i = 0;
+        var text = Written;
+        var len = Written.Length;
+        while (i < len && text[i] == ch)
+        {
+            i++;
+        }
+
+        if (i > 0)
+        {
+            RemoveSpan(0, i);
+        }
+
+        return this;
+    }
+
+    public TextBuilder TrimStart(params char[] characters)
+    {
+        var i = 0;
+        var text = Written;
+        var len = Written.Length;
+        while (i < len && characters.Contains(text[i]))
+        {
+            i++;
+        }
+
+        if (i > 0)
+        {
+            RemoveSpan(0, i);
+        }
+
+        return this;
+    }
+
+    public TextBuilder TrimStart(ReadOnlySpan<char> match)
+    {
+        int matchLen = match.Length;
+        if (matchLen <= _length)
+        {
+            if (TextHelper.Equals(Written[..matchLen], match))
+            {
+                RemoveSpan(0, matchLen);
+            }
+        }
+        return this;
+    }
+
+    public TextBuilder TrimStart(ReadOnlySpan<char> match, StringComparison comparison)
+    {
+        int matchLen = match.Length;
+        if (matchLen <= _length)
+        {
+            if (TextHelper.Equals(Written[..matchLen], match, comparison))
+            {
+                RemoveSpan(0, matchLen);
+            }
+        }
+        return this;
+    }
+    #endregion
+
+    public TextBuilder Modify(RefChar perChar)
+    {
+        Span<char> span = Written;
+        for (var i = _length = 1; i >= 0; i--)
+        {
+            perChar(ref span[i]);
+        }
+        return this;
+    }
+
     public TextBuilder Clear()
     {
         // We do not clear the contents of the array
@@ -464,19 +574,19 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(char[] array, int arrayIndex = 0)
     {
-        Written.CopyTo(array.AsSpan(arrayIndex));
+        TextHelper.CopyTo(Written, array.AsSpan(arrayIndex));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(Span<char> destination)
     {
-        Written.CopyTo(destination);
+        TextHelper.CopyTo(Written, destination);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryCopyTo(Span<char> destination)
     {
-        return Written.TryCopyTo(destination);
+        return TextHelper.TryCopyTo(Written, destination);
     }
     
     public IEnumerator<char> GetEnumerator()

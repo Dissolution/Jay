@@ -1,17 +1,47 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using static InlineIL.IL;
+using InlineIL;
 
 namespace Jay.Text;
 
 public static class TextHelper
 {
-    public static bool Equals(text x, text y)
+    public static bool Equals(string? x, string? y)
+    {
+        return string.Equals(x, y);
+    }
+
+    public static bool Equals(string x, ReadOnlySpan<char> y)
     {
         return MemoryExtensions.SequenceEqual(x, y);
     }
 
-    public static bool Equals(text x, text y, StringComparison comparison)
+    public static bool Equals(ReadOnlySpan<char> x, string y)
+    {
+        return MemoryExtensions.SequenceEqual(x, y);
+    }
+
+    public static bool Equals(ReadOnlySpan<char> x, ReadOnlySpan<char> y)
+    {
+        return MemoryExtensions.SequenceEqual(x, y);
+    }
+
+    public static bool Equals(string? x, string? y, StringComparison comparison)
+    {
+        return MemoryExtensions.Equals(x, y, comparison);
+    }
+
+    public static bool Equals(string x, ReadOnlySpan<char> y, StringComparison comparison)
+    {
+        return MemoryExtensions.Equals(x, y, comparison);
+    }
+
+    public static bool Equals(ReadOnlySpan<char> x, string y, StringComparison comparison)
+    {
+        return MemoryExtensions.Equals(x, y, comparison);
+    }
+
+    public static bool Equals(ReadOnlySpan<char> x, ReadOnlySpan<char> y, StringComparison comparison)
     {
         return MemoryExtensions.Equals(x, y, comparison);
     }
@@ -20,21 +50,21 @@ public static class TextHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void CopyTo(in char source, ref char dest, int count)
     {
-        Emit.Ldarg(nameof(dest));
-        Emit.Ldarg(nameof(source));
-        Emit.Ldarg(nameof(count));
-        Emit.Ldc_I4_2(); // sizeof(char)
-        Emit.Mul();
-        Emit.Cpblk();
+        IL.Emit.Ldarg(nameof(dest));
+        IL.Emit.Ldarg(nameof(source));
+        IL.Emit.Ldarg(nameof(count));
+        IL.Emit.Ldc_I4_2(); // sizeof(char)
+        IL.Emit.Mul();
+        IL.Emit.Cpblk();
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void CopyTwoCharsTo(in char source, ref char dest)
     {
-        Emit.Ldarg(nameof(dest));
-        Emit.Ldarg(nameof(source));
-        Emit.Ldc_I4_4(); // = sizeof(char) * 2
-        Emit.Mul();
-        Emit.Cpblk();
+        IL.Emit.Ldarg(nameof(dest));
+        IL.Emit.Ldarg(nameof(source));
+        IL.Emit.Ldc_I4_4(); // = sizeof(char) * 2
+        IL.Emit.Mul();
+        IL.Emit.Cpblk();
     }
 
     public static void CopyTo(ReadOnlySpan<char> source, Span<char> dest)
@@ -42,8 +72,8 @@ public static class TextHelper
         if (source.Length <= dest.Length)
         {
             CopyTo(in source.GetPinnableReference(),
-                   ref dest.GetPinnableReference(),
-                   source.Length);
+                ref dest.GetPinnableReference(),
+                source.Length);
         }
         throw new ArgumentException("Destination cannot contain source", nameof(dest));
     }
@@ -53,8 +83,8 @@ public static class TextHelper
         if (source.Length <= dest.Length)
         {
             CopyTo(in source.GetPinnableReference(),
-                   ref MemoryMarshal.GetArrayDataReference(dest),
-                   source.Length);
+                ref MemoryMarshal.GetArrayDataReference(dest),
+                source.Length);
         }
         throw new ArgumentException("Destination cannot contain source", nameof(dest));
     }
@@ -65,8 +95,8 @@ public static class TextHelper
         if (source.Length <= dest.Length)
         {
             CopyTo(in source.GetPinnableReference(),
-                   ref dest.GetPinnableReference(),
-                   source.Length);
+                ref dest.GetPinnableReference(),
+                source.Length);
         }
         throw new ArgumentException("Destination cannot contain source", nameof(dest));
     }
@@ -77,8 +107,8 @@ public static class TextHelper
         if (source.Length <= dest.Length)
         {
             CopyTo(in source.GetPinnableReference(),
-                   ref MemoryMarshal.GetArrayDataReference(dest),
-                   source.Length);
+                ref MemoryMarshal.GetArrayDataReference(dest),
+                source.Length);
         }
         throw new ArgumentException("Destination cannot contain source", nameof(dest));
     }
@@ -88,8 +118,8 @@ public static class TextHelper
         if (source.Length <= dest.Length)
         {
             CopyTo(in source.GetPinnableReference(),
-                   ref dest.GetPinnableReference(),
-                   source.Length);
+                ref dest.GetPinnableReference(),
+                source.Length);
             return true;
         }
         return false;

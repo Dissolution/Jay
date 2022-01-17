@@ -1,12 +1,9 @@
 ﻿
 using System.Runtime.InteropServices;
-using Jay.Text.Extensions;
 
 namespace Jay.Text;
 
-public abstract class TextComparer : IEqualityComparer<char>, IComparer<char>,
-                                     IEqualityComparer<string>, IComparer<string>, 
-                                     IEqualityComparer<char[]>, IComparer<char[]>
+public abstract class TextComparer
 {
     public static implicit operator TextComparer(StringComparison stringComparison)
     {
@@ -45,15 +42,15 @@ public abstract class TextComparer : IEqualityComparer<char>, IComparer<char>,
 
     public virtual int Compare(string? x, string? y)
     {
-        return Compare((text)x, (text)y);
+        return Compare((ReadOnlySpan<char>)x, (ReadOnlySpan<char>)y);
     }
 
     public virtual int Compare(char[]? x, char[]? y)
     {
-        return Compare((text)x, (text)y);
+        return Compare((ReadOnlySpan<char>)x, (ReadOnlySpan<char>)y);
     }
 
-    public abstract int Compare(text x, text y);
+    public abstract int Compare(ReadOnlySpan<char> x, ReadOnlySpan<char> y);
 
     public virtual bool Equals(char x, char y)
     {
@@ -62,15 +59,15 @@ public abstract class TextComparer : IEqualityComparer<char>, IComparer<char>,
 
     public virtual bool Equals(string? x, string? y)
     {
-        return Equals((text)x, (text)y);
+        return Equals((ReadOnlySpan<char>)x, (ReadOnlySpan<char>)y);
     }
 
     public virtual bool Equals(char[]? x, char[]? y)
     {
-        return Equals((text)x, (text)y);
+        return Equals((ReadOnlySpan<char>)x, (ReadOnlySpan<char>)y);
     }
 
-    public abstract bool Equals(text x, text y);
+    public abstract bool Equals(ReadOnlySpan<char> x, ReadOnlySpan<char> y);
 
     public int GetHashCode(char ch)
     {
@@ -79,15 +76,15 @@ public abstract class TextComparer : IEqualityComparer<char>, IComparer<char>,
 
     public virtual int GetHashCode(string? text)
     {
-        return GetHashCode((text)text);
+        return GetHashCode((ReadOnlySpan<char>)text);
     }
         
     public int GetHashCode(char[] charArray)
     {
-        return GetHashCode((text)charArray);
+        return GetHashCode((ReadOnlySpan<char>)charArray);
     }
 
-    public abstract int GetHashCode(text text);
+    public abstract int GetHashCode(ReadOnlySpan<char> text);
 }
 
 internal sealed class FastTextComparer : TextComparer

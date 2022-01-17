@@ -661,7 +661,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
                         }
                         case ILGeneratorMethod.WriteLine:
                             throw new NotImplementedException();
-                            break;
+                            //break;
                         case ILGeneratorMethod.ThrowException:
                         {
                             if (instruction.Arg is not Type exceptionType)
