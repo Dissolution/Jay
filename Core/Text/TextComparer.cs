@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Runtime.InteropServices;
 
 namespace Jay.Text;
@@ -54,7 +55,7 @@ public abstract class TextComparer
 
     public virtual bool Equals(char x, char y)
     {
-        return Equals(x.ToReadOnlySpan(), y.ToReadOnlySpan());
+        return Equals((ReadOnlySpan<char>)x.ToReadOnlySpan(), (ReadOnlySpan<char>)y.ToReadOnlySpan());
     }
 
     public virtual bool Equals(string? x, string? y)

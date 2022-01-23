@@ -1,4 +1,5 @@
-﻿using System.Buffers;
+﻿using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -242,8 +243,8 @@ namespace Jay.Text
                 int pos = _index;
                 if (pos < chars.Length - 1)
                 {
-                    TextHelper.CopyTwoCharsTo(in text.GetPinnableReference(),
-                                      ref chars[pos]);
+                    TextHelper.CopyTo(in text.GetPinnableReference(),
+                                      ref chars[pos], 2);
                     _index = pos + 2;
                 }
                 else
@@ -301,8 +302,9 @@ namespace Jay.Text
                 int pos = _index;
                 if (pos < chars.Length - 1)
                 {
-                    TextHelper.CopyTwoCharsTo(in value.GetPinnableReference(),
-                                              ref chars[pos]);
+                    TextHelper.CopyTo(in value.GetPinnableReference(),
+                                              ref chars[pos],
+                                              2);
                     _index = pos + 2;
                 }
                 else
