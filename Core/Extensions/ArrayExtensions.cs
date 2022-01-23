@@ -1,4 +1,5 @@
-<<<<<<< HEAD
+using System.Runtime.CompilerServices;
+
 ﻿namespace Jay;
 
 public static class ArrayExtensions
@@ -22,14 +23,7 @@ public static class ArrayExtensions
         }
         return true;
     }
-}
-=======
-﻿using System.Runtime.CompilerServices;
 
-namespace Jay
-{
-    public static class ArrayExtensions
-    {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Contains<T>(this T?[]? array, T? value)
         {
@@ -55,5 +49,4 @@ namespace Jay
             return false;
         }
     }
-}
->>>>>>> Text
+

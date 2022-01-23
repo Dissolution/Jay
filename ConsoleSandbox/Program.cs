@@ -1,17 +1,14 @@
-<<<<<<< HEAD
-﻿using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using Jay.Reflection.Search;
+using System.Diagnostics;
+using Jay.Benchmarking;
+
+Debug.Assert(args.Length == 0);
+
+var result = Runner.RunAndOpenHtml();
+Console.WriteLine(result);
 
 
-//var result = MemberSearch.TryFind<MethodInfo>(() => RuntimeHelpers.GetUninitializedObject(default), out var method);
-
-var type = typeof(List<int>);
-
-
-Debugger.Break();
-
+Console.WriteLine("Press Enter to close this window.");
+Console.ReadLine();
 return 0;
 
 public class Thing
@@ -28,64 +25,24 @@ public class Thing
 
 
 
-internal class Scope
-{
-    public static string GetType(object? obj)
-    {
-        if (obj is null)
-            return "null";
-        if (obj is int i)
-            return "int";
+ internal class Scope
+ {
+     public static string GetType(object? obj)
+     {
+         if (obj is null)
+             return "null";
+         if (obj is int i)
+             return "int";
 
-        return obj.GetType().Name;
-    }
-    public static string GetGenType<T>(T value) => typeof(T).Name;
+         return obj.GetType().Name;
+     }
 
-    public static string GetGenValueType<T>(T value)
-    {
-        if (value is null) return "null";
-        if (value is int i) return "int";
-        return value.GetType().Name;
-    }
+     public static string GetGenType<T>(T value) => typeof(T).Name;
 
-=======
-﻿using System.Runtime.CompilerServices;
-using Jay.Text;
-
-Test.Thing("Id = {0}", 3);
-Test.Thing($"id = {3}");
-
-
-
-Console.WriteLine("Press Enter to close");
-Console.ReadLine();
-
-static class Test
-{
-    static Test()
-    {
-
-    }
-
-
-    public static void Thing(RawString format, params object?[] args)
-    {
-
-    }
-
-    // public static void Thing(string? format)
-    // {
-    //
-    // }
-    //
-    // public static void Thing(string? format, params object?[] args)
-    // {
-    //
-    // }
-
-    public static void Thing(FormattableString format)
-    {
-
-    }
->>>>>>> Text
-}
+     public static string GetGenValueType<T>(T value)
+     {
+         if (value is null) return "null";
+         if (value is int i) return "int";
+         return value.GetType().Name;
+     }
+ }

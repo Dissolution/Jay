@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Benchmarking\Benchmarking.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
