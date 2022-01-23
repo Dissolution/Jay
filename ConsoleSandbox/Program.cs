@@ -1,17 +1,14 @@
+using System.Diagnostics;
+using Jay.Benchmarking;
 
-﻿using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using Jay.Reflection.Search;
+Debug.Assert(args.Length == 0);
 
-
-//var result = MemberSearch.TryFind<MethodInfo>(() => RuntimeHelpers.GetUninitializedObject(default), out var method);
-
-var type = typeof(List<int>);
+var result = Runner.RunAndOpenHtml();
+Console.WriteLine(result);
 
 
-Debugger.Break();
-
+Console.WriteLine("Press Enter to close this window.");
+Console.ReadLine();
 return 0;
 
 public class Thing
@@ -24,3 +21,28 @@ public class Thing
         set => _id = value;
     }
 }
+
+
+
+
+ internal class Scope
+ {
+     public static string GetType(object? obj)
+     {
+         if (obj is null)
+             return "null";
+         if (obj is int i)
+             return "int";
+
+         return obj.GetType().Name;
+     }
+
+     public static string GetGenType<T>(T value) => typeof(T).Name;
+
+     public static string GetGenValueType<T>(T value)
+     {
+         if (value is null) return "null";
+         if (value is int i) return "int";
+         return value.GetType().Name;
+     }
+ }

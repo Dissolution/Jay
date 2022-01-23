@@ -1,8 +1,11 @@
-﻿using System.Buffers;
+﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Jay.Reflection;
 using Jay.Exceptions;
+
 
 namespace Jay.Text;
 
@@ -13,7 +16,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 {
     internal const int MinLength = 1024;
 
-    public static string Build(Action<TextBuilder> buildText)
+    public static string Build(Action<TextBuilder>? buildText)
     {
         if (buildText is null) return string.Empty;
         using (var builder = new TextBuilder())
@@ -23,68 +26,94 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         }
     }
 
+    public static string Build<TState>(TState? state, Action<TextBuilder, TState?>? buildText)
+    {
+        if (buildText is null) return string.Empty;
+        using (var builder = new TextBuilder())
+        {
+            buildText(builder, state);
+            return builder.ToString();
+        }
+    }
+
 
     protected char[]? _charArray;
     protected int _length;
 
+    /// <summary>
+    /// Gets the <see cref="Span{T}"/> of <see cref="char"/>acters that have been written.
+    /// </summary>
     public Span<char> Written
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _charArray.AsSpan(0, _length);
     }
 
+    /// <summary>
+    /// Gets the <see cref="Span{T}"/> of <see cref="char"/>acters available without growing.
+    /// </summary>
     public Span<char> Available
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _charArray.AsSpan(_length);
     }
-    
+
+    /// <summary>
+    /// Gets a <see langword="ref"/> to the <see cref="char"/> at the given <paramref name="index"/>.
+    /// </summary>
+    /// <param name="index">The index of the <see cref="char"/> to reference.</param>
+    /// <returns>A <see langword="ref"/> to the <see cref="char"/> at <paramref name="index"/>.</returns>
+    /// <exception cref="IndexOutOfRangeException">
+    /// Thrown if <paramref name="index"/> is not within the current bounds.
+    /// </exception>
     public ref char this[int index]
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             if ((uint)index >= (uint)_length)
-                throw new IndexOutOfRangeException();
+                throw new IndexOutOfRangeException($"Index '{index}' is not within [0..{_length - 1}]");
+            // Length is >0 if _charArray is not null
             return ref _charArray![index];
         }
     }
+    /// <inheritdoc cref="IList{T}"/>
     char IList<char>.this[int index]
     {
-        get
-        {
-            if ((uint)index >= (uint)_length)
-                throw new IndexOutOfRangeException();
-            return _charArray![index];
-        }
-        set
-        {
-            if ((uint)index >= (uint)_length)
-                throw new IndexOutOfRangeException();
-            _charArray![index] = value;
-        }
+        get => this[index];
+        set => this[index] = value;
     }
+    /// <inheritdoc cref="IReadOnlyList{T}"/>
     char IReadOnlyList<char>.this[int index]
     {
-        get
-        {
-            if ((uint)index >= (uint)_length)
-                throw new IndexOutOfRangeException();
-            return _charArray![index];
-        }
+        get => this[index];
     }
 
-    int ICollection<char>.Count => _length;
+    public Span<char> this[Range range]
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _charArray.AsSpan(range);
+    }
 
-    bool ICollection<char>.IsReadOnly => false;
-
-    int IReadOnlyCollection<char>.Count => _length;
-
+    /// <summary>
+    /// Gets the number of characters that have been written.
+    /// </summary>
     public int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _length;
     }
+    /// <inheritdoc cref="ICollection{T}"/>
+    int ICollection<char>.Count => _length;
+    /// <inheritdoc cref="IReadOnlyCollection{T}"/>
+    int IReadOnlyCollection<char>.Count => _length;
 
+    /// <inheritdoc cref="ICollection{T}"/>
+    bool ICollection<char>.IsReadOnly => false;
+
+    /// <summary>
+    /// Construct a new <see cref="TextBuilder"/>.
+    /// </summary>
     public TextBuilder()
     {
         _charArray = ArrayPool<char>.Shared.Rent(MinLength);
@@ -108,46 +137,47 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         _length += text.Length;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void GrowThenCopy(string text)
+    {
+        Grow(text.Length);
+        text.CopyTo(Available);
+        _length += text.Length;
+    }
+
     /// <summary>Grows <see cref="_chars"/> to have the capacity to store at least <paramref name="additionalChars"/> beyond <see cref="_pos"/>.</summary>
     [MethodImpl(MethodImplOptions.NoInlining)] // keep consumers as streamlined as possible
-    private void Grow(int additionalChars)
+    protected void Grow(int additionalChars)
     {
         // This method is called when the remaining space (_chars.Length - _pos) is
         // insufficient to store a specific number of additional characters.  Thus, we
         // need to grow to at least that new total. GrowCore will handle growing by more
         // than that if possible.
         Debug.Assert(additionalChars > _charArray!.Length - _length);
-        GrowCore((uint)_length + (uint)additionalChars);
+        GrowCore(_length + additionalChars);
     }
 
-    /// <summary>Grows the size of <see cref="_chars"/>.</summary>
-    [MethodImpl(MethodImplOptions.NoInlining)] // keep consumers as streamlined as possible
-    private void Grow()
-    {
-        // This method is called when the remaining space in _chars isn't sufficient to continue
-        // the operation.  Thus, we need at least one character beyond _chars.Length.  GrowCore
-        // will handle growing by more than that if possible.
-        GrowCore((uint)_charArray!.Length + 1);
-    }
-
-    /// <summary>Grow the size of <see cref="_chars"/> to at least the specified <paramref name="requiredMinCapacity"/>.</summary>
+    /// <summary>Grow the size of <see cref="_chars"/> to at least the specified <paramref name="minCapacity"/>.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)] // but reuse this grow logic directly in both of the above grow routines
-    private void GrowCore(uint requiredMinCapacity)
+    private void GrowCore(int minCapacity)
     {
-        // We want the max of how much space we actually required and doubling our capacity (without going beyond the max allowed length). We
-        // also want to avoid asking for small arrays, to reduce the number of times we need to grow, and since we're working with unsigned
-        // ints that could technically overflow if someone tried to, for example, append a huge string to a huge string, we also clamp to int.MaxValue.
-        // Even if the array creation fails in such a case, we may later fail in ToStringAndClear.
+        // We want the max of how much space we actually required and doubling our capacity (without going beyond the max allowed length).
+        // We also want to avoid asking for small arrays to reduce the number of times we need to grow.
+        
+        // string.MaxLength < array.MaxLength
+        const int stringMaxLength = 0x3FFFFFDF;
+        //const int arrayMaxLength =  0X7FFFFFC7;
+        int newCapacity = Math.Clamp(Math.Max(minCapacity, _charArray!.Length * 2), 
+                                     MinLength,
+                                     stringMaxLength);
 
-        uint newCapacity = Math.Max(requiredMinCapacity, Math.Min((uint)_charArray!.Length * 2, 0x3FFFFFDF));
-        int arraySize = (int)Math.Clamp(newCapacity, 1024, int.MaxValue);
-
-        char[] newArray = ArrayPool<char>.Shared.Rent(arraySize);
+        // Get our new array, copy what we have written to it
+        char[] newArray = ArrayPool<char>.Shared.Rent(newCapacity);
         Written.CopyTo(newArray);
-
+        // Return the array and then point at the new one
         char[]? toReturn = _charArray;
         _charArray = newArray;
-
+        // We may not have had anything to return (if we started with an initial buffer or some weird dispose)
         if (toReturn is not null)
         {
             ArrayPool<char>.Shared.Return(toReturn);
@@ -162,20 +192,18 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             Grow(length);
         }
-        int right = len - index;
-        TextHelper.CopyTo(_charArray.AsSpan(index, right),
-                          _charArray.AsSpan(index + length, right));
-        _length = len + length;
+        Written[index..].CopyTo(this[(index + length)..]);
+        _length += length;
         return _charArray.AsSpan(index, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemoveSpan(int index, int length)
     {
-        int right = index + length;
-        int rLength = _length - right;
-        TextHelper.CopyTo(_charArray.AsSpan(right, rLength),
-                          _charArray.AsSpan(index, rLength));
+        int rIndex = index + length;
+        int rLength = _length - rIndex;
+        _charArray.AsSpan(rIndex, rLength)
+                  .CopyTo(_charArray.AsSpan(index, rLength));
         _length -= length;
     }
 
@@ -221,7 +249,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, default, default))
                 {
-                    Grow();
+                    Grow(1);
                 }
 
                 _length += charsWritten;
@@ -262,7 +290,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, format, provider))
                 {
-                    Grow();
+                    Grow(1);
                 }
 
                 _length += charsWritten;
@@ -452,116 +480,6 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         return false;
     }
 
-    public TextBuilder RemoveRange(int index, int length)
-    {
-        if (index < 0 || (index > _length))
-            throw new ArgumentOutOfRangeException(nameof(index));
-        if (length <= 0) return this;
-        if (index + length > _length)
-            throw new ArgumentOutOfRangeException(nameof(length));
-        RemoveSpan(index, length);
-        return this;
-    }
-
-    public TextBuilder RemoveRange(Range range)
-    {
-        (int offset, int length) = range.GetOffsetAndLength(_length);
-        RemoveSpan(offset, length);
-        return this;
-    }
-
-    #region Trim
-    public TextBuilder TrimStart()
-    {
-        var i = 0;
-        var text = Written;
-        var len = Written.Length;
-        while (i < len && char.IsWhiteSpace(text[i]))
-        {
-            i++;
-        }
-
-        if (i > 0)
-        {
-            RemoveSpan(0, i);
-        }
-
-        return this;
-    }
-
-    public TextBuilder TrimStart(char ch)
-    {
-        var i = 0;
-        var text = Written;
-        var len = Written.Length;
-        while (i < len && text[i] == ch)
-        {
-            i++;
-        }
-
-        if (i > 0)
-        {
-            RemoveSpan(0, i);
-        }
-
-        return this;
-    }
-
-    public TextBuilder TrimStart(params char[] characters)
-    {
-        var i = 0;
-        var text = Written;
-        var len = Written.Length;
-        while (i < len && characters.Contains(text[i]))
-        {
-            i++;
-        }
-
-        if (i > 0)
-        {
-            RemoveSpan(0, i);
-        }
-
-        return this;
-    }
-
-    public TextBuilder TrimStart(ReadOnlySpan<char> match)
-    {
-        int matchLen = match.Length;
-        if (matchLen <= _length)
-        {
-            if (TextHelper.Equals(Written[..matchLen], match))
-            {
-                RemoveSpan(0, matchLen);
-            }
-        }
-        return this;
-    }
-
-    public TextBuilder TrimStart(ReadOnlySpan<char> match, StringComparison comparison)
-    {
-        int matchLen = match.Length;
-        if (matchLen <= _length)
-        {
-            if (TextHelper.Equals(Written[..matchLen], match, comparison))
-            {
-                RemoveSpan(0, matchLen);
-            }
-        }
-        return this;
-    }
-    #endregion
-
-    public TextBuilder Modify(RefChar perChar)
-    {
-        Span<char> span = Written;
-        for (var i = _length = 1; i >= 0; i--)
-        {
-            perChar(ref span[i]);
-        }
-        return this;
-    }
-
     public TextBuilder Clear()
     {
         // We do not clear the contents of the array
@@ -574,21 +492,25 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(char[] array, int arrayIndex = 0)
     {
-        TextHelper.CopyTo(Written, array.AsSpan(arrayIndex));
+        Written.CopyTo(array.AsSpan(arrayIndex));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(Span<char> destination)
     {
-        TextHelper.CopyTo(Written, destination);
+        Written.CopyTo(destination);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryCopyTo(Span<char> destination)
     {
-        return TextHelper.TryCopyTo(Written, destination);
+        return Written.TryCopyTo(destination);
     }
-    
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<char> AsSpan() => new Span<char>(_charArray);
+
+
     public IEnumerator<char> GetEnumerator()
     {
         for (var i = 0; i < _length; i++)
