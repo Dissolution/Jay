@@ -7,7 +7,7 @@ namespace Jay.Reflection.Building;
 
 public static class ExceptionBuilder
 {
-    private delegate TException ExceptionCtor<out TException>(string message, Exception? innerException)
+    internal delegate TException ExceptionCtor<out TException>(string message, Exception? innerException)
         where TException : Exception;
 
     private static readonly ConcurrentTypeDictionary<Delegate> _ctorCache;
@@ -70,7 +70,7 @@ public static class ExceptionBuilder
     }
 
 
-    private static ExceptionCtor<TException> GetCtor<TException>()
+    internal static ExceptionCtor<TException> GetCtor<TException>()
         where TException : Exception
     {
         return (_ctorCache.GetOrAdd(typeof(TException), CreateCtor<TException>) as

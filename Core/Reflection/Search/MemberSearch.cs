@@ -6,7 +6,7 @@ using Jay.Reflection.Expressions;
 
 namespace Jay.Reflection.Search;
 
-public class MemberSearch
+public static class MemberSearch
 {
     public static Result TryFind<TMember>(Expression memberExpression,
                                           [NotNullWhen(true)] out TMember? member)
@@ -19,5 +19,11 @@ public class MemberSearch
             return new MissingMemberException();
         }
         return true;
+    }
+
+    public static bool HasDefaultConstructor(this Type type, [NotNullWhen(true)] out ConstructorInfo? ctor)
+    {
+        ctor = type.GetConstructor(Reflect.InstanceFlags, Type.EmptyTypes);
+        return ctor is not null;
     }
 }

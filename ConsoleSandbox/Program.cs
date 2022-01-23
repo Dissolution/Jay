@@ -1,11 +1,16 @@
 using System.Diagnostics;
+using System.Text;
 using Jay.Benchmarking;
+using Jay.Collections.Pools;
 
 Debug.Assert(args.Length == 0);
 
 var result = Runner.RunAndOpenHtml();
 Console.WriteLine(result);
 
+
+var sbPool = Pool.Create<StringBuilder>(clean: sb => sb.Clear());
+sbPool.
 
 Console.WriteLine("Press Enter to close this window.");
 Console.ReadLine();

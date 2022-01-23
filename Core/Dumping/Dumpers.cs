@@ -2,6 +2,8 @@
 using System.Diagnostics.CodeAnalysis;
 using Jay.Collections;
 using Jay.Reflection;
+using Jay.Reflection.Building;
+using Jay.Reflection.Search;
 using Jay.Text;
 using Jay.Validation;
 
@@ -131,5 +133,13 @@ public static class Dumpers
         using var text = new TextBuilder();
         GetDumper<T>().Dump(text, value, level);
         return text.ToString();
+    }
+
+    public static void ThrowException<TException>(ref DumpStringHandler message, Exception? innerException = null)
+        where TException : Exception
+    {
+        var ctor = ExceptionBuilder.GetCtor<TException>();
+        var ex = ctor(message.ToStringAndClear(), innerException);
+        throw ex;
     }
 }

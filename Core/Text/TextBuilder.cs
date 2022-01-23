@@ -1,11 +1,9 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Collections;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Jay.Reflection;
 using Jay.Exceptions;
-
+using Jay.Validation;
 
 namespace Jay.Text;
 
@@ -41,16 +39,16 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     protected int _length;
 
     /// <summary>
-    /// Gets the <see cref="Span{T}"/> of <see cref="char"/>acters that have been written.
+    /// Gets the <see cref="Span{T}"/> of <see cref="char"/>s that have been written.
     /// </summary>
     public Span<char> Written
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _charArray.AsSpan(0, _length);
+        get => new Span<char>(_charArray, 0, _length);
     }
 
     /// <summary>
-    /// Gets the <see cref="Span{T}"/> of <see cref="char"/>acters available without growing.
+    /// Gets the <see cref="Span{T}"/> of <see cref="char"/>s available without growing.
     /// </summary>
     public Span<char> Available
     {
@@ -71,8 +69,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if ((uint)index >= (uint)_length)
-                throw new IndexOutOfRangeException($"Index '{index}' is not within [0..{_length - 1}]");
+            Validate.Index(index, _length);
             // Length is >0 if _charArray is not null
             return ref _charArray![index];
         }
@@ -133,7 +130,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     private void GrowThenCopy(ReadOnlySpan<char> text)
     {
         Grow(text.Length);
-        text.CopyTo(Available);
+        TextHelper.CopyTo(text, Available);
         _length += text.Length;
     }
 
@@ -141,7 +138,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     private void GrowThenCopy(string text)
     {
         Grow(text.Length);
-        text.CopyTo(Available);
+        TextHelper.CopyTo(text, Available);
         _length += text.Length;
     }
 
@@ -173,7 +170,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
         // Get our new array, copy what we have written to it
         char[] newArray = ArrayPool<char>.Shared.Rent(newCapacity);
-        Written.CopyTo(newArray);
+        TextHelper.CopyTo(Written, newArray);
         // Return the array and then point at the new one
         char[]? toReturn = _charArray;
         _charArray = newArray;
@@ -192,7 +189,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             Grow(length);
         }
-        Written[index..].CopyTo(this[(index + length)..]);
+        TextHelper.CopyTo(Written[index..], this[(index + length)..]);
         _length += length;
         return _charArray.AsSpan(index, length);
     }
@@ -200,19 +197,20 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemoveSpan(int index, int length)
     {
-        int rIndex = index + length;
-        int rLength = _length - rIndex;
-        _charArray.AsSpan(rIndex, rLength)
-                  .CopyTo(_charArray.AsSpan(index, rLength));
+        TextHelper.CopyTo(Written[(index+length)..], this[index..]);
         _length -= length;
     }
 
+    /// <summary>
+    /// Writes a single <see cref="char"/>.
+    /// </summary>
+    /// <param name="ch">The single <see cref="char"/> to write.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(char ch)
     {
         Span<char> chars = _charArray;
         int index = _length;
-        if ((uint)index < (uint)chars.Length)
+        if (index < chars.Length)
         {
             chars[index] = ch;
             _length = index + 1;
@@ -227,7 +225,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(ReadOnlySpan<char> text)
     {
-        if (text.TryCopyTo(Available))
+        if (TextHelper.TryCopyTo(text, Available))
         {
             _length += text.Length;
         }
@@ -237,9 +235,29 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(string? text)
+    {
+        if (text is null) return;
+        if (TextHelper.TryCopyTo(text, Available))
+        {
+            _length += text.Length;
+        }
+        else
+        {
+            GrowThenCopy(text);
+        }
+    }
+
+    /// <summary>
+    /// Writes the text representation of a <paramref name="value"/> to this <see cref="TextBuilder"/>.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="value"></param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write<T>(T? value)
     {
-        string? s;
+        string? strValue;
         if (value is IFormattable)
         {
             // If the value can format itself directly into our buffer, do so.
@@ -257,22 +275,22 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
             }
 
             // constrained call avoiding boxing for value types
-            s = ((IFormattable)value).ToString(null, null);
+            strValue = ((IFormattable)value).ToString(null, null);
         }
         else
         {
-            s = value?.ToString();
+            strValue = value?.ToString();
         }
 
-        if (s is not null)
+        if (strValue is not null)
         {
-            if (s.TryCopyTo(Available))
+            if (TextHelper.TryCopyTo(strValue, Available))
             {
-                _length += s.Length;
+                _length += strValue.Length;
             }
             else
             {
-                GrowThenCopy(s);
+                GrowThenCopy(strValue);
             }
         }
     }
@@ -280,7 +298,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteFormat<T>(T? value, string? format = null, IFormatProvider? provider = null)
     {
-        string? s;
+        string? strValue;
         if (value is IFormattable)
         {
             // If the value can format itself directly into our buffer, do so.
@@ -298,16 +316,23 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
             }
 
             // constrained call avoiding boxing for value types
-            s = ((IFormattable)value).ToString(format, provider);
+            strValue = ((IFormattable)value).ToString(format, provider);
         }
         else
         {
-            s = value?.ToString();
+            strValue = value?.ToString();
         }
 
-        if (s is not null)
+        if (strValue is not null)
         {
-            Write(s);
+            if (TextHelper.TryCopyTo(strValue, Available))
+            {
+                _length += strValue.Length;
+            }
+            else
+            {
+                GrowThenCopy(strValue);
+            }
         }
     }
 
@@ -319,6 +344,12 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     }
 
     public TextBuilder Append(ReadOnlySpan<char> text)
+    {
+        Write(text);
+        return this;
+    }
+
+    public TextBuilder Append(string? text)
     {
         Write(text);
         return this;
@@ -336,9 +367,9 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
 
-    public TextBuilder AppendJoin<T>(params T?[]? values)
+    public TextBuilder AppendJoin<T>(params T[]? values)
     {
-        if (values != null)
+        if (values is not null)
         {
             for (var i = 0; i < values.Length; i++)
             {
@@ -348,7 +379,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
 
-    public TextBuilder AppendJoin<T>(IEnumerable<T?> values)
+    public TextBuilder AppendJoin<T>(IEnumerable<T> values)
     {
         foreach (var value in values)
         {
@@ -357,7 +388,21 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
 
-    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, params T?[]? values)
+    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, ReadOnlySpan<T> values)
+    {
+        if (values.Length >= 1)
+        {
+            Write<T>(values[0]);
+            for (var i = 1; i < values.Length; i++)
+            {
+                Write(delimiter);
+                Write<T>(values[i]);
+            }
+        }
+        return this;
+    }
+
+    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, params T[]? values)
     {
         if (values != null)
         {
@@ -367,14 +412,14 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
                 for (var i = 1; i < values.Length; i++)
                 {
                     Write(delimiter);
-                    Write(values[i]);
+                    Write<T>(values[i]);
                 }
             }
         }
         return this;
     }
 
-    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T?> values)
+    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T> values)
     {
         using (var e = values.GetEnumerator())
         {
@@ -386,6 +431,20 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
                     Write(delimiter);
                     Write(e.Current);
                 }
+            }
+        }
+        return this;
+    }
+
+    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, ReadOnlySpan<T> values, Action<TextBuilder, T> appendValue)
+    {
+        if (values.Length >= 1)
+        {
+            appendValue(this, values[0]);
+            for (var i = 1; i < values.Length; i++)
+            {
+                Write(delimiter);
+                appendValue(this, values[i]);
             }
         }
         return this;
@@ -408,10 +467,21 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
 
+    public TextBuilder AppendNewLine() => Append(Environment.NewLine);
+
+    public TextBuilder AppendNewLines(int count)
+    {
+        ReadOnlySpan<char> nl = Environment.NewLine;
+        for (var i = 0; i < count; i++)
+        {
+            Write(nl);
+        }
+        return this;
+    }
+
     public TextBuilder Insert(int index, char ch)
     {
-        if ((uint)index > (uint)_length)
-            throw new IndexOutOfRangeException();
+        Validate.Insert(index, _length);
         if (index == _length)
             return Append(ch);
         InsertSpan(index, 1)[0] = ch;
@@ -421,63 +491,148 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder Insert(int index, ReadOnlySpan<char> text)
     {
-        if ((uint)index > (uint)_length)
-            throw new IndexOutOfRangeException();
+        Validate.Insert(index, _length);
         if (index == _length)
             return Append(text);
-        text.CopyTo(InsertSpan(index, text.Length));
+        TextHelper.CopyTo(text, InsertSpan(index, text.Length));
         return this;
     }
 
     public TextBuilder Insert<T>(int index, T? value)
     {
-        if ((uint)index > (uint)_length)
-            throw new IndexOutOfRangeException();
-        if (index == _length)
-            return Append<T>(value);
+        return Insert(index, tb => tb.Write<T>(value));
+    }
+
+    public TextBuilder Insert(int index, Action<TextBuilder> buildInsertText)
+    {
+        Validate.Insert(index, _length);
         using var temp = new TextBuilder();
-        temp.Write<T>(value);
-        temp.CopyTo(InsertSpan(index, temp.Length));
+        buildInsertText(temp);
+        if (index == _length)
+        {
+            return Append(temp.Written);
+        }
+
+        TextHelper.CopyTo(temp.Written, InsertSpan(index, temp.Length));
         return this;
     }
 
-    public int IndexOf(char ch)
+    public int FirstIndexOf(char ch)
     {
-        for (var i = 0; i < _length; i++)
+        ReadOnlySpan<char> chars = Written;
+        for (var i = 0; i < chars.Length; i++)
         {
-            if (_charArray![i] == ch)
-                return i;
+            if (chars[i] == ch) return i;
+        }
+        return -1;
+    }
+    int IList<char>.IndexOf(char ch) => FirstIndexOf(ch);
+    public int LastIndexOf(char ch)
+    {
+        ReadOnlySpan<char> chars = Written;
+        for (var i = chars.Length-1; i >= 0; i--)
+        {
+            if (chars[i] == ch) return i;
         }
         return -1;
     }
 
-    public bool Contains(char ch)
+    public int FirstIndexOf(ReadOnlySpan<char> text)
     {
-        for (var i = 0; i < _length; i++)
-        {
-            if (_charArray![i] == ch)
-                return true;
-        }
-        return false;
+        return MemoryExtensions.IndexOf(Written, text);
+    }
+    public int FirstIndexOf(ReadOnlySpan<char> text, StringComparison comparison)
+    {
+        return MemoryExtensions.IndexOf(Written, text, comparison);
+    }
+    public int LastIndexOf(ReadOnlySpan<char> text)
+    {
+        return MemoryExtensions.LastIndexOf(Written, text);
+    }
+    public int LastIndexOf(ReadOnlySpan<char> text, StringComparison comparison)
+    {
+        return MemoryExtensions.LastIndexOf(Written, text, comparison);
     }
 
+    public bool Contains(char ch) => FirstIndexOf(ch) >= 0;
 
     public void RemoveAt(int index)
     {
-        if ((uint)index >= (uint)_length)
-            throw new ArgumentOutOfRangeException(nameof(index), index, $"Index must be between 0 and {_length - 1}");
+        Validate.Index(index, _length);
         RemoveSpan(index, 1);
     }
 
-    public bool Remove(char ch)
+    public void RemoveAt(Range range)
     {
-        int i = IndexOf(ch);
+        var (offset, length) = range.GetOffsetAndLength(_length);
+        RemoveSpan(offset, length);
+    }
+
+    public int RemoveFirst(char ch)
+    {
+        ReadOnlySpan<char> chars = Written;
+        for (var i = 0; i < chars.Length; i++)
+        {
+            if (chars[i] == ch)
+            {
+                RemoveSpan(i, 1);
+                return i;
+            }
+        }
+        return -1;
+    }
+    bool ICollection<char>.Remove(char ch) => RemoveFirst(ch) >= 0;
+
+    public int RemoveLast(char ch)
+    {
+        ReadOnlySpan<char> chars = Written;
+        for (var i = chars.Length - 1; i >= 0; i--)
+        {
+            if (chars[i] == ch)
+            {
+                RemoveSpan(i, 1);
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int RemoveFirst(ReadOnlySpan<char> text)
+    {
+        var i = FirstIndexOf(text);
         if (i >= 0)
         {
-            RemoveAt(i);
-            return true;
+            RemoveSpan(i, text.Length);
         }
-        return false;
+        return i;
+    }
+    public int RemoveFirst(ReadOnlySpan<char> text, StringComparison comparison)
+    {
+        var i = FirstIndexOf(text, comparison);
+        if (i >= 0)
+        {
+            RemoveSpan(i, text.Length);
+        }
+        return i;
+    }
+
+    public int RemoveLast(ReadOnlySpan<char> text)
+    {
+        var i = LastIndexOf(text);
+        if (i >= 0)
+        {
+            RemoveSpan(i, text.Length);
+        }
+        return i;
+    }
+    public int RemoveLast(ReadOnlySpan<char> text, StringComparison comparison)
+    {
+        var i = LastIndexOf(text, comparison);
+        if (i >= 0)
+        {
+            RemoveSpan(i, text.Length);
+        }
+        return i;
     }
 
     public TextBuilder Clear()
@@ -490,35 +645,79 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CopyTo(char[] array, int arrayIndex = 0)
-    {
-        Written.CopyTo(array.AsSpan(arrayIndex));
-    }
+    public void CopyTo(char[] array, int arrayIndex = 0) => TextHelper.CopyTo(Written, array.AsSpan(arrayIndex));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CopyTo(Span<char> destination)
-    {
-        Written.CopyTo(destination);
-    }
+    public void CopyTo(Span<char> destination) => TextHelper.CopyTo(Written, destination);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryCopyTo(Span<char> destination)
+    public bool TryCopyTo(Span<char> destination) => TextHelper.TryCopyTo(Written, destination);
+
+    /// <summary>Enumerates the elements of a <see cref="Span{T}"/>.</summary>
+    public ref struct Enumerator
     {
-        return Written.TryCopyTo(destination);
-    }
+        /// <summary>The span being enumerated.</summary>
+        private readonly Span<char> _span;
+        /// <summary>The next index to yield.</summary>
+        private int _index;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<char> AsSpan() => new Span<char>(_charArray);
-
-
-    public IEnumerator<char> GetEnumerator()
-    {
-        for (var i = 0; i < _length; i++)
+        /// <summary>Gets the element at the current position of the enumerator.</summary>
+        public ref char Current
         {
-            yield return _charArray![i];
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref _span[_index];
+        }
+
+        public int Index
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _index;
+        }
+
+        /// <summary>Initialize the enumerator.</summary>
+        /// <param name="span">The span to enumerate.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal Enumerator(Span<char> span)
+        {
+            _span = span;
+            _index = -1;
+        }
+
+        /// <summary>Advances the enumerator to the next element of the span.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            int index = _index + 1;
+            if (index < _span.Length)
+            {
+                _index = index;
+                return true;
+            }
+
+            return false;
         }
     }
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(Written);
+    }
+
+    IEnumerator<char> IEnumerable<char>.GetEnumerator()
+    {
+        for (var i = 0; i < Written.Length; i++)
+        {
+            yield return Written[i];
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        for (var i = 0; i < Written.Length; i++)
+        {
+            yield return Written[i];
+        }
+    }
 
     public void Dispose()
     {
@@ -527,8 +726,18 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         _charArray = null;
         if (toReturn is not null)
         {
-            ArrayPool<char>.Shared.Return(toReturn, true);
+            // We do not clear the array
+            ArrayPool<char>.Shared.Return(toReturn, false);
         }
+    }
+
+    public bool Equals(string? text)
+    {
+        return TextHelper.Equals(Written, text);
+    }
+    public bool Equals(ReadOnlySpan<char> text)
+    {
+        return TextHelper.Equals(Written, text);
     }
 
     public override bool Equals(object? obj)

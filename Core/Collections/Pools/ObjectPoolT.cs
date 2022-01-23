@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Jay.Dumping;
 
 // ReSharper disable MethodOverloadWithOptionalParameter
 
@@ -110,6 +111,15 @@ public sealed class ObjectPool<T> : IDisposable
         get => Interlocked.CompareExchange(ref _disposed, 0, 0) > 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void CheckDisposed()
+    {
+        if (IsDisposed)
+        {
+            throw new ObjectDisposedException(Dumpers.Dump(GetType()), "This ObjectPool has been disposed");
+        }
+    }
+
     /// <summary>
     /// When we cannot find an available item quickly with Rent()
     /// </summary>
@@ -167,8 +177,7 @@ public sealed class ObjectPool<T> : IDisposable
     /// </remarks>
     public T Rent()
     {
-        if (IsDisposed)
-            throw new ObjectDisposedException(this.GetType().Name);
+        CheckDisposed();
 
         /* PERF: Examine the first element.
          * If that fails, AllocateSlow will look at the remaining elements.
@@ -201,13 +210,16 @@ public sealed class ObjectPool<T> : IDisposable
             
         // Disposed check
         if (IsDisposed)
+        {
+            _dispose?.Invoke(instance);
             return;
+        }
 
         // Examine first item, if that fails use the pool.
         // Initial read is not synchronized; we only interlock on a candidate.
         if (_firstItem == null)
         {
-            if (Interlocked.CompareExchange(ref _firstItem, instance, null) == null)
+            if (Interlocked.CompareExchange<T?>(ref _firstItem, instance, null) == null)
             {
                 // We stored it
                 return;
@@ -239,15 +251,19 @@ public sealed class ObjectPool<T> : IDisposable
         if (_dispose != null)
         {
             var dispose = _dispose!;
-            T? item = Reference.Exchange(ref _firstItem, null);
+            T? item = Reference.Exchange<T?>(ref _firstItem, null);
             if (item != null)
+            {
                 dispose(item);
+            }
             var items = _items;
             for (var i = 0; i < items.Length; i++)
             {
-                item = Reference.Exchange(ref items[i].Value, null);
+                item = Reference.Exchange<T?>(ref items[i].Value, null);
                 if (item != null)
+                {
                     dispose(item);
+                }
             }
         }
         Debug.Assert(_items.All(item => item.Value is null));

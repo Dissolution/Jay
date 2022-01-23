@@ -1,8 +1,4 @@
-﻿
-using System;
-using System.Runtime.InteropServices;
-
-namespace Jay.Text;
+﻿namespace Jay.Text;
 
 public abstract class TextComparer
 {
@@ -92,22 +88,24 @@ internal sealed class FastTextComparer : TextComparer
 {
     public override int Compare(char x, char y)
     {
-        return ((ushort)x).CompareTo((ushort)y);
+        if (x < y) return -1;
+        if (x == y) return 0;
+        return 1;
     }
 
     public override int Compare(string? x, string? y)
     {
-        return string.Compare(x, y);
+        return string.Compare(x, y, StringComparison.Ordinal);
     }
 
     public override int Compare(char[]? x, char[]? y)
     {
-        return base.Compare(x, y);
+        return MemoryExtensions.SequenceCompareTo<char>(x, y);
     }
 
     public override int Compare(ReadOnlySpan<char> x, ReadOnlySpan<char> y)
     {
-        return x.SequenceCompareTo(y);
+        return MemoryExtensions.SequenceCompareTo<char>(x, y);
     }
 
     public override bool Equals(char x, char y)
