@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Benchmarking\Benchmarking.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Corvidae\Corvidae.csproj" />
   </ItemGroup>
 
 </Project>

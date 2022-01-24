@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -8,6 +9,12 @@ using Jay.Text;
 
 namespace Jay.Corvidae
 {
+    /* https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/interpolated-string-handler
+     *
+     *
+     */
+
+
     public enum LogLevel
     {
         Off = 0,
@@ -38,13 +45,57 @@ namespace Jay.Corvidae
         void Log(ILogEvent logEvent);
 
         void Log(LogLevel level, [InterpolatedStringHandlerArgument("", "level")] LogInterpolatedStringHandler message);
+        void Log(Exception? exception, LogLevel level, [InterpolatedStringHandlerArgument("", "level")] LogInterpolatedStringHandler message);
+
+        // void LogThrow<TException>(LogLevel level,
+        //                           [InterpolatedStringHandlerArgument("", "level")] LogInterpolatedStringHandler message)
+        //     where TException : Exception;
+        //
+        // void LogThrow<TException>(Exception? innerException, 
+        //                           LogLevel level,
+        //                           [InterpolatedStringHandlerArgument("", "level")] LogInterpolatedStringHandler message)
+        //     where TException : Exception;
+
+    }
+
+    public interface ILogEventParameter
+    {
+        string? Name { get; }
+        object? Value { get; }
+    }
+
+    public interface ILogMessageParameter : ILogEventParameter
+    {
+        string? Format { get; }
+    }
+
+    public record class LogEventParameter(string Name, object? Value) : ILogEventParameter
+    {
+
+    }
+
+    public record class LogMessageParameter(string? Name, object? Value, string? Format = null) : ILogMessageParameter
+    {
+
+    }
+
+    public interface ILogMessage
+    {
+        string Template { get; }
+        ILogMessageParams Parameters { get; }
+
+        string Render(ILogMessageResolver resolver);
+    }
+
+    public interface ILogMessageParams : IList<ILogEventParameter>
+    {
+
     }
 
     [InterpolatedStringHandler]
     public ref struct LogInterpolatedStringHandler
     {
-        // Storage for the built-up string
-        private readonly TextBuilder? _textBuilder;
+        private readonly List<object?>? _parts;
 
         public LogInterpolatedStringHandler(int literalLength, int formattedCount,
                                             ILogger logger,
@@ -52,33 +103,52 @@ namespace Jay.Corvidae
                                             out bool isEnabled)
         {
             isEnabled = logger.IsEnabled(level);
-            _textBuilder = isEnabled ? new TextBuilder() : null;
+            if (isEnabled)
+            {
+                _parts = new(4);
+            }
+            else
+            {
+                _parts = null;
+            }
         }
 
         public void AppendLiteral(string? str)
         {
-            _textBuilder!.Write(str);
+            _parts!.Add(str);
         }
 
-        public void AppendFormatted<T>(T value, [CallerArgumentExpression("value")] string? valueName)
+        public void AppendFormatted<T>(T value, [CallerArgumentExpression("value")] string? valueName = null)
         {
-            _textBuilder!.WriteFormat<T>(value);
+            var p = new LogMessageParameter(valueName, value);
+            _parts!.Add(p);
         }
 
-        public void AppendFormatted<T>(T value, string? format)
+        public void AppendFormatted<T>(T value, string? format, [CallerArgumentExpression("value")] string? valueName = null)
         {
-            _textBuilder!.WriteFormat<T>(value, format);
+            var p = new LogMessageParameter(valueName, value, format);
+            _parts!.Add(p);
         }
 
-        public string ToStringAndClear()
+        public void Render(TextBuilder textBuilder)
         {
-            if (_textBuilder is not null)
+            if (_parts is null) return;
+
+            foreach (var part in _parts)
             {
-                var str = _textBuilder.ToString();
-                _textBuilder.Dispose();
-                return str;
+                if (part.Is(out string? str))
+                {
+                    textBuilder.Write(str);
+                }
+                else if (part.Is(out ILogMessageParameter? logMsgParam))
+                {
+                    textBuilder.WriteFormat(logMsgParam.Value, logMsgParam.Format);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
             }
-            return string.Empty;
         }
     }
 }

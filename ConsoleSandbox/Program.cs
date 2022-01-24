@@ -1,15 +1,23 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using Jay.Benchmarking;
 using Jay.Collections.Pools;
+using Jay.Corvidae;
+using Jay.Text;
 
 Debug.Assert(args.Length == 0);
 
-var result = Runner.RunAndOpenHtml();
-Console.WriteLine(result);
+//var result = Runner.RunAndOpenHtml();
+//Console.WriteLine(result);
+
+var thing = new Thing() {Id = RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue)};
+
+var local = new Local();
+local.Log(LogLevel.Warning, $"We had an error with {thing:n=Thinger} at {DateTime.Now}");
 
 
-var sbPool = Pool.Create<StringBuilder>(clean: sb => sb.Clear());
 
 Console.WriteLine("Press Enter to close this window.");
 Console.ReadLine();
@@ -26,6 +34,35 @@ public class Thing
     }
 }
 
+internal class Local : ILogger
+{
+    public bool IsEnabled(LogLevel level)
+    {
+        return true;
+    }
+
+    public void Log(ILogEvent logEvent)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Log(LogLevel level, [InterpolatedStringHandlerArgument("", "level")] LogInterpolatedStringHandler message)
+    {
+        if (IsEnabled(level))
+        {
+            using var text = new TextBuilder();
+            message.Render(text);
+            var str = text.ToString();
+            Debugger.Break();
+        }
+        Debugger.Break();
+    }
+
+    public void Log(Exception? exception, LogLevel level, LogInterpolatedStringHandler message)
+    {
+        throw new NotImplementedException();
+    }
+}
 
 
 
