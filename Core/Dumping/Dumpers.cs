@@ -135,6 +135,11 @@ public static class Dumpers
         return text.ToString();
     }
 
+    public static string Dump(ref DumpStringHandler dumpFormattedString)
+    {
+        return dumpFormattedString.ToStringAndClear();
+    }
+
     public static void ThrowException<TException>(ref DumpStringHandler message, Exception? innerException = null)
         where TException : Exception
     {

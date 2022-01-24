@@ -10,7 +10,6 @@ Console.WriteLine(result);
 
 
 var sbPool = Pool.Create<StringBuilder>(clean: sb => sb.Clear());
-sbPool.
 
 Console.WriteLine("Press Enter to close this window.");
 Console.ReadLine();

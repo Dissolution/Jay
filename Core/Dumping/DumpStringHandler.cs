@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Jay.Exceptions;
 using Jay.Text;
 
 namespace Jay.Dumping;
@@ -30,13 +31,18 @@ public ref struct DumpStringHandler
         return str;
     }
 
-    public void Dispose()
+    public override bool Equals(object? obj)
     {
-        _text.Dispose();
+        return UnsuitableException.ThrowEquals(typeof(DumpStringHandler));
+    }
+
+    public override int GetHashCode()
+    {
+        return UnsuitableException.ThrowGetHashCode(typeof(DumpStringHandler));
     }
 
     public override string ToString()
     {
-        return _text.ToString();
+        throw new InvalidOperationException($"You MUST call {nameof(ToStringAndClear)}() in order to get the string output of resolving the {nameof(DumpStringHandler)}");
     }
 }

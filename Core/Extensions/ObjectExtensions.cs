@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Jay.Reflection;
 using static InlineIL.IL;
 
 namespace Jay;
@@ -15,18 +16,6 @@ public static class ObjectExtensions
         return Return<bool>();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsDefault(this object? obj)
-    {
-        Emit.Ldarg(nameof(obj));
-        Emit.Brfalse("yup");
-        Emit.Ldc_I4_0();
-        Emit.Ret();
-        MarkLabel("yup");
-        Emit.Ldc_I4_1();
-        Emit.Ret();
-        throw Unreachable();
-    }
 
     /// <summary>
     /// 
@@ -76,7 +65,7 @@ public static class ObjectExtensions
         if (obj is null)
         {
             value = default;
-            return !typeof(T).IsValueType || typeof(T).IsAssignableTo(typeof(Nullable<>));
+            return !typeof(T).IsValueType || typeof(T).Implements(typeof(Nullable<>));
         }
         else
         {
