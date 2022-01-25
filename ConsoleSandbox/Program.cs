@@ -1,9 +1,19 @@
 using System.Diagnostics;
 using System.Text;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using Jay.Benchmarking;
 using Jay.Collections.Pools;
 
 Debug.Assert(args.Length == 0);
+
+Label lblThing;
+
+string name = Local.Thing(out lblThing);
+
+Debugger.Break();
+
 
 var result = Runner.RunAndOpenHtml();
 Console.WriteLine(result);
@@ -26,7 +36,14 @@ public class Thing
     }
 }
 
-
+public class Local
+{
+    public static string Thing(out Label lbl, [CallerArgumentExpression("lbl")] string? labelName = null)
+    {
+        lbl = default;
+        return labelName!;
+    }
+}
 
 
  internal class Scope

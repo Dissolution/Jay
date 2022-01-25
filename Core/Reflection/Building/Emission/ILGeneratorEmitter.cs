@@ -7,6 +7,8 @@ namespace Jay.Reflection.Building.Emission;
 public sealed class ILGeneratorEmitter : IILGeneratorEmitter
 {
     private readonly ILGenerator _ilGenerator;
+    private readonly List<Label> _labels;
+    private readonly List<LocalBuilder> _locals;
 
     public InstructionStream Instructions { get; }
     public int ILOffset => _ilGenerator.ILOffset;
@@ -15,6 +17,8 @@ public sealed class ILGeneratorEmitter : IILGeneratorEmitter
     {
         ArgumentNullException.ThrowIfNull(ilGenerator);
         _ilGenerator = ilGenerator;
+        _labels = new List<Label>(0);
+        _locals = new List<LocalBuilder>(0);
         this.Instructions = new();
     }
 
