@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Jay.Reflection.Exceptions;
 
@@ -14,7 +15,8 @@ namespace Jay.Reflection.Building.Emission;
 public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
     where TEmitter : class, IFluentEmitter<TEmitter>
 {
-    TEmitter DefineAndMarkLabel(out Label label) => DefineLabel(out label).MarkLabel(label);
+    TEmitter DefineAndMarkLabel(out Label label, [CallerArgumentExpression("label")] string lblName = "") 
+        => DefineLabel(out label, lblName).MarkLabel(label);
 
     TEmitter ThrowException(Type exceptionType)
     {
@@ -56,20 +58,20 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
         return Newobj(ctor).Throw();
     }
 
-    TEmitter Br(out Label label) => DefineLabel(out label).Br(label);
-    TEmitter Leave(out Label label) => DefineLabel(out label).Leave(label);
-    TEmitter Brtrue(out Label label) => DefineLabel(out label).Brtrue(label);
-    TEmitter Brfalse(out Label label) => DefineLabel(out label).Brfalse(label);
-    TEmitter Beq(out Label label) => DefineLabel(out label).Beq(label);
-    TEmitter Bne_Un(out Label label) => DefineLabel(out label).Bne_Un(label);
-    TEmitter Bge(out Label label) => DefineLabel(out label).Bge(label);
-    TEmitter Bge_Un(out Label label) => DefineLabel(out label).Bge_Un(label);
-    TEmitter Bgt(out Label label) => DefineLabel(out label).Bgt(label);
-    TEmitter Bgt_Un(out Label label) => DefineLabel(out label).Bgt_Un(label);
-    TEmitter Ble(out Label label) => DefineLabel(out label).Ble(label);
-    TEmitter Ble_Un(out Label label) => DefineLabel(out label).Ble_Un(label);
-    TEmitter Blt(out Label label) => DefineLabel(out label).Blt(label);
-    TEmitter Blt_Un(out Label label) => DefineLabel(out label).Blt_Un(label);
+    TEmitter Br(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Br(label);
+    TEmitter Leave(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Leave(label);
+    TEmitter Brtrue(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Brtrue(label);
+    TEmitter Brfalse(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Brfalse(label);
+    TEmitter Beq(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Beq(label);
+    TEmitter Bne_Un(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Bne_Un(label);
+    TEmitter Bge(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Bge(label);
+    TEmitter Bge_Un(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Bge_Un(label);
+    TEmitter Bgt(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Bgt(label);
+    TEmitter Bgt_Un(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Bgt_Un(label);
+    TEmitter Ble(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Ble(label);
+    TEmitter Ble_Un(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Ble_Un(label);
+    TEmitter Blt(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Blt(label);
+    TEmitter Blt_Un(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Blt_Un(label);
 
     TEmitter Cge() => Clt().Not();
     TEmitter Cge_Un() => Clt_Un().Not();

@@ -1,14 +1,17 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Jay.Dumping;
+using Jay.Text;
 
 namespace Jay.Reflection.Building.Emission;
 
 public sealed class ILGeneratorEmitter : IILGeneratorEmitter
 {
     private readonly ILGenerator _ilGenerator;
-    private readonly List<Label> _labels;
-    private readonly List<LocalBuilder> _locals;
+    private readonly Dictionary<Label, string> _labels;
+    private readonly Dictionary<LocalBuilder, string> _locals;
 
     public InstructionStream Instructions { get; }
     public int ILOffset => _ilGenerator.ILOffset;
@@ -17,9 +20,55 @@ public sealed class ILGeneratorEmitter : IILGeneratorEmitter
     {
         ArgumentNullException.ThrowIfNull(ilGenerator);
         _ilGenerator = ilGenerator;
-        _labels = new List<Label>(0);
-        _locals = new List<LocalBuilder>(0);
+        _labels = new(0);
+        _locals = new(0);
         this.Instructions = new();
+    }
+
+    private string CreateLabelName(Label label)
+    {
+        return $"lbl{label.GetHashCode()}";
+    }
+
+    private string CreateLocalName(LocalBuilder local)
+    {
+        return Dumpers.Dump($"{local.LocalType}_{local.LocalIndex}{(local.IsPinned ? "_pinned" : "")}");
+    }
+
+    private void AddLabel(Label label, string? lblName)
+    {
+        if (string.IsNullOrWhiteSpace(lblName))
+        {
+            _labels[label] = CreateLabelName(label);
+        }
+        else
+        {
+            // Fix 'out var XYZ' having 'var XYZ' as a name
+            var i = lblName.LastIndexOf(' ');
+            if (i >= 0)
+            {
+                lblName = lblName.Substring(i + 1);
+            }
+            _labels[label] = lblName;
+        }
+    }
+
+    private void AddLocal(LocalBuilder local, string? localName)
+    {
+        if (string.IsNullOrWhiteSpace(localName))
+        {
+            _locals[local] = CreateLocalName(local);
+        }
+        else
+        {
+            // Fix 'out var XYZ' having 'var XYZ' as a name
+            var i = localName.LastIndexOf(' ');
+            if (i >= 0)
+            {
+                localName = localName.Substring(i + 1);
+            }
+            _locals[local] = localName;
+        }
     }
 
     public IILGeneratorEmitter BeginCatchBlock(Type exceptionType)
@@ -41,9 +90,10 @@ public sealed class ILGeneratorEmitter : IILGeneratorEmitter
         return this;
     }
 
-    public IILGeneratorEmitter BeginExceptionBlock(out Label label)
+    public IILGeneratorEmitter BeginExceptionBlock(out Label label, [CallerArgumentExpression("label")] string lblName = "")
     {
         label = _ilGenerator.BeginExceptionBlock();
+        AddLabel(label, lblName);
         var inst = new Instruction(this.ILOffset, ILGeneratorMethod.BeginExceptionBlock, label);
         this.Instructions.AddLast(inst);
         return this;
@@ -98,27 +148,30 @@ public sealed class ILGeneratorEmitter : IILGeneratorEmitter
         return this;
     }
 
-    public IILGeneratorEmitter DeclareLocal(Type localType, out LocalBuilder local)
+    public IILGeneratorEmitter DeclareLocal(Type localType, out LocalBuilder local, [CallerArgumentExpression("local")] string localName = "")
     {
         ArgumentNullException.ThrowIfNull(localType);
         local = _ilGenerator.DeclareLocal(localType);
+        AddLocal(local, localName);
         var inst = new Instruction(this.ILOffset, ILGeneratorMethod.DeclareLocal, localType, local);
         this.Instructions.AddLast(inst);
         return this;
     }
 
-    public IILGeneratorEmitter DeclareLocal(Type localType, bool pinned, out LocalBuilder local)
+    public IILGeneratorEmitter DeclareLocal(Type localType, bool pinned, out LocalBuilder local, [CallerArgumentExpression("local")] string localName = "")
     {
         ArgumentNullException.ThrowIfNull(localType);
         local = _ilGenerator.DeclareLocal(localType, pinned);
+        AddLocal(local, localName);
         var inst = new Instruction(this.ILOffset, ILGeneratorMethod.DeclareLocal, localType, pinned, local);
         this.Instructions.AddLast(inst);
         return this;
     }
 
-    public IILGeneratorEmitter DefineLabel(out Label label)
+    public IILGeneratorEmitter DefineLabel(out Label label, [CallerArgumentExpression("label")] string lblName = "")
     {
         label = _ilGenerator.DefineLabel();
+        AddLabel(label, lblName);
         var inst = new Instruction(this.ILOffset, ILGeneratorMethod.DefineLabel, label);
         this.Instructions.AddLast(inst);
         return this;
@@ -313,5 +366,72 @@ public sealed class ILGeneratorEmitter : IILGeneratorEmitter
         return this;
     }
 
-    public override string ToString() => Instructions.ToString();
+    private static void WriteOffset(TextBuilder builder, Instruction instruction)
+    {
+        builder.Append("IL_").WriteFormatted(instruction.Offset, "x4");
+    }
+
+    private void WriteArg(TextBuilder text, object? arg)
+    {
+        if (arg is null)
+        {
+            return;
+        }
+        else if (arg is string str)
+        {
+            text.Append('"').Append(arg).Append('"');
+        }
+        else if (arg is Label label)
+        {
+            if (!_labels.TryGetValue(label, out var lblName))
+            {
+                lblName = CreateLabelName(label);
+            }
+            text.Write(lblName);
+        }
+        else if (arg is LocalBuilder local)
+        {
+            if (!_locals.TryGetValue(local, out var localName))
+            {
+                localName = CreateLocalName(local);
+            }
+            text.Write(localName);
+        }
+        else if (arg is Array array)
+        {
+            text.AppendDelimit(",", array.Cast<object?>(), (tb, a) => WriteArg(tb, a));
+        }
+        else
+        {
+            text.AppendDump(arg);
+        }
+    }
+
+    public override string ToString()
+    {
+        using var textBuilder = new TextBuilder();
+        textBuilder.AppendDelimit(Environment.NewLine, this.Instructions, (text, instr) =>
+        {
+            WriteOffset(text, instr);
+            text.Write(": ");
+            // OpCode-based?
+            if (instr.GenMethod == ILGeneratorMethod.None)
+            {
+                text.Write(instr.OpCode.Name);
+                if (instr.Arg is not null)
+                {
+                    text.Write(' ');
+                    WriteArg(text, instr.Arg);
+                }
+            }
+            else
+            {
+                text.Append(instr.GenMethod)
+                    .Write('(');
+                WriteArg(text, instr.Arg);
+                text.Write(')');
+            }
+        });
+        return textBuilder.ToString();
+    }
 }

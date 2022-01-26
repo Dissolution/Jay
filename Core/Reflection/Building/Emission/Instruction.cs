@@ -7,7 +7,7 @@ namespace Jay.Reflection.Building.Emission;
 
 public class Instruction : IEquatable<Instruction>
 {
-    private static TextBuilder AppendLabel(TextBuilder builder, Instruction instruction)
+    private static TextBuilder AppendOffset(TextBuilder builder, Instruction instruction)
     {
         return builder.Append("IL_")
                       .AppendFormat(instruction.Offset, "x4");
@@ -200,7 +200,7 @@ public class Instruction : IEquatable<Instruction>
     public override string ToString()
     {
         using var text = new TextBuilder();
-        AppendLabel(text, this);
+        AppendOffset(text, this);
         text.Append(": ");
         if (GenMethod == ILGeneratorMethod.None)
         {
@@ -222,7 +222,7 @@ public class Instruction : IEquatable<Instruction>
                             {
                                 text.Append(',');
                             }
-                            AppendLabel(text, labels[i]);
+                            AppendOffset(text, labels[i]);
                         }
 
                         break;

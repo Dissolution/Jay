@@ -22,7 +22,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyTo(in char sourcePtr, ref char destPtr, int charCount)
+    internal static void CopyTo(in char sourcePtr, ref char destPtr, int charCount)
     {
         Emit.Ldarg(nameof(destPtr));
         Emit.Ldarg(nameof(sourcePtr));

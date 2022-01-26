@@ -5,12 +5,15 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using Jay.Benchmarking;
 using Jay.Collections.Pools;
+using Jay.Text;
 
-Debug.Assert(args.Length == 0);
+using var text = new TextBuilder();
 
-Label lblThing;
+text.Write($"Eat at {147,6:C}");
 
-string name = Local.Thing(out lblThing);
+string str = text.ToString();
+
+
 
 Debugger.Break();
 
@@ -38,7 +41,12 @@ public class Thing
 
 public class Local
 {
-    public static string Thing(out Label lbl, [CallerArgumentExpression("lbl")] string? labelName = null)
+
+  
+
+
+
+    public static string CaptureOutParamName(out Label lbl, [CallerArgumentExpression("lbl")] string? labelName = null)
     {
         lbl = default;
         return labelName!;
