@@ -9,11 +9,12 @@ using Jay.Text;
 
 using var text = new TextBuilder();
 
-text.Write($"Eat at {147,6:C}");
+text.WriteAligned("abcd", Alignment.Left, 2, 'x');
+text.WriteAligned("abcd", Alignment.Right, 2, '-');
+text.WriteAligned("abcd", Alignment.Center | Alignment.Right, 2, '|');
+
 
 string str = text.ToString();
-
-
 
 Debugger.Break();
 

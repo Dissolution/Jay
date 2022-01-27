@@ -1,16 +1,7 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Jay.Exceptions;
 
 namespace Jay.Text;
-
-[Flags]
-public enum Alignment
-{
-    Left = 1 << 0,
-    Right = 1 << 1,
-    Center = 1 << 2,
-}
 
 [InterpolatedStringHandler]
 public ref struct InterpolatedTextBuilderHandler
@@ -54,35 +45,15 @@ public ref struct InterpolatedTextBuilderHandler
     {
         if (alignment != 0)
         {
-            int start = _textBuilder.Length;
-            var span = _textBuilder.GetWriteFormatted<T>(value, format);
-            // Right-align?
-            if (alignment > 0)
-            {
-                var spaces = alignment - span.Length;
-                if (spaces > 0)
-                {
-                    // Add spaces after
-                    _textBuilder.AllocateAt(start, spaces).Fill(' ');
-                }
-            }
-            // Left-Align
-            else
-            {
-                var spaces = (-alignment) - span.Length;
-                if (spaces > 0)
-                {
-                    // Add spaces after
-                    _textBuilder.Allocate(spaces).Fill(' ');
-                }
-            }
+            using var temp = new TextBuilder();
+            temp.WriteFormatted<T>(value, format);
+            _textBuilder.WriteAligned(temp.Written, alignment > 0 ? Alignment.Right : Alignment.Left, alignment);
         }
         else
         {
             _textBuilder.WriteFormatted<T>(value, format);
         }
 
-        
 #if DEBUG
         _handlerTextEnd = _textBuilder.Length;
 #endif

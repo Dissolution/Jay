@@ -87,10 +87,10 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         get => this[index];
     }
 
-    public Span<char> this[Range range]
+    internal Span<char> this[Range range]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Written[range]
+        get => _charArray.AsSpan(range);
     }
 
     /// <summary>
@@ -357,6 +357,186 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
                 GrowThenCopy(strValue);
             }
         }
+    }
+
+    public void WriteAligned(char ch, Alignment alignment, int width, char fillChar = ' ')
+    {
+        if (width > 0)
+        {
+            if (width == 1 || alignment == default)
+            {
+                Write(ch);
+            }
+            else
+            {
+                var spaces = width - 1;
+                if (alignment == Alignment.Left)
+                {
+                    Write(ch);
+                    Allocate(spaces).Fill(fillChar);
+                }
+                else if (alignment == Alignment.Right)
+                {
+                    Allocate(spaces).Fill(fillChar);
+                    Write(ch);
+                }
+                else
+                {
+                    Debug.Assert(alignment.HasFlag(Alignment.Center));
+                    // Is even?
+                    if (spaces % 2 == 0)
+                    {
+                        int half = spaces / 2;
+                        Allocate(half).Fill(fillChar);
+                        Write(ch);
+                        Allocate(half).Fill(fillChar);
+                    }
+                    else
+                    {
+                        double half = spaces / 2d;
+                        // CenterLeft or CenterRight are valid ways of indicating a tiebreaker
+                        if (alignment.HasFlag<Alignment>(Alignment.Right))
+                        {
+                            Allocate((int)Math.Ceiling(half)).Fill(fillChar);
+                            Write(ch);
+                            Allocate((int)Math.Floor(half)).Fill(fillChar);
+                        }
+                        // Defaults to Left
+                        else
+                        {
+                            Allocate((int)Math.Floor(half)).Fill(fillChar);
+                            Write(ch);
+                            Allocate((int)Math.Ceiling(half)).Fill(fillChar);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void WriteAligned(string? text, Alignment alignment, int width, char fillChar = ' ')
+    {
+        WriteAligned((ReadOnlySpan<char>)text, alignment, width, fillChar);
+    }
+
+    public void WriteAligned(ReadOnlySpan<char> text, Alignment alignment, int width, char fillChar = ' ')
+    {
+        if (width > 0)
+        {
+            if (alignment == default)
+            {
+                Write(text);
+            }
+            else
+            {
+                var spaces = width - text.Length;
+                if (spaces == 0)
+                {
+                    Write(text);
+                }
+                else if (spaces < 0)
+                {
+                    if (alignment == Alignment.Right)
+                    {
+                        Write(text[^width..]);
+                    }
+                    else if (alignment == Alignment.Left)
+                    {
+                        Write(text[..width]);
+                    }
+                    else
+                    {
+                        Debug.Assert(alignment.HasFlag(Alignment.Center));
+                        spaces = Math.Abs(spaces);
+                        // Is even?
+                        if (spaces % 2 == 0)
+                        {
+                            int half = spaces / 2;
+                            Write(text[half..^half]);
+                        }
+                        else
+                        {
+                            double half = spaces / 2d;
+                            int front;
+                            int back;
+                            // CenterLeft or CenterRight are valid ways of indicating a tiebreaker
+                            if (alignment.HasFlag<Alignment>(Alignment.Right))
+                            {
+                                front = (int)Math.Ceiling(half);
+                                back = (int)Math.Floor(half);
+                                
+                            }
+                            // Defaults to Left
+                            else
+                            {
+                                front = (int)Math.Floor(half);
+                                back = (int)Math.Ceiling(half);
+                            }
+                            Write(text[front..^back]);
+                        }
+                    }
+                }
+                else // spaces > 0
+                {
+                    if (alignment == Alignment.Left)
+                    {
+                        Write(text);
+                        Allocate(spaces).Fill(fillChar);  
+                    }
+                    else if (alignment == Alignment.Right)
+                    {
+                        Allocate(spaces).Fill(fillChar);
+                        Write(text);
+                    }
+                    else
+                    {
+                        Debug.Assert(alignment.HasFlag(Alignment.Center));
+                        // Is even?
+                        if (spaces % 2 == 0)
+                        {
+                            int half = spaces / 2;
+                            Allocate(half).Fill(fillChar);
+                            Write(text);
+                            Allocate(half).Fill(fillChar);
+                        }
+                        else
+                        {
+                            double half = spaces / 2d;
+                            // CenterLeft or CenterRight are valid ways of indicating a tiebreaker
+                            if (alignment.HasFlag<Alignment>(Alignment.Right))
+                            {
+                                Allocate((int)Math.Ceiling(half)).Fill(fillChar);
+                                Write(text);
+                                Allocate((int)Math.Floor(half)).Fill(fillChar);
+                            }
+                            // Defaults to Left
+                            else
+                            {
+                                Allocate((int)Math.Floor(half)).Fill(fillChar);
+                                Write(text);
+                                Allocate((int)Math.Ceiling(half)).Fill(fillChar);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void WriteAligned<T>(T? value, Alignment alignment, int width, char fillChar = ' ')
+    {
+        if (width <= 0) return;
+        if (alignment == default)
+        {
+            Write<T>(value);
+            return;
+        }
+        // We don't know how big value will turn out to be once formatted,
+        // so we can just let another temp TextBuilder do the work
+        // and then we use the great logic above
+        using var temp = new TextBuilder();
+        temp.Write<T>(value);
+        WriteAligned(temp.Written, alignment, width, fillChar);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -734,7 +914,26 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     {
         var oldLen = oldText.Length;
         var newLen = newText.Length;
+        Debug.Assert(oldLen > newLen);
 
+        var nt = newText.GetPinnableReference();
+        var ntLen = newText.Length;
+
+        var writ = Written;
+        int writePos = 0;
+        int i;
+        while ((i = MemoryExtensions.IndexOf(writ, oldText)) >= 0)
+        {
+            // We need to copy all text before this to the last writepos
+            
+        }
+
+        throw new NotImplementedException();
+    }
+
+    private void ReplaceGrow(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText)
+    {
+        throw new NotImplementedException();
     }
 
     public TextBuilder Replace(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText)
@@ -747,8 +946,13 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         }
         else if (oldLen > newText.Length)
         {
-
+            ReplaceShrink(oldText, newText);
         }
+        else
+        {
+            ReplaceGrow(oldText, newText);
+        }
+        return this;
     }
 
 
