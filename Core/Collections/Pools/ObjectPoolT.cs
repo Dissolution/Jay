@@ -116,7 +116,7 @@ public sealed class ObjectPool<T> : IDisposable
     {
         if (IsDisposed)
         {
-            throw new ObjectDisposedException(Dumpers.Dump(GetType()), "This ObjectPool has been disposed");
+            throw new ObjectDisposedException(Dump.Value(GetType()), "This ObjectPool has been disposed");
         }
     }
 

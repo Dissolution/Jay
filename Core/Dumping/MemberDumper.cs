@@ -7,12 +7,12 @@ namespace Jay.Dumping;
 
 public class MemberDumper : IDumper<MemberInfo>
 {
-    private static void Dump(TextBuilder text, Type type, DumpLevel level = DumpLevel.Self)
+    private static void DumpType(TextBuilder text, Type? type, DumpLevel level = DumpLevel.Default)
     {
         switch (Type.GetTypeCode(type))
         {
             case TypeCode.Empty:
-                Dumpers.DumpNull<Type>(text, null, level);
+                Dump.DumpNull<Type>(text, null, level);
                 return;
             case TypeCode.DBNull:
                 text.Write("DBNull");
@@ -76,8 +76,9 @@ public class MemberDumper : IDumper<MemberInfo>
             // Remove the trailing `# bit
             var idx = name.LastIndexOf('`');
             Debug.Assert(idx >= 0);
-            text.Append(name.Slice(0, idx)).Append('<')
-                .AppendDelimit(",", argTypes, (tb, argType) => Dump(tb, argType))
+            text.Append(name[..idx])
+                .Append('<')
+                .AppendDelimit(",", argTypes, (tb, argType) => DumpType(tb, argType))
                 .Append('>');
             return;
         }
@@ -87,9 +88,9 @@ public class MemberDumper : IDumper<MemberInfo>
         text.Write(name);
     }
 
-    private static void Dump(TextBuilder text, FieldInfo field, DumpLevel level)
+    private static void DumpField(TextBuilder text, FieldInfo field, DumpLevel level)
     {
-        if (level.HasFlag(DumpLevel.Details))
+        if (level.HasFlag(DumpLevel.Detailed))
         {
             text.Append(field.Visibility()).Append(' ');
         }
@@ -97,7 +98,7 @@ public class MemberDumper : IDumper<MemberInfo>
         text.AppendDump(field.FieldType)
             .Write(' ');
 
-        if (level.HasFlag(DumpLevel.Surroundings))
+        if (level.HasFlag(DumpLevel.Detailed))
         {
             text.AppendDump(field.OwnerType())
                 .Write('.');
@@ -105,9 +106,9 @@ public class MemberDumper : IDumper<MemberInfo>
         text.Write(field.Name);
     }
 
-    private static void Dump(TextBuilder text, PropertyInfo property, DumpLevel level)
+    private static void DumpProperty(TextBuilder text, PropertyInfo property, DumpLevel level)
     {
-        if (level.HasFlag(DumpLevel.Details))
+        if (level.HasFlag(DumpLevel.Detailed))
         {
             var getVis = property.GetGetter().Visibility();
             var setVis = property.GetSetter().Visibility();
@@ -117,7 +118,7 @@ public class MemberDumper : IDumper<MemberInfo>
                 .AppendDump(property.PropertyType)
                 .Write(' ');
 
-            if (level.HasFlag(DumpLevel.Surroundings))
+            if (level.HasFlag(DumpLevel.Detailed))
             {
                 text.AppendDump(property.OwnerType())
                     .Write('.');
@@ -142,7 +143,7 @@ public class MemberDumper : IDumper<MemberInfo>
         }
         else
         {
-            if (level.HasFlag(DumpLevel.Surroundings))
+            if (level.HasFlag(DumpLevel.Detailed))
             {
                 text.AppendDump(property.OwnerType())
                     .Write('.');
@@ -152,9 +153,9 @@ public class MemberDumper : IDumper<MemberInfo>
         }
     }
 
-    private static void Dump(TextBuilder text, EventInfo eventInfo, DumpLevel level)
+    private static void DumpEvent(TextBuilder text, EventInfo eventInfo, DumpLevel level)
     {
-        if (level.HasFlag(DumpLevel.Details))
+        if (level.HasFlag(DumpLevel.Detailed))
         {
             text.Append(eventInfo.Visibility()).Append(' ');
         }
@@ -163,7 +164,7 @@ public class MemberDumper : IDumper<MemberInfo>
             .AppendDump(eventInfo.EventHandlerType)
             .Write(' ');
 
-        if (level.HasFlag(DumpLevel.Surroundings))
+        if (level.HasFlag(DumpLevel.Detailed))
         {
             text.AppendDump(eventInfo.OwnerType())
                 .Write('.');
@@ -172,9 +173,9 @@ public class MemberDumper : IDumper<MemberInfo>
         text.Write(eventInfo.Name);
     }
 
-    private static void Dump(TextBuilder text, ConstructorInfo constructor, DumpLevel level)
+    private static void DumpConstructor(TextBuilder text, ConstructorInfo constructor, DumpLevel level)
     {
-        if (level.HasFlag(DumpLevel.Details))
+        if (level.HasFlag(DumpLevel.Detailed))
         {
             text.Append(constructor.Visibility()).Append(' ');
         }
@@ -184,15 +185,15 @@ public class MemberDumper : IDumper<MemberInfo>
             .Append(')');
     }
 
-    private static void Dump(TextBuilder text, MethodInfo method, DumpLevel level)
+    private static void DumpMethod(TextBuilder text, MethodInfo method, DumpLevel level)
     {
-        if (level.HasFlag(DumpLevel.Details))
+        if (level.HasFlag(DumpLevel.Detailed))
         {
             text.Append(method.Visibility()).Append(' ');
         }
 
 
-        if (level.HasFlag(DumpLevel.Surroundings))
+        if (level.HasFlag(DumpLevel.Detailed))
         {
             text.AppendDump(method.OwnerType())
                 .Write('.');
@@ -204,32 +205,31 @@ public class MemberDumper : IDumper<MemberInfo>
             .Append(')');
     }
 
-    public void Dump(TextBuilder text, MemberInfo? value, DumpLevel level = DumpLevel.Self)
+    public void DumpValue(TextBuilder text, MemberInfo? value, DumpLevel level = DumpLevel.Default)
     {
-        if (Dumpers.DumpNull(text, value, level)) return;
+        if (Dump.DumpNull(text, value, level)) return;
         switch (value)
         {
             case Type type:
-                Dump(text, type, level);
+                DumpType(text, type, level);
                 return;
             case FieldInfo field:
-                Dump(text, field, level);
+                DumpField(text, field, level);
                 return;
             case PropertyInfo property:
-                Dump(text, property, level);
+                DumpProperty(text, property, level);
                 return;
             case EventInfo eventInfo:
-                Dump(text, eventInfo, level);
+                DumpEvent(text, eventInfo, level);
                 return;
             case ConstructorInfo ctor:
-                Dump(text, ctor, level);
+                DumpConstructor(text, ctor, level);
                 return;
             case MethodInfo method:
-                Dump(text, method, level);
+                DumpMethod(text, method, level);
                 return;
             default:
-                Dumpers.Default.Dump(text, value, level);
-                return;
+                throw new NotImplementedException();
         }
     }
 }

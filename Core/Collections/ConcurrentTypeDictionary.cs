@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Jay.Collections;
 
@@ -6,7 +7,7 @@ public class ConcurrentTypeDictionary<TValue> : ConcurrentDictionary<Type, TValu
 {
     public bool ContainsKey<T>() => base.ContainsKey(typeof(T));
 
-    public bool TryGetValue<T>(out TValue? value) => base.TryGetValue(typeof(T), out value);
+    public bool TryGetValue<T>([MaybeNullWhen(false)] out TValue value) => base.TryGetValue(typeof(T), out value);
 
     public TValue GetOrAdd<T>(TValue addValue)
     {

@@ -3,33 +3,32 @@ using System.Diagnostics.CodeAnalysis;
 using Jay.Collections;
 using Jay.Reflection;
 using Jay.Reflection.Building;
-using Jay.Reflection.Search;
 using Jay.Text;
 using Jay.Validation;
 
 namespace Jay.Dumping;
 
-public static class Dumpers
+public static class Dump
 {
     public sealed class DefaultDumper : IDumper
     {
         public bool CanDump(Type type) => true;
 
-        void IDumper.Dump(TextBuilder text, object? value, DumpLevel level) => Dump<object>(text, value, level);
+        void IDumper.DumpObject(TextBuilder text, object? value, DumpLevel level) => Dump<object>(text, value, level);
 
         private static string? GetFormat(Type type, DumpLevel level)
         {
             if (type == typeof(TimeSpan))
             {
-                return level.HasFlag(DumpLevel.Details) ? "G" : "g";
+                return level.HasFlag(DumpLevel.Detailed) ? "G" : "g";
             }
             else if (type == typeof(DateTime))
             {
-                return level.HasFlag(DumpLevel.Details) ? "O" : "yyyy-MM-dd HH:mm:ss.f";
+                return level.HasFlag(DumpLevel.Detailed) ? "O" : "yyyy-MM-dd HH:mm:ss.f";
             }
             else if (type == typeof(DateTimeOffset))
             {
-                return level.HasFlag(DumpLevel.Details) ? "O" : "yyyy-MM-dd HH:mm:ss.f zzz";
+                return level.HasFlag(DumpLevel.Detailed) ? "O" : "yyyy-MM-dd HH:mm:ss.f zzz";
             }
             else if (type == typeof(Guid))
             {
@@ -45,9 +44,9 @@ public static class Dumpers
             }
         }
 
-        public void Dump<T>(TextBuilder text, T? value, DumpLevel level = DumpLevel.Self)
+        public void Dump<T>(TextBuilder text, T? value, DumpLevel level = DumpLevel.Default)
         {
-            if (Dumpers.DumpNull(text, value, level)) return;
+            if (Dumping.Dump.DumpNull(text, value, level)) return;
             text.AppendFormat(value, GetFormat(value.GetType(), level), null);
         }
     }
@@ -57,7 +56,7 @@ public static class Dumpers
 
     public static DefaultDumper Default { get; } = new DefaultDumper();
 
-    static Dumpers()
+    static Dump()
     {
         _dumperMap = new ConcurrentTypeDictionary<IDumper>();
         var dumperTypes = AppDomain.CurrentDomain
@@ -89,7 +88,7 @@ public static class Dumpers
     {
         if (value is null)
         {
-            if (level.HasFlag<DumpLevel>(DumpLevel.Surroundings))
+            if (level.HasFlag<DumpLevel>(DumpLevel.Detailed))
             {
                 text.Append('(')
                     .AppendDump(typeof(T))
@@ -122,24 +121,25 @@ public static class Dumpers
 
     internal static IDumper<T> GetDumper<T>() => (GetDumper(typeof(T)) as IDumper<T>).ThrowIfNull();
 
-    public static TextBuilder AppendDump<T>(this TextBuilder text, T? value, DumpLevel level = DumpLevel.Self)
+    public static TextBuilder AppendDump<T>(this TextBuilder text, T? value, DumpLevel level = DumpLevel.Default)
     {
-        GetDumper<T>().Dump(text, value, level);
+        GetDumper<T>().DumpValue(text, value, level);
         return text;
     }
 
-    public static string Dump<T>(T? value, DumpLevel level = DumpLevel.Self)
+    public static string Value<T>(T? value, DumpLevel level = DumpLevel.Default)
     {
         using var text = new TextBuilder();
-        GetDumper<T>().Dump(text, value, level);
+        GetDumper<T>().DumpValue(text, value, level);
         return text.ToString();
     }
 
-    public static string Dump(ref DumpStringHandler dumpFormattedString)
+    public static string Text(ref DumpStringHandler dumpFormattedString)
     {
         return dumpFormattedString.ToStringAndClear();
     }
 
+    [DoesNotReturn]
     public static void ThrowException<TException>(ref DumpStringHandler message, Exception? innerException = null)
         where TException : Exception
     {

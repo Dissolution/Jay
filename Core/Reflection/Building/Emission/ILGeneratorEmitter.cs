@@ -32,7 +32,7 @@ public sealed class ILGeneratorEmitter : IILGeneratorEmitter
 
     private string CreateLocalName(LocalBuilder local)
     {
-        return Dumpers.Dump($"{local.LocalType}_{local.LocalIndex}{(local.IsPinned ? "_pinned" : "")}");
+        return Dump.Text($"{local.LocalType}_{local.LocalIndex}{(local.IsPinned ? "_pinned" : "")}");
     }
 
     private void AddLabel(Label label, string? lblName)

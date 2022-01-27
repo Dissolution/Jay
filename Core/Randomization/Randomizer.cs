@@ -52,15 +52,40 @@ public interface IRandomizer
     ulong ZeroTo(ulong incMax);
 
     bool Bool();
-    Guid Guid();
 
-    char Char();
-    char Char(char incMin, char incMax);
-    TimeSpan TimeSpan();
+    /// <summary>
+    /// Generates a random <see cref="Guid"/>
+    /// </summary>
+    /// <returns>A random <see cref="Guid"/> based upon this <see cref="IRandomizer"/>'s SEED.</returns>
+    /// <remarks>
+    /// One would use this (rather than <see cref="M:System.Guid.NewGuid()"/>) if you wanted consistent Guids produced with the same SEED.
+    /// </remarks>
+    Guid Guid()
+    {
+        Span<byte> bytes = stackalloc byte[16];
+        Fill(bytes);
+        return new Guid(bytes);
+    }
+
+    char Char() => (char)UShort();
+    char Char(char incMin, char incMax) => (char)UShort((ushort)incMin, (ushort)incMax);
+
+    TimeSpan TimeSpan()
+    {
+        return System.TimeSpan.FromTicks(Long());
+    }
     TimeSpan TimeSpan(TimeSpan incMin, TimeSpan incMax);
-    DateTime DateTime();
+
+    DateTime DateTime()
+    {
+        return new DateTime(Long());
+    }
     DateTime DateTime(DateTime incMin, DateTime incMax);
-    DateTimeOffset DateTimeOffset();
+
+    DateTimeOffset DateTimeOffset()
+    {
+        return new DateTimeOffset(Long(), TimeSpan());
+    }
     DateTimeOffset DateTimeOffset(DateTimeOffset incMin, DateTimeOffset incMax);
 
     void Fill(Span<byte> bytes);
@@ -76,8 +101,16 @@ public interface IRandomizer
         return MemoryMarshal.Read<TUnmanaged>(bytes);
     }
 
-    T Single<T>(ReadOnlySpan<T> values);
-    T Single<T>(params T[] values);
+    T Single<T>(ReadOnlySpan<T> values)
+    {
+        int r = ZeroTo(values.Length - 1);
+        return values[r];
+    }
+    T Single<T>(params T[] values)
+    {
+        int r = ZeroTo(values.Length - 1);
+        return values[r];
+    }
     T Single<T>(IEnumerable<T> values);
 
     void Shuffle<T>(Span<T> values);
