@@ -478,9 +478,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             possibleInstanceParameter.GetAccess(out var instanceType);
 
             // Look for a throwaway instance type
-            // TODO: Allow for throwaway object/Type   [null, typeof(member.OwnerType()]
-            if (instanceType == typeof(Types.Static) || instanceType == typeof(Types.Void) ||
-                instanceType == typeof(void) || instanceType == member.OwnerType())
+            if (instanceType == typeof(Types.Static) || instanceType == typeof(Types.Void) || instanceType == typeof(void))
             {
                 // This is a throwaway
                 offset = 1;

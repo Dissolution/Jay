@@ -1,7 +1,7 @@
 ﻿namespace Jay.Reflection;
 
 [Flags]
-public enum MatchType
+public enum NameMatchFlags
 {
     Exact = 0,
     IgnoreCase = 1 << 0,

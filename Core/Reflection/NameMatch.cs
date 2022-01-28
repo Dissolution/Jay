@@ -4,26 +4,26 @@ namespace Jay.Reflection;
 
 public readonly struct NameMatch 
 {
-    public static implicit operator NameMatch(string name) => new NameMatch(name, MatchType.Exact);
-    public static implicit operator NameMatch((string Name, MatchType MatchType) tuple) => new NameMatch(tuple.Name, tuple.MatchType);
+    public static implicit operator NameMatch(string name) => new NameMatch(name, NameMatchFlags.Exact);
+    public static implicit operator NameMatch((string Name, NameMatchFlags MatchType) tuple) => new NameMatch(tuple.Name, tuple.MatchType);
 
     public static bool operator ==(NameMatch x, NameMatch y) => x.Equals(y);
     public static bool operator !=(NameMatch x, NameMatch y) => !x.Equals(y);
         
-    public static readonly NameMatch Any = new NameMatch(null, MatchType.IgnoreCase);
+    public static readonly NameMatch Any = new NameMatch(null, NameMatchFlags.IgnoreCase);
         
     public readonly string? Name;
-    public readonly MatchType MatchType;
+    public readonly NameMatchFlags NameMatchFlags;
 
     public NameMatch(string? name)
     {
         this.Name = name;
-        this.MatchType = MatchType.Exact;
+        this.NameMatchFlags = NameMatchFlags.Exact;
     }
-    public NameMatch(string? name, MatchType matchType)
+    public NameMatch(string? name, NameMatchFlags nameMatchFlags)
     {
         this.Name = name;
-        this.MatchType = matchType;
+        this.NameMatchFlags = nameMatchFlags;
     }
 
     public bool Matches(string? name)
@@ -31,7 +31,7 @@ public readonly struct NameMatch
         if (Name is null) return true;
         if (string.IsNullOrWhiteSpace(name)) return false;
         StringComparison comparison;
-        if (MatchType.HasFlag(MatchType.IgnoreCase))
+        if (NameMatchFlags.HasFlag(NameMatchFlags.IgnoreCase))
         {
             comparison = StringComparison.OrdinalIgnoreCase;
         }
@@ -40,16 +40,16 @@ public readonly struct NameMatch
             comparison = StringComparison.Ordinal;
         }
 
-        if (MatchType.HasFlag(MatchType.Contains))
+        if (NameMatchFlags.HasFlag(NameMatchFlags.Contains))
         {
             return name.Contains(this.Name, comparison);
         }
 
-        if (MatchType.HasFlag(MatchType.BeginsWith))
+        if (NameMatchFlags.HasFlag(NameMatchFlags.BeginsWith))
         {
             return name.StartsWith(this.Name, comparison);
         }
-        if (MatchType.HasFlag(MatchType.EndsWith))
+        if (NameMatchFlags.HasFlag(NameMatchFlags.EndsWith))
         {
             return name.EndsWith(this.Name, comparison);
         }
@@ -59,7 +59,7 @@ public readonly struct NameMatch
         
     public bool Equals(NameMatch nameMatch)
     {
-        return MatchType == nameMatch.MatchType &&
+        return NameMatchFlags == nameMatch.NameMatchFlags &&
                Matches(nameMatch.Name);
     }
 
@@ -75,7 +75,7 @@ public readonly struct NameMatch
     public override int GetHashCode()
     {
         var hasher = new HashCode();
-        if (MatchType.HasFlag(MatchType.IgnoreCase))
+        if (NameMatchFlags.HasFlag(NameMatchFlags.IgnoreCase))
         {
             hasher.Add(Name, StringComparer.OrdinalIgnoreCase);
         }
@@ -83,7 +83,7 @@ public readonly struct NameMatch
         {
             hasher.Add(Name, StringComparer.Ordinal);
         }
-        hasher.Add(MatchType);
+        hasher.Add(NameMatchFlags);
         return hasher.ToHashCode();
     }
 
@@ -96,12 +96,12 @@ public readonly struct NameMatch
         }
         else
         {
-            if (this.MatchType.HasFlag<MatchType>(MatchType.EndsWith))
+            if (this.NameMatchFlags.HasFlag<NameMatchFlags>(NameMatchFlags.EndsWith))
             {
                 text.Append('*');
             }
 
-            if (this.MatchType.HasFlag<MatchType>(MatchType.IgnoreCase))
+            if (this.NameMatchFlags.HasFlag<NameMatchFlags>(NameMatchFlags.IgnoreCase))
             {
                 text.Append(Name!.ToUpper());
             }
@@ -110,7 +110,7 @@ public readonly struct NameMatch
                 text.Append(this.Name!);
             }
 
-            if (this.MatchType.HasFlag<MatchType>(MatchType.BeginsWith))
+            if (this.NameMatchFlags.HasFlag<NameMatchFlags>(NameMatchFlags.BeginsWith))
             {
                 text.Append('*');
             }

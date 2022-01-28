@@ -16,17 +16,25 @@ public static class ObjectExtensions
         return Return<bool>();
     }
 
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="input"></param>
-    /// <param name="output"></param>
-    /// <typeparam name="TOut"></typeparam>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Is<TOut>(this object? input, [NotNullWhen(true)] out TOut output)
+    public static ref T UnboxRef<T>(this object? obj)
+    {
+        Emit.Ldarg(nameof(obj));
+        Emit.Isinst<T>();
+        Emit.Brfalse("isNotT");
+
+        Emit.Ldarg(nameof(obj));
+        Emit.Unbox<T>();
+        Emit.Ret();
+
+        MarkLabel("isNotT");
+        Emit.Ldc_I4_0();
+        Emit.Conv_U();
+        return ref ReturnRef<T>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool Is<T>(this object? input, [NotNullWhen(true)] out T output)
     {
         // if (input is TOut temp)
         // {
@@ -40,19 +48,19 @@ public static class ObjectExtensions
         // }
 
         Emit.Ldarg(nameof(input));
-        Emit.Isinst<TOut>();
-        Emit.Brfalse("isnot");
+        Emit.Isinst<T>();
+        Emit.Brfalse("isNotT");
 
         Emit.Ldarg(nameof(output));
         Emit.Ldarg(nameof(input));
-        Emit.Unbox_Any<TOut>();
-        Emit.Stobj<TOut>();
+        Emit.Unbox_Any<T>();
+        Emit.Stobj<T>();
         Emit.Ldc_I4_1();
         Emit.Ret();
 
-        MarkLabel("isnot");
+        MarkLabel("isNotT");
         Emit.Ldarg(nameof(output));
-        Emit.Initobj<TOut>();
+        Emit.Initobj<T>();
         Emit.Ldc_I4_0();
         Emit.Ret();
 

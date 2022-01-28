@@ -3,16 +3,40 @@ using System.Text;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using Jay;
 using Jay.Benchmarking;
 using Jay.Collections.Pools;
+using Jay.Reflection;
 using Jay.Text;
 
 using var text = new TextBuilder();
 
-text.WriteAligned("abcd", Alignment.Left, 2, 'x');
-text.WriteAligned("abcd", Alignment.Right, 2, '-');
-text.WriteAligned("abcd", Alignment.Center | Alignment.Right, 2, '|');
 
+object? thing = 147;
+
+var a = thing.Is(out int i);
+var b = thing.Is(out decimal m);
+
+int k = 0;
+ref int reffy = ref k;
+//var c = thing.Is(out reffy);
+//var c = thing.TryUnboxRef(ref reffy);
+//var c = thing.TryUnboxRef(ref int newIntRef);
+//reffy = ref thing.UnboxRef<int>();
+
+int origReffy = reffy;
+reffy = 13;
+
+
+
+
+
+
+//
+// text.WriteAligned("abcd", Alignment.Left, 2, 'x');
+// text.WriteAligned("abcd", Alignment.Right, 2, '-');
+// text.WriteAligned("abcd", Alignment.Center | Alignment.Right, 2, '|');
+//
 
 string str = text.ToString();
 
@@ -42,7 +66,20 @@ public class Thing
 
 public class Local
 {
+    private static class S<T>
+    {
+        public static T Default = default;
+    }
 
+    public static ref T GetRef<T>()
+    {
+        return ref S<T>.Default;
+    }
+
+    public static void Me<T>(out T value)
+    {
+        value = GetRef<T>();
+    }
   
 
 
