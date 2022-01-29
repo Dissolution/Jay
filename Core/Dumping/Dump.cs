@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using Jay.Collections;
 using Jay.Reflection;
 using Jay.Reflection.Building;
+using Jay.Reflection.Search;
 using Jay.Text;
 using Jay.Validation;
 
@@ -152,5 +153,25 @@ public static class Dump
         where TException : Exception
     {
         throw GetException<TException>(ref message, innerException);
+    }
+
+    [DoesNotReturn]
+    public static void ThrowException<TException>(ref DumpStringHandler message, params object?[] args)
+        where TException : Exception
+    {
+        var argTypes = new Type?[args.Length + 1];
+        argTypes[0] = typeof(string);
+        for (var i = 0; i < args.Length; i++)
+        {
+            argTypes[i + 1] = args[0]?.GetType();
+        }
+
+        var ctor = MemberSearch.FindBestConstructor(typeof(TException),
+                                   Reflect.InstanceFlags,
+                                   MemberSearch.MemberExactness.CanIgnoreInputArgs,
+                                   argTypes)
+                               .ThrowIfNull();
+        var ex = ctor.Construct<TException>(args);
+        throw ex;
     }
 }

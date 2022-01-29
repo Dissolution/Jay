@@ -49,6 +49,20 @@ public static class RuntimeBuilder
                category == UnicodeCategory.Format;
     }
 
+    public static bool IsValidMemberName(string? name)
+    {
+        if (name is null) return false;
+        var len = name.Length;
+        if (len == 0) return false;
+        char ch = name[0];
+        if (!IsValidNameFirstChar(ch)) return false;
+        for (var i = 1; i < len; i++)
+        {
+            if (!IsValidNameChar(ch)) return false;
+        }
+        return true;
+    }
+
     internal static bool TryAppendName(string? name, TextBuilder builder)
     {
         if (name is null || name.Length == 0)

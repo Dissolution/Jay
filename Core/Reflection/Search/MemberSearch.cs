@@ -21,6 +21,12 @@ public static class MemberSearch
         return true;
     }
 
+    public static TMember? Find<TMember>(Expression memberExpression)
+        where TMember : MemberInfo
+    {
+        return memberExpression.ExtractMember<TMember>();
+    }
+
     public static bool HasDefaultConstructor(this Type type, [NotNullWhen(true)] out ConstructorInfo? ctor)
     {
         ctor = type.GetConstructor(Reflect.InstanceFlags, Type.EmptyTypes);
