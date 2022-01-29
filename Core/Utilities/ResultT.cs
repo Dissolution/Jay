@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Jay;
 
@@ -122,6 +123,16 @@ public readonly struct Result<T> : IEquatable<Result<T>>,
         }
     }
 
+    public void ThrowIfFailed(out T? value)
+    {
+        if (!_pass)
+        {
+            throw _error ?? new Exception(Result.DefaultErrorMessage);
+        }
+        value = _value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Failed() => !_pass;
 
     public bool Failed([NotNullWhen(true)] out Exception? error)
@@ -134,6 +145,15 @@ public readonly struct Result<T> : IEquatable<Result<T>>,
 
         error = (_error ?? new Exception(Result.DefaultErrorMessage));
         return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Passed() => _pass;
+
+    public bool Passed(out T? value)
+    {
+        value = _value;
+        return _pass;
     }
 
     public bool Equals(Result<T> result)

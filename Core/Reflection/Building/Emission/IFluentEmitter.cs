@@ -389,8 +389,8 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
         // TODO: More advanced logic here?
         if (inputType.IsAssignableTo(outputType))
         {
-            Debug.Assert(inputType.IsClass);
-            Debug.Assert(outputType.IsClass);
+            //Debug.Assert(inputType.IsClass);
+            //Debug.Assert(outputType.IsClass);
             Castclass(outputType);
             return (TEmitter)this;
         }
@@ -459,46 +459,51 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
         return Ldnull();
     }
     TEmitter LoadDefault<T>() => LoadDefault(typeof(T));
-    
-    TEmitter LoadInstanceFor(ParameterInfo? possibleInstanceParameter,
-                             MemberInfo member,
-                             out int offset)
-    {
-        // Assume offset 0 for fast return
-        offset = 0;
 
+    TEmitter LoadInstanceFor(MemberInfo member, ParameterInfo? possibleInstanceParameter, out int offset)
+    {
+        var result = TryLoadInstanceFor(member, possibleInstanceParameter);
+        result.ThrowIfFailed(out offset);
+        return (TEmitter)this;
+    }
+
+    Result<int> TryLoadInstanceFor(MemberInfo member,
+                                   ParameterInfo? possibleInstanceParameter)
+    {
         // Static method?
         if (member.IsStatic())
         {
             // Null possible is okay
             if (possibleInstanceParameter is null)
-                return (TEmitter)this;
+                return 0;
 
             // Fast get actual instance type minus in/out/ref
-            possibleInstanceParameter.GetAccess(out var instanceType);
+            Type instanceType = possibleInstanceParameter.NonRefType();
 
             // Look for a throwaway instance type
             if (instanceType == typeof(Types.Static) || instanceType == typeof(Types.Void) || instanceType == typeof(void))
             {
                 // This is a throwaway
-                offset = 1;
-                return (TEmitter)this;
+                return 1;
             }
 
             // Assume there is no throwaway
-            return (TEmitter)this;
+            return 0;
         }
         else
         {
             if (possibleInstanceParameter is null)
-                throw new ArgumentNullException(nameof(possibleInstanceParameter));
+                return new ArgumentNullException(nameof(possibleInstanceParameter));
 
-            member.TryGetInstanceType(out var methodInstanceType).ThrowIfFailed();
-            LoadAs(possibleInstanceParameter, methodInstanceType!);
+            Result result = member.TryGetInstanceType(out var methodInstanceType);
+            if (!result)
+                return result.Failed<int>();
+            result = Result.Try(() => this.LoadAs(possibleInstanceParameter, methodInstanceType!));
+            if (!result)
+                return result.Failed<int>();
 
             // We loaded the instance, the rest of the parameters are used
-            offset = 1;
-            return (TEmitter)this;
+            return 1;
         }
 
         TEmitter EmitInstructions(IEnumerable<Instruction> instructions)

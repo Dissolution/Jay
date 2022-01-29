@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Jay.Dumping;
 
 namespace Jay;
 
@@ -81,6 +82,15 @@ public readonly struct Result : IEquatable<Result>
     {
         _pass = pass;
         _error = error;
+    }
+
+    public Result<T> Failed<T>()
+    {
+        if (!_pass)
+        {
+            return new Result<T>(false, default, _error);
+        }
+        throw Dump.GetException<InvalidOperationException>($"Cannot returned a Failed Result<{typeof(T)}> from a non-failed Result");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

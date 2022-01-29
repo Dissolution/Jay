@@ -3,12 +3,17 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Jay.Collections;
+using Jay.Dumping;
 using Jay.Reflection;
+using Jay.Reflection.Cloning;
 using Jay.Validation;
 
 namespace Jay;
 
-public readonly struct Box : IEquatable<Box>, IComparable<Box>, IFormattable
+public readonly struct Box : IEquatable<Box>, 
+                             IComparable<Box>, IComparable,
+                             ICloneable,
+                             IFormattable
 {
     public static bool operator ==(Box a, Box b) => a.Equals(b);
     public static bool operator !=(Box a, Box b) => !a.Equals(b);
@@ -17,7 +22,27 @@ public readonly struct Box : IEquatable<Box>, IComparable<Box>, IFormattable
     public static bool operator <=(Box a, Box b) => a.CompareTo(b) <= 0;
     public static bool operator >=(Box a, Box b) => a.CompareTo(b) >= 0;
 
-   
+    public static bool operator ==(Box box, object? obj) => box.Equals(obj);
+    public static bool operator !=(Box box, object? obj) => !box.Equals(obj);
+    public static bool operator ==(object? obj, Box box) => box.Equals(obj);
+    public static bool operator !=(object? obj, Box box) => !box.Equals(obj);
+    public static bool operator <(Box box, object? obj) => box.CompareTo(obj) < 0;
+    public static bool operator >(Box box, object? obj) => box.CompareTo(obj) > 0;
+    public static bool operator <(object? obj, Box box) => box.CompareTo(obj) > 0;
+    public static bool operator >(object? obj, Box box) => box.CompareTo(obj) < 0;
+    public static bool operator <=(Box box, object? obj) => box.CompareTo(obj) <= 0;
+    public static bool operator >=(Box box, object? obj) => box.CompareTo(obj) >= 0;
+    public static bool operator <=(object? obj, Box box) => box.CompareTo(obj) >= 0;
+    public static bool operator >=(object? obj, Box box) => box.CompareTo(obj) <= 0;
+
+    public static Box operator +(Box box, object? obj)
+    {
+        throw new NotImplementedException();
+    }
+    public static Box operator +(object? obj, Box box)
+    {
+        throw new NotImplementedException();
+    }
 
     private static readonly ConcurrentTypeDictionary<IEqualityComparer> _equalityComparers;
     private static readonly ConcurrentTypeDictionary<IComparer> _comparers;
@@ -33,9 +58,9 @@ public readonly struct Box : IEquatable<Box>, IComparable<Box>, IFormattable
         return _equalityComparers.GetOrAdd(type, t => typeof(EqualityComparer<>).MakeGenericType(t)
                                                .GetProperty(nameof(EqualityComparer<byte>.Default),
                                                             BindingFlags.Public | BindingFlags.Static)
-                                               .ThrowIfNull()
+                                               .ThrowIfNull(Dump.Text($"Cannot find the EqualityComparer<{t}>.Default property"))
                                                .GetStaticValue<IEqualityComparer>()
-                                               .ThrowIfNull());
+                                               .ThrowIfNull(Dump.Text($"Cannot cast EqualityComparer<{t}> to IEqualityComparer")));
     }
 
     private static IComparer GetComparer(Type type)
@@ -43,9 +68,9 @@ public readonly struct Box : IEquatable<Box>, IComparable<Box>, IFormattable
         return _comparers.GetOrAdd(type, t => typeof(Comparer<>).MakeGenericType(t)
                                                                 .GetProperty(nameof(Comparer<byte>.Default),
                                                                              BindingFlags.Public | BindingFlags.Static)
-                                                                .ThrowIfNull()
+                                                                .ThrowIfNull(Dump.Text($"Cannot find the Comparer<{t}>.Default property"))
                                                                 .GetStaticValue<IComparer>()
-                                                                .ThrowIfNull());
+                                                                .ThrowIfNull(Dump.Text($"Cannot cast Comparer<{t}> to IComparer")));
     }
 
     public static Box Wrap(object? value)
@@ -61,10 +86,20 @@ public readonly struct Box : IEquatable<Box>, IComparable<Box>, IFormattable
     private readonly object? _obj;
     private readonly Type? _objType;
 
-    public bool IsNull
+    // public object? this[string fieldName]
+    // {
+    //     get
+    //     {
+    //         return _objType.GetField(fieldName, Reflect.InstanceFlags)
+    //                        .GetValue<object, object?>(ref Unsafe.AsRef(in _obj));
+    //     }
+    // }
+
+
+    public bool ContainsNull
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _objType == null;
+        get => _obj is null;
     }
 
     private Box(object? obj, Type? type)
@@ -73,6 +108,9 @@ public readonly struct Box : IEquatable<Box>, IComparable<Box>, IFormattable
         _objType = type;
     }
 
+    // TODO: Should Is<> act like CanBe<>?
+    // In the instance of Wrap((int?)null), the objecttype is int?, but we should be able to extract the int inside?
+
     public bool Is<T>()
     {
         return _objType == typeof(T);
@@ -80,35 +118,54 @@ public readonly struct Box : IEquatable<Box>, IComparable<Box>, IFormattable
 
     public bool Is<T>([MaybeNullWhen(false)] out T value)
     {
-        return _obj.Is<T>(out value);
+        //return _obj.Is<T>(out value);
+        if (_obj is T)
+        {
+            value = (T)_obj;
+            return true;
+        }
+        value = default;
+        return false;
+    }
+
+    public bool IsType(Type? type)
+    {
+        return _objType == type;
+    }
+    
+    public object Clone()
+    {
+        return (object)Cloner.Clone(in this);
     }
 
     public int CompareTo(Box box)
     {
-        if (IsNull)
+        if (ContainsNull)
         {
-            if (box.IsNull) return 0;
+            if (box.ContainsNull) return 0;
             return -1;
         }
-        if (box.IsNull) return 1;
+        if (box.ContainsNull) return 1;
         if (box._objType != _objType)
             return 0;
         return GetComparer(_objType!).Compare(_obj, box._obj);
     }
 
+    public int CompareTo(object? obj)
+    {
+        return CompareTo(Wrap(obj));
+    }
+
     public bool Equals(Box box)
     {
-        if (IsNull) return box.IsNull;
+        if (ContainsNull) return box.ContainsNull;
         return box._objType == _objType &&
                GetEqualityComparer(_objType!).Equals(box._obj, _obj);
     }
 
     public override bool Equals(object? obj)
     {
-        if (obj is null) return IsNull;
-        var objType = obj.GetType();
-        return objType == _objType &&
-               GetEqualityComparer(_objType!).Equals(obj, _obj);
+        return Equals(Wrap(obj));
     }
 
     public override int GetHashCode()

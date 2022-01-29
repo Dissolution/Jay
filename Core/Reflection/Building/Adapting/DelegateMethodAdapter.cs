@@ -109,7 +109,7 @@ public class DelegateMethodAdapter
             possibleInstanceParam = null;
         }
         int offset = default;
-        result = Result.Try(() => emitter.LoadInstanceFor(possibleInstanceParam, Method, out offset));
+        result = Result.Try(() => emitter.LoadInstanceFor(Method, possibleInstanceParam, out offset));
         if (!result) return result;
         result = TryLoadArgs(emitter, offset);
         if (!result) return result;

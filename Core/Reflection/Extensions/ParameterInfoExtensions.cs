@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -34,6 +35,19 @@ public static class ParameterInfoExtensions
             return Access.Ref;
         }
         return Access.Default;
+    }
+
+    [return: NotNullIfNotNull("parameter")]
+    public static Type? NonRefType(this ParameterInfo? parameter)
+    {
+        if (parameter is null) return null;
+        var parameterType = parameter.ParameterType;
+        if (parameterType.IsByRef || parameterType.IsByRefLike || parameterType.IsPointer)
+        {
+            parameterType = parameterType.GetElementType();
+            Debug.Assert(parameterType != null);
+        }
+        return parameterType;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

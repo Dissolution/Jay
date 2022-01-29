@@ -118,7 +118,7 @@ public static class Cloner
                     emitter.Ldloc(clone);
                 }
                 // Load the original value's field's value
-                emitter.LoadInstanceFor(dm.Parameters[0], field, out int offset)
+                emitter.LoadInstanceFor(field, dm.Parameters[0], out int offset)
                        .Assert(() => offset == 1)
                        .Ldflda(field)
                        // Clone it using Clone<T> so it will cache

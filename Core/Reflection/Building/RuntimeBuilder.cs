@@ -1,6 +1,9 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 using System.Reflection.Emit;
+using Jay.Dumping;
+using Jay.Reflection.Search;
 using Jay.Text;
 
 namespace Jay.Reflection.Building;
@@ -46,7 +49,7 @@ public static class RuntimeBuilder
                category == UnicodeCategory.Format;
     }
 
-    private static bool TryAppendName(string? name, TextBuilder builder)
+    internal static bool TryAppendName(string? name, TextBuilder builder)
     {
         if (name is null || name.Length == 0)
             return false;
@@ -54,12 +57,12 @@ public static class RuntimeBuilder
         char ch = name[0];
         if (IsValidNameFirstChar(ch))
         {
-            builder.Append(ch);
+            builder.Write(ch);
             start = 1;
         }
         else
         {
-            builder.Append('_');
+            builder.Write('_');
             start = 0;
         }
 
@@ -68,7 +71,7 @@ public static class RuntimeBuilder
             ch = name[i];
             if (IsValidNameChar(ch))
             {
-                builder.Append(ch);
+                builder.Write(ch);
             }
         }
         return builder.Length > start;
@@ -118,6 +121,33 @@ public static class RuntimeBuilder
         return builder.ToString();
     }
 
+    public static string FixedMemberName(string? name, MemberTypes memberType)
+    {
+        using var text = new TextBuilder();
+        if (!TryAppendName(name, text))
+        {
+            var ctr = Interlocked.Increment(ref _counter);
+            text.Clear()
+                .Append(memberType)
+                .Append('_')
+                .Append(ctr);
+        }
+        return text.ToString();
+    }
+
+    public static string FieldName(string propertyName)
+    {
+        return string.Create(propertyName.Length + 1, propertyName, (span, name) =>
+        {
+            span[0] = '_';
+            span[1] = char.ToLower(name[0]);
+            for (var i = 1; i < name.Length; i++)
+            {
+                span[i + 1] = name[i];
+            }
+        });
+    }
+
     public static DynamicMethod CreateDynamicMethod(string? name,
                                                     DelegateSig delegateSig)
     {
@@ -148,5 +178,33 @@ public static class RuntimeBuilder
     {
         return ModuleBuilder.DefineType(CreateTypeName(name, typeAttributes),
             typeAttributes, typeof(RuntimeBuilder));
+    }
+
+    public static CustomAttributeBuilder GetCustomAttributeBuilder<TAttribute>()
+        where TAttribute : Attribute, new()
+    {
+        var ctor = typeof(TAttribute).GetConstructor(Reflect.InstanceFlags, Type.EmptyTypes);
+        if (ctor is null)
+            Dump.ThrowException<InvalidOperationException>($"Cannot find an empty {typeof(TAttribute)} constructor.");
+        return new CustomAttributeBuilder(ctor, Array.Empty<object>());
+    }
+
+    public static CustomAttributeBuilder GetCustomAttributeBuilder<TAttribute>(params object?[] ctorArgs)
+        where TAttribute : Attribute
+    {
+        var ctor = MemberSearch.FindBestConstructor(typeof(TAttribute), Reflect.InstanceFlags, ctorArgs);
+        if (ctor is null)
+            Dump.ThrowException<InvalidOperationException>($"Cannot find a {typeof(TAttribute)} constructor that matches {ctorArgs}");
+        return new CustomAttributeBuilder(ctor, ctorArgs);
+    }
+
+    public static CustomAttributeBuilder GetCustomAttributeBuilder(Type attributeType, params object?[] ctorArgs)
+    {
+        if (!attributeType.Implements<Attribute>())
+            Dump.ThrowException<ArgumentException>($"{attributeType} is not an Attribute");
+        var ctor = MemberSearch.FindBestConstructor(attributeType, Reflect.InstanceFlags, ctorArgs);
+        if (ctor is null)
+            Dump.ThrowException<InvalidOperationException>($"Cannot find a {attributeType} constructor that matches {ctorArgs}");
+        return new CustomAttributeBuilder(ctor, ctorArgs);
     }
 }

@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Jay.Reflection.Expressions;
 
 namespace Jay.Reflection;
@@ -61,11 +62,28 @@ public static class TypeExtensions
     {
         if (type == otherType) return true;
         if (type is null || otherType is null) return false;
-        if (type.IsAssignableTo(otherType)) return true;
-        // TODO: OTHER CHECKS w/INTERFACES
+        if (otherType.IsAssignableFrom(type)) return true;
+        if (type.IsGenericType && otherType.IsGenericTypeDefinition)
+            return type.GetGenericTypeDefinition() == otherType;
+
+        // TODO: OTHER CHECKS
+        Debugger.Break();
         return false;
     }
 
+    public static bool CanBeNull(this Type? type)
+    {
+        if (type is null) return true;
+        if (type.IsValueType)
+            return type.Implements(typeof(Nullable<>));
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Type MakeGenericType<T>(this Type type)
+    {
+        return type.MakeGenericType(typeof(T));
+    }
 
     public static Result TryFind<TMember>(this Type type, 
                                           Expression memberExpression,

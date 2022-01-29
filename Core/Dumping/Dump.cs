@@ -139,12 +139,18 @@ public static class Dump
         return dumpFormattedString.ToStringAndClear();
     }
 
-    [DoesNotReturn]
-    public static void ThrowException<TException>(ref DumpStringHandler message, Exception? innerException = null)
+    internal static TException GetException<TException>(ref DumpStringHandler message, Exception? innerException = null)
         where TException : Exception
     {
         var ctor = ExceptionBuilder.GetCtor<TException>();
         var ex = ctor(message.ToStringAndClear(), innerException);
-        throw ex;
+        return ex;
+    }
+
+    [DoesNotReturn]
+    public static void ThrowException<TException>(ref DumpStringHandler message, Exception? innerException = null)
+        where TException : Exception
+    {
+        throw GetException<TException>(ref message, innerException);
     }
 }

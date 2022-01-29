@@ -1,42 +1,24 @@
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Text;
-using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using Jay;
 using Jay.Benchmarking;
 using Jay.Collections.Pools;
-using Jay.Reflection;
+using Jay.Reflection.Building;
 using Jay.Text;
 
 using var text = new TextBuilder();
 
+var dm = RuntimeBuilder.CreateDynamicMethod<Func<string>>("anything");
 
-object? thing = 147;
+object thing = 13;
+ref int i = ref ObjectExtensions.UnboxRef<int>(thing);
 
-var a = thing.Is(out int i);
-var b = thing.Is(out decimal m);
+i = 55;
 
-int k = 0;
-ref int reffy = ref k;
-//var c = thing.Is(out reffy);
-//var c = thing.TryUnboxRef(ref reffy);
-//var c = thing.TryUnboxRef(ref int newIntRef);
-//reffy = ref thing.UnboxRef<int>();
-
-int origReffy = reffy;
-reffy = 13;
-
-
-
-
-
-
-//
-// text.WriteAligned("abcd", Alignment.Left, 2, 'x');
-// text.WriteAligned("abcd", Alignment.Right, 2, '-');
-// text.WriteAligned("abcd", Alignment.Center | Alignment.Right, 2, '|');
-//
 
 string str = text.ToString();
 
@@ -63,6 +45,25 @@ public class Thing
         set => _id = value;
     }
 }
+
+public interface IEntity : INotifyPropertyChanged
+{
+
+}
+
+public interface IEntity<TKey> : IEntity
+{
+    [Key]
+    TKey Key { get; }
+}
+
+public interface INUEntity<TKey> : IEntity<TKey>
+{
+    string Name { get; }
+    DateTime Updated { get; set; }
+}
+
+//RuntimeBuilder.Create<INUEntity<int>>();
 
 public class Local
 {
