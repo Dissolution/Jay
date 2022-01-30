@@ -1,9 +1,121 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using InlineIL;
 using Jay.Collections;
 using Jay.Validation;
 
 namespace Jay.Reflection.Building.Fulfilling;
+
+public enum Group
+{
+    Arithmetic,
+    Comparison,
+    BooleanLogic,
+    Bitwise,
+    Equality,
+}
+
+public enum Targets
+{
+    Unary = 1,
+    Binary = 2,
+}
+
+public sealed class Operator : EnumLike<Operator>
+{
+    public static readonly Operator Increment = new Operator(Group.Arithmetic, Targets.Unary, "++");
+    public static readonly Operator Decrement = new Operator(Group.Arithmetic, Targets.Unary, "--");
+    public static readonly Operator Plus = new Operator(Group.Arithmetic, Targets.Unary, "+");
+    public static readonly Operator Minus = new Operator(Group.Arithmetic, Targets.Unary, "-");
+    public static readonly Operator Multiplication = new Operator(Group.Arithmetic, Targets.Binary, "*");
+    public static readonly Operator Division = new Operator(Group.Arithmetic, Targets.Binary, "/");
+    public static readonly Operator Remainder = new Operator(Group.Arithmetic, Targets.Binary, "%");
+    public static readonly Operator Addition = new Operator(Group.Arithmetic, Targets.Binary, "+");
+    public static readonly Operator Subtraction = new Operator(Group.Arithmetic, Targets.Binary, "-");
+
+
+
+
+    public Group Group { get; }
+    public Targets Targets { get; }
+    public string Symbol { get; }
+
+    private Operator(Group group, Targets targets, string symbol, [CallerMemberName] string name = "")
+        : base(name)
+    {
+        this.Group = group;
+        this.Targets = targets;
+        this.Symbol = symbol;
+    }
+}
+
+public static class Operators
+{
+    private static readonly Operator[] _operators;
+
+    static Operators()
+    {
+
+    }
+
+    public static class Arithmetic
+    {
+        public static class Unary
+        {
+            public static readonly Operator Increment = new Operator("++");
+            public static readonly Operator Decrement = new Operator("--");
+            public static readonly Operator Plus = new Operator("+");
+            public static readonly Operator Minus = new Operator("-");
+        }
+
+        public static class Binary
+        {
+            public static readonly Operator Multiplication = new Operator("*");
+            public static readonly Operator Division = new Operator("/");
+            public static readonly Operator Remainder = new Operator("%");
+            public static readonly Operator Addition = new Operator("+");
+            public static readonly Operator Subtraction = new Operator("-");
+        }
+    }
+
+    public static class Comparision
+    {
+        public static readonly Operator LessThan = new Operator("<");
+        public static readonly Operator LessThanOrEqual = new Operator("<=");
+        public static readonly Operator GreaterThan = new Operator(">");
+        public static readonly Operator GreaterThanOrEqual = new Operator(">=");
+    }
+
+    public static class Boolean
+    {
+        public static class Logical
+        {
+            public static class Unary
+            {
+                public static readonly Operator Negation = new Operator("!");
+            }
+
+            public static class Binary
+            {
+                public static readonly Operator And = new Operator("&");
+                public static readonly Operator Or = new Operator("|");
+                public static readonly Operator Xor = new Operator("^");
+            }
+        }
+
+        public static class Conditional
+        {
+
+            public static class Binary
+            {
+                public static readonly Operator And = new Operator("&&");
+                public static readonly Operator Or = new Operator("||");
+            }
+        }
+    }
+}
+
 
 public static class OperatorCache
 {
