@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection.Metadata.Ecma335;
 using Jay.Collections;
 using Jay.Reflection;
 using Jay.Reflection.Building;
@@ -155,8 +156,7 @@ public static class Dump
         throw GetException<TException>(ref message, innerException);
     }
 
-    [DoesNotReturn]
-    public static void ThrowException<TException>(ref DumpStringHandler message, params object?[] args)
+    internal static TException GetException<TException>(ref DumpStringHandler message, params object?[] args)
         where TException : Exception
     {
         var argTypes = new Type?[args.Length + 1];
@@ -172,6 +172,13 @@ public static class Dump
                                    argTypes)
                                .ThrowIfNull();
         var ex = ctor.Construct<TException>(args);
-        throw ex;
+        return ex;
+    }
+
+    [DoesNotReturn]
+    public static void ThrowException<TException>(ref DumpStringHandler message, params object?[] args)
+        where TException : Exception
+    {
+        throw GetException<TException>(ref message, args);
     }
 }

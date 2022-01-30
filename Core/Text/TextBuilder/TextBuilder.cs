@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 using InlineIL;
 using Jay.Exceptions;
 using Jay.Validation;
+// ReSharper disable MergeCastWithTypeCheck
+// ReSharper disable UnusedMember.Global
+// ReSharper disable InvokeAsExtensionMethod
 
 namespace Jay.Text;
 
@@ -143,7 +146,6 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         _length += text.Length;
     }
 
-    /// <summary>Grows <see cref="_chars"/> to have the capacity to store at least <paramref name="additionalChars"/> beyond <see cref="_pos"/>.</summary>
     [MethodImpl(MethodImplOptions.NoInlining)] // keep consumers as streamlined as possible
     protected void Grow(int additionalChars)
     {
@@ -155,7 +157,6 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         GrowCore(_length + additionalChars);
     }
 
-    /// <summary>Grow the size of <see cref="_chars"/> to at least the specified <paramref name="minCapacity"/>.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)] // but reuse this grow logic directly in both of the above grow routines
     private void GrowCore(int minCapacity)
     {
@@ -725,16 +726,13 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, params T[]? values)
     {
-        if (values != null)
+        if (values is { Length: >= 1 })
         {
-            if (values.Length >= 1)
+            Write<T>(values[0]);
+            for (var i = 1; i < values.Length; i++)
             {
-                Write<T>(values[0]);
-                for (var i = 1; i < values.Length; i++)
-                {
-                    Write(delimiter);
-                    Write<T>(values[i]);
-                }
+                Write(delimiter);
+                Write<T>(values[i]);
             }
         }
         return this;
@@ -891,62 +889,64 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
 
-    private void ReplaceSwap(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText)
+    private void ReplaceSwap(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText, StringComparison comparison)
     {
-        var len = oldText.Length;
-        Debug.Assert(len > 0);
-        Debug.Assert(len <= _length);
-        Debug.Assert(len == newText.Length);
-
-        var nt = newText.GetPinnableReference();
-        var writ = Written;
+        ref readonly char refNewTextChar = ref newText.GetPinnableReference();
+        var len = newText.Length;
+        Span<char> scan = Written;
         int i;
-        while ((i = MemoryExtensions.IndexOf(writ, oldText)) >= 0)
+        while ((i = MemoryExtensions.IndexOf(scan, oldText, comparison)) >= 0)
         {
-            TextHelper.CopyTo(in nt,
-                              ref writ[i],
+            TextHelper.CopyTo(in refNewTextChar,
+                              ref scan[i],
                               len);
-            writ = writ[(i+1)..];
+            scan = scan.Slice(i + len);
         }
     }
 
-    private void ReplaceShrink(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText)
+    private void ReplaceShrink(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText, StringComparison comparison)
     {
-        var oldLen = oldText.Length;
+        ref readonly char refNewTextChar = ref newText.GetPinnableReference();
         var newLen = newText.Length;
-        Debug.Assert(oldLen > newLen);
-
-        var nt = newText.GetPinnableReference();
-        var ntLen = newText.Length;
-
-        var writ = Written;
-        int writePos = 0;
+        var oldLen = oldText.Length;
+        Span<char> scan = Written;
         int i;
-        while ((i = MemoryExtensions.IndexOf(writ, oldText)) >= 0)
+        while ((i = MemoryExtensions.IndexOf(scan, oldText, comparison)) >= 0)
         {
-            // We need to copy all text before this to the last writepos
-            
+            TextHelper.CopyTo(in refNewTextChar,
+                              ref scan[i],
+                              newLen);
+            var right = scan.Slice(i + newLen);
+            TextHelper.CopyTo(scan.Slice(i + oldLen), right);
+            scan = right;
         }
-
-        throw new NotImplementedException();
     }
 
-    private void ReplaceGrow(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText)
+    private void ReplaceGrow(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText, StringComparison comparison)
     {
+        /* Thoughts:
+         * What we need to do is hold a starting (end of last write) position
+         * Find i = IndexOf, if I == -1, be sure we write everything AFTER start
+         * Otherwise, write [i-s] to temp, then write new to temp, then update s and i to their new positions
+         * But when we scan chararray, we need to offset i to later position for IndexOf, then offset BACK for slicing (s + i)
+         
+         */
+
+
         throw new NotImplementedException();
     }
 
-    public TextBuilder Replace(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText)
+    public TextBuilder Replace(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText, StringComparison comparison = StringComparison.Ordinal)
     {
         var oldLen = oldText.Length;
         if (oldLen == 0 || oldLen > _length) return this;
         if (oldLen == newText.Length)
         {
-            ReplaceSwap(oldText, newText);
+            ReplaceSwap(oldText, newText, comparison);
         }
         else if (oldLen > newText.Length)
         {
-            ReplaceShrink(oldText, newText);
+            ReplaceShrink(oldText, newText, comparison);
         }
         else
         {
@@ -1127,7 +1127,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         if (toReturn is not null)
         {
             // We do not clear the array
-            ArrayPool<char>.Shared.Return(toReturn, false);
+            ArrayPool<char>.Shared.Return(toReturn);
         }
     }
 

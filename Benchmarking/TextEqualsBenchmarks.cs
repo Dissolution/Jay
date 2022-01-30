@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
 using Jay.Text;
+using Unsafe = Jay.Text.Unsafe;
 
 namespace Jay.Benchmarking;
 
@@ -39,10 +40,27 @@ public class TextEqualsBenchmarks
     {
         if (ReferenceEquals(x, y)) return true;
         if (x is null || y is null || x.Length != y.Length) return false;
-        return TextHelper.Compare(in x.GetPinnableReference(),
+        return Compare(in x.GetPinnableReference(),
             in y.GetPinnableReference(),
             x.Length) == 0;
 
         
+
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+    private static extern unsafe int memcmp(void* ptr1, void* ptr2, nuint byteCount);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Compare(in char x, in char y, int charCount)
+    {
+        unsafe
+        {
+            return memcmp(Unsafe.AsPointer(in x),
+                Unsafe.AsPointer(in y),
+                (nuint)(charCount * 2));
+        }
+    }
+
 }

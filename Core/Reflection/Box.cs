@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Jay.Collections;
-using Jay.Dumping;
 using Jay.Reflection;
 using Jay.Reflection.Cloning;
 using Jay.Validation;
@@ -35,15 +34,6 @@ public readonly struct Box : IEquatable<Box>,
     public static bool operator <=(object? obj, Box box) => box.CompareTo(obj) >= 0;
     public static bool operator >=(object? obj, Box box) => box.CompareTo(obj) <= 0;
 
-    public static Box operator +(Box box, object? obj)
-    {
-        throw new NotImplementedException();
-    }
-    public static Box operator +(object? obj, Box box)
-    {
-        throw new NotImplementedException();
-    }
-
     private static readonly ConcurrentTypeDictionary<IEqualityComparer> _equalityComparers;
     private static readonly ConcurrentTypeDictionary<IComparer> _comparers;
 
@@ -58,9 +48,9 @@ public readonly struct Box : IEquatable<Box>,
         return _equalityComparers.GetOrAdd(type, t => typeof(EqualityComparer<>).MakeGenericType(t)
                                                .GetProperty(nameof(EqualityComparer<byte>.Default),
                                                             BindingFlags.Public | BindingFlags.Static)
-                                               .ThrowIfNull(Dump.Text($"Cannot find the EqualityComparer<{t}>.Default property"))
+                                               .ThrowIfNull($"Cannot find the EqualityComparer<{t}>.Default property")
                                                .GetStaticValue<IEqualityComparer>()
-                                               .ThrowIfNull(Dump.Text($"Cannot cast EqualityComparer<{t}> to IEqualityComparer")));
+                                               .ThrowIfNull($"Cannot cast EqualityComparer<{t}> to IEqualityComparer"));
     }
 
     private static IComparer GetComparer(Type type)
@@ -68,9 +58,9 @@ public readonly struct Box : IEquatable<Box>,
         return _comparers.GetOrAdd(type, t => typeof(Comparer<>).MakeGenericType(t)
                                                                 .GetProperty(nameof(Comparer<byte>.Default),
                                                                              BindingFlags.Public | BindingFlags.Static)
-                                                                .ThrowIfNull(Dump.Text($"Cannot find the Comparer<{t}>.Default property"))
+                                                                .ThrowIfNull($"Cannot find the Comparer<{t}>.Default property")
                                                                 .GetStaticValue<IComparer>()
-                                                                .ThrowIfNull(Dump.Text($"Cannot cast Comparer<{t}> to IComparer")));
+                                                                .ThrowIfNull($"Cannot cast Comparer<{t}> to IComparer"));
     }
 
     public static Box Wrap(object? value)
@@ -85,15 +75,6 @@ public readonly struct Box : IEquatable<Box>,
 
     private readonly object? _obj;
     private readonly Type? _objType;
-
-    // public object? this[string fieldName]
-    // {
-    //     get
-    //     {
-    //         return _objType.GetField(fieldName, Reflect.InstanceFlags)
-    //                        .GetValue<object, object?>(ref Unsafe.AsRef(in _obj));
-    //     }
-    // }
 
 
     public bool ContainsNull
@@ -113,12 +94,11 @@ public readonly struct Box : IEquatable<Box>,
 
     public bool Is<T>()
     {
-        return _objType == typeof(T);
+        return _obj is T;
     }
 
     public bool Is<T>([MaybeNullWhen(false)] out T value)
     {
-        //return _obj.Is<T>(out value);
         if (_obj is T)
         {
             value = (T)_obj;
@@ -135,7 +115,7 @@ public readonly struct Box : IEquatable<Box>,
     
     public object Clone()
     {
-        return (object)Cloner.Clone(in this);
+        return new Box(Cloner.Clone(in _obj), _objType);
     }
 
     public int CompareTo(Box box)

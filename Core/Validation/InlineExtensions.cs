@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Jay.Dumping;
 
 namespace Jay.Validation;
 
@@ -39,6 +40,17 @@ public static class InlineExtensions
         if (value is null)
         {
             throw new ArgValidationException(value, $"{valueName} is null");
+        }
+        return value;
+    }
+
+    [return: NotNull]
+    public static T ThrowIfNull<T>([AllowNull, NotNull] this T value,
+                                   ref DumpStringHandler message)
+    {
+        if (value is null)
+        {
+            throw new ArgValidationException(value, message.ToStringAndClear());
         }
         return value;
     }

@@ -7,21 +7,6 @@ namespace Jay.Text;
 public static class TextHelper
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-    private static extern unsafe int memcmp(void* ptr1, void* ptr2, nuint byteCount);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int Compare(in char x, in char y, int charCount)
-    {
-        unsafe
-        {
-            return memcmp(Unsafe.AsPointer(in x),
-                Unsafe.AsPointer(in y),
-                (nuint)(charCount * 2));
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void CopyTo(in char sourcePtr, ref char destPtr, int charCount)
     {
         Emit.Ldarg(nameof(destPtr));
@@ -32,7 +17,6 @@ public static class TextHelper
         Emit.Cpblk();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryCopyTo(ReadOnlySpan<char> source, Span<char> dest)
     {
         var len = source.Length;
@@ -44,7 +28,6 @@ public static class TextHelper
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryCopyTo(string? source, Span<char> dest)
     {
         var len = source?.Length ?? 0;
@@ -58,7 +41,7 @@ public static class TextHelper
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyTo(ReadOnlySpan<char> source, Span<char> dest)
+    internal static void CopyTo(ReadOnlySpan<char> source, Span<char> dest)
     {
         CopyTo(in source.GetPinnableReference(),
                ref dest.GetPinnableReference(),
@@ -66,7 +49,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyTo(ReadOnlySpan<char> source, char[] dest)
+    internal static void CopyTo(ReadOnlySpan<char> source, char[] dest)
     {
         CopyTo(in source.GetPinnableReference(),
                ref MemoryMarshal.GetArrayDataReference<char>(dest),
@@ -74,7 +57,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyTo(char[] source, Span<char> dest)
+    internal static void CopyTo(char[] source, Span<char> dest)
     {
         CopyTo(in MemoryMarshal.GetArrayDataReference<char>(source),
                ref dest.GetPinnableReference(),
@@ -82,7 +65,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyTo(char[] source, char[] dest)
+    internal static void CopyTo(char[] source, char[] dest)
     {
         CopyTo(in MemoryMarshal.GetArrayDataReference<char>(source),
                ref MemoryMarshal.GetArrayDataReference<char>(dest),
@@ -90,7 +73,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyTo(string source, Span<char> dest)
+    internal static void CopyTo(string source, Span<char> dest)
     {
         CopyTo(in source.GetPinnableReference(),
                ref dest.GetPinnableReference(),
@@ -98,7 +81,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyTo(string source, char[] dest)
+    internal static void CopyTo(string source, char[] dest)
     {
         CopyTo(in source.GetPinnableReference(),
                ref MemoryMarshal.GetArrayDataReference<char>(dest),

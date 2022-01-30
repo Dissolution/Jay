@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Jay.Annotations;
 using Jay.Dumping;
+using Jay.Reflection.Building.Emission;
+using Jay.Reflection.Building.Fulfilling;
 
 namespace Jay.Reflection.Building;
 
@@ -100,6 +102,120 @@ public class NotifyPropertyChangedFulfiller : InterfaceFulfiller
             Dump.ThrowException<ArgumentException>($"{interfaceType} is not INotifyPropertyChanged");
     }
 
+    protected virtual EventBuilder DefinePropertyChangedEvent()
+    {
+        var backingField = _typeBuilder
+            .DefineField(nameof(INotifyPropertyChanged.PropertyChanged),
+                typeof(PropertyChangedEventHandler),
+                FieldAttributes.Private);
+        throw new NotImplementedException();
+    }
+
+
+
+    protected FieldBuilder EmitEvent(string eventName,
+                                     Type eventHandlerType)
+    {
+        var field = _typeBuilder.DefineField(eventName, eventHandlerType, FieldAttributes.Private);
+        var @event = _typeBuilder.DefineEvent(eventName, EventAttributes.None, eventHandlerType);
+        var addMethod = _typeBuilder.DefineMethod($"add_{eventName}",
+            MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.NewSlot | MethodAttributes.SpecialName,
+            CallingConventions.HasThis,
+            typeof(void),
+            new Type[1] { eventHandlerType });
+        addMethod.GetEmitter()
+              .DeclareLocal(eventHandlerType, out var addTemp0)
+              .DeclareLocal(eventHandlerType, out var addTemp1)
+              .DeclareLocal(eventHandlerType, out var addTemp2)
+              .Ldarg(0) //this
+              .Ldfld(field)
+              .Stloc(addTemp0)
+              .DefineAndMarkLabel(out var lblAddLoopStart)
+              .Ldloc(addTemp0)
+              .Stloc(addTemp1)
+              .Ldloc(addTemp1)
+              .Ldarg(1)
+              .Call(OperatorCache.DelegateCombineMethod)
+              .Castclass(eventHandlerType)
+              .Stloc(addTemp2)
+              .Ldarg(0)
+              .Ldflda(field)
+              .Ldloc(addTemp2)
+              .Ldloc(addTemp1)
+              .Call(OperatorCache.InterlockedCompareExchange(eventHandlerType))
+              .Stloc(addTemp0)
+              .Ldloc(addTemp0)
+              .Ldloc(addTemp1)
+              .Bne_Un_S(lblAddLoopStart)
+              .Ret();
+        @event.SetAddOnMethod(addMethod);
+
+        var removeMethod = _typeBuilder.DefineMethod($"remove_{eventName}",
+            MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.NewSlot | MethodAttributes.SpecialName,
+            CallingConventions.HasThis,
+            typeof(void),
+            new Type[1] { eventHandlerType });
+        removeMethod.GetEmitter()
+                    .DeclareLocal(eventHandlerType, out var removeTemp0)
+                    .DeclareLocal(eventHandlerType, out var removeTemp1)
+                    .DeclareLocal(eventHandlerType, out var removeTemp2)
+                    .Ldarg(0)
+                    .Ldfld(field)
+                    .Stloc_0()
+                    .DefineAndMarkLabel(out var lblRemoveLoopStart)
+                    .Ldloc_0()
+                    .Stloc_1()
+                    .Ldloc_1()
+                    .Ldarg(1)
+                    .Call(OperatorCache.DelegateRemoveMethod)
+                    .Castclass(eventHandlerType)
+                    .Stloc_2()
+                    .Ldarg(0)
+                    .Ldflda(field)
+                    .Ldloc_2()
+                    .Ldloc_1()
+                    .Call(OperatorCache.InterlockedCompareExchange(eventHandlerType))
+                    .Stloc_0()
+                    .Ldloc_0()
+                    .Ldloc_1()
+                    .Bne_Un_S(lblRemoveLoopStart)
+                    .Ret();
+        @event.SetRemoveOnMethod(removeMethod);
+        return field;
+    }
+
+    protected void EmitCallEvent(IILGeneratorEmitter emitter,
+                                 FieldBuilder eventField)
+    {
+        emitter.Ldarg(0) //this
+               .Ldfld(eventField) //this.EventField
+               .Dup() // This is for thread-safety
+               .Brtrue(out var lblOk)
+               .Pop()
+               .Br(out var lblNope)
+               .MarkLabel(lblOk)
+               .Ldarg(0) //this
+               .Ldarg(3) // string propertyName
+               .Ret();
+        throw new NotImplementedException();
+    }
+
+    /*
+     
+       IL_0013: ldarg.0      // this
+    IL_0014: ldfld        class [System.ObjectModel]System.ComponentModel.PropertyChangedEventHandler Jay.Reflection.Building.NotifyBase::PropertyChanged
+    IL_0019: dup
+    IL_001a: brtrue.s     IL_001f
+    IL_001c: pop
+    IL_001d: br.s         IL_002b
+    IL_001f: ldarg.0      // this
+    IL_0020: ldarg.3      // propertyName
+    IL_0021: newobj       instance void [System.ObjectModel]System.ComponentModel.PropertyChangedEventArgs::.ctor(string)
+    IL_0026: callvirt     instance void [System.ObjectModel]System.ComponentModel.PropertyChangedEventHandler::Invoke(object, class [System.ObjectModel]System.ComponentModel.PropertyChangedEventArgs)
+
+     */
+
+
     protected virtual MethodBuilder DefineSetValueMethod()
     {
         var method = _typeBuilder.DefineMethod("SetValue",
@@ -130,7 +246,22 @@ public class NotifyPropertyChangedFulfiller : InterfaceFulfiller
                         .Ldarg(0) //this
                         .Ldfld(field)
                         .Ret();
-        var setMethod = DefineSetMethod(property).GetEmitter();
+        var equalityMethods = OperatorCache.GetEqualityMethods(property.PropertyType);
+        var setMethod = DefineSetMethod(property)
+                        .GetEmitter()
+                        .Call(equalityMethods.GetDefaultMethod)
+                        .Ldarg(0)
+                        .Ldfld(field)
+                        .Ldarg(1)
+                        .Call(equalityMethods.EqualsMethod)
+                        .Brfalse(out var lblSet)
+                        .Ret()
+                        .MarkLabel(lblSet)
+                        .Ldarg(0)
+                        .Ldarg(1)
+                        .Stfld(field)
+                        .Ret();
+                                                 
 
 
         throw new NotImplementedException();

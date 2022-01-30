@@ -20,7 +20,6 @@ public static class Cloner
         _cloneDelegateCache = new DelegateMemberCache();
     }
 
-
     private static CloneDelegate<T> CreateCloneDelegate<T>(Type type)
     {
         var dm = RuntimeBuilder.CreateDynamicMethod<CloneDelegate<T>>($"clone_{type.Name}");
@@ -150,7 +149,7 @@ public static class Cloner
     public static CloneDelegate<T> CreateCloneDelegate<T>() => CreateCloneDelegate<T>(typeof(T));
 
     [return: NotNullIfNotNull("value")]
-    public static T Clone<T>(in T value)
+    public static T? Clone<T>(in T? value)
     {
         if (value is null) return default;
         var del = _cloneDelegateCache.GetOrAdd(typeof(T), type => CreateCloneDelegate<T>(type));

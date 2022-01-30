@@ -13,7 +13,7 @@ public ref struct InterpolatedTextBuilderHandler
 #endif
 
     public InterpolatedTextBuilderHandler(int literalLength, int formattedCount,
-                                            TextBuilder textBuilder)
+                                          TextBuilder textBuilder)
     {
         ArgumentNullException.ThrowIfNull(textBuilder);
         _textBuilder = textBuilder;

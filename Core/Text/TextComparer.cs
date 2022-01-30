@@ -1,6 +1,8 @@
-﻿namespace Jay.Text;
+﻿using System.Collections;
 
-public abstract class TextComparer
+namespace Jay.Text;
+
+public abstract class TextComparer : ITextComparer
 {
     public static implicit operator TextComparer(StringComparison stringComparison)
     {
@@ -48,6 +50,14 @@ public abstract class TextComparer
     }
 
     public abstract int Compare(ReadOnlySpan<char> x, ReadOnlySpan<char> y);
+
+    int IComparer.Compare(object? x, object? y)
+    {
+        if (x is char xChar && y is char yChar) return Compare(xChar, yChar);
+        if (x is string xStr && y is string yStr) return Compare(xStr, yStr);
+        if (x is char[] xChars && y is char[] yChars) return Compare(xChars, yChars);
+        return 0;
+    }
 
     public virtual bool Equals(char x, char y)
     {

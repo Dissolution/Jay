@@ -39,7 +39,7 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>
     public static DelegateSig Of(Type delegateType, out MethodInfo invokeMethod)
     {
         ArgumentNullException.ThrowIfNull(delegateType);
-        invokeMethod = delegateType.GetMethod("Invoke", Reflect.PublicFlags);
+        invokeMethod = delegateType.GetMethod("Invoke", Reflect.PublicFlags)!;
         if (invokeMethod is null)
             throw new ArgumentException("Invalid Delegate Type: Does not have an Invoke method", nameof(delegateType));
         return DelegateSig.Of(invokeMethod);
