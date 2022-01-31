@@ -150,7 +150,7 @@ public abstract class EnumLike<TEnum> : EnumLike, IEquatable<TEnum>, IComparable
     
     public override bool HasFlags => false;
     
-    protected EnumLike([CallerMemberName] string name = "")
+    protected EnumLike(string name)
         : base(_members.Count, name)
     {
         _members.Add((TEnum)this);

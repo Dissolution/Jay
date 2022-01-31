@@ -7,18 +7,16 @@ using System.Runtime.CompilerServices;
 using Jay;
 using Jay.Benchmarking;
 using Jay.Collections.Pools;
+using Jay.Reflection;
 using Jay.Reflection.Building;
 using Jay.Text;
+using Jay.Validation;
 
 using var text = new TextBuilder();
 
-var dm = RuntimeBuilder.CreateDynamicMethod<Func<string>>("anything");
-
-object thing = 13;
-ref int i = ref ObjectExtensions.UnboxRef<int>(thing);
-
-i = 55;
-
+var method = typeof(Local).GetMethod(nameof(Local.GenericType), Reflect.StaticFlags).ThrowIfNull();
+var sig = DelegateSig.Of(method);
+var sig2 = DelegateSig.Of(typeof(Func<int, int>).GetGenericTypeDefinition());
 
 string str = text.ToString();
 
@@ -80,6 +78,11 @@ public class Local
     public static void Me<T>(out T value)
     {
         value = GetRef<T>();
+    }
+
+    public static T GenericType<T>(T value)
+    {
+        return value;
     }
   
 

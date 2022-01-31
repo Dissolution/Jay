@@ -1,8 +1,13 @@
-﻿using System.Diagnostics;
+﻿
+
+/*using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using InlineIL;
 using Jay.Collections;
+using Jay.Dumping;
+using Jay.Reflection.Building.Emission;
 using Jay.Validation;
 
 namespace Jay.Reflection.Building.Fulfilling;
@@ -14,111 +19,168 @@ public enum Group
     BooleanLogic,
     Bitwise,
     Equality,
+    Other,
 }
 
 public enum Targets
 {
+    None = 0,
     Unary = 1,
     Binary = 2,
 }
 
+
+/// <summary>
+/// 
+/// </summary>
+/// <see cref="https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/"/>
+/// <see cref="https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/operator-overloads"/>
 public sealed class Operator : EnumLike<Operator>
 {
-    public static readonly Operator Increment = new Operator(Group.Arithmetic, Targets.Unary, "++");
-    public static readonly Operator Decrement = new Operator(Group.Arithmetic, Targets.Unary, "--");
-    public static readonly Operator Plus = new Operator(Group.Arithmetic, Targets.Unary, "+");
-    public static readonly Operator Minus = new Operator(Group.Arithmetic, Targets.Unary, "-");
-    public static readonly Operator Multiplication = new Operator(Group.Arithmetic, Targets.Binary, "*");
-    public static readonly Operator Division = new Operator(Group.Arithmetic, Targets.Binary, "/");
-    public static readonly Operator Remainder = new Operator(Group.Arithmetic, Targets.Binary, "%");
-    public static readonly Operator Addition = new Operator(Group.Arithmetic, Targets.Binary, "+");
-    public static readonly Operator Subtraction = new Operator(Group.Arithmetic, Targets.Binary, "-");
+    public static class Boolean
+    {
+        public static readonly Operator Negation =
+            new Operator(Group.BooleanLogic, Targets.Unary, "!", "op_LogicalNot", 0,);
+        public static readonly Operator And = new Operator(Group.BooleanLogic, Targets.Binary, "&", "op_LogicalAnd", 6);
+        public static readonly Operator Or = new Operator(Group.BooleanLogic, Targets.Binary, "|", "op_LogicalOr", 8);
+        public static readonly Operator Xor = new Operator(Group.BooleanLogic, Targets.Binary, "^", "op_ExclusiveOr", 7);
+        public static readonly Operator ConditionalAnd = new Operator(Group.BooleanLogic, Targets.Binary, "&&", "op_LogicalAnd", 9);
+        public static readonly Operator ConditionalOr = new Operator(Group.BooleanLogic, Targets.Binary, "||", "op_LogicalOr", 10);
+    }
 
+    public static class Bitwise
+    {
+        public static readonly Operator Complement = new Operator(Group.Bitwise, Targets.Unary, "~", "op_OnesComplement", 0);
+        public static readonly Operator LeftShift = new Operator(Group.Bitwise, Targets.Binary, "<<", "op_LeftShift", 3);
+        public static readonly Operator RightShift = new Operator(Group.Bitwise, Targets.Binary, ">>", "op_RightShift", 3);
+        public static readonly Operator And = new Operator(Group.Bitwise, Targets.Binary, "&", "op_BitwiseAnd", 6);
+        public static readonly Operator Or = new Operator(Group.Bitwise, Targets.Binary, "|", "op_BitwiseOr", 8);
+        public static readonly Operator Xor = new Operator(Group.Bitwise, Targets.Binary, "^", "op_ExclusiveOr", 7);
+    }
 
+    public static readonly Operator Increment = new Operator(Group.Arithmetic, Targets.Unary, "++", "op_Increment", 0);
+    public static readonly Operator Decrement = new Operator(Group.Arithmetic, Targets.Unary, "--", "op_Decrement", 0);
+    public static readonly Operator Plus = new Operator(Group.Arithmetic, Targets.Unary, "+", "op_UnaryPlus", 0);
+    public static readonly Operator Minus = new Operator(Group.Arithmetic, Targets.Unary, "-", "op_UnaryNegation", 0);
+    public static readonly Operator Multiplication = new Operator(Group.Arithmetic, Targets.Binary, "*", "op_Multiply", 1);
+    public static readonly Operator Division = new Operator(Group.Arithmetic, Targets.Binary, "/", "op_Division", 1);
+    public static readonly Operator Remainder = new Operator(Group.Arithmetic, Targets.Binary, "%", "op_Modulus", 1);
+    public static readonly Operator Addition = new Operator(Group.Arithmetic, Targets.Binary, "+", "op_Addition", 2);
+    public static readonly Operator Subtraction = new Operator(Group.Arithmetic, Targets.Binary, "-", "op_Subtraction", 2);
 
+    public static readonly Operator LessThan = new Operator(Group.Comparison, Targets.Binary, "<", "op_LessThan", 4);
+    public static readonly Operator GreaterThan = new Operator(Group.Comparison, Targets.Binary, ">", "op_GreaterThan", 4);
+    public static readonly Operator LessThanOrEqual = new Operator(Group.Comparison, Targets.Binary, "<=", "op_LessThanOrEqual", 4);
+    public static readonly Operator GreaterThanOrEqual = new Operator(Group.Comparison, Targets.Binary, ">", "op_GreaterThanOrEqual", 4);
+
+    public static readonly Operator Equality = new Operator(Group.Equality, Targets.Binary, "==", "op_Equality", 5);
+    public static readonly Operator Inequality = new Operator(Group.Equality, Targets.Binary, "!=", "op_Inequality", 5);
+
+    public static readonly Operator Implicit =
+        new Operator(Fulfilling.Group.Other, Targets.Binary, "(implicit)", "op_Implicit", -1);
+    public static readonly Operator Explicit =
+        new Operator(Fulfilling.Group.Other, Targets.Binary, "(explicit)", "op_Explicit", -1);
+
+    /* op_True
+     * op_False
+     #1#
+
+    private readonly int _priority;
 
     public Group Group { get; }
     public Targets Targets { get; }
     public string Symbol { get; }
+    public string MetadataName { get; }
+    public DelegateSig Signature { get; }
 
-    private Operator(Group group, Targets targets, string symbol, [CallerMemberName] string name = "")
+    private Operator(Group group, Targets targets, string symbol, 
+                     string metadataName,
+                     int priority, 
+                     DelegateSig signature,
+                     [CallerMemberName] string name = "")
         : base(name)
     {
         this.Group = group;
         this.Targets = targets;
         this.Symbol = symbol;
+        this.MetadataName = metadataName;
+        this.Signature = signature;
+        _priority = priority;
+    }
+
+    public override int CompareTo(Operator? op)
+    {
+        if (op is null) return 1;
+        return _priority.CompareTo(op._priority);
     }
 }
 
-public static class Operators
+public static class TypeOperatorCache
 {
-    private static readonly Operator[] _operators;
-
-    static Operators()
+    public sealed class OperatorCache
     {
+        private readonly ConcurrentDictionary<Operator, Delegate?> _operatorCache;
 
-    }
+        public Type Type { get; }
 
-    public static class Arithmetic
-    {
-        public static class Unary
+        internal OperatorCache(Type type)
         {
-            public static readonly Operator Increment = new Operator("++");
-            public static readonly Operator Decrement = new Operator("--");
-            public static readonly Operator Plus = new Operator("+");
-            public static readonly Operator Minus = new Operator("-");
+            this.Type = type;
+            _operatorCache = new ConcurrentDictionary<Operator, Delegate?>();
         }
 
-        public static class Binary
+        internal Result TryEmit(IILGeneratorEmitter emitter,
+                                Operator @operator,
+                                Type argType)
         {
-            public static readonly Operator Multiplication = new Operator("*");
-            public static readonly Operator Division = new Operator("/");
-            public static readonly Operator Remainder = new Operator("%");
-            public static readonly Operator Addition = new Operator("+");
-            public static readonly Operator Subtraction = new Operator("-");
-        }
-    }
-
-    public static class Comparision
-    {
-        public static readonly Operator LessThan = new Operator("<");
-        public static readonly Operator LessThanOrEqual = new Operator("<=");
-        public static readonly Operator GreaterThan = new Operator(">");
-        public static readonly Operator GreaterThanOrEqual = new Operator(">=");
-    }
-
-    public static class Boolean
-    {
-        public static class Logical
-        {
-            public static class Unary
+            // Func<T,T>
+            if (@operator.Targets == Targets.Unary)
             {
-                public static readonly Operator Negation = new Operator("!");
-            }
+                // Special
 
-            public static class Binary
-            {
-                public static readonly Operator And = new Operator("&");
-                public static readonly Operator Or = new Operator("|");
-                public static readonly Operator Xor = new Operator("^");
             }
         }
 
-        public static class Conditional
+        internal Result TryGetDelegate<TDelegate>(Operator @operator)
+            where TDelegate : Delegate
         {
-
-            public static class Binary
+            var delSig = DelegateSig.Of<TDelegate>();
+            if (@operator.Targets == Targets.Unary)
             {
-                public static readonly Operator And = new Operator("&&");
-                public static readonly Operator Or = new Operator("||");
+                if (delSig.ParameterCount != 1)
+                {
+                    return Dump.GetException<ArgumentException>($"{typeof(TDelegate)} is not valid for Unary Operand {@operator}", nameof(@operator));
+                }
+                var returnType = delSig.ReturnType;
+                if (returnType != delSig.ParameterTypes[0])
+                {
+                    return Dump.GetException<ArgumentException>($"{typeof(TDelegate)} is not valid for Unary Operand {@operator}", nameof(@operator));
+                }
+                
             }
         }
+    }
+
+    private static readonly ConcurrentTypeDictionary<ConcurrentDictionary<Operator, Delegate?>> _operatorCache;
+
+    static TypeOperatorCache()
+    {
+
     }
 }
+*/
 
+using System.Diagnostics;
+using System.Reflection;
+using Jay.Collections;
+using Jay.Reflection;
+using Jay.Reflection.Building.Fulfilling;
+using Jay.Validation;
 
 public static class OperatorCache
 {
+
+    
     private static readonly ConcurrentTypeDictionary<EqualityMethods> _equalsMethods;
 
     static OperatorCache()

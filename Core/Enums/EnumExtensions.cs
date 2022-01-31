@@ -222,4 +222,27 @@ public static class EnumExtensions
             RemoveFlag(ref @enum, flag);
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CompareTo<TEnum>(this TEnum @enum, TEnum other)
+        where TEnum : unmanaged, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(other));
+        Emit.Ceq();
+        Emit.Brfalse("notEqual");
+        Emit.Ldc_I4(0);
+        Emit.Ret();
+        MarkLabel("notEqual");
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(other));
+        Emit.Clt();
+        Emit.Brfalse("greaterThan");
+        Emit.Ldc_I4(-1);
+        Emit.Ret();
+        MarkLabel("greaterThan");
+        Emit.Ldc_I4(1);
+        Emit.Ret();
+        throw Unreachable();
+    }
 }

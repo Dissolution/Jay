@@ -950,7 +950,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         }
         else
         {
-            ReplaceGrow(oldText, newText);
+            ReplaceGrow(oldText, newText, comparison);
         }
         return this;
     }
