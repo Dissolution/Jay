@@ -97,7 +97,7 @@ public readonly struct Box : IEquatable<Box>,
         return _obj is T;
     }
 
-    public bool Is<T>([MaybeNullWhen(false)] out T value)
+    public bool Is<T>([NotNullWhen(true)] out T? value)
     {
         if (_obj is T)
         {
@@ -112,7 +112,9 @@ public readonly struct Box : IEquatable<Box>,
     {
         return _objType == type;
     }
-    
+
+    public object? AsObject() => _obj;
+
     public object Clone()
     {
         return new Box(Cloner.Clone(in _obj), _objType);

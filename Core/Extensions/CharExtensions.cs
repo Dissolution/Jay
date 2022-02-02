@@ -1,5 +1,4 @@
-﻿using System;
-using Jay.Text;
+﻿using Jay.Text;
 
 namespace Jay;
 
@@ -10,7 +9,7 @@ public static class CharExtensions
     /// </summary>
     /// <param name="ch"></param>
     /// <returns></returns>
-    public static ReadOnlySpan<char> ToReadOnlySpan(ref this char ch)
+    public static ReadOnlySpan<char> AsReadOnlySpan(ref this char ch)
     {
         // Tested fastest
         unsafe
