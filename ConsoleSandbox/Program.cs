@@ -1,11 +1,15 @@
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Dynamic;
+using System.Linq.Expressions;
 using System.Text;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using Jay;
 using Jay.Benchmarking;
+using Jay.Collections;
 using Jay.Collections.Pools;
 using Jay.Reflection;
 using Jay.Reflection.Building;
@@ -14,9 +18,16 @@ using Jay.Validation;
 
 using var text = new TextBuilder();
 
-var method = typeof(Local).GetMethod(nameof(Local.GenericType), Reflect.StaticFlags).ThrowIfNull();
-var sig = DelegateSig.Of(method);
-var sig2 = DelegateSig.Of(typeof(Func<int, int>).GetGenericTypeDefinition());
+object a = 13;
+dynamic A = new DynamicWrapper(a);
+
+object b = 147;
+dynamic B = new DynamicWrapper(b);
+
+var c = A + B;
+text.Write(c);
+
+
 
 string str = text.ToString();
 
@@ -41,6 +52,41 @@ public class Thing
     {
         get => _id;
         set => _id = value;
+    }
+}
+
+public sealed class DynamicWrapper : DynamicObject
+{
+    private static readonly ConcurrentTypeDictionary<ConcurrentDictionary<ExpressionType, Delegate>> _cache;
+
+    static DynamicWrapper()
+    {
+        _cache = new ConcurrentTypeDictionary<ConcurrentDictionary<ExpressionType, Delegate>>();
+    }
+
+
+
+
+    private readonly object? _obj;
+    private readonly Type? _objType;
+
+    public DynamicWrapper(object? obj)
+    {
+        _obj = obj;
+        _objType = obj?.GetType();
+    }
+
+    public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object? result)
+    {
+        var op = binder.Operation;
+        Expressions.CompileBinaryExpression<Func>()
+
+        return base.TryBinaryOperation(binder, arg, out result);
+    }
+
+    public override bool TryUnaryOperation(UnaryOperationBinder binder, out object? result)
+    {
+        return base.TryUnaryOperation(binder, out result);
     }
 }
 

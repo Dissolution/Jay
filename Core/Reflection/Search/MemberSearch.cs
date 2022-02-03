@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using Jay.Reflection.Expressions;
 
 namespace Jay.Reflection.Search;
 
