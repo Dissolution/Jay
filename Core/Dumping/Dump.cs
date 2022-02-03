@@ -86,7 +86,7 @@ public static class Dump
         _dumpers = new List<IDumper>(dumperTypes);
     }
 
-    internal static bool DumpNull<T>(TextBuilder text, [NotNullWhen(false)] T? value, DumpLevel level)
+    internal static bool DumpNull<T>(TextBuilder text, [AllowNull, NotNullWhen(false)] T? value, DumpLevel level)
     {
         if (value is null)
         {

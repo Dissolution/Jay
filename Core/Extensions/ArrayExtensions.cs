@@ -48,5 +48,14 @@ public static class ArrayExtensions
             }
             return false;
         }
-    }
+
+        public static T? GetOrDefault<T>(this T?[]? array, int index, T? @default = default(T))
+        {
+            if (array is null)
+                return @default;
+            if ((uint)index > (uint)array.Length)
+                return @default;
+            return array[index];
+        }
+}
 

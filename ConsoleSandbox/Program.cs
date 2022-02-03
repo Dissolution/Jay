@@ -17,16 +17,20 @@ using Jay.Text;
 using Jay.Validation;
 
 using var text = new TextBuilder();
+//
+// object a = 13;
+// dynamic A = new DynamicWrapper(a);
+//
+// object b = 147;
+// dynamic B = new DynamicWrapper(b);
+//
+// var c = A + B;
+// text.Write(c);
 
-object a = 13;
-dynamic A = new DynamicWrapper(a);
 
-object b = 147;
-dynamic B = new DynamicWrapper(b);
-
-var c = A + B;
-text.Write(c);
-
+Expression<Func<bool>> a = () => true;
+Expression<Func<bool>> b = () => false;
+var c = 
 
 
 string str = text.ToString();

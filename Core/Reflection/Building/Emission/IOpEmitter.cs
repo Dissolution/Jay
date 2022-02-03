@@ -476,7 +476,7 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     TEmitter Neg() => Emit(OpCodes.Neg);
 
     /// <summary>
-    /// Computes the bitwise complement (<see langword="!"/>) of a value and pushes the result onto the stack.
+    /// Computes the bitwise complement / negation (<see langword="!"/>/<see langword="~"/>) of a value and pushes the result onto the stack.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.not"/>
     TEmitter Not() => Emit(OpCodes.Not);
