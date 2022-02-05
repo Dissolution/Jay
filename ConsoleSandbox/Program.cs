@@ -17,23 +17,15 @@ using Jay.Text;
 using Jay.Validation;
 
 using var text = new TextBuilder();
-//
-// object a = 13;
-// dynamic A = new DynamicWrapper(a);
-//
-// object b = 147;
-// dynamic B = new DynamicWrapper(b);
-//
-// var c = A + B;
-// text.Write(c);
 
-
-Expression<Func<bool>> a = () => true;
-Expression<Func<bool>> b = () => false;
+TimeSpan nowTime = DateTime.Now.TimeOfDay;
+string str = nowTime.Format("hh:mm:ss.fff");
 
 
 
-string str = text.ToString();
+
+
+//string str = text.ToString();
 
 Debugger.Break();
 
@@ -82,14 +74,15 @@ public sealed class DynamicWrapper : DynamicObject
 
     public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object? result)
     {
-        var op = binder.Operation;
-        Expressions.CompileBinaryExpression<Func>()
+        throw new NotImplementedException();
 
         return base.TryBinaryOperation(binder, arg, out result);
     }
 
     public override bool TryUnaryOperation(UnaryOperationBinder binder, out object? result)
     {
+        throw new NotImplementedException();
+
         return base.TryUnaryOperation(binder, out result);
     }
 }

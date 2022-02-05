@@ -49,7 +49,7 @@ public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
         Targets = Targets.Binary,
         Symbol = "&",
         MethodName = "op_LogicalAnd",
-        Signature = DelegateSig.Of(typeof(Func<,,bool>)),
+        Signature = DelegateSig.Of(typeof(Func<,,>)),
         ExpressionType = ExprType.And,
     };
 
@@ -82,7 +82,7 @@ public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
         Targets = Targets.Binary,
         Symbol = "&&",
         MethodName = "op_LogicalAnd",
-        Signature = DelegateSig.Of(typeof(Func<,,bool>)),
+        Signature = DelegateSig.Of(typeof(Func<,,>)),
         ExpressionType = ExprType.AndAlso,
     };
 
@@ -283,12 +283,6 @@ public static class TypeOperatorCache
 }
 */
 
-using System.Diagnostics;
-using System.Reflection;
-using Jay.Collections;
-using Jay.Reflection;
-using Jay.Reflection.Building.Fulfilling;
-using Jay.Validation;
 
 public static class MethodCache
 {

@@ -78,6 +78,22 @@ public static class TypeExtensions
         return true;
     }
 
+    public static bool IsNullable(this Type? type)
+    {
+        return type is not null && type.Implements(typeof(Nullable<>));
+    }
+
+    public static bool IsNullable(this Type? type, [NotNullWhen(true)] out Type? underlyingType)
+    {
+        if (type is not null && type.IsValueType && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            underlyingType = type.GetGenericArguments()[0];
+            return true;
+        }
+        underlyingType = null;
+        return false;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Type MakeGenericType<T>(this Type type)
     {
