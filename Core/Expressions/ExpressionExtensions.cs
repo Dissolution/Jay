@@ -1,5 +1,4 @@
-﻿using System.Dynamic;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Jay;
@@ -228,7 +227,7 @@ public static class ExpressionExtensions
                             yield return member;
                         }
                     }
-                    
+
                     break;
                 }
             // ReSharper disable once UnusedVariable

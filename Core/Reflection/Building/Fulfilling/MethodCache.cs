@@ -1,13 +1,10 @@
-﻿
-using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using InlineIL;
 using Jay.Collections;
-using Jay.Dumping;
-using Jay.Reflection.Building.Emission;
 using Jay.Validation;
+using ExprType = System.Linq.Expressions.ExpressionType;
 
 namespace Jay.Reflection.Building.Fulfilling;
 
@@ -28,24 +25,141 @@ public enum Targets
     Binary = 2,
 }
 
-
-/// <summary>
-/// 
-/// </summary>
 /// <see cref="https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/"/>
 /// <see cref="https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/operator-overloads"/>
-public sealed class Operator : EnumLike<Operator>
+public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
 {
-    public static class Boolean
+    private static readonly List<Operator> _operators;
+   
+    public static readonly Operator Not = new Operator
     {
-        public static readonly Operator Negation =
-            new Operator(Group.BooleanLogic, Targets.Unary, "!", "op_LogicalNot", 0,);
-        public static readonly Operator And = new Operator(Group.BooleanLogic, Targets.Binary, "&", "op_LogicalAnd", 6);
-        public static readonly Operator Or = new Operator(Group.BooleanLogic, Targets.Binary, "|", "op_LogicalOr", 8);
-        public static readonly Operator Xor = new Operator(Group.BooleanLogic, Targets.Binary, "^", "op_ExclusiveOr", 7);
-        public static readonly Operator ConditionalAnd = new Operator(Group.BooleanLogic, Targets.Binary, "&&", "op_LogicalAnd", 9);
-        public static readonly Operator ConditionalOr = new Operator(Group.BooleanLogic, Targets.Binary, "||", "op_LogicalOr", 10);
+        Priority = 0,
+        Group = Group.BooleanLogic,
+        Targets = Targets.Unary,
+        Symbol = "!",
+        MethodName = "op_LogicalNot",
+        Signature = DelegateSig.Of(typeof(Func<bool,bool>)),
+        ExpressionType = ExprType.Not,
+    };
+
+    public static readonly Operator LogicalAnd = new Operator
+    {
+        Priority = 6,
+        Group = Group.BooleanLogic,
+        Targets = Targets.Binary,
+        Symbol = "&",
+        MethodName = "op_LogicalAnd",
+        Signature = DelegateSig.Of(typeof(Func<,,bool>)),
+        ExpressionType = ExprType.And,
+    };
+
+    public static readonly Operator LogicalOr = new Operator
+    {
+        Priority = 8,
+        Group = Group.BooleanLogic,
+        Targets = Targets.Binary,
+        Symbol = "|",
+        MethodName = "op_LogicalOr",
+        Signature = DelegateSig.Of(typeof(Func<,,>)),
+        ExpressionType = ExprType.Or,
+    };
+
+    public static readonly Operator Xor = new Operator
+    {
+        Priority = 7,
+        Group = Group.BooleanLogic,
+        Targets = Targets.Binary,
+        Symbol = "^",
+        MethodName = "op_ExclusiveOr",
+        Signature = DelegateSig.Of(typeof(Func<,,>)),
+        ExpressionType = ExprType.ExclusiveOr,
+    };
+
+    public static readonly Operator ConditionalAnd = new Operator
+    {
+        Priority = 9,
+        Group = Group.BooleanLogic,
+        Targets = Targets.Binary,
+        Symbol = "&&",
+        MethodName = "op_LogicalAnd",
+        Signature = DelegateSig.Of(typeof(Func<,,bool>)),
+        ExpressionType = ExprType.AndAlso,
+    };
+
+
+    public static readonly Operator ConditionalOr = new Operator
+    {
+        Priority = 10,
+        Group = Group.BooleanLogic,
+        Targets = Targets.Binary,
+        Symbol = "||",
+        MethodName = "op_LogicalOr",
+        Signature = DelegateSig.Of(typeof(Func<,,>)),
+        ExpressionType = ExprType.OrElse,
+    };
+
+
+    static Operator()
+    {
+        _operators = new List<Operator>(85);    // ExpressionType.Count
     }
+
+    public static bool TryParse(string? text, out Operator? @operator)
+    {
+        throw new NotImplementedException();
+    }
+
+
+    private int Priority { get; init; }
+    
+    public string Name { get; }
+
+    public Group Group { get; init; }
+    public Targets Targets { get; init; }
+    public string Symbol { get; init; }
+    
+    public string MethodName { get; init; }
+    public DelegateSig Signature { get; init; }
+
+    public ExpressionType? ExpressionType { get; init; }
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    private Operator([CallerMemberName] string name = "")
+    {
+        this.Name = name;
+        _operators.Add(this);
+    }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
+    public int CompareTo(Operator? @operator)
+    {
+        if (@operator is null) return 1;
+        return Priority.CompareTo(@operator.Priority);
+    }
+
+    public bool Equals(Operator? @operator)
+    {
+        return ReferenceEquals(this, @operator);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Hasher.Create(Name);
+    }
+
+    public override string ToString()
+    {
+        return $"Name ({Symbol})";
+    }
+}
+
+
+/*
 
     public static class Bitwise
     {
@@ -82,7 +196,7 @@ public sealed class Operator : EnumLike<Operator>
 
     /* op_True
      * op_False
-     #1#
+     #2#
 
     private readonly int _priority;
 
@@ -176,13 +290,11 @@ using Jay.Reflection;
 using Jay.Reflection.Building.Fulfilling;
 using Jay.Validation;
 
-public static class OperatorCache
+public static class MethodCache
 {
-
-    
     private static readonly ConcurrentTypeDictionary<EqualityMethods> _equalsMethods;
 
-    static OperatorCache()
+    static MethodCache()
     {
         _equalsMethods = new();
         _delegateCombineMethod = new Lazy<MethodInfo>(() =>

@@ -30,7 +30,7 @@ using var text = new TextBuilder();
 
 Expression<Func<bool>> a = () => true;
 Expression<Func<bool>> b = () => false;
-var c = 
+
 
 
 string str = text.ToString();
