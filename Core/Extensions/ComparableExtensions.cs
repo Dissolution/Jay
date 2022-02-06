@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Jay;
+﻿namespace Jay;
 
 /// <summary>
 /// Extensions for <see cref="IComparable{T}"/> and <see cref="IComparable"/> values.
@@ -16,7 +13,28 @@ public static class ComparableExtensions
     /// <param name="minimum">The minimum inclusive value it can be.</param>
     /// <param name="maximum">The maximum inclusive value it can be.</param>
     /// <returns></returns>
-    public static T Clamp<T>(this T value, T minimum, T maximum)
+    public static void Clamp<T>(ref T value, T minimum, T maximum)
+        where T : IComparable<T>
+    {
+        if (Comparer<T>.Default.Compare(value, minimum) < 0)
+        {
+            value = minimum;
+        }
+        else if (Comparer<T>.Default.Compare(value, maximum) > 0)
+        {
+            value = maximum;
+        }
+    }
+
+    /// <summary>
+    /// Limit this <see cref="IComparable{T}"/> value between a minimum and maximum value.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="value">The <see cref="IComparable{T}"/> value to limit.</param>
+    /// <param name="minimum">The minimum inclusive value it can be.</param>
+    /// <param name="maximum">The maximum inclusive value it can be.</param>
+    /// <returns></returns>
+    public static T Clamped<T>(this T value, T minimum, T maximum)
         where T : IComparable<T>
     {
         if (Comparer<T>.Default.Compare(value, minimum) < 0)
