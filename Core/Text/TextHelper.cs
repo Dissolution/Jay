@@ -6,6 +6,14 @@ namespace Jay.Text;
 
 public static class TextHelper
 {
+    private const string _digits = "0123456789";
+    private const string _upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private const string _lowerCase = "abcdefghijklmnopqrstuvwxyz";
+
+    public static ReadOnlySpan<char> Digits => _digits;
+    public static ReadOnlySpan<char> UpperCase => _upperCase;
+    public static ReadOnlySpan<char> LowerCase => _lowerCase;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void CopyTo(in char sourcePtr, ref char destPtr, int charCount)
     {

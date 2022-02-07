@@ -53,7 +53,7 @@ namespace Jay.Collections
     {
         private const int StartOfFreeList = -3;
 
-        public sealed class KeySet : IReadOnlySet<TKey>, IReadOnlyCollection<TKey>, IEnumerable<TKey>
+        public sealed class KeySet //: IReadOnlySet<TKey>, IReadOnlyCollection<TKey>, IEnumerable<TKey>
         {
             private readonly UberDictionary<TKey, TValue> _dictionary;
 
@@ -64,7 +64,7 @@ namespace Jay.Collections
             }
         }
 
-        public sealed class ValueCollection : IReadOnlyCollection<TValue>, IEnumerable<TValue>
+        public sealed class ValueCollection //: IReadOnlyCollection<TValue>, IEnumerable<TValue>
         {
             private readonly UberDictionary<TKey, TValue> _dictionary;
 

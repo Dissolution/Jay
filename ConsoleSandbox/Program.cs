@@ -16,13 +16,13 @@ using Jay.Reflection.Building;
 using Jay.Text;
 using Jay.Validation;
 
+
+
 using var text = new TextBuilder();
 
-TimeSpan nowTime = DateTime.Now.TimeOfDay;
-string str = nowTime.Format("hh:mm:ss.fff");
+var thing = new Thing();
 
-
-
+Local.Capture(thing, () => nameof(thing.PropertyChanged))
 
 
 //string str = text.ToString();
@@ -40,14 +40,63 @@ Console.WriteLine("Press Enter to close this window.");
 Console.ReadLine();
 return 0;
 
-public class Thing
+
+public class Local
+{
+    public static void Capture<T, THandler>(T thing, Expression handler)
+    {
+
+    }
+
+    private static class S<T>
+    {
+        public static T Default = default;
+    }
+
+    public static ref T GetRef<T>()
+    {
+        return ref S<T>.Default;
+    }
+
+    public static void Me<T>(out T value)
+    {
+        value = GetRef<T>();
+    }
+
+    public static T GenericType<T>(T value)
+    {
+        return value;
+    }
+
+
+
+
+    public static string CaptureOutParamName(out Label lbl, [CallerArgumentExpression("lbl")] string? labelName = null)
+    {
+        lbl = default;
+        return labelName!;
+    }
+}
+
+public class Thing : INotifyPropertyChanged
 {
     private int _id;
 
     public int Id
     {
         get => _id;
-        set => _id = value;
+        set
+        {
+            _id = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
 
@@ -106,37 +155,7 @@ public interface INUEntity<TKey> : IEntity<TKey>
 
 //RuntimeBuilder.Create<INUEntity<int>>();
 
-public class Local
-{
-    private static class S<T>
-    {
-        public static T Default = default;
-    }
 
-    public static ref T GetRef<T>()
-    {
-        return ref S<T>.Default;
-    }
-
-    public static void Me<T>(out T value)
-    {
-        value = GetRef<T>();
-    }
-
-    public static T GenericType<T>(T value)
-    {
-        return value;
-    }
-  
-
-
-
-    public static string CaptureOutParamName(out Label lbl, [CallerArgumentExpression("lbl")] string? labelName = null)
-    {
-        lbl = default;
-        return labelName!;
-    }
-}
 
 
  internal class Scope
