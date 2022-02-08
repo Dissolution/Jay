@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleSandbox", "ConsoleSa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarking", "Benchmarking\Benchmarking.csproj", "{65FE65A5-789A-4435-93EF-3F16AB0DAEDB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{3D43DF24-F639-4E9E-B3D2-C18416E8028D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{3D43DF24-F639-4E9E-B3D2-C18416E8028D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JayCsv", "JayCsv\JayCsv.csproj", "{49DCBB25-A632-427A-903D-FF0720C8C383}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{3D43DF24-F639-4E9E-B3D2-C18416E8028D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D43DF24-F639-4E9E-B3D2-C18416E8028D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D43DF24-F639-4E9E-B3D2-C18416E8028D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49DCBB25-A632-427A-903D-FF0720C8C383}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49DCBB25-A632-427A-903D-FF0720C8C383}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49DCBB25-A632-427A-903D-FF0720C8C383}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49DCBB25-A632-427A-903D-FF0720C8C383}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
