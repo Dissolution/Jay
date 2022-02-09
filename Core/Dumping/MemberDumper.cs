@@ -1,13 +1,14 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 using Jay.Reflection;
 using Jay.Text;
 
 namespace Jay.Dumping;
 
-public class MemberDumper : IDumper<MemberInfo>
+public class TypeDumper : IDumper<Type>
 {
-    private static void DumpType(TextBuilder text, Type? type, DumpLevel level = DumpLevel.Default)
+    public void DumpValue(TextBuilder text, Type? type, DumpLevel level = DumpLevel.Default)
     {
         switch (Type.GetTypeCode(type))
         {
@@ -68,6 +69,70 @@ public class MemberDumper : IDumper<MemberInfo>
             default:
                 break;
         }
+    https://github.com/stakx/TypeNameFormatter/blob/2ab6b20e7eb2a2477371769d8109c705a0043e2b/src/TypeNameFormatter/TypeNameFormatter.Nullable.cs#L67
+        if (type == typeof(object))
+        {
+            text.Write("object");
+            return;
+        }
+
+        if (type == typeof(void))
+        {
+            text.Write("void");
+            return;
+        }
+
+        // Array, ref, pointer
+        if (type!.HasElementType)
+        {
+            var elementType = type.GetElementType()!;
+
+            if (type.IsArray)
+            {
+                var ranks = new Queue<int>();
+                ranks.Enqueue(type.GetArrayRank());
+                HandleArrayElementType(elementType, ranks);
+
+                void HandleArrayElementType(Type et, Queue<int> r)
+                {
+                    if (et.IsArray)
+                    {
+                        r.Enqueue(et.GetArrayRank());
+                        HandleArrayElementType(et.GetElementType()!, r);
+                    }
+                    else
+                    {
+                        DumpValue(text, et, level);
+                        while (r.Count > 0)
+                        {
+                            text.Append('[')
+                                .AppendRepeat(r.Dequeue() - 1, ',')
+                                .Write(']');
+                        }
+                    }
+                }
+            }
+            else if (type.IsByRef)
+            {
+                text.Write("ref ");
+                DumpValue(text, elementType, level);
+            }
+            else
+            {
+                Debug.Assert(type.IsPointer, "Only array, by-ref, and pointer types have an element type.");
+
+                DumpValue(text, elementType, level);
+                text.Write('*');
+            }
+
+            return;
+        }
+
+        if (type.IsGenericType && !type.IsGenericTypeDefinition)
+        {
+
+        }
+
 
         ReadOnlySpan<char> name = type!.Name;
         if (type.IsGenericType)
@@ -86,6 +151,14 @@ public class MemberDumper : IDumper<MemberInfo>
         Debugger.Break();
 
         text.Write(name);
+    }
+}
+
+public class MemberDumper : IDumper<MemberInfo>
+{
+    public bool CanDump(Type objType)
+    {
+        return objType.Implements<MemberInfo>() && objType != typeof(Type);
     }
 
     private static void DumpField(TextBuilder text, FieldInfo field, DumpLevel level)
@@ -211,7 +284,7 @@ public class MemberDumper : IDumper<MemberInfo>
         switch (value)
         {
             case Type type:
-                DumpType(text, type, level);
+                Dump.GetDumper<Type>().DumpValue(text, type, level);
                 return;
             case FieldInfo field:
                 DumpField(text, field, level);
