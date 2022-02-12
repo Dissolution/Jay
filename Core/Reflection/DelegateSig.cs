@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using Jay.Comparision;
+using Jay.Dumping;
 using Jay.Text;
 
-namespace Jay.Reflection.Building;
+namespace Jay.Reflection;
 
 public readonly struct DelegateSig : IEquatable<DelegateSig>
 {
@@ -16,8 +16,7 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>
     public static DelegateSig Of<TDelegate>()
         where TDelegate : Delegate
     {
-        var invokeMethod = typeof(TDelegate).GetMethod("Invoke",
-            BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+        var invokeMethod = typeof(TDelegate).GetMethod("Invoke", BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
         Debug.Assert(invokeMethod != null);
         return DelegateSig.Of(invokeMethod);
     }
@@ -66,7 +65,7 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>
     public bool Equals(DelegateSig sig)
     {
         return sig.ReturnType == this.ReturnType &&
-               EnumerableEqualityComparer<ParameterInfo>.Default.Equals(sig.Parameters, this.Parameters);
+               MemoryExtensions.SequenceEqual<ParameterInfo>(sig.Parameters, this.Parameters);
     }
 
     public override bool Equals(object? obj)
@@ -96,21 +95,13 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>
     public override string ToString()
     {
         using var text = new TextBuilder();
+        text.Write(IsFunc ? "Func<" : "Action<");
+        text.AppendDelimit(",", ParameterTypes, (tb,pt) => tb.AppendDump(pt));
         if (IsFunc)
         {
-            text.Append("Func<");
+            text.Append(',').Write(ReturnType);
         }
-        else
-        {
-            text.Append("Action<");
-        }
-        text.AppendDelimit(",", ParameterTypes);
-        if (IsFunc)
-        {
-            text.Append(',')
-                .Append(ReturnType);
-        }
-        text.Append('>');
+        text.Write('>');
         return text.ToString();
     }
 }

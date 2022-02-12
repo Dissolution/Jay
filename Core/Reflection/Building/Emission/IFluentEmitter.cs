@@ -132,7 +132,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
     TEmitter LoadType(Type type)
     {
         ArgumentNullException.ThrowIfNull(type);
-        return Ldtoken(type).Call(EmitterHelpers.TypeGetTypeFromHandleMethod.Value);
+        return Ldtoken(type).Call(MethodInfoCache.Type_GetTypeFromHandle);
     }
     TEmitter LoadType<T>() => LoadType(typeof(T));
 
@@ -140,7 +140,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
     {
         ArgumentNullException.ThrowIfNull(type);
         return LoadType(type)
-               .Call(EmitterHelpers.RuntimeHelpersGetUninitializedObjectMethod.Value)
+               .Call(MethodInfoCache.RuntimeHelpers_GetUninitializedObject)
                .Cast(typeof(object), type);
     }
     TEmitter LoadUninitialized<T>() => LoadUninitialized(typeof(T));

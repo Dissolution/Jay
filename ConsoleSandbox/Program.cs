@@ -22,7 +22,7 @@ using var text = new TextBuilder();
 
 var thing = new Thing();
 
-Local.Capture(thing, () => nameof(thing.PropertyChanged))
+Local.Capture<Thing, PropertyChangedEventHandler>(thing, (t, h) => t.PropertyChanged += h);
 
 
 //string str = text.ToString();
@@ -43,7 +43,8 @@ return 0;
 
 public class Local
 {
-    public static void Capture<T, THandler>(T thing, Expression handler)
+    public static void Capture<T, THandler>(T thing, Action<T, THandler> func)
+        where THandler : Delegate
     {
 
     }

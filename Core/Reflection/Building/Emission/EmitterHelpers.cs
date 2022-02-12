@@ -1,46 +1,9 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
-using Jay.Reflection.Exceptions;
 
 namespace Jay.Reflection.Building.Emission;
 
 internal static class EmitterHelpers
 {
-    public static Lazy<MethodInfo> RuntimeHelpersGetUninitializedObjectMethod { get; }
-    public static Lazy<MethodInfo> TypeGetTypeFromHandleMethod { get; }
-    public static Lazy<MethodInfo> MulticastDelegateGetInvocationListMethod { get; }
-
-    static EmitterHelpers()
-    {
-        RuntimeHelpersGetUninitializedObjectMethod = new Lazy<MethodInfo>(() =>
-        {
-            var method = typeof(RuntimeHelpers).GetMethod(nameof(RuntimeHelpers.GetUninitializedObject),
-                Reflect.AllFlags,
-                new Type[1] {typeof(Type)});
-            if (method is null)
-                throw new RuntimeException("Cannot find RuntimeHelpers.GetUninitializedObject(type)");
-            return method;
-        });
-        TypeGetTypeFromHandleMethod = new Lazy<MethodInfo>(() =>
-        {
-            var method = typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle),
-                Reflect.AllFlags,
-                new Type[1] {typeof(RuntimeTypeHandle)});
-            if (method is null)
-                throw new RuntimeException("Cannot find Type.GetTypeFromHandle(RuntimeTypeHandle)");
-            return method;
-        });
-        MulticastDelegateGetInvocationListMethod = new Lazy<MethodInfo>(() =>
-        {
-            var getInvocationListMethod = typeof(MulticastDelegate)
-                .GetMethod(nameof(Delegate.GetInvocationList),
-                    BindingFlags.Public | BindingFlags.Instance);
-            if (getInvocationListMethod is null)
-                throw new RuntimeException("Delegate.GetInvocationList() does not exist");
-            return getInvocationListMethod;
-        });
-    }
-
     public static bool IsObjectArray(this ParameterInfo parameter)
     {
         return !parameter.IsIn &&

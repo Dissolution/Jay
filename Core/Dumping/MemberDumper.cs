@@ -128,10 +128,10 @@ public class TypeDumper : IDumper<Type>
             return;
         }
 
-        if (type.IsGenericType && !type.IsGenericTypeDefinition)
-        {
-
-        }
+        // if (type.IsGenericType && !type.IsGenericTypeDefinition)
+        // {
+        //
+        // }
 
 
         ReadOnlySpan<char> name = type!.Name;
@@ -143,7 +143,7 @@ public class TypeDumper : IDumper<Type>
             Debug.Assert(idx >= 0);
             text.Append(name[..idx])
                 .Append('<')
-                .AppendDelimit(",", argTypes, (tb, argType) => DumpType(tb, argType))
+                .AppendDelimit(",", argTypes, (tb, argType) => DumpValue(tb, argType))
                 .Append('>');
             return;
         }

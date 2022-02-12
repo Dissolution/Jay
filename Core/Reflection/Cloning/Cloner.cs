@@ -1,8 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Jay.Collections;
+using Jay.Dumping;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Adapting;
+using Jay.Reflection.Building.Emission;
+using Jay.Reflection.Building.Fulfilling;
 using Jay.Reflection.Search;
 using Jay.Validation;
 
@@ -10,6 +14,19 @@ namespace Jay.Reflection.Cloning;
 
 public static class Cloner
 {
+    public static T[] Clone<T>(in T[] array)
+    {
+        int len = array.Length;
+        T[] clone = new T[len];
+        for (int i = 0; i < len; i++)
+        {
+            clone[i] = Clone<T>(in array[i])!;
+        }
+
+        return clone;
+    }
+
+
     [return: NotNullIfNotNull("value")]
     public delegate T CloneDelegate<T>(in T value);
 
@@ -18,19 +35,197 @@ public static class Cloner
     static Cloner()
     {
         _cloneDelegateCache = new DelegateMemberCache();
+        _cloneILCache = new();
     }
+
+    private static readonly ConcurrentTypeDictionary<Action<IILGeneratorEmitter>> _cloneILCache;
+
+    private static void EmitCloneIL(IILGeneratorEmitter emitter, Type? type)
+    {
+        if (type is null)
+        {
+            CloneNull(emitter);
+        }
+        else
+        {
+            var emission = _cloneILCache.GetOrAdd(type, CreateCloneEmission);
+            emission(emitter);
+        }
+    }
+
+    private static Action<IILGeneratorEmitter> GetCloneEmission(Type? type)
+    {
+        if (type is null)
+        {
+            return CloneNull;
+        }
+        else
+        {
+            return _cloneILCache.GetOrAdd(type, CreateCloneEmission);
+        }
+    }
+
+    private static void CloneNull(IILGeneratorEmitter emitter) => emitter.Ldnull();
+
+    private record Source(Action<IILGeneratorEmitter> LoadValue, Action<IILGeneratorEmitter> LoadValueAddress);
+
+    
+
+    // We are either working with Ldarg(a) or Ldfld(a)
+    private static void EmitClone(IILGeneratorEmitter emitter, Type? type, Source source)
+    {
+        // null is probably (object?)null
+        if (type == null)
+        {
+            // do nothing
+            return;
+        }
+
+        // string and true value types are always copied as we move them around
+        if (type == typeof(string) || MethodInfoCache.IsNonReferenced(type))
+        {
+            source.LoadValue(emitter);
+            return;
+        }
+
+        // array
+        if (type.IsArray)
+        {
+            var elementType = type.GetElementType()!;
+            var elementCloneEmit = GetCloneEmission(elementType);
+            var rank = type.GetArrayRank();
+            if (rank == 1)
+            {
+                // The clone we have to write to
+                emitter.DeclareLocal(type, out var clone)
+                       .DeclareLocal<int>(out var i)
+                       .DeclareLocal<int>(out var len)
+
+                       // Load and store len
+                       .Ldarg(0)
+                       .Ldind_Ref()
+                       .Ldlen()
+                       .Conv_I4()
+                       .Stloc(len)
+
+                       // Create clone = new T[len]
+                       .Ldloc(len)
+                       .Newarr(elementType)
+                       .Stloc(clone)
+
+                       // i = 0
+                       .Ldc_I4(0)
+                       .Stloc(i)
+
+                       // Goto Check
+                       .Br(out var lblLoopCheck)
+
+                       // Start of loop
+                       .DefineAndMarkLabel(out var lblLoopStart)
+
+                       // Setup clone[i] =
+                       .Ldloc(clone)
+                       .Ldloc(i)
+                       // in T[i]
+                       .Ldarg(0)
+                       .Ldind_Ref()
+                       .Ldloc(i)
+                       .Readonly()
+                       .Ldelema(elementType);
+                // Emit the code to clone the element
+                elementCloneEmit(emitter);
+                // Store in clone[i]
+                emitter.Stelem(elementType)
+
+                       // i++
+                       .Ldloc(i)
+                       .Ldc_I4(1)
+                       .Add()
+                       .Stloc(i)
+
+                       // check that i < len
+                       .MarkLabel(lblLoopCheck)
+                       .Ldloc(i)
+                       .Ldloc(len)
+                       .Blt(lblLoopStart)
+
+                       // Load clone and done
+                       .Ldloc(clone);
+                ;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        // At this point, we have to construct and set fields
+        return emitter =>
+        {
+            // First, we have to create clone
+            emitter.DeclareLocal(type, out var clone);
+            
+            if (type.IsValueType)
+            {
+                emitter.Ldloca(clone)
+                       .Initobj(type);
+            }
+            else if (type.HasDefaultConstructor(out var ctor))
+            {
+                emitter.Newobj(ctor)
+                       .Stloc(clone);
+            }
+            else
+            {
+                emitter.LoadUninitialized(type)
+                       .Stloc(clone);
+            }
+
+            // Copy each instance field
+            var fields = type.GetFields(Reflect.InstanceFlags);
+            foreach (var field in fields)
+            {
+                // ref clone (to set field value of)
+                if (type.IsValueType)
+                {
+                    emitter.Ldloca(clone);
+                }
+                else
+                {
+                    emitter.Ldloc(clone);
+                }
+                // Load 
+                emitter.Ldflda(field)
+                       // Clone it using Clone<T> so it will cache
+                       .Call(GetCloneMethod(field.FieldType))
+                       // Set the clone's field value to the cloned value
+                       .Stfld(field);
+            }
+            // Done
+            emitter.Ret();
+        }
+        
+    }
+                
 
     private static CloneDelegate<T> CreateCloneDelegate<T>(Type type)
     {
-        var dm = RuntimeBuilder.CreateDynamicMethod<CloneDelegate<T>>($"clone_{type.Name}");
+        var dm = RuntimeBuilder.CreateDynamicMethod<CloneDelegate<T>>(Dump.Text($"clone_{type}"));
         var emitter = dm.Emitter;
         // Start with a blank clone
         emitter.DeclareLocal<T>(out var clone);
 
-        // Special Array handler
-        if (type.IsArray)
+        // String is special
+        if (type == typeof(string))
         {
-            var elementType = type.GetElementType().ThrowIfNull();
+            emitter.Ldarg(0)
+                   .Ldind<string>()
+                   .Ret();
+        }
+        // Special Array handler
+        else if (type.IsArray)
+        {
+            var elementType = type.GetElementType()!;
             var elementCloneMethod = GetCloneMethod(elementType);
             var rank = type.GetArrayRank();
             if (rank == 1)
