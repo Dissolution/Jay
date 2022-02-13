@@ -63,7 +63,20 @@ public static class Dump
         _dumperMap = new ConcurrentTypeDictionary<IDumper>();
         var dumperTypes = AppDomain.CurrentDomain
                                    .GetAssemblies()
-                                   .SelectMany(assembly => assembly.ExportedTypes)
+                                   .Where(assembly => !assembly.IsDynamic)
+                                   .SelectMany(assembly =>
+                                   {
+                                       try
+                                       {
+                                           return assembly.ExportedTypes;
+                                       }
+                                       catch (Exception e)
+                                       {
+                                           Debugger.Break();
+                                           return Type.EmptyTypes;
+                                       }
+                                       
+                                   })
                                    .Where(type => type.Implements<IDumper>())
                                    .Where(type => type.IsClass && !type.IsAbstract && !type.IsInterface && !type.IsNested)
                                    .SelectWhere((Type type, out IDumper dumper) =>
@@ -76,9 +89,9 @@ public static class Dump
                                            }
                                            return false;
                                        }
-                                       catch (Exception ex)
+                                       catch //(Exception ex)
                                        {
-                                           Debugger.Break();
+                                           //Debugger.Break();
                                            dumper = null!;
                                            return false;
                                        }
@@ -125,7 +138,8 @@ public static class Dump
 
     public static TextBuilder AppendDump<T>(this TextBuilder text, T? value, DumpLevel level = DumpLevel.Default)
     {
-        GetDumper<T>().DumpValue(text, value, level);
+        var dumper = GetDumper<T>();
+        dumper.DumpValue(text, value, level);
         return text;
     }
 

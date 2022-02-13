@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Tests;
+namespace Jay.Tests;
 
 public class BoxTests
 {

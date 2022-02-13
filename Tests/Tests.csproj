@@ -7,6 +7,10 @@
 		<IsPackable>false</IsPackable>
 
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<AssemblyName>Jay.$(MSBuildProjectName)</AssemblyName>
+
+		<RootNamespace>Jay.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>

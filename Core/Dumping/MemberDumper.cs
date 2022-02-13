@@ -133,13 +133,17 @@ public class TypeDumper : IDumper<Type>
         //
         // }
 
-
-        ReadOnlySpan<char> name = type!.Name;
         if (type.IsGenericType)
         {
             var argTypes = type.GenericTypeArguments;
+            ReadOnlySpan<char> name = type.Name;
             // Remove the trailing `# bit
             var idx = name.LastIndexOf('`');
+            if (idx == -1)
+            {
+                name = type.FullName;
+                idx = name.LastIndexOf('`');
+            }
             Debug.Assert(idx >= 0);
             text.Append(name[..idx])
                 .Append('<')
@@ -150,7 +154,7 @@ public class TypeDumper : IDumper<Type>
 
         Debugger.Break();
 
-        text.Write(name);
+        text.Write(type.Name);
     }
 }
 

@@ -34,37 +34,37 @@ public static class ObjectExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Is<T>(this object? input, [NotNullWhen(true)] out T output)
+    public static bool Is<T>(this object? input, [NotNullWhen(true)] out T? output)
     {
-        // if (input is TOut temp)
-        // {
-        //     output = temp;
-        //     return true;
-        // }
-        // else
-        // {
-        //     output = default;
-        //     return false;
-        // }
+        if (input is T)
+        {
+            output = (T)input;
+            return true;
+        }
+        else
+        {
+            output = default;
+            return false;
+        }
 
-        Emit.Ldarg(nameof(input));
-        Emit.Isinst<T>();
-        Emit.Brfalse("isNotT");
-
-        Emit.Ldarg(nameof(output));
-        Emit.Ldarg(nameof(input));
-        Emit.Unbox_Any<T>();
-        Emit.Stobj<T>();
-        Emit.Ldc_I4_1();
-        Emit.Ret();
-
-        MarkLabel("isNotT");
-        Emit.Ldarg(nameof(output));
-        Emit.Initobj<T>();
-        Emit.Ldc_I4_0();
-        Emit.Ret();
-
-        throw Unreachable();
+        // Emit.Ldarg(nameof(input));
+        // Emit.Isinst<T>();
+        // Emit.Brfalse("isNotT");
+        //
+        // Emit.Ldarg(nameof(output));
+        // Emit.Ldarg(nameof(input));
+        // Emit.Unbox_Any<T>();
+        // Emit.Stobj<T>();
+        // Emit.Ldc_I4_1();
+        // Emit.Ret();
+        //
+        // MarkLabel("isNotT");
+        // Emit.Ldarg(nameof(output));
+        // Emit.Initobj<T>();
+        // Emit.Ldc_I4_0();
+        // Emit.Ret();
+        //
+        // throw Unreachable();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

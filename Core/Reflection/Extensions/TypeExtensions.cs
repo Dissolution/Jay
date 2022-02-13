@@ -66,7 +66,7 @@ public static class TypeExtensions
             return type.GetGenericTypeDefinition() == otherType;
 
         // TODO: OTHER CHECKS
-        Debugger.Break();
+        //Debugger.Break();
         return false;
     }
 

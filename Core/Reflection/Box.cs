@@ -117,7 +117,8 @@ public readonly struct Box : IEquatable<Box>,
 
     public object Clone()
     {
-        return new Box(Cloner.Clone(in _obj), _objType);
+        //return new Box(Cloner.Clone(in _obj), _objType);
+        throw new InvalidOperationException();
     }
 
     public int CompareTo(Box box)

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Jay.Collections;
@@ -12,7 +13,7 @@ using Jay.Validation;
 
 namespace Jay.Reflection.Cloning;
 
-public static class Cloner
+/*public static class Cloner
 {
     public static T[] Clone<T>(in T[] array)
     {
@@ -349,5 +350,185 @@ public static class Cloner
         if (value is null) return default;
         var del = _cloneDelegateCache.GetOrAdd(typeof(T), type => CreateCloneDelegate<T>(type));
         return del(in value);
+    }
+}*/
+
+
+
+public static class Muq
+{
+    [return: NotNullIfNotNull("value")]
+    private delegate T? CloneValue<T>(T? value);
+
+    private static readonly ConcurrentTypeDictionary<Delegate> _typeCloneCache;
+
+    static Muq()
+    {
+        _typeCloneCache = new();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static CloneValue<T> GetCloneDelegate<T>()
+    {
+        return (_typeCloneCache.GetOrAdd(typeof(T), CreateCloneDelegate)
+            as CloneValue<T>)!;
+    }
+
+    private static MethodInfo Muq_GetCloneMethod =
+        typeof(Muq).GetMethod(nameof(GetCloneMethod),
+            Reflect.StaticFlags,
+            new Type[1] { typeof(Type) })!;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static MethodInfo GetCloneMethod(Type type)
+    {
+        return typeof(Muq).GetMethod(nameof(Muq.Clone), BindingFlags.Public | BindingFlags.Static)
+                          .ThrowIfNull()
+                          .MakeGenericMethod(type)
+                          .ThrowIfNull();
+    }
+
+    [return: NotNullIfNotNull("value")]
+    public static T? Clone<T>(T? value)
+    {
+        if (value is null) return default;
+        var del = _typeCloneCache.GetOrAdd(typeof(T), CreateCloneDelegate);
+        CloneValue<T> cloner = del as CloneValue<T>;
+        if (cloner is null)
+        {
+            Debugger.Break();
+        }
+
+        return cloner!(value);
+    }
+
+    private static Delegate CreateCloneDelegate(Type type)
+    {
+        if (type.IsByRef || type.IsPointer)
+            throw new NotImplementedException();
+
+        var delType = typeof(CloneValue<>).MakeGenericType(type);
+
+        var dm = RuntimeBuilder.CreateDynamicMethod(Dump.Text($"{type}_clone"), 
+            DelegateSig.Of(delType));
+            
+        var emitter = dm.GetEmitter();
+
+        // Object we need to extract the value inside
+        if (type == typeof(object))
+        {
+            emitter.Ldarg(0)
+                   .Ldarg(0)
+                   .Call(typeof(object).GetMethod(nameof(object.GetType),
+                       Reflect.InstanceFlags,
+                       Type.EmptyTypes)!)
+                   .Call(Muq_GetCloneMethod)
+                   .Call(Muq_GetCloneMethod)
+
+        }
+
+        // String and true Value types are always copied as we ref them
+        if (type == typeof(string) || MethodInfoCache.IsNonReferenced(type))
+        {
+            emitter.Ldarg(0).Ret();
+        }
+        else if (type.IsArray)
+        {
+            emitter.DeclareLocal(type, out var clone);
+            var elementType = type.GetElementType()!;
+            var elementCloneMethod = GetCloneMethod(elementType);
+            var rank = type.GetArrayRank();
+            if (rank == 1)
+            {
+                emitter.DefineLabel(out var lblStart)
+                       .DefineLabel(out var lblCheck);
+
+                emitter.Ldarg(0)
+                       .Ldlen()
+                       .DeclareLocal<int>(out var len)
+                       .Stloc(len)
+                       .Ldloc(len)
+                       .Newarr(elementType)
+                       .Stloc(clone);
+
+                // int i = 0
+                emitter.DeclareLocal<int>(out var i)
+                       .Ldc_I4_0()
+                       .Stloc(i);
+
+                emitter.Br(lblCheck);
+
+                // Start of loop
+                emitter.MarkLabel(lblStart)
+                       .Ldloc(clone)
+                       .Ldloc(i)
+                       .Ldarg(0)
+                       .Ldloc(i)
+                       .Ldelem(elementType)
+                       .Call(elementCloneMethod)
+                       .Stelem(elementType);
+                // i++
+                emitter.Ldloc(i)
+                       .Ldc_I4_1()
+                       .Add()
+                       .Stloc(i);
+
+                // While i < array.Len
+                emitter.MarkLabel(lblCheck)
+                       .Ldloc(i)
+                       .Ldloc(len)
+                       .Clt()
+                       .Brtrue(lblStart);
+                // We've loaded them all
+                emitter.Ldloc(clone)
+                    .Ret();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+        else
+        {
+            emitter.DeclareLocal(type, out var clone);
+
+            if (type.IsValueType)
+            {
+                emitter.Ldloca(clone)
+                       .Initobj(type);
+            }
+            else if (type.HasDefaultConstructor(out var ctor))
+            {
+                emitter.Newobj(ctor)
+                       .Stloc(clone);
+            }
+            else
+            {
+                emitter.LoadUninitialized(type)
+                       .Stloc(clone);
+            }
+
+            var fields = type.GetFields(Reflect.InstanceFlags);
+            Debug.Assert(fields.Length > 0);
+            foreach (var field in fields)
+            {
+                var fieldCloneMethod = GetCloneMethod(field.FieldType);
+                if (type.IsValueType)
+                {
+                    emitter.Ldloca(clone);
+                }
+                else
+                {
+                    emitter.Ldloc(clone);
+                }
+                emitter.Ldarg(0)
+                       .Ldfld(field)
+                       .Call(fieldCloneMethod)
+                       .Stfld(field);
+            }
+            emitter.Ldloc(clone)
+                   .Ret();
+        }
+        return dm.CreateDelegate(delType);
     }
 }

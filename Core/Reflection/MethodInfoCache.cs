@@ -1,10 +1,45 @@
-﻿using System.Reflection;
+﻿using System.Collections;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Jay.Collections;
+using Jay.Reflection;
 using Jay.Reflection.Exceptions;
 
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
+
+public sealed class EqualityCache : IEqualityComparer
+{
+    private static readonly ConcurrentTypeDictionary<IEqualityComparer> _equalityComparers;
+
+    static EqualityCache()
+    {
+        _equalityComparers = new();
+    }
+
+    private static IEqualityComparer GetEqualityComparer(Type type)
+    {
+        return _equalityComparers.GetOrAdd(type,
+            t => (typeof(EqualityComparer<>).MakeGenericType(t)
+                                            .GetMethod("get_Default", Reflect.StaticFlags)!
+                                            .Invoke(null, null) as IEqualityComparer)!)!;
+    }
+
+    public new static bool Equals(object? x, object? y)
+    {
+        if (x == null) return (y == null);
+        return GetEqualityComparer(x.GetType()).Equals(x, y);
+
+    }
+    bool IEqualityComparer.Equals(object? x, object? y) => Equals(x, y);
+
+    public static int GetHashCode(object? obj)
+    {
+        if (obj == null) return 0;
+        return GetEqualityComparer(obj.GetType()).GetHashCode(obj);
+    }
+    int IEqualityComparer.GetHashCode(object? obj) => GetHashCode(obj);
+}
 
 internal static class MethodInfoCache
 {
