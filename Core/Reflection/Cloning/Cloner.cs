@@ -420,10 +420,11 @@ public static class Muq
             emitter.Ldarg(0)
                    .Ldarg(0)
                    .Call(typeof(object).GetMethod(nameof(object.GetType),
-                       Reflect.InstanceFlags,
-                       Type.EmptyTypes)!)
+                                                  Reflect.InstanceFlags,
+                                                  Type.EmptyTypes)!)
                    .Call(Muq_GetCloneMethod)
-                   .Call(Muq_GetCloneMethod)
+                   .Call(Muq_GetCloneMethod);
+            throw new NotImplementedException();
 
         }
 
