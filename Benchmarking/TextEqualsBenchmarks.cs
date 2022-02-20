@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
-using Unsafe = Jay.Text.Unsafe;
+using Jay.Reflection;
 
 namespace Jay.Benchmarking;
 
@@ -55,8 +55,8 @@ public class TextEqualsBenchmarks
     {
         unsafe
         {
-            return memcmp(Unsafe.AsPointer(in x),
-                Unsafe.AsPointer(in y),
+            return memcmp(Danger.AsPointer(in x),
+                          Danger.AsPointer(in y),
                 (nuint)(charCount * 2));
         }
     }

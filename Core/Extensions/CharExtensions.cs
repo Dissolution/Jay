@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Jay.Reflection;
 using Jay.Text;
 
 namespace Jay;
@@ -15,7 +16,7 @@ public static class CharExtensions
         // Tested fastest
         unsafe
         {
-            return new ReadOnlySpan<char>(Unsafe.AsPointer(in ch), 1);
+            return new ReadOnlySpan<char>(Danger.AsPointer(in ch), 1);
         }
     }
 

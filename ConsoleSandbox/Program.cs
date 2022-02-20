@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using Jay;
 using Jay.Benchmarking;
 using Jay.Collections;
 using Jay.Collections.Pools;
@@ -15,12 +16,10 @@ using Jay.Text;
 
 using var text = new TextBuilder();
 
-var thing = new Thing();
-
-Local.Capture<Thing, PropertyChangedEventHandler>(thing, (t, h) => t.PropertyChanged += h);
-
-
-//string str = text.ToString();
+Charset chars = new Charset();
+var count1 = chars.Count;
+chars['a'] = true;
+var str = chars.ToString();
 
 Debugger.Break();
 
