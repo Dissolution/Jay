@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Jay;
+﻿namespace Jay;
 
 public readonly struct Either<T1, T2>
 {

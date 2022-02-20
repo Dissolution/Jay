@@ -454,6 +454,14 @@ public ref struct Hasher
         }
     }
 
+    public static int Create<T>(T? value, IEqualityComparer<T>? equalityComparer)
+    {
+        if (equalityComparer is null) return Create<T>(value);
+        var hasher = new Hasher();
+        hasher.Add(value, equalityComparer);
+        return hasher.ToHashCode();
+    }
+    
     public static int Create<T>(ReadOnlySpan<T> values, IEqualityComparer<T>? equalityComparer)
     {
         if (equalityComparer is null) return Create<T>(values);

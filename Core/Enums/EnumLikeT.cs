@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using Jay.Dumping;
+﻿using Jay.Dumping;
 
 #pragma warning disable CS0659 // Overrides Equals but not GetHashCode
 

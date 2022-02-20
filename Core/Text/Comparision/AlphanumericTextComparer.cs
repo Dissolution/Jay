@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Jay.Text.Comparision;
+﻿using Jay.Text.Comparision;
 
 namespace Jay.Text;
 

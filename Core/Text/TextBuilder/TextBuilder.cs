@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Collections;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using InlineIL;

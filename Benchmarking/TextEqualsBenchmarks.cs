@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
-using Jay.Text;
 using Unsafe = Jay.Text.Unsafe;
 
 namespace Jay.Benchmarking;

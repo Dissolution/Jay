@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Jay.Text;
+﻿using Jay.Text;
 
 namespace Jay.Dumping;
 

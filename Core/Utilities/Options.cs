@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using Jay.Comparision;
+﻿using Jay.Comparision;
 using Jay.Text;
 
 namespace Jay;

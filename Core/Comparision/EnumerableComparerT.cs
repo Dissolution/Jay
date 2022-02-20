@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Jay.Annotations;
-
-namespace Jay.Comparision;
+﻿namespace Jay.Comparision;
 
 public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
                                                     IEqualityComparer<T[]>,
@@ -26,7 +23,7 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
         return right.Length == 1 && _equalityComparer.Equals(left, right[0]);
     }
 
-    public bool Equals(T? left, params T[]? right)
+    public bool Equals(T? left, T[]? right)
     {
         if (right is null) return left is null;
         return right.Length == 1 && _equalityComparer.Equals(left, right[0]);
@@ -67,7 +64,7 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
         return MemoryExtensions.SequenceEqual(left, right, _equalityComparer);
     }
 
-    public bool Equals(ReadOnlySpan<T> left, params T[]? right)
+    public bool Equals(ReadOnlySpan<T> left, T[]? right)
     {
         return MemoryExtensions.SequenceEqual(left, right, _equalityComparer);
     }
@@ -125,7 +122,7 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
         return MemoryExtensions.SequenceEqual(left, right, _equalityComparer);
     }
 
-    public bool Equals(T[]? left, params T[]? right)
+    public bool Equals(T[]? left, T[]? right)
     {
         return MemoryExtensions.SequenceEqual(left, right, _equalityComparer);
     }
@@ -441,10 +438,9 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
         }
     }
 
-    public int GetHashCode([AllowNull, CanBeNull]T? value)
+    public int GetHashCode(T? value)
     {
-        if (value is null) return 0;
-        return _equalityComparer.GetHashCode(value);
+        return Hasher.Create(value, _equalityComparer);
     }
 
     public int GetHashCode(ReadOnlySpan<T> values)
@@ -452,7 +448,7 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
         return Hasher.Create(values, _equalityComparer);
     }
 
-    public int GetHashCode(params T[]? values)
+    public int GetHashCode(T[]? values)
     {
         return Hasher.Create(values, _equalityComparer);
     }

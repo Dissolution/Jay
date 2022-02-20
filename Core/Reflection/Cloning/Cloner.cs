@@ -1,13 +1,9 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Jay.Collections;
 using Jay.Dumping;
 using Jay.Reflection.Building;
-using Jay.Reflection.Building.Adapting;
-using Jay.Reflection.Building.Emission;
-using Jay.Reflection.Building.Fulfilling;
 using Jay.Reflection.Search;
 using Jay.Validation;
 

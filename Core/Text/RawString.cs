@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Jay.Text;
+﻿namespace Jay.Text;
 
 /// <summary>
 /// A constraint on a value that implicitly converts to and from <see cref="string"/> and allows for a <see cref="FormattableString"/> to be passed directly to a method.

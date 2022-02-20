@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using System.Text;
 using Jay.Reflection;
 using Jay.Text;
 

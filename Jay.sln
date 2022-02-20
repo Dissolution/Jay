@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarking", "Benchmarkin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{3D43DF24-F639-4E9E-B3D2-C18416E8028D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JayCOM", "JayCOM\JayCOM.csproj", "{D6FB65AC-33BB-43A2-B2E3-4598C7BC519C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{3D43DF24-F639-4E9E-B3D2-C18416E8028D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D43DF24-F639-4E9E-B3D2-C18416E8028D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D43DF24-F639-4E9E-B3D2-C18416E8028D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6FB65AC-33BB-43A2-B2E3-4598C7BC519C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6FB65AC-33BB-43A2-B2E3-4598C7BC519C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6FB65AC-33BB-43A2-B2E3-4598C7BC519C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6FB65AC-33BB-43A2-B2E3-4598C7BC519C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
