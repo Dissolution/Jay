@@ -4,40 +4,112 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq.Expressions;
-using System.Text;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using Jay;
-using Jay.Benchmarking;
 using Jay.Collections;
-using Jay.Collections.Pools;
+using Jay.Reflection;
+using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
+using Jay.Validation;
+
+#if RELEASE
+    var result = Runner.RunAndOpenHtml();
+    Console.WriteLine(result);
+#else
+    using var text = new TextBuilder();
 
 
-using var text = new TextBuilder();
-
-Charset chars = new Charset();
-var count1 = chars.Count;
-chars['a'] = true;
-var str = chars.ToString();
-
-Debugger.Break();
 
 
-var result = Runner.RunAndOpenHtml();
-Console.WriteLine(result);
 
 
-var sbPool = Pool.Create<StringBuilder>(clean: sb => sb.Clear());
-
+    Console.WriteLine(text.ToString());
+#endif
 Console.WriteLine("Press Enter to close this window.");
 Console.ReadLine();
 return 0;
 
+public static class Extensions
+{
+    public static string GetEvent<T, THandler>(this T? instance, Func<T?, THandler> eventInteraction)
+        where THandler : Delegate
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public static class EventCapture<T> where T : class
+{
+    public static string GetEvent<THandler>(Action<T, THandler> captureEvent)
+        where THandler : Delegate
+    {
+        var instructions = MethodBodyReader.GetInstructions(captureEvent.Method);
+        
+        Debugger.Break();
+        return "";
+
+
+        // var type = typeof(T);
+        // var interfaces = type.GetInterfaces();
+        // var iface = interfaces.First();
+        // var obj = typeof(EventCaptureProxy<>).MakeGenericType(iface)
+        //                                      .GetMethod("Decorate", Reflect.StaticFlags, new Type[1]{iface}).ThrowIfNull()
+        //                                      .Invoke(null, new object?[1]{null});
+        // T instance = obj as T;
+        //
+        // Debugger.Break();
+        //
+        //
+        // captureEvent(instance);
+        //
+        // Debugger.Break();
+        // return "";
+    }
+}
+
+public class EventCaptureProxy<T> : DispatchProxy
+    where T: class
+{
+    private readonly List<string> _eventNames;
+
+    internal T? Instance { get; private set; }
+    
+    public EventCaptureProxy()
+    {
+        _eventNames = new List<string>(1);
+    }
+
+    /// <inheritdoc />
+    protected override object? Invoke(MethodInfo? targetMethod, params object?[]? args)
+    {
+        Debugger.Break();
+        return null;
+    }
+    
+    public static T Decorate(T? instance = default)
+    {
+        // DispatchProxy.Create creates proxy objects
+        var proxy = (Create<T, EventCaptureProxy<T>>() as EventCaptureProxy<T>)!;
+
+        // If the proxy wraps an underlying object, it must be supplied after creating
+        // the proxy.
+        proxy.Instance = instance ?? Activator.CreateInstance<T>();
+
+        return (proxy as T)!;
+    }
+}
+
 
 public class Local
 {
-    public static void Capture<T, THandler>(T thing, Action<T, THandler> func)
+    // public static void Capture<T, THandler>(T thing, Action<T, THandler> func)
+    //     where THandler : Delegate
+    // {
+    //
+    // }
+    
+    public static void Capture<T, THandler>(T thing, Expression<Action<T, THandler>> func)
         where THandler : Delegate
     {
 
