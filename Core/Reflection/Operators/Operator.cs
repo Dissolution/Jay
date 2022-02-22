@@ -1,134 +1,80 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
+using Jay.Comparision;
+using Jay.Reflection.Building.Emission;
+using Jay.Reflection.Building.Fulfilling;
 
 namespace Jay.Reflection.Operators;
 
-public static class Operator
+public enum Operator
 {
-   // TODO: Giant cache of all Type:Operator:Func
+    None = 0,
+    Equals,
 }
 
-
-public class ExpressionDelegates
+public class OpCache
 {
-    private readonly ConcurrentDictionary<ExpressionType, Delegate> _cache;
+    public Action<IILGeneratorEmitter> EmitOp { get; }
+}
 
-    public Type Type { get; }
+public static class Operators
+{
+    private readonly record struct OpKey(Operator Operator, Type[] Types);
 
-    public ExpressionDelegates(Type type)
+
+    private static readonly ConcurrentDictionary<OpKey, OpCache> _cache;
+
+    static Operators()
     {
-        this.Type = type;
-        _cache = new ConcurrentDictionary<ExpressionType, Delegate>();
+        _cache = new();
     }
 
-    protected Func<object?, object?> CreateUnaryFunction(Func<Expression, UnaryExpression> unaryExpr)
+    public static IILGeneratorEmitter EmitEquals(this IILGeneratorEmitter emitter, params Type[] types)
     {
-        var objParam = Expression.Parameter(typeof(object), "obj");
-        var objConvExpr = Expression.Convert(objParam, Type);
-        var convBack = Expression.Convert(unaryExpr(objConvExpr), Type);
-        var lambda = Expression.Lambda<Func<object?, object?>>(convBack, objParam);
-        return lambda.Compile();
-    }
-
-    protected Func<object?, object?, object?> CreateBinaryFunction(Func<Expression, Expression, UnaryExpression> binaryExpr)
-    {
-        var obj1 = Expression.Parameter(typeof(object), "obj1");
-        var arg1 = Expression.Convert(obj1, Type);
-        var obj2 = Expression.Parameter(typeof(object), "obj2");
-        var arg2 = Expression.Convert(obj2, Type);
-        var body = binaryExpr(arg1, arg2);
-        var ret = Expression.Convert(body, typeof(object));
-        var lambda = Expression.Lambda<Func<object?, object?, object?>>(ret, obj1, obj2);
-        return lambda.Compile();
-    }
-
-    protected static readonly Dictionary<ExpressionType, string> _implicitMethodNames;
-
-    internal sealed record class ExpressionDetails(ExpressionType ExpressionType,
-                                                   string OperatorMethodName,
-                                                   string Rep);
-
-    static ExpressionDelegates()
-    {
-        _implicitMethodNames = new Dictionary<ExpressionType, string>
+        Type firstArgType;
+        Type secondArgType;
+        Type returnType = typeof(bool);
+        if (types.Length == 1)
         {
-            {ExpressionType.Convert, "op_Implicit"},
-            {ExpressionType.Add, "op_Addition"},
-            {ExpressionType.Subtract, "op_Subtraction"},
-            {ExpressionType.Multiply, "op_Multiply"},
-            {ExpressionType.Divide, "op_Division"},
-            {ExpressionType.Modulo, "op_Modulus"},
-            {ExpressionType.ExclusiveOr, "op_ExclusiveOr"},
-            {ExpressionType.And, "op_BitwiseAnd"},
-            {ExpressionType.Or, "op_BitwiseOr"},
-            {ExpressionType.AndAlso, "op_LogicalAnd"},
-            {ExpressionType.OrElse, "op_LogicalOr"},
-            {ExpressionType.Assign, "op_Assign"},
-            {ExpressionType.LeftShift, "op_LeftShift"},
-            {ExpressionType.RightShift, "op_RightShift"},
-            {ExpressionType.Equal, "op_Equality"},
-            {ExpressionType.NotEqual, "op_Inequality"},
-            {ExpressionType.GreaterThan, "op_GreaterThan"},
-            {ExpressionType.LessThan, "op_LessThan"},
-            {ExpressionType.GreaterThanOrEqual, "op_GreaterThanOrEqual"},
-            {ExpressionType.LessThanOrEqual, "op_LessThanOrEqual"},
-            {ExpressionType.MultiplyAssign, "op_MultiplicationAssignment"},
-            {ExpressionType.SubtractAssign, "op_SubtractionAssignment"},
-            {ExpressionType.ExclusiveOrAssign, "op_ExclusiveOrAssignment"},
-            {ExpressionType.LeftShiftAssign, "op_LeftShiftAssignment"},
-            {ExpressionType.RightShiftAssign, "op_RightShiftAssignment"},
-            {ExpressionType.ModuloAssign, "op_ModulusAssignment"},
-            {ExpressionType.AddAssign, "op_AdditionAssignment"},
-            {ExpressionType.AndAssign, "op_BitwiseAndAssignment"},
-            {ExpressionType.OrAssign, "op_BitwiseOrAssignment"},
-            {ExpressionType.DivideAssign, "op_DivisionAssignment"},
-            {ExpressionType.Decrement, "op_Decrement"},
-            {ExpressionType.Increment, "op_Increment"},
-            {ExpressionType.Negate, "op_UnaryNegation"},
-            {ExpressionType.UnaryPlus, "op_UnaryPlus"},
-            {ExpressionType.OnesComplement, "op_OnesComplement"},
-        };
-    }
-
-    private Func<object?[], object?> CreateDelegate(ExpressionType expressionType)
-    {
-        MethodInfo? method = null;
-        if (_implicitMethodNames.TryGetValue(expressionType, out var opMethodName))
+            firstArgType = secondArgType = types[0];
+        }
+        else if (types.Length == 2)
         {
-            method = Type.GetMethod(opMethodName, Reflect.StaticFlags);
+            firstArgType = types[0];
+            secondArgType = types[1];
+        }
+        else
+        {
+            throw new ArgumentException("You must pass 1 or 2 two Type arguments", nameof(types));
         }
 
-        if (method is null)
+        var equalsMethod = firstArgType.GetMethods(Reflect.InstanceFlags)
+                                       .Where(method => string.Equals(method.Name, "Equals"))
+                                       .Where(method => method.ReturnType == typeof(bool))
+                                       .Where(method =>
+                                       {
+                                           var methodParameters = method.GetParameters();
+                                           return methodParameters.Length == 1 &&
+                                                  methodParameters[0].ParameterType == secondArgType;
+                                       })
+                                       .OrderBy(method => method.Name, "Equals", "op_Equality")
+                                       .FirstOrDefault();
+        if (equalsMethod is not null)
         {
-            var exprName = expressionType.ToString();
-
-            // method = Type.GetMethods(Reflect.AllFlags)
-            //              .Where(method =>
-            //              {
-            //                  if (string.Equals(method.Name, exprName, StringComparison.OrdinalIgnoreCase))
-            //                  {
-            //                      
-            //                  }
-            //              })
-            throw new NotImplementedException();
+            emitter.Call(equalsMethod);
         }
+
         throw new NotImplementedException();
     }
-
-
-    public TDelegate GetDelegate<TDelegate>(ExpressionType expressionType,
-                                            params object?[] args)
-        where TDelegate : Delegate
+    
+    public static IILGeneratorEmitter EmitOp(this IILGeneratorEmitter emitter,
+                                             Operator op,
+                                             params Type[] types)
     {
-        var del = _cache.GetOrAdd(expressionType, CreateDelegate);
-        del.DynamicInvoke(args);
-
         throw new NotImplementedException();
-
     }
-
-   
 }
 
 

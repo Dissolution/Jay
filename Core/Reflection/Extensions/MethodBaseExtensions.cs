@@ -40,6 +40,7 @@ public static class MethodBaseExtensions
 
     public static InstructionStream GetInstructions(this MethodBase method)
     {
-        return MethodBodyReader.GetInstructions(method);
+        return new RuntimeDeconstructor(method)
+            .GetInstructions();
     }
 }

@@ -44,7 +44,7 @@ public static class EventCapture<T> where T : class
     public static string GetEvent<THandler>(Action<T, THandler> captureEvent)
         where THandler : Delegate
     {
-        var instructions = MethodBodyReader.GetInstructions(captureEvent.Method);
+        var instructions = new RuntimeDeconstructor(captureEvent.Method).GetInstructions();
         
         Debugger.Break();
         return "";

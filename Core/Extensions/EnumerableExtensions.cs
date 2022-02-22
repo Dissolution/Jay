@@ -1,4 +1,5 @@
 ﻿using Jay.Collections;
+using Jay.Comparision;
 
 namespace Jay;
 
@@ -238,4 +239,29 @@ public static class EnumerableExtensions
 	}
 	#endregion
 	#endregion
+
+	public static IEnumerable<T> OrderBy<T, TSub>(this IEnumerable<T> enumerable,
+	                                              Func<T, TSub> selectSub,
+	                                              params TSub[] order)
+		where TSub : IEquatable<TSub>
+	{
+
+		Func<TSub, int> getIndex = value =>
+		{
+			for (var i = 0; i < order.Length; i++)
+			{
+				if (order[i].Equals(value)) return i;
+			}
+
+			return order.Length;
+		};
+
+		return enumerable.OrderBy(selectSub,
+		                          new FuncComparer<TSub>((x, y) =>
+		                          {
+			                          if (x == null) return y == null ? 0 : -1;
+			                          if (y == null) return 1;
+			                          return getIndex(x).CompareTo(getIndex(y));
+		                          }));
+	}
 }

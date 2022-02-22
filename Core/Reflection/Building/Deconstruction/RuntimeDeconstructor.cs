@@ -50,7 +50,7 @@ public sealed class RuntimeDeconstructor
 
     private Module Module => _method.Module;
 
-    private RuntimeDeconstructor(MethodBase method)
+    public RuntimeDeconstructor(MethodBase method)
     {
         ArgumentNullException.ThrowIfNull(method);
         _method = method;

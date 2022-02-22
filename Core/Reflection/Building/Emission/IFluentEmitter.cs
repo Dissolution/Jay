@@ -755,5 +755,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             }
             return (TEmitter)this;
         }
+        
+        
     }
 }
