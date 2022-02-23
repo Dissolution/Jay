@@ -156,7 +156,7 @@ public static class Dump
     internal static TException GetException<TException>(ref DumpStringHandler message, Exception? innerException = null)
         where TException : Exception
     {
-        var ctor = ExceptionBuilder.GetCtor<TException>();
+        var ctor = ExceptionBuilder.GetCommonConstructor<TException>();
         var ex = ctor(message.ToStringAndClear(), innerException);
         return ex;
     }

@@ -12,6 +12,7 @@ using Jay.Reflection;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
 using Jay.Validation;
+using System.Text.Json;
 
 #if RELEASE
     var result = Runner.RunAndOpenHtml();
@@ -19,11 +20,22 @@ using Jay.Validation;
 #else
     using var text = new TextBuilder();
 
+    var notification = new Notification
+    {
+        Id = Guid.NewGuid(),
+        Name = "Test",
+        NotificationType = NotificationType.Email | NotificationType.SMS,
+    };
+    
+    using var memoryStream = new MemoryStream();
+    await JsonSerializer.SerializeAsync(memoryStream, notification);
+    memoryStream.Seek(0L, SeekOrigin.Begin);
+    using var streamReader = new StreamReader(memoryStream);
+    var str = await streamReader.ReadToEndAsync();
 
 
 
-
-
+    Debugger.Break();
     Console.WriteLine(text.ToString());
 #endif
 Console.WriteLine("Press Enter to close this window.");
@@ -37,6 +49,21 @@ public static class Extensions
     {
         throw new NotImplementedException();
     }
+}
+
+public class Notification
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public NotificationType NotificationType { get; set; }
+}
+
+[Flags]
+public enum NotificationType
+{
+    None = 0,
+    Email = 1 << 0,
+    SMS = 1 << 1,
 }
 
 public static class EventCapture<T> where T : class

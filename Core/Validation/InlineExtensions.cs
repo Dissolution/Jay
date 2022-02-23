@@ -28,23 +28,23 @@ public static class InlineExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNull]
-    public static T ThrowIfNull<T>([AllowNull, NotNull] this T value,
-                                   [CallerArgumentExpression("value")] string? valueName = null)
+    public static T ThrowIfNull<T>([AllowNull, NotNull] this T? value)
     {
         if (value is null)
         {
-            throw new ArgValidationException(value, $"{valueName} is null");
+            throw new ValidationException("Value is null");
         }
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNull]
-    public static T ThrowIfNull<T>([AllowNull, NotNull] this T value,
+    public static T ThrowIfNull<T>([AllowNull, NotNull] this T? value,
                                    ref DumpStringHandler message)
     {
         if (value is null)
         {
-            throw new ArgValidationException(value, message.ToStringAndClear());
+            throw new ValidationException(message.ToStringAndClear());
         }
         return value;
     }
