@@ -68,7 +68,7 @@ public static class Dump
                                        {
                                            return assembly.ExportedTypes;
                                        }
-                                       catch (Exception e)
+                                       catch
                                        {
                                            Debugger.Break();
                                            return Type.EmptyTypes;
@@ -81,7 +81,7 @@ public static class Dump
                                    {
                                        try
                                        {
-                                           if (Activator.CreateInstance(type).Is(out dumper))
+                                           if (Activator.CreateInstance(type).Is(out dumper!))
                                            {
                                                return true;
                                            }

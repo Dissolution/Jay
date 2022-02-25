@@ -2,12 +2,12 @@
 
 namespace Jay.Collections;
 
-public readonly struct EnumeratorValue<T> : IEquatable<T>
+public readonly struct EnumeratorItem<T> : IEquatable<T>
 {
-    public static implicit operator T?(EnumeratorValue<T?> enumeratorValue) 
-        => enumeratorValue.Value;
-    public static implicit operator (int Index, T? Value)(EnumeratorValue<T?> enumeratorValue)
-        => (enumeratorValue.Index, enumeratorValue.Value);
+    public static implicit operator T?(EnumeratorItem<T?> enumeratorItem) 
+        => enumeratorItem.Value;
+    public static implicit operator (int Index, T? Value)(EnumeratorItem<T?> enumeratorItem)
+        => (enumeratorItem.Index, enumeratorItem.Value);
 
     public readonly int Index;
     public readonly int? SourceLength;
@@ -15,7 +15,7 @@ public readonly struct EnumeratorValue<T> : IEquatable<T>
     public readonly bool IsLast;
     public readonly T? Value;
 
-    public EnumeratorValue(int index, int? sourceLength, bool isFirst, bool isLast, T? value)
+    public EnumeratorItem(int index, int? sourceLength, bool isFirst, bool isLast, T? value)
     {
         this.Index = index;
         this.SourceLength = sourceLength;
@@ -56,15 +56,12 @@ public readonly struct EnumeratorValue<T> : IEquatable<T>
     {
         using var text = new TextBuilder();
         // Index
-        text.Append('[')
-          .Append(Index)
-          .Write('/');
+        text.Append('[').Append(Index).Write('/');
         if (SourceLength.HasValue)
             text.Write(SourceLength.Value);
         else
             text.Write('?');
-        text.Append("] ")
-          .Write(Value);
+        text.Append("] ").Write(Value);
         return text.ToString();
     }
 }

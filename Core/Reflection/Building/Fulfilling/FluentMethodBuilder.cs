@@ -4,8 +4,7 @@ using Jay.Reflection.Building.Emission;
 
 namespace Jay.Reflection.Building.Fulfilling
 {
-    public sealed record EqualityMethods(MethodInfo GetDefaultMethod, MethodInfo EqualsMethod);
-
+   
     public class Test
     {
         public Test()

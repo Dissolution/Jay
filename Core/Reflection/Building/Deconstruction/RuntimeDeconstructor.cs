@@ -46,7 +46,7 @@ public sealed class RuntimeDeconstructor
     private readonly Type[] _declaringTypeGenericArguments;
     
     private readonly IList<LocalVariableInfo> _locals;
-    private readonly byte[] ilBytesBytes;
+    private readonly byte[] _ilBytesBytes;
 
     private Module Module => _method.Module;
 
@@ -56,7 +56,7 @@ public sealed class RuntimeDeconstructor
         _method = method;
         MethodBody body = method.GetMethodBody() ?? throw new ArgumentException("Method has no Body", nameof(method));
         _locals = body.LocalVariables;
-        ilBytesBytes = body.GetILAsByteArray() ?? throw new ArgumentException("Method Body has no IL Bytes", nameof(method));
+        _ilBytesBytes = body.GetILAsByteArray() ?? throw new ArgumentException("Method Body has no IL Bytes", nameof(method));
         
         if (method.IsStatic)
         {
@@ -81,6 +81,10 @@ public sealed class RuntimeDeconstructor
         if (method.DeclaringType != null)
         {
             _declaringTypeGenericArguments = method.DeclaringType.GetGenericArguments();
+        }
+        else
+        {
+            _declaringTypeGenericArguments = Type.EmptyTypes;
         }
     }
 
@@ -161,7 +165,7 @@ public sealed class RuntimeDeconstructor
     public InstructionStream GetInstructions()
     {
         var instructions = new InstructionStream();
-        ByteReader ilBytes = new ByteReader(ilBytesBytes);
+        ByteReader ilBytes = new ByteReader(_ilBytesBytes);
         while (ilBytes.Remaining > 0)
         {
             var offset = ilBytes.Position;

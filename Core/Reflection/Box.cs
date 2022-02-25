@@ -1,59 +1,8 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using Jay.Collections;
 using Jay.Reflection.Cloning;
-using Jay.Validation;
 
 namespace Jay.Reflection;
-
-public static class BoxCache
-{
-    private static readonly ConcurrentTypeDictionary<IEqualityComparer> _equalityComparers;
-    private static readonly ConcurrentTypeDictionary<IComparer> _comparers;
-
-    static BoxCache()
-    {
-        _equalityComparers = new();
-        _comparers = new();
-    }
-    
-    private static IEqualityComparer GetEqualityComparer(Type type)
-    {
-        return _equalityComparers.GetOrAdd(type, t => typeof(EqualityComparer<>).MakeGenericType(t)
-                                                                                .GetProperty(nameof(EqualityComparer<byte>.Default),
-                                                                                             BindingFlags.Public | BindingFlags.Static)
-                                                                                .ThrowIfNull($"Cannot find the EqualityComparer<{t}>.Default property")
-                                                                                .GetStaticValue<IEqualityComparer>()
-                                                                                .ThrowIfNull($"Cannot cast EqualityComparer<{t}> to IEqualityComparer"));
-    }
-
-    private static IComparer GetComparer(Type type)
-    {
-        return _comparers.GetOrAdd(type, t => typeof(Comparer<>).MakeGenericType(t)
-                                                                .GetProperty(nameof(Comparer<byte>.Default),
-                                                                             BindingFlags.Public | BindingFlags.Static)
-                                                                .ThrowIfNull($"Cannot find the Comparer<{t}>.Default property")
-                                                                .GetStaticValue<IComparer>()
-                                                                .ThrowIfNull($"Cannot cast Comparer<{t}> to IComparer"));
-    }
-
-    public static bool Equals(Type type, object? x, object? y)
-    {
-        return GetEqualityComparer(type).Equals(x, y);
-    }
-
-    public static int GetHashCode(Type type, object? obj)
-    {
-        if (obj is null) return 0;
-        return GetEqualityComparer(type).GetHashCode(obj);
-    }
-
-    public static int Compare(Type type, object? left, object? right)
-    {
-        return GetComparer(type).Compare(left, right);
-    }
-}
 
 public readonly struct Box : IEquatable<Box>, 
                              IComparable<Box>, IComparable,
@@ -187,7 +136,7 @@ public readonly struct Box : IEquatable<Box>,
         if (box.IsNull) return 1;
         if (box._objType != _objType)
             return 0;
-        return BoxCache.Compare(_objType!, _obj, box._obj);
+        return ComparerCache.Compare(_objType!, _obj, box._obj);
     }
 
     public int CompareTo(object? obj)
@@ -195,14 +144,14 @@ public readonly struct Box : IEquatable<Box>,
         if (IsNull) return obj is null ? 0 : -1;
         if (obj is null) return 1;
         if (_objType != obj.GetType()) return 0;
-        return BoxCache.Compare(_objType!, _obj, obj);
+        return ComparerCache.Compare(_objType!, _obj, obj);
     }
 
     public bool Equals(Box box)
     {
         if (IsNull) return box.IsNull;
         return _objType == box._objType &&
-               BoxCache.Equals(_objType!, _obj, box._obj);
+               ComparerCache.Equals(_objType!, _obj, box._obj);
     }
 
     public override bool Equals(object? obj)
@@ -210,13 +159,13 @@ public readonly struct Box : IEquatable<Box>,
         if (IsNull) return obj is null;
         if (obj is null) return false;
         return _objType == obj.GetType() &&
-               BoxCache.Equals(_objType!, _obj, obj);
+               ComparerCache.Equals(_objType!, _obj, obj);
     }
 
     public override int GetHashCode()
     {
         if (_obj is null) return 0;
-        return BoxCache.GetHashCode(_objType!, _obj);
+        return ComparerCache.GetHashCode(_objType!, _obj);
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider)

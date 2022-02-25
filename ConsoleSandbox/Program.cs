@@ -22,10 +22,11 @@ using System.Text.Json;
 
     var notification = new Notification
     {
-        Id = Guid.NewGuid(),
+        Id = Guid.Empty,
         Name = "Test",
         NotificationType = NotificationType.Email | NotificationType.SMS,
     };
+    //ArgumentValidation.ThrowIf(notification, n => n == null || n.Id == Guid.Empty || n.NotificationType == NotificationType.Email);
     
     using var memoryStream = new MemoryStream();
     await JsonSerializer.SerializeAsync(memoryStream, notification);

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Jay.Comparision;
 using Jay.Randomization;
+using Jay.Reflection;
 using Jay.Reflection.Cloning;
 
 namespace Jay.Tests;
@@ -135,7 +136,7 @@ public class CloneTests
             {
                 Assert.False(ReferenceEquals(dictValue, cloneValue));
                 Assert.True(dictValue?.GetType() == cloneValue.GetType());
-                Assert.True(EqualityCache.Equals(dictValue, cloneValue));
+                Assert.True(ComparerCache.Default.Equal(dictValue, cloneValue));
             }
         }
         

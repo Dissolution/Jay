@@ -45,25 +45,6 @@ public static class ObjectExtensions
             output = default;
             return false;
         }
-
-        // Emit.Ldarg(nameof(input));
-        // Emit.Isinst<T>();
-        // Emit.Brfalse("isNotT");
-        //
-        // Emit.Ldarg(nameof(output));
-        // Emit.Ldarg(nameof(input));
-        // Emit.Unbox_Any<T>();
-        // Emit.Stobj<T>();
-        // Emit.Ldc_I4_1();
-        // Emit.Ret();
-        //
-        // MarkLabel("isNotT");
-        // Emit.Ldarg(nameof(output));
-        // Emit.Initobj<T>();
-        // Emit.Ldc_I4_0();
-        // Emit.Ret();
-        //
-        // throw Unreachable();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

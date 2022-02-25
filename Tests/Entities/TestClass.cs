@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Jay.Annotations;
 
 namespace Jay.Tests.Entities;
 
@@ -41,7 +40,6 @@ public class TestClass : INotifyPropertyChanged,
         return true;
     }
     
-    [NotifyPropertyChangedInvocator]
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

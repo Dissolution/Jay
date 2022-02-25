@@ -4,7 +4,7 @@ using Jay.Reflection.Exceptions;
 
 namespace Jay.Reflection.Building.Adapting;
 
-public sealed class DelegateMemberCache : ConcurrentDictionary<DelegateMember, Delegate>
+public sealed class DelegateMemberCache : ConcurrentDictionary<DelegateAndMember, Delegate>
 {
     internal static DelegateMemberCache Instance { get; } = new DelegateMemberCache();
 
@@ -14,7 +14,7 @@ public sealed class DelegateMemberCache : ConcurrentDictionary<DelegateMember, D
     public bool TryGetDelegate<TDelegate>(MemberInfo member, out TDelegate? @delegate)
         where TDelegate : Delegate
     {
-        if (base.TryGetValue(DelegateMember.Create<TDelegate>(member), out var del))
+        if (base.TryGetValue(DelegateAndMember.Create<TDelegate>(member), out var del))
         {
             return del.Is(out @delegate);
         }
@@ -22,10 +22,10 @@ public sealed class DelegateMemberCache : ConcurrentDictionary<DelegateMember, D
         return false;
     }
 
-    public TDelegate GetOrAdd<TDelegate>(MemberInfo member, Func<DelegateMember, TDelegate> createDelegate)
+    public TDelegate GetOrAdd<TDelegate>(MemberInfo member, Func<DelegateAndMember, TDelegate> createDelegate)
         where TDelegate : Delegate
     {
-        var key = DelegateMember.Create<TDelegate>(member);
+        var key = DelegateAndMember.Create<TDelegate>(member);
         var del = base.GetOrAdd(key, createDelegate(key));
         if (del is not TDelegate typedDelegate)
         {
@@ -38,7 +38,7 @@ public sealed class DelegateMemberCache : ConcurrentDictionary<DelegateMember, D
         where TMember : MemberInfo
         where TDelegate : Delegate
     {
-        var key = DelegateMember.Create<TDelegate>(member);
+        var key = DelegateAndMember.Create<TDelegate>(member);
         var del = base.GetOrAdd(key, createDelegate(member));
         if (del is not TDelegate typedDelegate)
         {
@@ -52,7 +52,7 @@ public sealed class DelegateMemberCache : ConcurrentDictionary<DelegateMember, D
         where TMember : MemberInfo
         where TDelegate : Delegate
     {
-        var del = base.GetOrAdd(DelegateMember.Create<TDelegate>(member),
+        var del = base.GetOrAdd(DelegateAndMember.Create<TDelegate>(member),
             key => RuntimeBuilder.CreateDelegate(key.ToString(), buildMethod));
         if (del is not TDelegate typedDelegate)
         {

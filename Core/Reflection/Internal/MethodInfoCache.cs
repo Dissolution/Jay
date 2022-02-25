@@ -1,44 +1,12 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using Jay.Collections;
-using Jay.Reflection;
 using Jay.Reflection.Exceptions;
 
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 
-public sealed class EqualityCache : IEqualityComparer
-{
-    private static readonly ConcurrentTypeDictionary<IEqualityComparer> _equalityComparers;
-
-    static EqualityCache()
-    {
-        _equalityComparers = new();
-    }
-
-    private static IEqualityComparer GetEqualityComparer(Type type)
-    {
-        return _equalityComparers.GetOrAdd(type,
-            t => (typeof(EqualityComparer<>).MakeGenericType(t)
-                                            .GetMethod("get_Default", Reflect.StaticFlags)!
-                                            .Invoke(null, null) as IEqualityComparer)!)!;
-    }
-
-    public new static bool Equals(object? x, object? y)
-    {
-        if (x == null) return (y == null);
-        return GetEqualityComparer(x.GetType()).Equals(x, y);
-
-    }
-    bool IEqualityComparer.Equals(object? x, object? y) => Equals(x, y);
-
-    public static int GetHashCode(object? obj)
-    {
-        if (obj == null) return 0;
-        return GetEqualityComparer(obj.GetType()).GetHashCode(obj);
-    }
-    int IEqualityComparer.GetHashCode(object? obj) => GetHashCode(obj);
-}
+namespace Jay.Reflection;
 
 internal static class MethodInfoCache
 {
@@ -68,9 +36,9 @@ internal static class MethodInfoCache
         _runtimeHelpers_GetUninitializedObject_Method = new Lazy<MethodInfo>(() =>
         {
             var method = typeof(RuntimeHelpers).GetMethod(
-                nameof(RuntimeHelpers.GetUninitializedObject),
-                BindingFlags.Public | BindingFlags.Static,
-                new Type[1] { typeof(Type) });
+                                                          nameof(RuntimeHelpers.GetUninitializedObject),
+                                                          BindingFlags.Public | BindingFlags.Static,
+                                                          new Type[1] { typeof(Type) });
             if (method is null)
                 throw new RuntimeException($"Cannot find {nameof(RuntimeHelpers)}.{nameof(RuntimeHelpers.GetUninitializedObject)}({nameof(Type)})");
             return method;
@@ -78,9 +46,9 @@ internal static class MethodInfoCache
         _type_GetTypeFromHandle_Method = new Lazy<MethodInfo>(() =>
         {
             var method = typeof(Type).GetMethod(
-                nameof(Type.GetTypeFromHandle),
-                BindingFlags.Public | BindingFlags.Static,
-                new Type[1] { typeof(RuntimeTypeHandle) });
+                                                nameof(Type.GetTypeFromHandle),
+                                                BindingFlags.Public | BindingFlags.Static,
+                                                new Type[1] { typeof(RuntimeTypeHandle) });
             if (method is null)
                 throw new RuntimeException($"Cannot find {nameof(Type)}.{nameof(Type.GetTypeFromHandle)}({nameof(RuntimeTypeHandle)})");
             return method;
@@ -88,9 +56,9 @@ internal static class MethodInfoCache
         _multicastDelegate_GetInvocationList_Method = new Lazy<MethodInfo>(() =>
         {
             var method = typeof(MulticastDelegate).GetMethod(
-                nameof(Delegate.GetInvocationList),
-                BindingFlags.Public | BindingFlags.Instance,
-                Type.EmptyTypes);
+                                                             nameof(Delegate.GetInvocationList),
+                                                             BindingFlags.Public | BindingFlags.Instance,
+                                                             Type.EmptyTypes);
             if (method is null)
                 throw new RuntimeException($"Cannot fine {nameof(MulticastDelegate)}.{nameof(Delegate.GetInvocationList)}()");
             return method;
@@ -98,20 +66,20 @@ internal static class MethodInfoCache
         _runtimeHelpers_IsReferenceOrContainsReferences_Method = new Lazy<MethodInfo>(() =>
         {
             var method = typeof(RuntimeHelpers).GetMethod(
-                nameof(RuntimeHelpers.IsReferenceOrContainsReferences),
-                BindingFlags.Public | BindingFlags.Static,
-                Type.EmptyTypes);
+                                                          nameof(RuntimeHelpers.IsReferenceOrContainsReferences),
+                                                          BindingFlags.Public | BindingFlags.Static,
+                                                          Type.EmptyTypes);
             if (method is null)
                 throw new RuntimeException(
-                    $"Cannot fine {nameof(RuntimeHelpers)}.{nameof(RuntimeHelpers.IsReferenceOrContainsReferences)}<>()");
+                                           $"Cannot fine {nameof(RuntimeHelpers)}.{nameof(RuntimeHelpers.IsReferenceOrContainsReferences)}<>()");
             return method;
         });
         _delegate_Combine_Method = new Lazy<MethodInfo>(() =>
         {
             var method = typeof(Delegate).GetMethod(
-                nameof(Delegate.Combine),
-                BindingFlags.Public | BindingFlags.Static,
-                new Type[2] { typeof(Delegate), typeof(Delegate) });
+                                                    nameof(Delegate.Combine),
+                                                    BindingFlags.Public | BindingFlags.Static,
+                                                    new Type[2] { typeof(Delegate), typeof(Delegate) });
             if (method is null)
                 throw new RuntimeException($"Cannot fine {nameof(Delegate)}.{nameof(Delegate.Combine)}({nameof(Delegate)},{nameof(Delegate)})");
             return method;
@@ -119,9 +87,9 @@ internal static class MethodInfoCache
         _delegate_Remove_Method = new Lazy<MethodInfo>(() =>
         {
             var method = typeof(Delegate).GetMethod(
-                nameof(Delegate.Remove),
-                BindingFlags.Public | BindingFlags.Static,
-                new Type[2] { typeof(Delegate), typeof(Delegate) });
+                                                    nameof(Delegate.Remove),
+                                                    BindingFlags.Public | BindingFlags.Static,
+                                                    new Type[2] { typeof(Delegate), typeof(Delegate) });
             if (method is null)
                 throw new RuntimeException($"Cannot fine {nameof(Delegate)}.{nameof(Delegate.Remove)}({nameof(Delegate)},{nameof(Delegate)})");
             return method;
@@ -133,10 +101,10 @@ internal static class MethodInfoCache
     public static bool IsReferenceOrContainsReferences(Type type)
     {
         return _runtimeHelpers_IsReferenceOrContainsReferences_TypeCache.GetOrAdd(type, 
-            t => (bool)_runtimeHelpers_IsReferenceOrContainsReferences_Method
-                       .Value
-                       .MakeGenericMethod(t)
-                       .Invoke(null, null)!);
+                                                                                  t => (bool)_runtimeHelpers_IsReferenceOrContainsReferences_Method
+                                                                                             .Value
+                                                                                             .MakeGenericMethod(t)
+                                                                                             .Invoke(null, null)!);
     }
 
     public static bool IsNonReferenced(Type type) => !IsReferenceOrContainsReferences(type);

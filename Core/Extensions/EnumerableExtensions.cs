@@ -18,7 +18,7 @@ public static class EnumerableExtensions
         }
     }
 
-    public static IEnumerable<EnumeratorValue<T>> Indexed<T>(this IEnumerable<T>? enumerable)
+    public static IEnumerable<EnumeratorItem<T>> Indexed<T>(this IEnumerable<T>? enumerable)
     {
         if (enumerable is null)
         {
@@ -34,7 +34,7 @@ public static class EnumerableExtensions
             //For each item, yield the entry
             for (var i = 0; i < list.Count; i++)
             {
-                yield return new EnumeratorValue<T>(i, count, i == 0, i == count - 1, list[i]);
+                yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, list[i]);
             }
         }
         //ICollection<T>
@@ -48,7 +48,7 @@ public static class EnumerableExtensions
                 var i = 0;
                 while (e.MoveNext())
                 {
-                    yield return new EnumeratorValue<T>(i, count, i == 0, i == count - 1, e.Current);
+                    yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, e.Current);
                     i++;
                 }
             }
@@ -63,7 +63,7 @@ public static class EnumerableExtensions
             //For each item, yield the entry
             for (var i = 0; i < roList.Count; i++)
             {
-                yield return new EnumeratorValue<T>(i, count, i == 0, i == count - 1, roList[i]);
+                yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, roList[i]);
             }
         }
         //IReadOnlyCollection<T>
@@ -77,7 +77,7 @@ public static class EnumerableExtensions
                 var i = 0;
                 while (e.MoveNext())
                 {
-                    yield return new EnumeratorValue<T>(i, count, i == 0, i == count - 1, e.Current);
+                    yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, e.Current);
                     i++;
                 }
             }
@@ -101,7 +101,7 @@ public static class EnumerableExtensions
                     //Move next now to check for last
                     last = !e.MoveNext();
                     //Return our entry
-                    yield return new EnumeratorValue<T>(i, null, i == 0, last, current);
+                    yield return new EnumeratorItem<T>(i, null, i == 0, last, current);
                     //increment index
                     i++;
                 }

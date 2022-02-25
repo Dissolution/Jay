@@ -12,7 +12,7 @@ public sealed class FuncEqualityComparer<T> : EqualityComparer<T>
     {
         _equals = equals;
         _getHashCode = getHashCode;
-        }
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool Equals(T? x, T? y)

@@ -2,42 +2,42 @@
 
 namespace Jay.Reflection.Building.Adapting;
 
-public sealed class DelegateMember : IEquatable<DelegateMember>
+public sealed class DelegateAndMember : IEquatable<DelegateAndMember>
 {
-    public static DelegateMember Create(DelegateSig sig, MemberInfo member)
+    public static DelegateAndMember Create(DelegateSig sig, MemberInfo member)
     {
         ArgumentNullException.ThrowIfNull(sig);
         ArgumentNullException.ThrowIfNull(member);
-        return new DelegateMember(sig, member);
+        return new DelegateAndMember(sig, member);
     }
 
-    public static DelegateMember Create<TDelegate>(MemberInfo member)
+    public static DelegateAndMember Create<TDelegate>(MemberInfo member)
         where TDelegate : Delegate
     {
         ArgumentNullException.ThrowIfNull(member);
-        return new DelegateMember(DelegateSig.Of<TDelegate>(), member);
+        return new DelegateAndMember(DelegateSig.Of<TDelegate>(), member);
     }
 
-    public static DelegateMember Create<TMember>(DelegateSig sig, TMember member)
+    public static DelegateAndMember Create<TMember>(DelegateSig sig, TMember member)
         where TMember : MemberInfo
     {
         ArgumentNullException.ThrowIfNull(sig);
         ArgumentNullException.ThrowIfNull(member);
-        return new DelegateMember(sig, member);
+        return new DelegateAndMember(sig, member);
     }
 
-    public static DelegateMember Create<TDelegate, TMember>(TMember member)
+    public static DelegateAndMember Create<TDelegate, TMember>(TMember member)
         where TDelegate : Delegate
         where TMember : MemberInfo
     {
         ArgumentNullException.ThrowIfNull(member);
-        return new DelegateMember(DelegateSig.Of<TDelegate>(), member);
+        return new DelegateAndMember(DelegateSig.Of<TDelegate>(), member);
     }
 
     public DelegateSig DelegateSig { get; }
     public MemberInfo Member { get; }
 
-    private DelegateMember(DelegateSig sig, MemberInfo member)
+    private DelegateAndMember(DelegateSig sig, MemberInfo member)
     {
         this.DelegateSig = sig;
         this.Member = member;
@@ -47,7 +47,7 @@ public sealed class DelegateMember : IEquatable<DelegateMember>
         delegateSig = DelegateSig;
         member = Member;
     }
-    public bool Equals(DelegateMember? delMem)
+    public bool Equals(DelegateAndMember? delMem)
     {
         return delMem is not null &&
                delMem.DelegateSig == this.DelegateSig &&
@@ -56,7 +56,7 @@ public sealed class DelegateMember : IEquatable<DelegateMember>
 
     public override bool Equals(object? obj)
     {
-        return obj is DelegateMember delMem && Equals(delMem);
+        return obj is DelegateAndMember delMem && Equals(delMem);
     }
 
     public override int GetHashCode()
