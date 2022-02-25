@@ -16,7 +16,7 @@ public static class CharExtensions
         // Tested fastest
         unsafe
         {
-            return new ReadOnlySpan<char>(Danger.AsPointer(in ch), 1);
+            return new ReadOnlySpan<char>(Danger.InToVoidPointer(in ch), 1);
         }
     }
 

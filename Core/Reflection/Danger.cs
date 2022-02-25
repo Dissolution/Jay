@@ -1,6 +1,7 @@
-﻿using System.Runtime.CompilerServices;
-
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using static InlineIL.IL;
+
 // ReSharper disable EntityNameCapturedOnly.Global
 
 // ReSharper disable UnusedMember.Global
@@ -9,7 +10,8 @@ namespace Jay.Reflection;
 
 public static unsafe class Danger
 {
-    #region Read / Write
+#region Read / Write
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Read<T>(void* source)
     {
@@ -65,9 +67,11 @@ public static unsafe class Danger
         Emit.Unaligned(1);
         Emit.Stobj<T>();
     }
-    #endregion
 
-    #region CopyTo
+#endregion
+
+#region CopyTo
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CopyTo<T>(in T source, void* destination)
     {
@@ -95,46 +99,92 @@ public static unsafe class Danger
         Emit.Ldobj<TIn>();
         Emit.Stobj<TOut>();
     }
-    #endregion
 
-    #region As / Cast / Box / Unbox
+#endregion
+
+#region As / Cast / Box / Unbox
+
+#region To
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void* AsVoidPointer<T>(in T value)
+    public static T* VoidPointerToPointer<T>(void* pointer)
+        where T : unmanaged
     {
-        Emit.Ldarg(nameof(value));
+        Emit.Ldarg(nameof(pointer));
+        Emit.Conv_I();
+        return ReturnPointer<T>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref T VoidPointerToRef<T>(void* pointer)
+        where T : unmanaged
+    {
+        Emit.Ldarg(nameof(pointer));
+        Emit.Conv_I();
+        return ref ReturnRef<T>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void* PointerToVoidPointer<T>(T* pointer)
+        where T : unmanaged
+    {
+        Emit.Ldarg(nameof(pointer));
         Emit.Conv_U();
         return ReturnPointer();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T* AsPointer<T>(in T value)
+    public static ref T PointerToRef<T>(T* pointer)
         where T : unmanaged
     {
-        Emit.Ldarg(nameof(value));
-        return ReturnPointer<T>();
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref T AsRef<T>(void* source)
-    {
-        Push(source);
-        return ref ReturnRef<T>();
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref T AsRef<T>(T* source)
-        where T : unmanaged
-    {
-        Emit.Ldarg(nameof(source));
+        Emit.Ldarg(nameof(pointer));
         return ref ReturnRef<T>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref T AsRef<T>(in T source)
+    public static void* InToVoidPointer<T>(in T @in)
+        where T : unmanaged
     {
-        Emit.Ldarg(nameof(source));
+        Emit.Ldarg(nameof(@in));
+        Emit.Conv_U();
+        return ReturnPointer();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* InToPointer<T>(in T @in)
+        where T : unmanaged
+    {
+        Emit.Ldarg(nameof(@in));
+        return ReturnPointer<T>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref T InToRef<T>(in T @in)
+        where T : unmanaged
+    {
+        Emit.Ldarg(nameof(@in));
         return ref ReturnRef<T>();
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void* RefToVoidPointer<T>(ref T @ref)
+        where T : unmanaged
+    {
+        Emit.Ldarg(nameof(@ref));
+        Emit.Conv_U();
+        return ReturnPointer();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* RefToPointer<T>(ref T @ref)
+        where T : unmanaged
+    {
+        Emit.Ldarg(nameof(@ref));
+        return ReturnPointer<T>();
+    }
+
+#endregion
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull("obj")]
@@ -170,7 +220,8 @@ public static unsafe class Danger
         Emit.Unbox<T>();
         return ref ReturnRef<T>();
     }
-    #endregion
+
+#endregion
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -188,7 +239,8 @@ public static unsafe class Danger
         return Return<int>();
     }
 
-    #region Blocks (byte[])
+#region Blocks (byte[])
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CopyToBlock(void* source, void* destination, uint byteCount)
     {
@@ -197,7 +249,7 @@ public static unsafe class Danger
         Emit.Ldarg(nameof(byteCount));
         Emit.Cpblk();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CopyToBlock(in byte source, ref byte destination, uint byteCount)
     {
@@ -270,9 +322,11 @@ public static unsafe class Danger
         Emit.Unaligned(1);
         Emit.Initblk();
     }
-    #endregion
 
-    #region Offsets
+#endregion
+
+#region Offsets
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* OffsetBy<T>(void* source, int elementOffset)
     {
@@ -309,7 +363,7 @@ public static unsafe class Danger
         Emit.Add();
         return ref ReturnRef<T>();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref T OffsetBy<T>(ref T source, nint elementOffset)
     {
@@ -329,6 +383,7 @@ public static unsafe class Danger
         Emit.Add();
         return ReturnPointer();
     }
+
 #endregion
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -370,7 +425,7 @@ public static unsafe class Danger
         Emit.Ceq();
         return Return<bool>();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref T NullRef<T>()
     {

@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using static InlineIL.IL;
+// ReSharper disable EntityNameCapturedOnly.Global
 
 namespace Jay.Text;
 
@@ -104,7 +105,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(ReadOnlySpan<char> x, char[] y)
+    public static bool Equals(ReadOnlySpan<char> x, char[]? y)
     {
         return MemoryExtensions.SequenceEqual<char>(x, y);
     }
@@ -116,19 +117,19 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(char[] x, ReadOnlySpan<char> y)
+    public static bool Equals(char[]? x, ReadOnlySpan<char> y)
     {
         return MemoryExtensions.SequenceEqual<char>(x, y);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(char[] x, char[] y)
+    public static bool Equals(char[]? x, char[]? y)
     {
         return MemoryExtensions.SequenceEqual<char>(x, y);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(char[] x, string? y)
+    public static bool Equals(char[]? x, string? y)
     {
         return MemoryExtensions.SequenceEqual<char>(x, y);
     }
@@ -140,7 +141,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(string? x, char[] y)
+    public static bool Equals(string? x, char[]? y)
     {
         return MemoryExtensions.SequenceEqual<char>(x, y);
     }
@@ -159,7 +160,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(ReadOnlySpan<char> x, char[] y, StringComparison comparison)
+    public static bool Equals(ReadOnlySpan<char> x, char[]? y, StringComparison comparison)
     {
         return MemoryExtensions.Equals(x, y, comparison);
     }
@@ -171,19 +172,19 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(char[] x, ReadOnlySpan<char> y, StringComparison comparison)
+    public static bool Equals(char[]? x, ReadOnlySpan<char> y, StringComparison comparison)
     {
         return MemoryExtensions.Equals(x, y, comparison);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(char[] x, char[] y, StringComparison comparison)
+    public static bool Equals(char[]? x, char[]? y, StringComparison comparison)
     {
         return MemoryExtensions.Equals(x, y, comparison);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(char[] x, string? y, StringComparison comparison)
+    public static bool Equals(char[]? x, string? y, StringComparison comparison)
     {
         return MemoryExtensions.Equals(x, y, comparison);
     }
@@ -195,7 +196,7 @@ public static class TextHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equals(string? x, char[] y, StringComparison comparison)
+    public static bool Equals(string? x, char[]? y, StringComparison comparison)
     {
         return MemoryExtensions.Equals(x, y, comparison);
     }

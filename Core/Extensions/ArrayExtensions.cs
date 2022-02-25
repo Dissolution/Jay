@@ -1,9 +1,29 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-﻿namespace Jay;
+namespace Jay;
 
 public static class ArrayExtensions
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T?[]? array)
+    {
+        return array is null || array.Length == 0;
+    }
+        
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T?[]? array,
+                                        out int length)
+    {
+        if (array is not null)
+        {
+            length = array.Length;
+            return length > 0;
+        }
+        length = 0;
+        return false;
+    }
+    
     public static bool Any<T>(this T[] array, Func<T, bool> predicate)
     {
         for (var i = 0; i < array.Length; i++)

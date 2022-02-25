@@ -22,6 +22,22 @@ public static class FieldInfoExtensions
         return visibility;
     }
 
+    public static Getter<TInstance, TValue> CreateGetter<TInstance, TValue>(this FieldInfo fieldInfo)
+    {
+        var result = fieldInfo.TryGetInstanceType(out var instanceType);
+        result.ThrowIfFailed();
+        Validation.IsValue(instanceType, nameof(fieldInfo));
+        return RuntimeBuilder.CreateDelegate<Getter<TInstance, TValue>>(
+                                                                            $"get_{instanceType}_{fieldInfo.Name}", method =>
+                                                                            {
+                                                                                method.Emitter
+                                                                                      .LoadAs(method.Parameters[0], instanceType)
+                                                                                      .Ldfld(fieldInfo)
+                                                                                      .Cast(fieldInfo.FieldType, typeof(TValue))
+                                                                                      .Ret();
+                                                                            });
+    }
+    
     public static StaticGetter<TValue> CreateStaticGetter<TValue>(this FieldInfo fieldInfo)
     {
         Validation.IsStatic(fieldInfo);
@@ -94,6 +110,21 @@ public static class FieldInfoExtensions
     }
 
 
+    public static Setter<TInstance, TValue> CreateSetter<TInstance, TValue>(this FieldInfo fieldInfo)
+    {
+        var result = fieldInfo.TryGetInstanceType(out var instanceType);
+        result.ThrowIfFailed();
+        Validation.IsValue(instanceType, nameof(fieldInfo));
+        return RuntimeBuilder.CreateDelegate<Setter<TInstance, TValue>>(
+                                                                            $"get_{instanceType}_{fieldInfo.Name}", method =>
+                                                                            {
+                                                                                method.Emitter
+                                                                                      .LoadAs(method.Parameters[0], instanceType)
+                                                                                      .LoadAs(method.Parameters[1], fieldInfo.FieldType)
+                                                                                      .Stfld(fieldInfo)
+                                                                                      .Ret();
+                                                                            });
+    }
 
     public static StaticSetter<TValue> CreateStaticSetter<TValue>(this FieldInfo fieldInfo)
     {
