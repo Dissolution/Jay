@@ -72,7 +72,7 @@ public readonly struct Result<T> : IEquatable<Result<T>>,
     /// A passing <see cref="Result{T}"/> containing <paramref name="func"/>'s return value or
     /// a failing <see cref="Result{T}"/> containing the captured <see cref="_error"/>.
     /// </returns>
-    public static Result<T> Try(Func<T?>? func)
+    public static Result<T> Try(Func<T>? func)
     {
         if (func is null)
         {
@@ -85,6 +85,19 @@ public readonly struct Result<T> : IEquatable<Result<T>>,
         catch (Exception ex)
         {
             return ex;
+        }
+    }
+
+    public static T Swallow(Func<T>? func, T fallback = default)
+    {
+        if (func is null) return fallback;
+        try
+        {
+            return func();
+        }
+        catch
+        {
+            return fallback;
         }
     }
     #endregion

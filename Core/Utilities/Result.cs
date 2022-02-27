@@ -73,6 +73,19 @@ public readonly struct Result : IEquatable<Result>
 
     public static Result<T> Try<T>(Func<T>? func) => Result<T>.Try(func);
 
+    public static T Swallow<T>(Func<T>? func, T fallback = default)
+    {
+        if (func is null) return fallback;
+        try
+        {
+            return func();
+        }
+        catch
+        {
+            return fallback;
+        }
+    }
+    
     // _pass is the field (rather than _fail) because default(Result) should be a failure
     internal readonly bool _pass;
     internal readonly Exception? _error;

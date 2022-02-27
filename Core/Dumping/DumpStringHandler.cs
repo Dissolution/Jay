@@ -24,6 +24,11 @@ public ref struct DumpStringHandler
         _text.AppendDump<T>(value);
     }
 
+    public void AppendFormatted<T>(T? value, string? format)
+    {
+        _text.AppendDump<T>(value, new DumpOptions(false, format));
+    }
+
     public string ToStringAndClear()
     {
         var str = _text.ToString();

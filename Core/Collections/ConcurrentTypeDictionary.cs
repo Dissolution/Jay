@@ -4,6 +4,11 @@ namespace Jay.Collections;
 
 public class ConcurrentTypeDictionary<TValue> : ConcurrentDictionary<Type, TValue>
 {
+    public ConcurrentTypeDictionary()
+        : base() { }
+    public ConcurrentTypeDictionary(int capacity)
+        : base(Environment.ProcessorCount, capacity) { }
+
     public bool ContainsKey<T>() => base.ContainsKey(typeof(T));
 
     public bool TryGetValue<T>([MaybeNullWhen(false)] out TValue value) => base.TryGetValue(typeof(T), out value);

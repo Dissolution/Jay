@@ -2,11 +2,11 @@
 
 namespace Jay.Dumping;
 
-public class EnumerableDumper : IDumper<IEnumerable>
+public sealed class EnumerableDumper : Dumper<IEnumerable>
 {
-    public void DumpValue(TextBuilder text, IEnumerable? value, DumpLevel level = DumpLevel.Default)
+    public override void DumpValue(TextBuilder text, IEnumerable? value, DumpOptions options = default)
     {
-        if (Dump.DumpNull(text, value, level)) return;
+        if (DumpNull(text, value, options)) return;
         if (value is Array array)
         {
             if (array.Rank == 1)

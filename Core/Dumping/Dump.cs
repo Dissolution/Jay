@@ -8,151 +8,166 @@ using Jay.Validation;
 
 namespace Jay.Dumping;
 
-public static class Dump
+internal class DefaultDumper : IObjectDumper
 {
-    public sealed class DefaultDumper : IDumper
+    public static DefaultDumper Instance { get; } = new DefaultDumper();
+    
+    /// <inheritdoc />
+    public bool CanDump(Type objType) => true;
+
+    /// <inheritdoc />
+    public void DumpObject(TextBuilder text, object? obj, DumpOptions options = default)
     {
-        public bool CanDump(Type type) => true;
+        if (Dumper.DumpNull(text, obj, options)) return;
+        text.WriteFormatted(obj, options.Format);
+    }
+}
 
-        void IDumper.DumpObject(TextBuilder text, object? value, DumpLevel level) => Dump<object>(text, value, level);
+internal sealed class DefaultDumper<T> : DefaultDumper, IValueDumper<T>
+{
+    new public static DefaultDumper<T> Instance { get; } = new DefaultDumper<T>();
 
-        private static string? GetFormat(Type type, DumpLevel level)
+    /// <inheritdoc />
+    public void DumpValue(TextBuilder text, T? value, DumpOptions options = default)
+    {
+        if (Dumper.DumpNull(text, value, options)) return;
+        text.WriteFormatted(value, options.Format);
+    }
+}
+
+internal sealed class ObjectDumper : IValueDumper<object>, IObjectDumper
+{
+    /// <inheritdoc />
+    public bool CanDump(Type objType)
+    {
+        return objType == typeof(object);
+    }
+
+    /// <inheritdoc />
+    public void DumpObject(TextBuilder text, object? obj, DumpOptions options = default)
+    {
+        if (Dumper.DumpNull(text, obj, options)) return;
+        var valueType = obj.GetType();
+        if (valueType == typeof(object))
         {
-            if (type == typeof(TimeSpan))
-            {
-                return level.HasFlag(DumpLevel.Detailed) ? "G" : "g";
-            }
-            else if (type == typeof(DateTime))
-            {
-                return level.HasFlag(DumpLevel.Detailed) ? "O" : "yyyy-MM-dd HH:mm:ss.f";
-            }
-            else if (type == typeof(DateTimeOffset))
-            {
-                return level.HasFlag(DumpLevel.Detailed) ? "O" : "yyyy-MM-dd HH:mm:ss.f zzz";
-            }
-            else if (type == typeof(Guid))
-            {
-                return "D";
-            }
-            else if (type == typeof(decimal))
-            {
-                return "N";
-            }
-            else
-            {
-                return null;
-            }
+            text.Write("(object)");
         }
-
-        public void Dump<T>(TextBuilder text, T? value, DumpLevel level = DumpLevel.Default)
+        else
         {
-            if (Dumping.Dump.DumpNull(text, value, level)) return;
-            text.AppendFormat(value, GetFormat(value.GetType(), level), null);
+            var dumper = Dump.GetDumper(valueType);
+            dumper.DumpObject(text, obj, options);
         }
     }
-    
-    private static readonly List<IDumper> _dumpers;
-    private static readonly ConcurrentTypeDictionary<IDumper> _dumperMap;
 
-    public static DefaultDumper Default { get; } = new DefaultDumper();
+    /// <inheritdoc />
+    public void DumpValue(TextBuilder text, object? value, DumpOptions options = default)
+    {
+        DumpObject(text, value, options);
+    }
+}
+
+/// <summary>
+/// Dumper Cache
+/// </summary>
+public static partial class Dump
+{
+    private static readonly List<IObjectDumper> _dumpers;
+    private static readonly ConcurrentTypeDictionary<IObjectDumper?> _dumperMap;
 
     static Dump()
     {
-        _dumperMap = new ConcurrentTypeDictionary<IDumper>();
         var dumperTypes = AppDomain.CurrentDomain
                                    .GetAssemblies()
                                    .Where(assembly => !assembly.IsDynamic)
                                    .SelectMany(assembly =>
                                    {
-                                       try
-                                       {
-                                           return assembly.ExportedTypes;
-                                       }
-                                       catch
-                                       {
-                                           Debugger.Break();
-                                           return Type.EmptyTypes;
-                                       }
-                                       
+                                       return Result.Swallow(() => assembly.ExportedTypes, Type.EmptyTypes);
                                    })
-                                   .Where(type => type.Implements<IDumper>())
+                                   .Where(type => type.Implements(typeof(Dumper<>)))
                                    .Where(type => type.IsClass && !type.IsAbstract && !type.IsInterface && !type.IsNested)
-                                   .SelectWhere((Type type, out IDumper dumper) =>
+                                   .SelectWhere((Type type, out IObjectDumper dumper) =>
                                    {
-                                       try
-                                       {
-                                           if (Activator.CreateInstance(type).Is(out dumper!))
-                                           {
-                                               return true;
-                                           }
-                                           return false;
-                                       }
-                                       catch //(Exception ex)
-                                       {
-                                           //Debugger.Break();
-                                           dumper = null!;
-                                           return false;
-                                       }
+                                       return Result.Try(() => Activator.CreateInstance(type) as IObjectDumper!, out dumper!);
                                    });
-        _dumpers = new List<IDumper>(dumperTypes);
-    }
-
-    internal static bool DumpNull<T>(TextBuilder text, [AllowNull, NotNullWhen(false)] T? value, DumpLevel level)
-    {
-        if (value is null)
+        _dumpers = new List<IObjectDumper>(dumperTypes)
         {
-            if (level.HasFlag<DumpLevel>(DumpLevel.Detailed))
-            {
-                text.Append('(')
-                    .AppendDump(typeof(T))
-                    .Write(')');
-            }
-            text.Write("null");
-            return true;
-        }
-        return false;
+            new Format<TimeSpan>("G", "g"),
+            new Format<DateTime>("O", "yyyy-MM-dd HH:mm:ss.f"),
+            new Format<DateTimeOffset>("O", "yyyy-MM-dd HH:mm:ss.f zzz"),
+            new Format<Guid>("D", "D"),
+            new Format<decimal>("N", "N"),
+        };
+        Debug.Assert(_dumpers.Any(d => d is ObjectDumper));
+        _dumperMap = new(_dumpers.Count);
     }
 
-    internal static IDumper GetDumper(Type type)
+    private static IObjectDumper? GetObjectDumper(Type type)
     {
-        if (_dumperMap.TryGetValue(type, out var dumper))
+        return _dumperMap.AddOrUpdate(type, 
+            t => _dumpers.FirstOrDefault(d => d.CanDump(t)), 
+            (t, objDumper) => objDumper ?? _dumpers.FirstOrDefault(d => d.CanDump(t)));
+    }
+    
+    internal static IValueDumper<T> GetDumper<T>()
+    {
+        var dumper = GetObjectDumper(typeof(T));
+        
+        if (dumper is IValueDumper<T> valueDumper)
+        {
+            return valueDumper;
+        }
+
+        return DefaultDumper<T>.Instance;
+    }
+
+    internal static IObjectDumper GetDumper(Type? type)
+    {
+        if (type is null) return DefaultDumper.Instance;
+        
+        var dumper = GetObjectDumper(type);
+        
+        if (dumper is not null)
         {
             return dumper;
         }
-
-        for (var i = 0; i < _dumpers.Count; i++)
-        {
-            dumper = _dumpers[i];
-            if (dumper.CanDump(type))
-            {
-                return (_dumperMap[type] = dumper);
-            }
-        }
-
-        return Default;
+        
+        return DefaultDumper.Instance;
     }
+}
 
-    internal static IDumper<T> GetDumper<T>() => (GetDumper(typeof(T)) as IDumper<T>).ThrowIfNull();
-
-    public static TextBuilder AppendDump<T>(this TextBuilder text, T? value, DumpLevel level = DumpLevel.Default)
+/// <summary>
+/// Extensions
+/// </summary>
+public static partial class Dump
+{
+    public static TextBuilder AppendDump<T>(this TextBuilder text, 
+                                            T? value, 
+                                            DumpOptions options = default)
     {
         var dumper = GetDumper<T>();
-        dumper.DumpValue(text, value, level);
+        dumper.DumpValue(text, value, options);
         return text;
     }
+}
 
-    public static string Value<T>(T? value, DumpLevel level = DumpLevel.Default)
-    {
-        using var text = new TextBuilder();
-        GetDumper<T>().DumpValue(text, value, level);
-        return text.ToString();
-    }
-
+public static partial class Dump
+{
     public static string Text(ref DumpStringHandler dumpFormattedString)
     {
         return dumpFormattedString.ToStringAndClear();
     }
 
+    public static string Value<T>(T? value, DumpOptions options = default)
+    {
+        using var text = new TextBuilder();
+        var dumper = GetDumper<T>();
+        dumper.DumpValue(text, value, options);
+        return text.ToString();
+    }
+}
+
+public static partial class Dump
+{
     internal static TException GetException<TException>(ref DumpStringHandler message, Exception? innerException = null)
         where TException : Exception
     {
