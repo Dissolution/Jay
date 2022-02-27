@@ -374,3 +374,7 @@ MigrationBackup/
 **/.idea/**/*.iml
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
+
+# Zip Files
+*.zip
+*.gz

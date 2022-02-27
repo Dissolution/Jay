@@ -55,8 +55,8 @@ public class TextEqualsBenchmarks
     {
         unsafe
         {
-            return memcmp(Danger.AsPointer(in x),
-                          Danger.AsPointer(in y),
+            return memcmp(Danger.InToVoidPointer(in x),
+                          Danger.InToVoidPointer(in y),
                 (nuint)(charCount * 2));
         }
     }
