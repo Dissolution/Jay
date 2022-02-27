@@ -11,7 +11,7 @@ public class ScryfallData
     {
         // var path = Path.Combine(Directory.GetParent(Environment.CurrentDirectory)
         //                                  .Parent.Parent.FullName, "Data");
-        var path = @"C:\git\Jay\Scryfall\Data";
+        var path = @"C:\git\Jay\Scryfall\Zips";
         if (!Directory.Exists(path))
             throw new NotImplementedException();
         var filePath = Directory.EnumerateFiles(path, "all-cards-*.json.gz")

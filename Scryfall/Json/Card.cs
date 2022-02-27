@@ -1,46 +1,8 @@
-﻿using System.Diagnostics;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Globalization;
-using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Scryfall.Json;
-
-public static class ScryfallOptions
-{
-    public static JsonSerializerOptions JsonSerializer { get; }
-    
-    static ScryfallOptions()
-    {
-        JsonSerializer = new()
-        {
-            WriteIndented = true,
-            Converters =
-            {
-                new ColorsConverter(),
-                new JsonStringEnumConverter(),
-            },
-        };
-    }
-}
-
-
-public class ScryfallObject : IEquatable<ScryfallObject>
-{
-    [JsonPropertyName("id")]
-    public Guid Id { get; set; }
-    
-    [JsonPropertyName("object")]
-    public string ContentType { get; set; }
-    
-    [JsonPropertyName("uri")]
-    public Uri Uri { get; set; }
-
-    public bool Equals(ScryfallObject? obj)
-    {
-        return obj != null && obj.Id == this.Id;
-    }
-}
 
 //https://scryfall.com/docs/api/cards
 public class Card : ScryfallObject, IEquatable<Card>
@@ -113,7 +75,7 @@ public class Card : ScryfallObject, IEquatable<Card>
     public string Layout { get; set; }
     
     [JsonPropertyName("legalities")]
-    public object Legalities { get; set; }
+    public Dictionary<string, string> Legalities { get; set; }
     
     [JsonPropertyName("life_modifier")]
     public string? LifeModifier { get; set; }
@@ -202,10 +164,10 @@ public class Card : ScryfallObject, IEquatable<Card>
     public string ImageStatus { get; set; }
     
     [JsonPropertyName("image_uris")]
-    public object? ImageUris { get; set; }
+    public Dictionary<string, Uri>? ImageUris { get; set; }
     
     [JsonPropertyName("prices")]
-    public object Prices { get; set; }
+    public Dictionary<string, string> Prices { get; set; }
     
     [JsonPropertyName("printed_name")]
     public string? PrintedName { get; set; }
@@ -223,13 +185,13 @@ public class Card : ScryfallObject, IEquatable<Card>
     public string[]? PromoTypes { get; set; }
     
     [JsonPropertyName("purchase_uris")]
-    public object PurchaseUris { get; set; }
+    public Dictionary<string, Uri>? PurchaseUris { get; set; }
     
     [JsonPropertyName("rarity")]
     public Rarity Rarity { get; set; }
     
     [JsonPropertyName("related_uris")]
-    public object RelatedUris { get; set; }
+    public Dictionary<string, Uri> RelatedUris { get; set; }
     
     [JsonPropertyName("released_at")]
     public DateTime ReleasedAt { get; set; }
@@ -307,155 +269,6 @@ public class Card : ScryfallObject, IEquatable<Card>
     /// <inheritdoc />
     public override string ToString()
     {
-        return base.ToString();
+        return Name;
     }
 }
-
-public enum ComponentType
-{
-    [JsonPropertyName("token")]
-    Token,
-    [JsonPropertyName("meld_part")]
-    MeldPart,
-    [JsonPropertyName("meld_result")]
-    MeldResult,
-    [JsonPropertyName("combo_piece")]
-    ComboPiece,
-}
-
-public enum Rarity
-{
-    None = 0,
-    Common,
-    Uncommon,
-    Rare,
-    Special,
-    Mythic,
-    Bonus,
-}
-
-public class RelatedCard : ScryfallObject
-{
-    [JsonPropertyName("component")]
-    public ComponentType Component { get; set; }
-    
-    [JsonPropertyName("name")]
-    public string Name { get; set; }
-    
-    [JsonPropertyName("type_line")]
-    public string TypeLine { get; set; }
-}
-
-public class CardFace
-{
-    [JsonPropertyName("artist")]
-    public string? Artist { get; set; }
-    
-    [JsonPropertyName("cmc")]
-    public decimal? ManaValue { get; set; }
-    
-    [JsonPropertyName("color_indicator")]
-    public Colors? ColorIndicator { get; set; }
-    
-    [JsonPropertyName("colors")]
-    public Colors? Colors { get; set; }
-    
-    [JsonPropertyName("flavor_text")]
-    public string? FlavorText { get; set; }
-    
-    [JsonPropertyName("illustration_id")]
-    public Guid? IllustrationId { get; set; }
-    
-    [JsonPropertyName("image_uris")]
-    public Uri[]? ImageUris { get; set; }
-    
-    [JsonPropertyName("layout")]
-    public string? Layout { get; set; }
-    
-    [JsonPropertyName("loyalty")]
-    public string? Loyalty { get; set; }
-    
-    [JsonPropertyName("mana_cost")]
-    public string ManaCost { get; set; }
-    
-    [JsonPropertyName("name")]
-    public string Name { get; set; }
-    
-    [JsonPropertyName("oracle_id")]
-    public Guid? OracleId { get; set; }
-    
-    [JsonPropertyName("oracle_text")]
-    public string? OracleText { get; set; }
-    
-    [JsonPropertyName("power")]
-    public string? Power { get; set; }
-    
-    [JsonPropertyName("printed_name")]
-    public string? PrintedName { get; set; }
-    
-    [JsonPropertyName("printed_text")]
-    public string? PrintedText { get; set; }
-    
-    [JsonPropertyName("printed_type_line")]
-    public string? PrintedTypeLine { get; set; }
-    
-    [JsonPropertyName("toughness")]
-    public string? Toughness { get; set; }
-    
-    [JsonPropertyName("type_line")]
-    public string? TypeLine { get; set; }
-    
-    [JsonPropertyName("watermark")]
-    public string? Watermark { get; set; }
-}
-
-[Flags]
-public enum Colors
-{
-    Colorless = 0,
-    White = 1 <<0,
-    Blue = 1 << 1,
-    Black = 1<<2,
-    Red = 1<<3,
-    Green = 1 <<4,
-}
-
-public class ColorsConverter : JsonConverter<Colors>
-{
-    
-    
-    /// <inheritdoc />
-    public override Colors Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        Debug.Assert(typeToConvert == typeof(Colors));
-        Debug.Assert(reader.TokenType == JsonTokenType.StartArray);
-        var colors = Colors.Colorless;
-        while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
-        {
-            string color = Encoding.UTF8.GetString(reader.ValueSpan);
-            if (color == "W")
-                colors |= Colors.White;
-            else if (color == "U")
-                colors |= Colors.Blue;
-            else if (color == "B")
-                colors |= Colors.Black;
-            else if (color == "R")
-                colors |= Colors.Red;
-            else if (color == "G")
-                colors |= Colors.Green;
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        return colors;
-    }
-
-    /// <inheritdoc />
-    public override void Write(Utf8JsonWriter writer, Colors value, JsonSerializerOptions options)
-    {
-        throw new NotImplementedException();
-    }
-}
-

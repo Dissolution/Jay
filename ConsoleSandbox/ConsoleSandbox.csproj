@@ -20,6 +20,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Benchmarking\Benchmarking.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\JayCOM\JayCOM.csproj" />
+    <ProjectReference Include="..\Scryfall\Scryfall.csproj" />
   </ItemGroup>
 
 </Project>

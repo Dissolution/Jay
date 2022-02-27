@@ -13,6 +13,7 @@ using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
 using Jay.Validation;
 using System.Text.Json;
+using Scryfall.Data;
 
 #if RELEASE
     var result = Runner.RunAndOpenHtml();
@@ -20,21 +21,9 @@ using System.Text.Json;
 #else
     using var text = new TextBuilder();
 
-    var notification = new Notification
-    {
-        Id = Guid.Empty,
-        Name = "Test",
-        NotificationType = NotificationType.Email | NotificationType.SMS,
-    };
-    //ArgumentValidation.ThrowIf(notification, n => n == null || n.Id == Guid.Empty || n.NotificationType == NotificationType.Email);
+    var data = await ScryfallData.LoadLatest();
     
-    using var memoryStream = new MemoryStream();
-    await JsonSerializer.SerializeAsync(memoryStream, notification);
-    memoryStream.Seek(0L, SeekOrigin.Begin);
-    using var streamReader = new StreamReader(memoryStream);
-    var str = await streamReader.ReadToEndAsync();
-
-
+    
 
     Debugger.Break();
     Console.WriteLine(text.ToString());
