@@ -1,5 +1,9 @@
 ﻿using System.Globalization;
+using System.Reflection;
 using Jay.Collections;
+using Jay.Dumping;
+using Jay.Reflection;
+using Jay.Reflection.Building;
 
 namespace Jay.Conversion;
 
@@ -31,6 +35,41 @@ public class Converter
     static Converter()
     {
         _cache = new();
+        Reflect.AllExportedTypes()
+               .SelectMany(type => type.GetMethods(Reflect.StaticFlags)
+                                       .Where(method => method.DeclaringType is not null)
+                                       .Where(method => method.Name == "TryParse")
+                                       .Where(method =>
+                                       {
+                                           var parameters = method.GetParameters();
+                                           bool takesSpan = false;
+                                           bool hasOut = false;
+                                           foreach (var parameter in parameters)
+                                           {
+                                               if (parameter.ParameterType == typeof(ReadOnlySpan<char>))
+                                               {
+                                                   takesSpan = true;
+                                               }
+                                               else if (parameter.IsOut && parameter.ParameterType == type.MakeByRefType())
+                                               {
+                                                   hasOut = true;
+                                               }
+                                           }
+                                           return takesSpan && hasOut;
+                                       }))
+               .Consume(method =>
+               {
+                   RuntimeBuilder.CreateDelegate(typeof(TryParseDel<>).MakeGenericType(method.DeclaringType!),
+                                                 Dump.Text($"{method.DeclaringType}_TryParse"),
+                                                 dm =>
+                                                 {
+                                                     var parameters = method.GetParameters();
+                                                     var spanParam = parameters.First(p => p.ParameterType == typeof(ReadOnlySpan<char>));
+                                                     var outParam = parameters.First(p => p.IsOut && p.ParameterType == method.DeclaringType.MakeByRefType())
+                                                 }
+               })
+
+
         _cache[typeof(object)] = TryParseObject;
         _cache[typeof(int)] = TryParseInt;
     }

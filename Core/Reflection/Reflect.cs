@@ -49,4 +49,15 @@ public static partial class Reflect
                     .Stfld(field)
                     .Ret())(ref instance, value);
     }
+
+    public static IEnumerable<Type> AllExportedTypes()
+    {
+        return AppDomain.CurrentDomain
+                        .GetAssemblies()
+                        .Where(assembly => !assembly.IsDynamic)
+                        .SelectMany(assembly =>
+                        {
+                            return Result.Swallow(() => assembly.ExportedTypes, Type.EmptyTypes);
+                        });
+    }
 }

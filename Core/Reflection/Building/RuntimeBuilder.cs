@@ -186,6 +186,15 @@ public static class RuntimeBuilder
         buildDelegate(dm);
         return dm.CreateDelegate();
     }
+    
+    public static Delegate CreateDelegate(Type delegateType, string? name, Action<DynamicMethod> buildDelegate)
+    {
+        if (!delegateType.Implements<Delegate>())
+            throw new ArgumentException("Must be a delegate", nameof(delegateType));
+        var dm = CreateDynamicMethod(name, DelegateSig.Of(delegateType));
+        buildDelegate(dm);
+        return dm.CreateDelegate(delegateType);
+    }
 
     public static TypeBuilder DefineType(string? name, TypeAttributes typeAttributes)
     {

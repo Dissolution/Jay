@@ -264,4 +264,22 @@ public static class EnumerableExtensions
 			                          return getIndex(x).CompareTo(getIndex(y));
 		                          }));
 	}
+
+	public static void Consume<T>(this IEnumerable<T> enumerable, Action<T> perItem)
+	{
+		if (enumerable is IList<T> list)
+		{
+			for (var i = 0; i < list.Count; i++)
+			{
+				perItem(list[i]);
+			}
+		}
+		else
+		{
+			foreach (var item in enumerable)
+			{
+				perItem(item);
+			}
+		}
+	}
 }
