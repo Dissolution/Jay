@@ -94,7 +94,7 @@ public static class FieldInfoExtensions
     }
 
     public static TValue? GetValue<TClass, TValue>(this FieldInfo fieldInfo,
-                                                   TClass? instance)
+                                                   TClass instance)
         where TClass : class
     {
         var getter = DelegateMemberCache.Instance

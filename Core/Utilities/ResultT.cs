@@ -88,7 +88,8 @@ public readonly struct Result<T> : IEquatable<Result<T>>,
         }
     }
 
-    public static T Swallow(Func<T>? func, T fallback = default)
+    [return: MaybeNull]
+    public static T Swallow(Func<T>? func, [AllowNull] T fallback = default)
     {
         if (func is null) return fallback;
         try

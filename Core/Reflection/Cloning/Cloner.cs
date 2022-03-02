@@ -389,7 +389,7 @@ public static class Muq
     {
         if (value is null) return default;
         var del = _typeCloneCache.GetOrAdd(typeof(T), CreateCloneDelegate);
-        CloneValue<T> cloner = del as CloneValue<T>;
+        CloneValue<T> cloner = (del as CloneValue<T>)!;
         if (cloner is null)
         {
             Debugger.Break();

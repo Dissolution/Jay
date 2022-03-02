@@ -55,6 +55,7 @@ public class Converter
                                                    hasOut = true;
                                                }
                                            }
+
                                            return takesSpan && hasOut;
                                        }))
                .Consume(method =>
@@ -65,13 +66,15 @@ public class Converter
                                                  {
                                                      var parameters = method.GetParameters();
                                                      var spanParam = parameters.First(p => p.ParameterType == typeof(ReadOnlySpan<char>));
-                                                     var outParam = parameters.First(p => p.IsOut && p.ParameterType == method.DeclaringType.MakeByRefType())
-                                                 }
-               })
+                                                     var outParam = parameters.First(p => p.IsOut && p.ParameterType == method.DeclaringType!.MakeByRefType());
+                                                     throw new NotImplementedException();
+                                                 });
+                   throw new NotImplementedException();
+               });
 
 
-        _cache[typeof(object)] = TryParseObject;
-        _cache[typeof(int)] = TryParseInt;
+        //_cache[typeof(object)] = TryParseObject;
+        //_cache[typeof(int)] = TryParseInt;
     }
 
     private static Result TryParseObject(ReadOnlySpan<char> text, out object? obj, ParseOptions options)
@@ -90,6 +93,6 @@ public class Converter
                                      [NotNullWhen(true)] out T value, 
                                      ParseOptions options = default)
     {
-            
+        throw new NotImplementedException();
     }
 }

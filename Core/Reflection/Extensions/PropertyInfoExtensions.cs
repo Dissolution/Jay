@@ -58,7 +58,7 @@ public static class PropertyInfoExtensions
                               .Where(inst =>
                                   inst.OpCode == OpCodes.Ldfld || inst.OpCode == OpCodes.Ldflda ||
                                   inst.OpCode == OpCodes.Ldsfld || inst.OpCode == OpCodes.Ldsflda)
-                              .SelectWhere((Instruction inst, out FieldInfo fld) =>
+                              .SelectWhere((Instruction inst, out FieldInfo? fld) =>
                               {
                                   if (inst.Arg.Is(out fld) &&
                                       fld.DeclaringType == owner &&
@@ -70,7 +70,7 @@ public static class PropertyInfoExtensions
                                   fld = null;
                                   return false;
                               })
-                              .OrderBy(fld => Levenshtein.Calculate(fld.Name, propertyInfo.Name))
+                              .OrderBy(fld => Levenshtein.Calculate(fld!.Name, propertyInfo.Name))
                               .FirstOrDefault();
             }
         }
@@ -82,7 +82,7 @@ public static class PropertyInfoExtensions
             {
                 field = setter.GetInstructions()
                               .Where(inst => inst.OpCode == OpCodes.Stfld || inst.OpCode == OpCodes.Stsfld)
-                              .SelectWhere((Instruction inst, out FieldInfo fld) =>
+                              .SelectWhere((Instruction inst, out FieldInfo? fld) =>
                               {
                                   if (inst.Arg.Is(out fld) &&
                                       fld.DeclaringType == owner &&
@@ -94,7 +94,7 @@ public static class PropertyInfoExtensions
                                   fld = null;
                                   return false;
                               })
-                              .OrderBy(fld => Levenshtein.Calculate(fld.Name, propertyInfo.Name))
+                              .OrderBy(fld => Levenshtein.Calculate(fld!.Name, propertyInfo.Name))
                               .FirstOrDefault();
             }
         }
@@ -166,7 +166,7 @@ public static class PropertyInfoExtensions
     }
 
     public static TValue? GetValue<TClass, TValue>(this PropertyInfo property,
-                                                   TClass? instance)
+                                                   TClass instance)
         where TClass : class
     {
         var getter = DelegateMemberCache.Instance

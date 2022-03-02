@@ -73,7 +73,7 @@ public readonly struct Result : IEquatable<Result>
 
     public static Result<T> Try<T>(Func<T>? func) => Result<T>.Try(func);
 
-    public static T Swallow<T>(Func<T>? func, T fallback = default)
+    public static T Swallow<T>(Func<T>? func, [AllowNull] T fallback = default)
     {
         if (func is null) return fallback;
         try

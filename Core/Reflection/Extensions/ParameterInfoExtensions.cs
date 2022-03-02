@@ -19,8 +19,7 @@ public static class ParameterInfoExtensions
         parameterType = parameter.ParameterType;
         if (parameterType.IsByRef)
         {
-            parameterType = parameterType.GetElementType();
-            Debug.Assert(parameterType != null);
+            parameterType = parameterType.GetElementType()!;
             if (parameter.IsIn)
             {
                 return Access.In;

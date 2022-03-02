@@ -66,7 +66,7 @@ public class TypeDumper : Dumper<Type>
             default:
                 break;
         }
-        https://github.com/stakx/TypeNameFormatter/blob/2ab6b20e7eb2a2477371769d8109c705a0043e2b/src/TypeNameFormatter/TypeNameFormatter.Nullable.cs#L67
+        //https://github.com/stakx/TypeNameFormatter/blob/2ab6b20e7eb2a2477371769d8109c705a0043e2b/src/TypeNameFormatter/TypeNameFormatter.Nullable.cs#L67
         if (type == typeof(object))
         {
             text.Write("object");
