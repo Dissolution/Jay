@@ -25,7 +25,10 @@ public abstract class Dumper : IObjectDumper
     public abstract bool CanDump(Type objType);
 
     /// <inheritdoc />
-    public abstract void DumpObject(TextBuilder text, object? obj, DumpOptions options = default);
+    public virtual void DumpObject(TextBuilder text, object? obj, DumpOptions options = default)
+    {
+        
+    }
 }
 
 public abstract class Dumper<T> : Dumper, IValueDumper<T>
@@ -37,17 +40,14 @@ public abstract class Dumper<T> : Dumper, IValueDumper<T>
 
     public sealed override void DumpObject(TextBuilder text, object? obj, DumpOptions options = default)
     {
-        if (obj is null)
+        if (Dumper.DumpNull(text, obj, options)) return;
+        if (obj is T value)
         {
-            DumpNull<T>(text, default, options);
-        }
-        else if (obj is T typed)
-        {
-            DumpValue(text, typed, options);
+            DumpValue(text, value, options);
         }
         else
         {
-            throw new InvalidOperationException();
+            throw Dump.GetException<InvalidOperationException>($"{GetType()} cannot dump a {obj.GetType()} value");
         }
     }
 

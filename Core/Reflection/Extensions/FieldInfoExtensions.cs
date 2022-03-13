@@ -27,15 +27,15 @@ public static class FieldInfoExtensions
         var result = fieldInfo.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
         Validation.IsValue(instanceType, nameof(fieldInfo));
-        return RuntimeBuilder.CreateDelegate<Getter<TInstance, TValue>>(
-                                                                            $"get_{instanceType}_{fieldInfo.Name}", method =>
-                                                                            {
-                                                                                method.Emitter
-                                                                                      .LoadAs(method.Parameters[0], instanceType)
-                                                                                      .Ldfld(fieldInfo)
-                                                                                      .Cast(fieldInfo.FieldType, typeof(TValue))
-                                                                                      .Ret();
-                                                                            });
+        return RuntimeBuilder.CreateDelegate<Getter<TInstance, TValue>>($"get_{instanceType}_{fieldInfo.Name}", 
+                                                                        method =>
+        {
+            method.Emitter
+                  .LoadAs(method.Parameters[0], instanceType)
+                  .Ldfld(fieldInfo)
+                  .Cast(fieldInfo.FieldType, typeof(TValue))
+                  .Ret();
+        });
     }
     
     public static StaticGetter<TValue> CreateStaticGetter<TValue>(this FieldInfo fieldInfo)

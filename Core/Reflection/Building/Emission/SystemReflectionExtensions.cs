@@ -22,13 +22,19 @@ internal static class SystemReflectionExtensions
 
     public static OpCode GetCallOpCode(this MethodBase method)
     {
-        //If the method is static, we know it can never be null, so we can Call
-        if (method.IsStatic)
+        // We always want to use Callvirt when in doubt, as it is the 'safest' option to get the behavior
+        // that we're expecting. However, when we know that the method is non-virtual (sealed) we can use Call
+        // which is slightly more performant.
+        
+        // Static methods are sealed, as are non-virtual methods
+        if (method.IsStatic || !method.IsVirtual)
             return OpCodes.Call;
-        //If the method owner is a struct, it can also never be null, so we can Call
+        
+        // Value type methods are also sealed
         var source = method.ReflectedType ?? method.DeclaringType;
         if (source != null && source.IsValueType)
             return OpCodes.Call;
+        
         return OpCodes.Callvirt;
     }
 

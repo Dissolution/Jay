@@ -49,7 +49,8 @@ public readonly struct EnumeratorItem<T> : IEquatable<T>
 
     public override int GetHashCode()
     {
-        return Hasher.Create(Index, Value);
+        if (Value is null) return 0;
+        return Value.GetHashCode();
     }
 
     public override string ToString()

@@ -71,6 +71,53 @@ public sealed class ILGeneratorEmitter : IILGeneratorEmitter
         }
     }
 
+    private sealed class TCFEmitter : ITryCatchFinallyEmitter<IILGeneratorEmitter>
+    {
+        private readonly IILGeneratorEmitter _emitter;
+
+        public IILGeneratorEmitter EndTry
+        {
+            get
+            {
+                _emitter.EndExceptionBlock();
+                return _emitter;
+            }
+        }
+
+        public TCFEmitter(IILGeneratorEmitter emitter)
+        {
+            _emitter = emitter;
+        }
+
+        public void Try(Action<IILGeneratorEmitter> tryBlock)
+        {
+            _emitter.BeginExceptionBlock(out _);
+            tryBlock(_emitter);
+        }
+
+        public ITryCatchFinallyEmitter<IILGeneratorEmitter> Catch(Type exceptionType, Action<IILGeneratorEmitter> catchBlock)
+        {
+            _emitter.BeginCatchBlock(exceptionType);
+            catchBlock(_emitter);
+            return this;
+        }
+
+        public IILGeneratorEmitter Finally(Action<IILGeneratorEmitter> finallyBlock)
+        {
+            _emitter.BeginFinallyBlock();
+            finallyBlock(_emitter);
+            _emitter.EndExceptionBlock();
+            return _emitter;
+        }
+    }
+    
+    public ITryCatchFinallyEmitter<IILGeneratorEmitter> Try(Action<IILGeneratorEmitter> tryBlock)
+    {
+        var tcf = new TCFEmitter(this);
+        tcf.Try(tryBlock);
+        return tcf;
+    }
+
     public IILGeneratorEmitter BeginCatchBlock(Type exceptionType)
     {
         ArgumentNullException.ThrowIfNull(exceptionType);

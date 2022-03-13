@@ -15,6 +15,9 @@ namespace Jay.Reflection.Building.Emission;
 public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
     where TEmitter : class, IFluentEmitter<TEmitter>
 {
+
+    ITryCatchFinallyEmitter<TEmitter> Try(Action<TEmitter> tryBlock);
+
     TEmitter DefineAndMarkLabel(out Label label, [CallerArgumentExpression("label")] string lblName = "") 
         => DefineLabel(out label, lblName).MarkLabel(label);
 
@@ -58,6 +61,17 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
         return Newobj(ctor).Throw();
     }
 
+    internal TEmitter Do(Action<TEmitter> emission)
+    {
+        emission((TEmitter)this);
+        return (TEmitter)this;
+    }
+    
+    TEmitter Scoped(Action<TEmitter> scopedBlock)
+    {
+        return BeginScope().Do(scopedBlock).EndScope();
+    }
+    
     TEmitter Br(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Br(label);
     TEmitter Leave(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Leave(label);
     TEmitter Brtrue(out Label label, [CallerArgumentExpression("label")] string lblName = "") => DefineLabel(out label, lblName).Brtrue(label);

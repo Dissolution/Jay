@@ -16,7 +16,8 @@ public static class RuntimeBuilder
 
     static RuntimeBuilder()
     {
-        AssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Jay.Reflection.Building.Dynamic"), AssemblyBuilderAccess.Run);
+        AssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Jay.Reflection.Building.Runtime"), 
+                                                                AssemblyBuilderAccess.Run);
         ModuleBuilder = AssemblyBuilder.DefineDynamicModule("RuntimeModuleBuilder");
     }
 
@@ -47,6 +48,7 @@ public static class RuntimeBuilder
                category == UnicodeCategory.ConnectorPunctuation ||
                category == UnicodeCategory.Format;
     }
+
 
     public static bool IsValidMemberName(string? name)
     {

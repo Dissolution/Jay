@@ -1,15 +1,20 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using Jay.Collections;
-using Jay.Comparision;
+using Jay.Reflection;
 using Jay.Validation;
 
-namespace Jay.Reflection;
+namespace Jay.Comparision;
 
+/// <summary>
+/// A cache of <see cref="IEqualityComparer{T}"/>.Default and <see cref="IComparer{T}"/>.Default instances accessible
+/// with a <see cref="Type"/>.
+/// </summary>
 public static class ComparerCache
 {
     public sealed class CacheComparer : IEqualityComparer, IComparer
     {
-        /// <inheritdoc />
         public bool Equal(object? x, object? y)
         {
             if (ReferenceEquals(x, y)) return true;

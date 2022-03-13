@@ -10,6 +10,13 @@ internal static class EmitterHelpers
                !parameter.IsOut &&
                parameter.ParameterType == typeof(object[]);
     }
+
+    public static bool IsParams(this ParameterInfo parameter)
+    {
+        return parameter.IsDefined(typeof(ParamArrayAttribute), false);
+    }
+    
+    
     public static bool IsObjectArray(this Type type)
     {
         return !type.IsByRef &&

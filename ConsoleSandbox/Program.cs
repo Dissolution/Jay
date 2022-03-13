@@ -1,3 +1,5 @@
+global using Jay;
+
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -13,6 +15,7 @@ using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
 using Jay.Validation;
 using System.Text.Json;
+using Jay.Reflection.Building.Emission;
 
 #if RELEASE
     var result = Runner.RunAndOpenHtml();
@@ -20,51 +23,95 @@ using System.Text.Json;
 #else
     using var text = new TextBuilder();
 
-    var notification = new Notification
-    {
-        Id = Guid.Empty,
-        Name = "Test",
-        NotificationType = NotificationType.Email | NotificationType.SMS,
-    };
-    //ArgumentValidation.ThrowIf(notification, n => n == null || n.Id == Guid.Empty || n.NotificationType == NotificationType.Email);
+    dynamic blob = default!;
+
+    // Instance thing = default!;
+    // thing.Chain().Chain()
+    //      .Try(() => 14)
+    //      .Catch<Exception>()
+    //      .Catch<NullReferenceException>()
+    //      .Finally(() => { })
+    //      .Chain().Chain().Chain();
+
+
     
-    using var memoryStream = new MemoryStream();
-    await JsonSerializer.SerializeAsync(memoryStream, notification);
-    memoryStream.Seek(0L, SeekOrigin.Begin);
-    using var streamReader = new StreamReader(memoryStream);
-    var str = await streamReader.ReadToEndAsync();
+    //cap.GetEvent(t => t.PropertyChanged += new(delegate { }));
+    //cap.GetEvent((t, h) => t.PropertyChanged += new(h));
+
+
+
+
+    //IDEA: Each method upon firing should call a sub-method that look for stuff 'hanging around'
+    // so it can be dealt with before the method. (LIke ending a Try?Catch block, what else?)
 
 
 
     Debugger.Break();
     Console.WriteLine(text.ToString());
 #endif
+    
 Console.WriteLine("Press Enter to close this window.");
 Console.ReadLine();
 return 0;
 
+    static void ThOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+public interface Instance : IFluent<Instance>
+{
+    
+}
+
+public interface IFluent<B> where B : IFluent<B>
+{
+    B Chain();
+    ITCF<B> Try(Delegate? del = default);
+}
+
+public interface ITCF<B> 
+    where B : IFluent<B>
+{
+    B EndTry { get; }
+    
+    ITCF<B> Catch<TEx>(Delegate? del = default) where TEx : Exception;
+    B Finally(Delegate? del = default);
+}
+
 public static class Extensions
 {
+    public static THandler GetHandler<THandler>()
+        where THandler : Delegate
+    {
+        throw new NotImplementedException();
+    }
+    
     public static string GetEvent<T, THandler>(this T? instance, Func<T?, THandler> eventInteraction)
         where THandler : Delegate
     {
         throw new NotImplementedException();
     }
-}
+    
+    public static string GetEvent<T>(this T? instance, Func<T?, Delegate?> eventInteraction)
+    {
+        throw new NotImplementedException();
+    }
 
-public class Notification
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-    public NotificationType NotificationType { get; set; }
-}
+    public class TestEventCapture<TInstance>
+    {
+        public string GetEvent<THandler>(Action<TInstance?, THandler?> eventInteraction)
+            where THandler : Delegate
+        {
+            throw new NotImplementedException();
+        }
 
-[Flags]
-public enum NotificationType
-{
-    None = 0,
-    Email = 1 << 0,
-    SMS = 1 << 1,
+        public THandler GetHandler<THandler>()
+            where THandler : Delegate
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
 
 public static class EventCapture<T> where T : class
