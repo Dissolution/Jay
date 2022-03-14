@@ -242,7 +242,7 @@ public static class TimeSpanExtensions
     /// </summary>
     /// <param name="timeSpan"></param>
     /// <returns></returns>
-    public static string ToSqlString(this TimeSpan? timeSpan)
+    public static string? ToSqlString(this TimeSpan? timeSpan)
     {
         return timeSpan is null ? null : ToSqlString(timeSpan.Value);
     }

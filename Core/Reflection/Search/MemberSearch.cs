@@ -30,6 +30,11 @@ public static class MemberSearch
         ctor = type.GetConstructor(Reflect.InstanceFlags, Type.EmptyTypes);
         return ctor is not null;
     }
+    
+    public static bool HasDefaultConstructor(this Type type)
+    {
+        return type.GetConstructor(Reflect.InstanceFlags, Type.EmptyTypes) is not null;
+    }
 
     public static ConstructorInfo? FindBestConstructor(Type type,
                                                        BindingFlags flags,

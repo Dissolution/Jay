@@ -1,0 +1,35 @@
+﻿using System.Diagnostics.CodeAnalysis;
+using Jay;
+
+namespace ConsoleSandbox.Conversion;
+
+public interface ICaster<TIn, TOut> : ICaster
+{
+    bool ICaster.CanCastFrom(Type inType) => inType.IsAssignableTo(typeof(TIn));
+    bool ICaster.CanCastTo(Type outType) => outType.IsAssignableTo(typeof(TOut));
+
+    Result ICaster.TryCast(object? input, [NotNullWhen(true)] out object? output, CastOptions options)
+    {
+        if (input is TIn)
+        {
+            Result result = TryCast((TIn)input, out TOut? outValue, options);
+            if (!result)
+            {
+                output = null;
+                return result;
+            }
+            else
+            {
+                output = outValue!;
+                return true;
+            }
+        }
+        else
+        {
+            output = null;
+            return new CastException(input?.GetType(), typeof(TOut));
+        }
+    }
+
+    Result TryCast(TIn? input, [NotNullWhen(true)] out TOut? output, CastOptions options = default);
+}

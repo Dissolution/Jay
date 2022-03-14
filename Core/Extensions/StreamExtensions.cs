@@ -28,9 +28,9 @@ public static class StreamExtensions
 
             // Analyze the BOM
             if (bom[0] == 0x2B && bom[1] == 0x2F && bom[2] == 0x76)
-#pragma warning disable CS0618
+#pragma warning disable
                 return Encoding.UTF7;
-#pragma warning restore CS0618
+#pragma warning restore
             if (bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
                 return Encoding.UTF8;
             if (bom[0] == 0xFF && bom[1] == 0xFE)

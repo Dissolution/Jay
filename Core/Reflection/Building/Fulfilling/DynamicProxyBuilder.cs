@@ -34,7 +34,7 @@ public static class DynamicProxyBuilder
 {
     private static readonly AssemblyBuilder _assemblyBuilder;
     private static readonly ModuleBuilder _moduleBuilder;
-    private static readonly IComparer<MemberInfo> _memberComparer = new FuncComparer<MemberInfo>((x,y) => x.MemberType.CompareTo(y.MemberType));
+    private static readonly IComparer<MemberInfo> _memberComparer = new FuncComparer<MemberInfo>((x,y) => Comparer<MemberTypes>.Default.Compare(x?.MemberType ?? default, y?.MemberType ?? default));
         
     private static readonly ConcurrentDictionary<(Type SourceType, Type DestType), object> _proxyCache;
         
