@@ -4,7 +4,7 @@ using Jay.Dumping;
 using Jay.Exceptions;
 using Jay.Text;
 
-namespace ConsoleSandbox.Conversion;
+namespace Jay.Conversion;
 
 [InterpolatedStringHandler]
 public ref struct FormatterStringHandler

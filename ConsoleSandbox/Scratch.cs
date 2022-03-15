@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using ConsoleSandbox.Conversion;
 using Jay;
+using Jay.Conversion;
 
 namespace ConsoleSandbox;
 

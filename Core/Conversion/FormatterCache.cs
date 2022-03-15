@@ -1,26 +1,23 @@
-﻿using System.Runtime.CompilerServices;
-using Jay;
+﻿
 using Jay.Collections;
 using Jay.Reflection;
 using Jay.Reflection.Search;
 
-namespace ConsoleSandbox.Conversion;
+namespace Jay.Conversion;
 
 public sealed class FormatterCache : IFormatter
 {
     private sealed class DefaultFormatter : IFormatter
     {
-        public bool CanFormatFrom(Type inputType) => true;
+        public bool CanFormat(Type inputType) => true;
 
-        public Result TryFormat(object? input, out string text, FormatOptions options = default)
+        public string Format(object? input, FormatOptions options = default)
         {
             if (input is IFormattable)
             {
-                text = ((IFormattable)input).ToString(options.Format, options.Provider);
-                return true;
+                return ((IFormattable)input).ToString(options.Format, options.Provider);
             }
-            text = input?.ToString() ?? "";
-            return true;
+            return input?.ToString() ?? "";
         }
 
         public Result TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options = default)
@@ -55,7 +52,17 @@ public sealed class FormatterCache : IFormatter
     {
         return new FormatterCache(AppDomain.CurrentDomain
                                            .GetAssemblies()
-                                           .SelectMany(assembly => Result.Swallow(() => assembly.ExportedTypes, Type.EmptyTypes))
+                                           .SelectMany(assembly =>
+                                           {
+                                               try
+                                               {
+                                                   return assembly.ExportedTypes;
+                                               }
+                                               catch
+                                               {
+                                                   return Type.EmptyTypes;
+                                               }
+                                           })
                                            .SelectWhere((Type type, out IFormatter? formatter) =>
                                            {
                                                if (type.Implements<IFormatter>() &&
@@ -79,8 +86,7 @@ public sealed class FormatterCache : IFormatter
                                                return formatter is not null;
                                            })!);
     }
-        
-        
+
     private readonly List<IFormatter> _formatters;
     private readonly ConcurrentTypeDictionary<IFormatter?> _cache;
 
@@ -98,7 +104,7 @@ public sealed class FormatterCache : IFormatter
 
     private IFormatter? FindFormatter(Type type)
     {
-        return _formatters.FirstOrDefault(f => f.CanFormatFrom(type));
+        return _formatters.FirstOrDefault(f => f.CanFormat(type));
     }
 
     public FormatterCache AddFormatter(IFormatter formatter)
@@ -126,22 +132,21 @@ public sealed class FormatterCache : IFormatter
    
     public IFormatter GetFormatter<T>() => GetFormatter(typeof(T));
     
-    public bool CanFormatFrom(Type inputType)
+    public bool CanFormat(Type inputType)
     {
         return true;
     }
 
-    public Result TryFormat(object? input, out string text, FormatOptions options = default)
+    string IFormatter.Format(object? input, FormatOptions options)
     {
         if (input is null)
         {
-            text = string.Empty;
-            return true;
+            return "";
         }
-        return GetFormatter(input.GetType()).TryFormat(input, out text, options);
+        return GetFormatter(input.GetType()).Format(input, options);
     }
 
-    public Result TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options = default)
+    Result IFormatter.TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options)
     {
         if (input is null)
         {
@@ -149,6 +154,28 @@ public sealed class FormatterCache : IFormatter
             return true;
         }
         return GetFormatter(input.GetType()).TryFormat(input, destination, out charsWritten, options);
+    }
+
+    public string Format<T>(T? input, FormatOptions options = default)
+    {
+        if (input is null) return "";
+        var formatter = GetFormatter<T>();
+        if (formatter is IFormatter<T> typedFormatter)
+            return typedFormatter.Format(input, options);
+        return formatter.Format(input, options);
+    }
+    
+    public Result TryFormat<T>(T? input, Span<char> destination, out int charsWritten, FormatOptions options = default)
+    {
+        if (input is null)
+        {
+            charsWritten = 0;
+            return true;
+        }
+        var formatter = GetFormatter<T>();
+        if (formatter is IFormatter<T> typedFormatter)
+            return typedFormatter.TryFormat(input, destination, out charsWritten, options);
+        return formatter.TryFormat(input, destination, out charsWritten, options);
     }
 
     public string Format([InterpolatedStringHandlerArgument("")] ref FormatterStringHandler stringHandler)

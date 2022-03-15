@@ -85,6 +85,18 @@ public readonly struct Result : IEquatable<Result>
             return fallback;
         }
     }
+
+    public static TOut Swallow<TIn, TOut>(TIn instance, Func<TIn, TOut> select, TOut fallback)
+    {
+        try
+        {
+            return select(instance);
+        }
+        catch // (Exception ex)
+        {
+            return fallback;
+        }
+    }
     
     // _pass is the field (rather than _fail) because default(Result) should be a failure
     internal readonly bool _pass;

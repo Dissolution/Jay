@@ -17,6 +17,7 @@
   <ItemGroup>
     <Using Include="System.Collections" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.Runtime.CompilerServices" />
   </ItemGroup>
   
   <ItemGroup>

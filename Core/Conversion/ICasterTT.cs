@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Jay;
-
-namespace ConsoleSandbox.Conversion;
+﻿namespace Jay.Conversion;
 
 public interface ICaster<TIn, TOut> : ICaster
 {

@@ -1,4 +1,4 @@
-﻿namespace ConsoleSandbox.Conversion;
+﻿namespace Jay.Conversion;
 
 public abstract class ConversionException : Exception
 {
