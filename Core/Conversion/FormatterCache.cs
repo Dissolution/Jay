@@ -1,4 +1,5 @@
 ﻿
+using System.Runtime.CompilerServices;
 using Jay.Collections;
 using Jay.Reflection;
 using Jay.Reflection.Search;
@@ -183,9 +184,14 @@ public sealed class FormatterCache : IFormatter
         return stringHandler.ToStringAndClear();
     }
     
-    public string Format([InterpolatedStringHandlerArgument("", "options")] ref FormatterStringHandler stringHandler, FormatOptions options)
+    public string Format(FormatOptions options, [InterpolatedStringHandlerArgument("options", "")] ref FormatterStringHandler stringHandler)
     {
         return stringHandler.ToStringAndClear();
     }
+    
+    // public string Format([InterpolatedStringHandlerArgument("options", "")] ref FormatterStringHandler stringHandler, FormatOptions options)
+    // {
+    //     return stringHandler.ToStringAndClear();
+    // }
     
 }

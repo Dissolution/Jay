@@ -8,11 +8,13 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using ConsoleSandbox;
 using Jay;
 using Jay.Collections;
 using Jay.Reflection;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Building.Emission;
+using Jay.Reflection.Building.Fulfilling;
 using Jay.Text;
 using Jay.Validation;
 
@@ -22,20 +24,12 @@ using Jay.Validation;
 #else
 using var text = new TextBuilder();
 
-dynamic blob = default!;
+var fulfiller = Fulfiller.Default;
 
-// Instance thing = default!;
-// thing.Chain().Chain()
-//      .Try(() => 14)
-//      .Catch<Exception>()
-//      .Catch<NullReferenceException>()
-//      .Finally(() => { })
-//      .Chain().Chain().Chain();
+var instance = fulfiller.CreateImplementation<IKeyEntity<Guid>>();
 
 
-    
-//cap.GetEvent(t => t.PropertyChanged += new(delegate { }));
-//cap.GetEvent((t, h) => t.PropertyChanged += new(h));
+
 
 
 
@@ -60,6 +54,23 @@ static void ThOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
 
 namespace ConsoleSandbox
 {
+    public interface IEntity : INotifyPropertyChanged,
+                               INotifyPropertyChanging
+    {
+        DateTimeOffset TimeStamp { get; set; }
+        string Name { get; set; }
+    }
+
+    public interface IKeyEntity<TKey> : IEntity,
+                                        IEquatable<IKeyEntity<TKey>>
+                                        
+        where TKey : IComparable<TKey>
+    {
+        TKey Key { get; }
+    }
+    
+    
+    
     public interface Instance : IFluent<Instance>
     {
     
@@ -278,26 +289,6 @@ namespace ConsoleSandbox
             return base.TryUnaryOperation(binder, out result);
         }
     }
-
-    public interface IEntity : INotifyPropertyChanged
-    {
-
-    }
-
-    public interface IEntity<TKey> : IEntity
-    {
-        [Key]
-        TKey Key { get; }
-    }
-
-    public interface INUEntity<TKey> : IEntity<TKey>
-    {
-        string Name { get; }
-        DateTime Updated { get; set; }
-    }
-
-//RuntimeBuilder.Create<INUEntity<int>>();
-
 
 
 

@@ -27,35 +27,29 @@ public ref struct FormatterStringHandler
     }
 
     internal FormatterStringHandler(int literalLength, int formatCount, FormatterCache formatterCache)
-    {
-        _formatterCache = formatterCache;
-        _formatOptions = default;
-        _chars = ArrayPool<char>.Shared.Rent(literalLength + (formatCount * 8));
-        _length = 0;
-    }
+        : this(literalLength, formatCount, default(FormatOptions), formatterCache) { }
     
-    internal FormatterStringHandler(int literalLength, int formatCount, FormatterCache formatterCache, FormatOptions options)
+    internal FormatterStringHandler(int literalLength, int formatCount, FormatOptions options, FormatterCache formatterCache)
     {
         _formatterCache = formatterCache;
         _formatOptions = options;
-        _chars = ArrayPool<char>.Shared.Rent(literalLength + (formatCount * 8));
+        _chars = ArrayPool<char>.Shared.Rent(Math.Max(literalLength + (formatCount * 8), 1024));
         _length = 0;
     }
-    //
-    // internal FormatterStringHandler(int literalLength, int formatCount, FormatOptions options, FormatterCache formatterCache)
-    // {
-    //     _formatterCache = formatterCache;
-    //     _formatOptions = options;
-    //     _chars = ArrayPool<char>.Shared.Rent(literalLength + (formatCount * 8));
-    //     _length = 0;
-    // }
-
+    
     private void Grow()
     {
         var newArray = ArrayPool<char>.Shared.Rent(_chars.Length * 2);
         TextHelper.CopyTo(Written, newArray);
         ArrayPool<char>.Shared.Return(_chars);
         _chars = newArray;
+    }
+
+    public void AppendLiteral(char ch)
+    {
+        if (_length >= _chars.Length)
+            Grow();
+        _chars[_length++] = ch;
     }
     
     public void AppendLiteral(ReadOnlySpan<char> text)
@@ -126,6 +120,6 @@ public ref struct FormatterStringHandler
 
     public override string ToString()
     {
-        throw new InvalidOperationException($"You MUST call {nameof(ToStringAndClear)}() in order to get the string output of resolving the {nameof(FormatterStringHandler)}");
+        throw new InvalidOperationException($"You MUST call {nameof(ToStringAndClear)}() to retrieve the resolved {nameof(FormatterStringHandler)} string");
     }
 }
