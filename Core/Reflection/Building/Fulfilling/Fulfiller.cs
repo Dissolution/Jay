@@ -3,11 +3,32 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Dumping;
+using Jay.Text;
 
 namespace Jay.Reflection.Building.Fulfilling;
 
 public abstract class PropertyFulfiller
 {
+    private static string GetFieldName(string propertyName)
+    {
+        return string.Create(propertyName.Length + 1, propertyName, (span, name) =>
+        {
+            span[0] = '_';
+            span[1] = char.ToLower(name[0]);
+            TextHelper.CopyTo(name.AsSpan(1), span[2..]);
+        });
+    }
+
+    private static string GetPropertyGetterName(PropertyInfo property)
+    {
+        return $"get_{property.Name}";
+    }
+    
+    private static string GetPropertySetterName(PropertyInfo property)
+    {
+        return $"set_{property.Name}";
+    }
+    
     protected readonly TypeBuilder _typeBuilder;
     protected readonly List<PropertyFulfiller> _fulfillers;
 
@@ -17,6 +38,12 @@ public abstract class PropertyFulfiller
         _fulfillers = new List<PropertyFulfiller>(0);
     }
 
+    protected void EmitPropertySetter(MethodBuilder setter)
+    {
+        var emitter = setter.GetEmitter();
+        
+    }
+    
     public void Add(PropertyFulfiller propertyFulfiller)
     {
         _fulfillers.Add(propertyFulfiller);
@@ -39,8 +66,10 @@ public abstract class PropertyFulfiller
         {
             parameterTypes = null;
         }
-        
-        var field = _typeBuilder.DefineField()
+
+        var field = _typeBuilder.DefineField(fieldName: GetFieldName(property.Name),
+                                             type: property.PropertyType,
+                                             FieldAttributes.Private);
         
         var prop = _typeBuilder.DefineProperty(name: property.Name,
                                                attributes: property.Attributes,
@@ -51,50 +80,15 @@ public abstract class PropertyFulfiller
                                                parameterTypes: parameterTypes,
                                                parameterTypeRequiredCustomModifiers: null,
                                                parameterTypeOptionalCustomModifiers: null);
+        var propSetter = _typeBuilder.DefineMethod(name: GetPropertySetterName(property),
+                                                   attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.SpecialName,
+                                                   callingConvention: CallingConventions.HasThis,
+                                                   returnType: property.PropertyType,
+                                                   parameterTypes: Array.Empty<Type>());
+        EmitPropertySetter(propSetter);
     }
+    
+    
 
 }
 
-public class Fulfiller
-{
-    protected readonly HashSet<Type> _interfaceTypes;
-    protected readonly IPropertyFulfiller _propertyFulfiller;
-
-    public Fulfiller(params Type[] interfaceTypes)
-    {
-        _interfaceTypes = new HashSet<Type>(interfaceTypes.Length);
-        foreach (var interfaceType in interfaceTypes)
-        {
-            if (interfaceType == typeof(INotifyPropertyChanged))
-            {
-                _propertyFulfiller
-            }
-        }
-    }
-
-    public Type GenerateImplementationType()
-    {
-        throw new NotImplementedException();
-    }
-
-    public static TInterface CreateImplementation<TInterface>()
-        where TInterface : class  // closest constraint to : interface
-    {
-        var interfaceType = typeof(TInterface);
-        if (!interfaceType.IsInterface)
-            throw Dump.GetException<ArgumentException>($"{typeof(TInterface)} is not an interface", nameof(TInterface));
-        var interfaces = typeof(TInterface).GetInterfaces();
-        var interfaceTypes = new Type[interfaces.Length + 1];
-        interfaceTypes[0] = interfaceType;
-        interfaces.CopyTo(interfaceTypes, 1);
-        var implementationType = GenerateImplementationType(interfaceTypes);
-        var instance =  Activator.CreateInstance(implementationType) as TInterface;
-        if (instance is null)
-            throw new InvalidOperationException("Unable to create an implementation");
-        return instance;
-    }
-
-    public object CreateImplementation<T1, T2>() => throw new NotImplementedException();
-    public object CreateImplementation<T1, T2, T3>() => throw new NotImplementedException();
-    public object CreateImplementation<T1, T2, T3, T4>() => throw new NotImplementedException();
-}
