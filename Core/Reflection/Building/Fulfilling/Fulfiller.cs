@@ -7,11 +7,40 @@ using Jay.Text;
 
 namespace Jay.Reflection.Building.Fulfilling;
 
-public abstract class PropertyFulfiller
+public partial class Fulfiller
 {
-    private static string GetFieldName(string propertyName)
+    public abstract class Fulfilled
     {
-        return string.Create(propertyName.Length + 1, propertyName, (span, name) =>
+        
+    }
+
+    public class FulfilledProperty : Fulfilled
+    {
+        public PropertyBuilder Property { get; init; }
+        public FieldBuilder BackingField { get; init; }
+        public MethodBuilder Getter { get; init; }
+        public MethodBuilder Setter { get; init; }
+    }
+
+    public class FulfilledEvent : Fulfilled
+    {
+        public EventBuilder Event { get; init; }
+        public FieldBuilder BackingField { get; init; }
+        public MethodBuilder Adder { get; init; }
+        public MethodBuilder Remover { get; init; }
+        public MethodBuilder Caller { get; init; }
+    }
+}
+
+public partial class Fulfiller
+{
+    private readonly TypeBuilder _typeBuilder;
+    private readonly IReadOnlySet<Type> _interfaceTypes;
+    private readonly Dictionary<MemberInfo, Fulfilled> _fulfilledMembers;
+
+    private static string GetBackingFieldName(MemberInfo member)
+    {
+        return string.Create(member.Name.Length + 1, member.Name, (span, name) =>
         {
             span[0] = '_';
             span[1] = char.ToLower(name[0]);
@@ -28,67 +57,83 @@ public abstract class PropertyFulfiller
     {
         return $"set_{property.Name}";
     }
-    
-    protected readonly TypeBuilder _typeBuilder;
-    protected readonly List<PropertyFulfiller> _fulfillers;
 
-    protected PropertyFulfiller(TypeBuilder typeBuilder)
+    protected void EmitPropertyGetter(MethodBuilder getter)
     {
-        _typeBuilder = typeBuilder;
-        _fulfillers = new List<PropertyFulfiller>(0);
+        
     }
-
+    
     protected void EmitPropertySetter(MethodBuilder setter)
     {
+        /* set => {
+         *  if (_field != value)
+         *  {
+         *      this.NotifyPropertyChanging?();
+         *      _field = value;
+         *      this.NotifyPropertyChanged?();
+         *  }};
+         * */
+        
         var emitter = setter.GetEmitter();
         
     }
-    
-    public void Add(PropertyFulfiller propertyFulfiller)
-    {
-        _fulfillers.Add(propertyFulfiller);
-    }
 
-    public (FieldBuilder BackingField, PropertyBuilder Property) Fulfill(PropertyInfo property)
+    protected readonly Dictionary<PropertyInfo, FulfilledProperty> _fulfilledProperties;
+
+    protected FulfilledProperty FulfillProperty(PropertyInfo property)
     {
-        Type[]? parameterTypes;
-        var indexParameters = property.GetIndexParameters();
-        if (indexParameters.Length > 0)
+        return _fulfilledProperties.GetOrAdd(property, prop =>
         {
-            Debugger.Break();
-            parameterTypes = new Type[indexParameters.Length];
-            for (var i = 0; i < indexParameters.Length; i++)
+            Type[]? parameterTypes;
+            var indexParameters = prop.GetIndexParameters();
+            if (indexParameters.Length > 0)
             {
-                parameterTypes[i] = indexParameters[i].ParameterType;
+                Debugger.Break();
+                parameterTypes = new Type[indexParameters.Length];
+                for (var i = 0; i < indexParameters.Length; i++)
+                {
+                    parameterTypes[i] = indexParameters[i].ParameterType;
+                }
             }
-        }
-        else
-        {
-            parameterTypes = null;
-        }
+            else
+            {
+                parameterTypes = null;
+            }
 
-        var field = _typeBuilder.DefineField(fieldName: GetFieldName(property.Name),
-                                             type: property.PropertyType,
-                                             FieldAttributes.Private);
-        
-        var prop = _typeBuilder.DefineProperty(name: property.Name,
-                                               attributes: property.Attributes,
-                                               callingConvention: CallingConventions.HasThis,
-                                               returnType: property.PropertyType,
-                                               returnTypeRequiredCustomModifiers: null,
-                                               returnTypeOptionalCustomModifiers: null,
-                                               parameterTypes: parameterTypes,
-                                               parameterTypeRequiredCustomModifiers: null,
-                                               parameterTypeOptionalCustomModifiers: null);
-        var propSetter = _typeBuilder.DefineMethod(name: GetPropertySetterName(property),
-                                                   attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.SpecialName,
+            var fField = _typeBuilder.DefineField(fieldName: GetBackingFieldName(prop),
+                                                 type: prop.PropertyType,
+                                                 FieldAttributes.Private);
+
+            var fProperty = _typeBuilder.DefineProperty(name: prop.Name,
+                                                   attributes: prop.Attributes,
                                                    callingConvention: CallingConventions.HasThis,
-                                                   returnType: property.PropertyType,
-                                                   parameterTypes: Array.Empty<Type>());
-        EmitPropertySetter(propSetter);
-    }
-    
-    
+                                                   returnType: prop.PropertyType,
+                                                   returnTypeRequiredCustomModifiers: null,
+                                                   returnTypeOptionalCustomModifiers: null,
+                                                   parameterTypes: parameterTypes,
+                                                   parameterTypeRequiredCustomModifiers: null,
+                                                   parameterTypeOptionalCustomModifiers: null);
+            var fGetter = _typeBuilder.DefineMethod(name: GetPropertyGetterName(prop),
+                                                    attributes: MethodAttributes.Private | MethodAttributes.Final,
+                                                    callingConvention: CallingConventions.HasThis,
+                                                    returnType: prop.PropertyType,
+                                                    parameterTypes: Array.Empty<Type>());
+            EmitPropertyGetter(fGetter);
+            var fSetter = _typeBuilder.DefineMethod(name: GetPropertySetterName(prop),
+                                                       attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.SpecialName,
+                                                       callingConvention: CallingConventions.HasThis,
+                                                       returnType: typeof(void),
+                                                       parameterTypes: new Type[1]{prop.PropertyType});
+            EmitPropertySetter(fSetter);
 
+            return new FulfilledProperty
+            {
+                Property = fProperty,
+                BackingField = fField,
+                Getter = fGetter,
+                Setter = fSetter,
+            };
+        });
+    }
 }
 

@@ -24,11 +24,6 @@ using Jay.Validation;
 #else
 using var text = new TextBuilder();
 
-var fulfiller = Fulfiller.Default;
-
-var instance = fulfiller.CreateImplementation<IKeyEntity<Guid>>();
-
-
 
 
 
