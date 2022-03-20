@@ -80,16 +80,16 @@ public interface IRandomizer
     }
     DateTime DateTime(DateTime incMin, DateTime incMax);
 
-    DateTimeOffset DateTimeOffset()
+    DateTimeOffset DateTimeOffset(TimeSpan? offset)
     {
-        return new DateTimeOffset(Long(), TimeSpan());
+        return new DateTimeOffset(Long(), offset ?? TimeSpan());
     }
     DateTimeOffset DateTimeOffset(DateTimeOffset incMin, DateTimeOffset incMax);
 
     void Fill(Span<byte> bytes);
 
     TEnum Enum<TEnum>(bool incFlags = false)
-        where TEnum : struct, Enum;
+        where TEnum : Enum;
 
     TUnmanaged Unmanaged<TUnmanaged>()
         where TUnmanaged : unmanaged

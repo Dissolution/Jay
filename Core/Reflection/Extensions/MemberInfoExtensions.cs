@@ -77,4 +77,10 @@ public static class MemberInfoExtensions
             return type.IsStatic();
         return false;
     }
+
+    public static bool HasAttribute<TAttribute>(this MemberInfo member)
+        where TAttribute : Attribute
+    {
+        return Attribute.GetCustomAttribute(member, typeof(TAttribute), true) is not null;
+    }
 }

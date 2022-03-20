@@ -2,8 +2,10 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Jay.Reflection;
+using Jay.Validation;
 
-namespace Jay.Reflection;
+namespace Jay;
 
 public static class TypeExtensions
 {
@@ -113,42 +115,46 @@ public static class TypeExtensions
         }
         return true;
     }
+    
 
-    // public static Result TryFind<TMember>(this Type type, 
-    //                                       Expression<Func<Type, TMember>> findMember,
-    //                                       [NotNullWhen(true)] out TMember? member)
-    //     where TMember : MemberInfo
-    // {
-    //     member = default;
-    //     if (type is null) return new ArgumentNullException(nameof(type));
-    //     if (findMember is null) return new ArgumentNullException(nameof(findMember));
-    //     Func<Type, TMember> func;
-    //     try
-    //     {
-    //         func = findMember.Compile();
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         return ex;
-    //     }
-    //     try
-    //     {
-    //         member = func(type);
-    //         if (member is null)
-    //             return new ReflectionException($"Unable to find a non-null {typeof(TMember)}");
-    //         return true;
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Debugger.Break();
-    //
-    //         return ex;
-    //     }
-    //
-    //
-    //
-    //     Debugger.Break();
-    // }
+    public static bool IsByRef(this Type? type, out Type underlyingType)
+    {
+        if (type is null)
+        {
+            underlyingType = typeof(void);
+            return false;
+        }
+
+        if (type.IsByRef)
+        {
+            underlyingType = type.GetElementType()
+                                 .ThrowIfNull();
+            return true;
+        }
+
+        underlyingType = type;
+        return false;
+    }
+
+    public static (bool ByRef, Type UnderlyingType) IsByRef(this Type? type)
+    {
+        if (type is null)
+        {
+            return (false, typeof(void));
+        }
+
+        if (type.IsByRef)
+        {
+            return (true, type.GetElementType()!);
+        }
+
+        return (false, type);
+    }
+
+    public static bool HasInterface(this Type type, Type interfaceType)
+    {
+        return type.GetInterfaces().Any(t => t == interfaceType);
+    }
 
    
 }

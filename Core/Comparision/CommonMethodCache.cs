@@ -11,7 +11,7 @@ namespace Jay.Comparision;
 /// A cache of <see cref="IEqualityComparer{T}"/>.Default and <see cref="IComparer{T}"/>.Default instances accessible
 /// with a <see cref="Type"/>.
 /// </summary>
-public static class ComparerCache
+public static class CommonMethodCache
 {
     public sealed class CacheComparer : IEqualityComparer, IComparer
     {
@@ -49,9 +49,9 @@ public static class ComparerCache
     private static readonly ConcurrentTypeDictionary<IEqualityComparer> _equalityComparers;
     private static readonly ConcurrentTypeDictionary<IComparer> _comparers;
 
-    public static CacheComparer Default { get; } = new CacheComparer();
+    public static CacheComparer Comparer { get; } = new CacheComparer();
     
-    static ComparerCache()
+    static CommonMethodCache()
     {
         _equalityComparers = new();
         _comparers = new();
@@ -95,5 +95,36 @@ public static class ComparerCache
     public static int Compare(Type type, object? left, object? right)
     {
         return GetComparer(type).Compare(left, right);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T? Default<T>() => default(T);
+        
+    public static object? Default(Type? type)
+    {
+        if (type is null)
+            return null;
+        if (type.IsClass)
+            return null;
+        return Activator.CreateInstance(type);
+    }
+        
+    /// <summary>
+    /// Create a new, Uninitialized object of the specified type.
+    /// </summary>
+    [return: NotNull]
+    public static T CreateRaw<T>()
+    {
+        return (T)RuntimeHelpers.GetUninitializedObject(typeof(T))!;
+    }
+
+    /// <summary>
+    /// Create a new, Uninitialized object of the specified type.
+    /// </summary>
+    [return: NotNullIfNotNull("type")]
+    public static object? CreateRaw(Type? type)
+    {
+        if (type is null) return null;
+        return RuntimeHelpers.GetUninitializedObject(type);
     }
 }

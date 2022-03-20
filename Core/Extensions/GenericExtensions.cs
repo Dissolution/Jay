@@ -1,5 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using InlineIL;
+// ReSharper disable EntityNameCapturedOnly.Global
+using static InlineIL.IL;
 
 namespace Jay;
 
@@ -9,17 +11,17 @@ public static class GenericExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsDefault<T>(this T? value)
     {
-        IL.Emit.Ldarg(nameof(value));
-        IL.Emit.Brfalse("yup");
-        IL.Emit.Ldc_I4_0();
-        IL.Emit.Ret();
-        IL.MarkLabel("yup");
-        IL.Emit.Ldc_I4_1();
-        IL.Emit.Ret();
-        throw IL.Unreachable();
+        Emit.Ldarg(nameof(value));
+        Emit.Brfalse("isDefault");
+        Emit.Ldc_I4_0();
+        Emit.Ret();
+        MarkLabel("isDefault");
+        Emit.Ldc_I4_1();
+        Emit.Ret();
+        throw Unreachable();
     }
 
-    public static ReadOnlySpan<char> ToReadOnlyText<T>(this T? value)
+    public static ReadOnlySpan<char> ToText<T>(this T? value)
     {
         if (value is null) return default;
         if (value is string str) return str.AsSpan();

@@ -22,7 +22,7 @@ public interface ITextComparer : IComparer<string?>,
     
     int IComparer.Compare(object? x, object? y)
     {
-        return Compare(x.ToReadOnlyText(), y.ToReadOnlyText());
+        return Compare(x.ToText(), y.ToText());
     }
 
     int Compare(ReadOnlySpan<char> x, ReadOnlySpan<char> y);

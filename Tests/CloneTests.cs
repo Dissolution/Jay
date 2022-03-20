@@ -136,7 +136,7 @@ public class CloneTests
             {
                 Assert.False(ReferenceEquals(dictValue, cloneValue));
                 Assert.True(dictValue?.GetType() == cloneValue.GetType());
-                Assert.True(ComparerCache.Default.Equal(dictValue, cloneValue));
+                Assert.True(CommonMethodCache.Comparer.Equal(dictValue, cloneValue));
             }
         }
         

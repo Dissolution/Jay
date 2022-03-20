@@ -137,7 +137,7 @@ public readonly struct Box : IEquatable<Box>,
         if (box.IsNull) return 1;
         if (box._objType != _objType)
             return 0;
-        return ComparerCache.Compare(_objType!, _obj, box._obj);
+        return CommonMethodCache.Compare(_objType!, _obj, box._obj);
     }
 
     public int CompareTo(object? obj)
@@ -145,14 +145,14 @@ public readonly struct Box : IEquatable<Box>,
         if (IsNull) return obj is null ? 0 : -1;
         if (obj is null) return 1;
         if (_objType != obj.GetType()) return 0;
-        return ComparerCache.Compare(_objType!, _obj, obj);
+        return CommonMethodCache.Compare(_objType!, _obj, obj);
     }
 
     public bool Equals(Box box)
     {
         if (IsNull) return box.IsNull;
         return _objType == box._objType &&
-               ComparerCache.Equals(_objType!, _obj, box._obj);
+               CommonMethodCache.Equals(_objType!, _obj, box._obj);
     }
 
     public override bool Equals(object? obj)
@@ -160,13 +160,13 @@ public readonly struct Box : IEquatable<Box>,
         if (IsNull) return obj is null;
         if (obj is null) return false;
         return _objType == obj.GetType() &&
-               ComparerCache.Equals(_objType!, _obj, obj);
+               CommonMethodCache.Equals(_objType!, _obj, obj);
     }
 
     public override int GetHashCode()
     {
         if (_obj is null) return 0;
-        return ComparerCache.GetHashCode(_objType!, _obj);
+        return CommonMethodCache.GetHashCode(_objType!, _obj);
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider)

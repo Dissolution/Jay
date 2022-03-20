@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Jay.Reflection;
+// ReSharper disable EqualExpressionComparison
 
 namespace Jay.Tests;
 

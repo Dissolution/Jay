@@ -40,7 +40,7 @@ public static class StreamExtensions
             if (bom[0] == 0x0 && bom[1] == 0x0 && bom[2] == 0xFE && bom[3] == 0xFF)
                 return Encoding.UTF32;
 
-            //Attempt to use streamreader, falls back to ASCII
+            //Attempt to use StreamReader, falls back as ASCII
             if (stream.Position != 0L)
                 stream.Seek(0L, SeekOrigin.Begin);
             using (var reader = new StreamReader(stream, Encoding.ASCII, true))

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Jay.Comparision;
 using Jay.Tests.Entities;
+// ReSharper disable ExpressionIsAlwaysNull
+// ReSharper disable StackAllocInsideLoop
 
 namespace Jay.Tests;
 
@@ -46,7 +48,9 @@ public class EnumerableEqualityComparerTests
         foreach (int length in new[] { 0, 1, 128 })
         {
             int[] array = new int[length];
+#pragma warning disable CA2014
             Span<int> span = stackalloc int[length];
+#pragma warning restore CA2014
             List<int> list = new List<int>(length);
             IEnumerable<int> enumerable = Enumerable.Range(0, length);
             for (var i = 0; i < length; i++)
@@ -85,10 +89,10 @@ public class EnumerableEqualityComparerTests
 
         Assert.True(testComparer.Equals(nullTest, nullTest));
         Assert.True(testComparer.Equals(nullTest, array));
-        Assert.True(testComparer.Equals(nullTest, (TestClass?[])null));
+        Assert.True(testComparer.Equals(nullTest, (TestClass?[]?)null));
         Assert.True(testComparer.Equals(nullTest, span));
         Assert.True(testComparer.Equals(nullTest, list));
         Assert.True(testComparer.Equals(nullTest, enumerable));
-        Assert.True(testComparer.Equals(nullTest, (IEnumerable<TestClass?>)null));
+        Assert.True(testComparer.Equals(nullTest, (IEnumerable<TestClass?>?)null));
     }
 }

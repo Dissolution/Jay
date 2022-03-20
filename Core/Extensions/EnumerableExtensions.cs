@@ -143,7 +143,7 @@ public static class EnumerableExtensions
 		if (values is null)
 			throw new ArgumentNullException(nameof(values));
 		if (selector is null)
-			throw new ArgumentNullException(nameof(values));
+			throw new ArgumentNullException(nameof(selector));
 		return values.Select(selector).Sum();
 	}
 	#endregion
@@ -173,7 +173,7 @@ public static class EnumerableExtensions
 		if (values is null)
 			throw new ArgumentNullException(nameof(values));
 		if (selector is null)
-			throw new ArgumentNullException(nameof(values));
+			throw new ArgumentNullException(nameof(selector));
 		return values.Select(selector).Sum();
 	}
 	#endregion

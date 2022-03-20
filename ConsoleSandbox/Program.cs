@@ -11,6 +11,7 @@ using System.Text.Json;
 using ConsoleSandbox;
 using Jay;
 using Jay.Collections;
+using Jay.Enums;
 using Jay.Reflection;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Building.Emission;
@@ -24,7 +25,7 @@ using Jay.Validation;
 #else
 using var text = new TextBuilder();
 
-
+var e = Enumeration.Wrap(Reflect.AllFlags);
 
 
 

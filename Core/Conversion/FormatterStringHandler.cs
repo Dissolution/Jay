@@ -73,6 +73,15 @@ public ref struct FormatterStringHandler
         }
     }
 
+    public void AppendFormatted(ReadOnlySpan<char> text)
+    {
+        while (!TextHelper.TryCopyTo(text, Available))
+        {
+            Grow();
+        }
+        _length += text.Length;
+    }
+    
     public void AppendFormatted<T>(T? value)
     {
         var formatter = _formatterCache.GetFormatter<T>();

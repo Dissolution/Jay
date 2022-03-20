@@ -12,17 +12,7 @@ namespace Jay
 {
     public static class Bits
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int HalfRoundUp(int value)
-        {
-            return (value >> 1) + (value & 1);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int HalfRoundDown(int value)
-        {
-            return (value >> 1);
-        }
+       
     }
 
     public static class Bits<T> where T : unmanaged

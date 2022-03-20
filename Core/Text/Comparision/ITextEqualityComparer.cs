@@ -11,7 +11,7 @@ public interface ITextEqualityComparer : IEqualityComparer<string?>,
 
     bool IEqualityComparer<char>.Equals(char x, char y) => Equals(x.AsReadOnlySpan(), y.AsReadOnlySpan());
 
-    bool IEqualityComparer.Equals(object? x, object? y) => Equals(x.ToReadOnlyText(), y.ToReadOnlyText());
+    bool IEqualityComparer.Equals(object? x, object? y) => Equals(x.ToText(), y.ToText());
 
     bool Equals(ReadOnlySpan<char> x, ReadOnlySpan<char> y);
 
@@ -22,7 +22,7 @@ public interface ITextEqualityComparer : IEqualityComparer<string?>,
 
     int IEqualityComparer<char>.GetHashCode(char ch) => GetHashCode(ch.AsReadOnlySpan());
 
-    int IEqualityComparer.GetHashCode(object? obj) => GetHashCode(obj.ToReadOnlyText());
+    int IEqualityComparer.GetHashCode(object? obj) => GetHashCode(obj.ToText());
 
     int GetHashCode(ReadOnlySpan<char> span);
 }
