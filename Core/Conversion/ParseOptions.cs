@@ -28,7 +28,7 @@ public readonly record struct ParseOptions
     
     public override string ToString()
     {
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         text.Write('(');
         if (!ExactFormats.IsNullOrEmpty())
         {

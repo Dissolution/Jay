@@ -150,7 +150,7 @@ public static class TimeSpanExtensions
         /* TimeSpan formatting has gotchas.
          * You have to escape certain characters for them to actually appear.
          */
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         int i = 0;
         char ch;
         while (i < formatLen)

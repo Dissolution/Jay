@@ -456,7 +456,7 @@ public sealed class ILGeneratorEmitter : IILGeneratorEmitter
 
     public override string ToString()
     {
-        using var textBuilder = new TextBuilder();
+        using var textBuilder = TextBuilder.Borrow();
         textBuilder.AppendDelimit(Environment.NewLine, this.Instructions, (text, instr) =>
         {
             WriteOffset(text, instr);

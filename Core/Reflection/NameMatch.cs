@@ -89,7 +89,7 @@ public readonly struct NameMatch
 
     public override string ToString()
     {
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         if (Name is null)
         {
             text.Append('*');

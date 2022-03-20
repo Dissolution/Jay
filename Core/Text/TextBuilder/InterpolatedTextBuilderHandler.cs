@@ -45,7 +45,7 @@ public ref struct InterpolatedTextBuilderHandler
     {
         if (alignment != 0)
         {
-            using var temp = new TextBuilder();
+            using var temp = TextBuilder.Borrow();
             temp.WriteFormatted<T>(value, format);
             _textBuilder.WriteAligned(temp.Written, alignment > 0 ? Alignment.Right : Alignment.Left, alignment);
         }

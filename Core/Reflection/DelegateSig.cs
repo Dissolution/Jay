@@ -94,7 +94,7 @@ public readonly struct DelegateSig : IEquatable<DelegateSig>
 
     public override string ToString()
     {
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         text.Write(IsFunc ? "Func<" : "Action<");
         text.AppendDelimit(",", ParameterTypes, (tb,pt) => tb.AppendDump(pt));
         if (IsFunc)

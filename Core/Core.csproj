@@ -12,6 +12,7 @@
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Authors>Timothy Jay</Authors>
+    <Title>Jay Core Libraries</Title>
   </PropertyGroup>
 
   <ItemGroup>

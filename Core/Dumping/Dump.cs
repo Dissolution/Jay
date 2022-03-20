@@ -159,7 +159,7 @@ public static partial class Dump
 
     public static string Value<T>(T? value, DumpOptions options = default)
     {
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         var dumper = GetDumper<T>();
         dumper.DumpValue(text, value, options);
         return text.ToString();

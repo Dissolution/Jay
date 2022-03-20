@@ -94,7 +94,7 @@ public static class RuntimeBuilder
 
     public static string CreateMethodName(string? name, DelegateSig delegateSig)
     {
-        using var builder = new TextBuilder();
+        using var builder = TextBuilder.Borrow();
         if (!TryAppendName(name, builder))
         {
             builder.Clear();
@@ -114,7 +114,7 @@ public static class RuntimeBuilder
 
     public static string CreateTypeName(string? name, TypeAttributes typeAttributes)
     {
-        using var builder = new TextBuilder();
+        using var builder = TextBuilder.Borrow();
         if (!TryAppendName(name, builder))
         {
             builder.Clear();
@@ -138,7 +138,7 @@ public static class RuntimeBuilder
 
     public static string FixedMemberName(string? name, MemberTypes memberType)
     {
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         if (!TryAppendName(name, text))
         {
             var ctr = Interlocked.Increment(ref _counter);

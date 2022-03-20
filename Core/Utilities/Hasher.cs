@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using Jay.Exceptions;
+using Jay.Reflection;
 
 namespace Jay;
 
@@ -496,6 +497,18 @@ public ref struct Hasher
         return hasher.ToHashCode();
     }
 
+    public static unsafe int Create<T>(T* ptr, int length)
+        where T : unmanaged
+    {
+        if (length == 0) return 0;
+        var hasher = new Hasher();
+        for (var i = 0; i < length; i++)
+        {
+            hasher.Add<T>(Danger.Read<T>(ptr));
+            ptr = Danger.OffsetBy<T>(ptr, 1);
+        }
+        return hasher.ToHashCode();
+    }
 
     // State variables
     private uint _v1, _v2, _v3, _v4;

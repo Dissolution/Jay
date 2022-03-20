@@ -23,7 +23,7 @@ using Jay.Validation;
     var result = Runner.RunAndOpenHtml();
     Console.WriteLine(result);
 #else
-using var text = new TextBuilder();
+using var text = TextBuilder.Borrow();
 
 var e = Enumeration.Wrap(Reflect.AllFlags);
 

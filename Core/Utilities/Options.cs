@@ -90,7 +90,7 @@ public readonly struct Options : IEquatable<Options>
 
     public override string ToString()
     {
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         text.AppendDelimit(" | ", _args);
         return text.ToString();
     }

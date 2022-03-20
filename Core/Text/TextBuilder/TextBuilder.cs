@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using InlineIL;
 using Jay.Exceptions;
 using Jay.Validation;
@@ -17,6 +16,11 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 {
     internal const int MinLength = 1024;
 
+    /// <summary>
+    /// Builds a <see cref="string"/> with a <see cref="TextBuilder"/> instance delegate
+    /// </summary>
+    /// <param name="buildText"></param>
+    /// <returns></returns>
     public static string Build(Action<TextBuilder>? buildText)
     {
         if (buildText is null) return string.Empty;
@@ -36,6 +40,8 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
             return builder.ToString();
         }
     }
+
+    public static TextBuilder Borrow() => new TextBuilder();
 
 
     protected char[]? _charArray;
@@ -89,7 +95,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         get => this[index];
     }
 
-    internal Span<char> this[Range range]
+    public Span<char> this[Range range]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _charArray.AsSpan(range);
@@ -114,7 +120,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     /// <summary>
     /// Construct a new <see cref="TextBuilder"/>.
     /// </summary>
-    public TextBuilder()
+    private TextBuilder()
     {
         _charArray = ArrayPool<char>.Shared.Rent(MinLength);
         _length = 0;
@@ -164,11 +170,20 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         
         // string.MaxLength < array.MaxLength
         const int stringMaxLength = 0x3FFFFFDF;
-        //const int arrayMaxLength =  0X7FFFFFC7;
-        int newCapacity = Math.Clamp(Math.Max(minCapacity, _charArray!.Length * 2), 
-                                     MinLength,
-                                     stringMaxLength);
-
+        // This is larger than stringMaxLength, so the clamp below covers this already
+        //const int arrayMaxLength =  0X7FFFFFC7; 
+        int newCapacity;
+        if (_charArray is null)
+        {
+            newCapacity = Math.Max(minCapacity, MinLength);
+        }
+        else
+        {
+            newCapacity = Math.Clamp(Math.Max(minCapacity, _charArray.Length * 2), 
+                         MinLength,
+                         stringMaxLength);
+        }
+            
         // Get our new array, copy what we have written to it
         char[] newArray = ArrayPool<char>.Shared.Rent(newCapacity);
         TextHelper.CopyTo(Written, newArray);
@@ -534,7 +549,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         // We don't know how big value will turn out to be once formatted,
         // so we can just let another temp TextBuilder do the work
         // and then we use the great logic above
-        using var temp = new TextBuilder();
+        using var temp = TextBuilder.Borrow();
         temp.Write<T>(value);
         WriteAligned(temp.Written, alignment, width, fillChar);
     }
@@ -824,7 +839,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     public TextBuilder Insert(int index, Action<TextBuilder> buildInsertText)
     {
         Validate.Insert(index, _length);
-        using var temp = new TextBuilder();
+        using var temp = TextBuilder.Borrow();
         buildInsertText(temp);
         if (index == _length)
         {

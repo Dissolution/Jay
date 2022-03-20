@@ -11,7 +11,7 @@ public ref struct DumpStringHandler
 
     public DumpStringHandler(int literalLength, int formatCount)
     {
-        _text = new TextBuilder();
+        _text = TextBuilder.Borrow();
     }
 
     public void AppendLiteral(string? str)

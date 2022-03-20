@@ -25,21 +25,21 @@ public interface IRandomizer
     ulong ULong(ulong incMin, ulong incMax);
 
     float Float();
-    float Float(float incMin, float incMax, float precision);
+    float Float(float incMin, float incMax, int precision);
     /// <summary>
     /// Get a random <see cref="float"/> percentage value [0.0f &lt;= (r)f &lt; 1.0f]
     /// </summary>
     float FloatPercent();
 
     double Double();
-    double Double(double incMin, double incMax, double precision);
+    double Double(double incMin, double incMax, int precision);
     /// <summary>
     /// Get a random <see cref="double"/> percentage value [0.00d &lt;= (r)d &lt; 1.00d]
     /// </summary>
     double DoublePercent();
 
     decimal Decimal();
-    decimal Decimal(decimal incMin, decimal incMax, decimal precision);
+    decimal Decimal(decimal incMin, decimal incMax, int precision);
     /// <summary>
     /// Get a random <see cref="decimal"/> percentage value [0.0mf &lt;= (r)m &lt; 1.0m]
     /// </summary>
@@ -58,32 +58,18 @@ public interface IRandomizer
     /// <remarks>
     /// One would use this (rather than <see cref="M:System.Guid.NewGuid()"/>) if you wanted consistent Guids produced with the same SEED.
     /// </remarks>
-    Guid Guid()
-    {
-        Span<byte> bytes = stackalloc byte[16];
-        Fill(bytes);
-        return new Guid(bytes);
-    }
+    Guid Guid();
 
-    char Char() => (char)UShort();
-    char Char(char incMin, char incMax) => (char)UShort((ushort)incMin, (ushort)incMax);
+    char Char();
+    char Char(char incMin, char incMax);
 
-    TimeSpan TimeSpan()
-    {
-        return System.TimeSpan.FromTicks(Long());
-    }
+    TimeSpan TimeSpan();
     TimeSpan TimeSpan(TimeSpan incMin, TimeSpan incMax);
 
-    DateTime DateTime(DateTimeKind kind = DateTimeKind.Unspecified)
-    {
-        return new DateTime(Long(), kind);
-    }
+    DateTime DateTime(DateTimeKind kind = DateTimeKind.Unspecified);
     DateTime DateTime(DateTime incMin, DateTime incMax);
 
-    DateTimeOffset DateTimeOffset(TimeSpan? offset)
-    {
-        return new DateTimeOffset(Long(), offset ?? TimeSpan());
-    }
+    DateTimeOffset DateTimeOffset(TimeSpan? offset);
     DateTimeOffset DateTimeOffset(DateTimeOffset incMin, DateTimeOffset incMax);
 
     void Fill(Span<byte> bytes);
@@ -92,23 +78,10 @@ public interface IRandomizer
         where TEnum : Enum;
 
     TUnmanaged Unmanaged<TUnmanaged>()
-        where TUnmanaged : unmanaged
-    {
-        Span<byte> bytes = stackalloc byte[Danger.SizeOf<TUnmanaged>()];
-        Fill(bytes);
-        return MemoryMarshal.Read<TUnmanaged>(bytes);
-    }
+        where TUnmanaged : unmanaged;
 
-    T Single<T>(ReadOnlySpan<T> values)
-    {
-        int r = ZeroTo(values.Length - 1);
-        return values[r];
-    }
-    T Single<T>(params T[] values)
-    {
-        int r = ZeroTo(values.Length - 1);
-        return values[r];
-    }
+    T Single<T>(ReadOnlySpan<T> values);
+    T Single<T>(params T[] values);
     T Single<T>(IEnumerable<T> values);
 
     void Shuffle<T>(Span<T> values);

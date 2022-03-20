@@ -20,7 +20,7 @@ public class InstructionStream : LinkedList<Instruction>
 
     public override string ToString()
     {
-        var text = new TextBuilder();
+        var text = TextBuilder.Borrow();
         text.AppendDelimit<Instruction>(Environment.NewLine, this);
         return text.ToString();
     }

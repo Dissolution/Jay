@@ -16,6 +16,17 @@ public static class TextHelper
     public static ReadOnlySpan<char> LowerCase => _lowerCase;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static unsafe void CopyTo(char* sourcePtr, ref char destPtr, int charCount)
+    {
+        Emit.Ldarg(nameof(destPtr));
+        Emit.Ldarg(nameof(sourcePtr));
+        Emit.Ldarg(nameof(charCount));
+        Emit.Sizeof<char>();
+        Emit.Mul();
+        Emit.Cpblk();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void CopyTo(in char sourcePtr, ref char destPtr, int charCount)
     {
         Emit.Ldarg(nameof(destPtr));

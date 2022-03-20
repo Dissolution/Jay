@@ -199,7 +199,7 @@ public class Instruction : IEquatable<Instruction>
 
     public override string ToString()
     {
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         AppendOffset(text, this);
         text.Append(": ");
         if (GenMethod == ILGeneratorMethod.None)

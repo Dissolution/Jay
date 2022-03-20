@@ -35,7 +35,7 @@ public readonly struct DumpOptions : IEquatable<DumpOptions>
     /// <inheritdoc />
     public override string ToString()
     {
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         text.Write('{');
         if (Detailed)
             text.Write("Detailed,");

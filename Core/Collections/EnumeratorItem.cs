@@ -55,7 +55,7 @@ public readonly struct EnumeratorItem<T> : IEquatable<T>
 
     public override string ToString()
     {
-        using var text = new TextBuilder();
+        using var text = TextBuilder.Borrow();
         // Index
         text.Append('[').Append(Index).Write('/');
         if (SourceLength.HasValue)

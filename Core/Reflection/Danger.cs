@@ -340,7 +340,7 @@ public static unsafe class Danger
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void* OffsetBy<T>(T* source, int elementOffset)
+    public static T* OffsetBy<T>(T* source, int elementOffset)
         where T : unmanaged
     {
         Emit.Ldarg(nameof(source));
@@ -349,7 +349,7 @@ public static unsafe class Danger
         Emit.Conv_I();
         Emit.Mul();
         Emit.Add();
-        return ReturnPointer();
+        return ReturnPointer<T>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -432,5 +432,14 @@ public static unsafe class Danger
         Emit.Ldc_I4_0();
         Emit.Conv_U();
         return ref ReturnRef<T>();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe T* NullPointer<T>()
+        where T : unmanaged
+    {
+        Emit.Ldc_I4_0();
+        Emit.Conv_U();
+        return ReturnPointer<T>();
     }
 }

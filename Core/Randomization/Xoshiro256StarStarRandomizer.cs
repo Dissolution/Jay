@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Runtime.CompilerServices;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
+using Jay.Reflection;
 
 namespace Jay.Randomization;
 
@@ -10,7 +8,6 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
 {
     private const float FloatEpsilon = 1.0f / (1U << 24);
     private const double DoubleEpsilon = 1.0d / (1UL << 53);
-
 
     /// <summary>
     /// SplitMix64 Pseudo-Random Number Generator
@@ -25,11 +22,6 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         z = (z ^ (z >> 27)) * 0x94D049BB133111EBUL;
         return z ^ (z >> 31);
     }
-
-    /// <remarks>RyuJIT will compile this to a single rotate CPU instruction (as of about .NET 4.6.1 and dotnet core 2.0).</remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ulong RotateLeft(ulong x, int k) => (x << k) | (x >> (64 - k));
-
 
     //State #0
     private ulong _s0;
@@ -86,102 +78,6 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         _s3 = SplitMixNext(ref seed);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ulong ULong()
-    {
-        // For improved performance the below loop operates on these stack allocated copies of the heap variables.
-        // Note. doing this means that these heavily used variables are located near to other local/stack variables,
-        // thus they will very likely be cached in the same CPU cache line.
-        ulong s0 = _s0;
-        ulong s1 = _s1;
-        ulong s2 = _s2;
-        ulong s3 = _s3;
-
-        // Generate a further 64 random bits.
-        ulong result = RotateLeft(s1 * 5, 7) * 9;
-
-        // Update PRNG state.
-        ulong t = s1 << 17;
-        s2 ^= s0;
-        s3 ^= s1;
-        s1 ^= s2;
-        s0 ^= s3;
-        s2 ^= t;
-        s3 = RotateLeft(s3, 45);
-
-        // Update the state variables on the heap.
-        _s0 = s0;
-        _s1 = s1;
-        _s2 = s2;
-        _s3 = s3;
-
-        return result;
-    }
-
-    public void Fill(Span<byte> span)
-    {
-        // For improved performance the below loop operates on these stack allocated copies of the heap variables.
-        // Note. doing this means that these heavily used variables are located near to other local/stack variables,
-        // thus they will very likely be cached in the same CPU cache line.
-        ulong state0 = _s0;
-        ulong state1 = _s1;
-        ulong state2 = _s2;
-        ulong state3 = _s3;
-
-        // Allocate bytes in groups of 8 (64 bits at a time), for good performance.
-        // Keep looping and updating buffer to point to the remaining/unset bytes, until buffer.Length is too small
-        // to use this loop.
-        while (span.Length >= sizeof(ulong))
-        {
-            // Get 64 random bits, and assign to buffer (at the slice it is currently pointing to)
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(span),
-                                  BitOperations.RotateLeft(state1 * 5, 7) * 9);
-
-            // Update PRNG state.
-            ulong t = state1 << 17;
-            state2 ^= state0;
-            state3 ^= state1;
-            state1 ^= state2;
-            state0 ^= state3;
-            state2 ^= t;
-            state3 = BitOperations.RotateLeft(state3, 45);
-
-            // Set buffer to the a slice over the remaining bytes.
-            span = span.Slice(sizeof(ulong));
-        }
-
-        // Fill any remaining bytes in buffer (these occur when its length is not a multiple of eight).
-        if (!span.IsEmpty)
-        {
-            // Get 64 random bits.
-            ulong next = BitOperations.RotateLeft(state1 * 5, 7) * 9;
-            unsafe
-            {
-                byte* remainingBytes = (byte*)&next;
-
-                for (int i = 0; i < span.Length; i++)
-                {
-                    span[i] = remainingBytes[i];
-                }
-            }
-
-            // Update PRNG state.
-            ulong t = state1 << 17;
-            state2 ^= state0;
-            state3 ^= state1;
-            state1 ^= state2;
-            state0 ^= state3;
-            state2 ^= t;
-            state3 = BitOperations.RotateLeft(state3, 45);
-        }
-
-        // Update the state variables on the heap.
-        _s0 = state0;
-        _s1 = state1;
-        _s2 = state2;
-        _s3 = state3;
-    }
-
     /// <inheritdoc />
     public byte Byte()
     {
@@ -223,13 +119,60 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     {
         return (long)(ULong());
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong ULong()
+    {
+        // For improved performance the below loop operates on these stack allocated copies of the heap variables.
+        // Note. doing this means that these heavily used variables are located near to other local/stack variables,
+        // thus they will very likely be cached in the same CPU cache line.
+        ulong s0 = _s0;
+        ulong s1 = _s1;
+        ulong s2 = _s2;
+        ulong s3 = _s3;
+
+        // Generate a further 64 random bits.
+        ulong result = BitOperations.RotateLeft(s1 * 5, 7) * 9;
+
+        // Update PRNG state.
+        ulong t = s1 << 17;
+        s2 ^= s0;
+        s3 ^= s1;
+        s1 ^= s2;
+        s0 ^= s3;
+        s2 ^= t;
+        s3 = BitOperations.RotateLeft(s3, 45);
+
+        // Update the state variables on the heap.
+        _s0 = s0;
+        _s1 = s1;
+        _s2 = s2;
+        _s3 = s3;
+
+        return result;
+    }
+    
 
     /// <inheritdoc />
     public float Float()
     {
         Span<byte> bytes = stackalloc byte[sizeof(float)];
         Fill(bytes);
-        return Unsafe.ReadUnaligned<float>(ref MemoryMarshal.GetReference(bytes));
+        return Danger.ReadUnaligned<float>(in MemoryMarshal.GetReference(bytes));
+    }
+    /// <inheritdoc />
+    public float Float(float inclusiveMinimum, float inclusiveMaximum)
+    {
+        double range = ((double)inclusiveMaximum - (double)inclusiveMinimum) + (double)float.Epsilon;
+        return (float)((DoublePercent() * range) + (double)inclusiveMinimum);
+    }
+    /// <inheritdoc />
+    public float Float(float inclusiveMinimum, float inclusiveMaximum, int precision)
+    {
+        var incMin = Math.Round(inclusiveMinimum, precision);
+        var incMax = Math.Round(inclusiveMaximum, precision);
+        double range = (incMax - incMin) + (double)float.Epsilon;
+        return (float)Math.Round((DoublePercent() * range) + incMin, precision);
     }
 
     /// <inheritdoc />
@@ -237,9 +180,23 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     {
         Span<byte> bytes = stackalloc byte[sizeof(double)];
         Fill(bytes);
-        return Unsafe.ReadUnaligned<double>(ref MemoryMarshal.GetReference(bytes));
+        return Danger.ReadUnaligned<double>(in MemoryMarshal.GetReference(bytes));
     }
-
+    /// <inheritdoc />
+    public double Double(double inclusiveMinimum, double inclusiveMaximum)
+    {
+        double range = (inclusiveMaximum - inclusiveMinimum) + double.Epsilon;
+        return (DoublePercent() * range) + inclusiveMinimum;
+    }
+    /// <inheritdoc />
+    public double Double(double inclusiveMinimum, double inclusiveMaximum, int precision)
+    {
+        var incMin = Math.Round(inclusiveMinimum, precision);
+        var incMax = Math.Round(inclusiveMaximum, precision);
+        double range = (incMax - incMin) + double.Epsilon;
+        return Math.Round((DoublePercent() * range) + incMin, precision);
+    }
+    
     /// <inheritdoc />
     public decimal Decimal()
     {
@@ -260,23 +217,34 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             throw new NotImplementedException();
         }
     }
+    /// <inheritdoc />
+    public decimal Decimal(decimal inclusiveMinimum, decimal inclusiveMaximum)
+    {
+        throw new NotImplementedException();
+    }
+    /// <inheritdoc />
+    public decimal Decimal(decimal inclusiveMinimum, decimal inclusiveMaximum, int precision)
+    {
+        throw new NotImplementedException();
+    }
 
     /// <inheritdoc />
     public TimeSpan TimeSpan()
     {
-        return new TimeSpan((long)ULong());
+        return new TimeSpan(ticks: (long)ULong());
     }
 
     /// <inheritdoc />
     public DateTime DateTime(DateTimeKind kind = DateTimeKind.Unspecified)
     {
-        return new DateTime((long)ULong(), kind);
+        return new DateTime(ticks: (long)ULong(), kind: kind);
     }
 
     /// <inheritdoc />
     public DateTimeOffset DateTimeOffset(TimeSpan? offset = null)
     {
-        return new DateTimeOffset((long)ULong(), offset ?? new TimeSpan((long)ULong()));
+        return new DateTimeOffset(ticks: (long)ULong(),
+                                  offset: offset ?? new TimeSpan((long)ULong()));
     }
 
     /// <inheritdoc />
@@ -289,7 +257,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     }
 
     /// <inheritdoc />
-    public char Character()
+    public char Char()
     {
         return (char)(ULong() >> (8 * (sizeof(ulong) - sizeof(char))));
     }
@@ -313,9 +281,9 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     /// <inheritdoc />
     public T Unmanaged<T>() where T : unmanaged
     {
-        Span<byte> bytes = stackalloc byte[Unsafe.SizeOf<T>()];
+        Span<byte> bytes = stackalloc byte[Danger.SizeOf<T>()];
         Fill(bytes);
-        return Unsafe.ReadUnaligned<T>(ref bytes.GetPinnableReference());
+        return Danger.ReadUnaligned<T>(in bytes.GetPinnableReference());
     }
 
     /// <inheritdoc />
@@ -699,25 +667,9 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         return (inclusiveMinimum + r);
     }
 
-    /// <inheritdoc />
-    public float Float(float inclusiveMinimum, float inclusiveMaximum, float precision)
-    {
-        double range = ((double)inclusiveMaximum - (double)inclusiveMinimum) + (double)float.Epsilon;
-        return (float)((DoublePercent() * range) + (double)inclusiveMinimum);
-    }
+    
 
-    /// <inheritdoc />
-    public double Double(double inclusiveMinimum, double inclusiveMaximum, double precision)
-    {
-        double range = (inclusiveMaximum - inclusiveMinimum) + double.Epsilon;
-        return (DoublePercent() * range) + inclusiveMinimum;
-    }
-
-    /// <inheritdoc />
-    public decimal Decimal(decimal inclusiveMinimum, decimal inclusiveMaximum, decimal precision)
-    {
-        throw new NotImplementedException();
-    }
+  
 
     /// <inheritdoc />
     public TimeSpan TimeSpan(TimeSpan inclusiveMinimum, TimeSpan inclusiveMaximum)
@@ -739,6 +691,70 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
                                   TimeSpan(inclusiveMinimum.Offset, inclusiveMaximum.Offset));
     }
 
+        public void Fill(Span<byte> span)
+    {
+        // For improved performance the below loop operates on these stack allocated copies of the heap variables.
+        // Note. doing this means that these heavily used variables are located near to other local/stack variables,
+        // thus they will very likely be cached in the same CPU cache line.
+        ulong state0 = _s0;
+        ulong state1 = _s1;
+        ulong state2 = _s2;
+        ulong state3 = _s3;
+
+        // Allocate bytes in groups of 8 (64 bits at a time), for good performance.
+        // Keep looping and updating buffer to point to the remaining/unset bytes, until buffer.Length is too small
+        // to use this loop.
+        while (span.Length >= sizeof(ulong))
+        {
+            // Get 64 random bits, and assign to buffer (at the slice it is currently pointing to)
+            Danger.WriteUnaligned(ref MemoryMarshal.GetReference(span),
+                                  BitOperations.RotateLeft(state1 * 5, 7) * 9);
+
+            // Update PRNG state.
+            ulong t = state1 << 17;
+            state2 ^= state0;
+            state3 ^= state1;
+            state1 ^= state2;
+            state0 ^= state3;
+            state2 ^= t;
+            state3 = BitOperations.RotateLeft(state3, 45);
+
+            // Set buffer to the a slice over the remaining bytes.
+            span = span.Slice(sizeof(ulong));
+        }
+
+        // Fill any remaining bytes in buffer (these occur when its length is not a multiple of eight).
+        if (!span.IsEmpty)
+        {
+            // Get 64 random bits.
+            ulong next = BitOperations.RotateLeft(state1 * 5, 7) * 9;
+            unsafe
+            {
+                byte* remainingBytes = (byte*)&next;
+
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span[i] = remainingBytes[i];
+                }
+            }
+
+            // Update PRNG state.
+            ulong t = state1 << 17;
+            state2 ^= state0;
+            state3 ^= state1;
+            state1 ^= state2;
+            state0 ^= state3;
+            state2 ^= t;
+            state3 = BitOperations.RotateLeft(state3, 45);
+        }
+
+        // Update the state variables on the heap.
+        _s0 = state0;
+        _s1 = state1;
+        _s2 = state2;
+        _s3 = state3;
+    }
+    
     /// <inheritdoc />
     public T Single<T>(ReadOnlySpan<T> values)
     {
@@ -855,7 +871,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     /// a[j] ← source[i]
     ///
     /// </remarks>
-    public T[] Shuffled<T>(ReadOnlySpan<T> values)
+    public IReadOnlyList<T> ToList<T>(ReadOnlySpan<T> values)
     {
         var len = values.Length;
         var array = new T[len];
