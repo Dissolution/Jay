@@ -1,5 +1,7 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Jay.Enums;
 using Jay.Reflection;
 
 namespace Jay.Randomization;
@@ -273,7 +275,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
 
     /// <inheritdoc />
     public TEnum Enum<TEnum>(bool includeFlags = false) 
-        where TEnum : Enum
+        where TEnum : struct, Enum
     {
         throw new NotImplementedException();
     }

@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Jay.Collections;
 using Jay.Reflection;
 using Jay.Validation;
 
@@ -156,5 +158,19 @@ public static class TypeExtensions
         return type.GetInterfaces().Any(t => t == interfaceType);
     }
 
-   
+    private static readonly ConcurrentTypeDictionary<bool> _isUnmanagedCache = new();
+
+    public static bool IsUnmanaged(this Type type)
+    {
+        return _isUnmanagedCache.GetOrAdd(type, t =>
+        {
+            if (t.IsPrimitive || t.IsPointer || t.IsEnum)
+                return true;
+            if (t.IsGenericType || !t.IsValueType)
+                return false;
+            return Enumerable.All(t.GetFields(Reflect.InstanceFlags), field => IsUnmanaged(field.FieldType));
+        });
+    }
+
+
 }

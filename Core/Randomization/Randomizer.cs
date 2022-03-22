@@ -16,6 +16,8 @@ public class Randomizer
         }
     }
 
+    public static IRandomizer Instance { get; } = new Xoshiro256StarStarRandomizer();
+    
     static Randomizer()
     {
 

@@ -75,7 +75,7 @@ public interface IRandomizer
     void Fill(Span<byte> bytes);
 
     TEnum Enum<TEnum>(bool incFlags = false)
-        where TEnum : Enum;
+        where TEnum : struct, Enum;
 
     TUnmanaged Unmanaged<TUnmanaged>()
         where TUnmanaged : unmanaged;

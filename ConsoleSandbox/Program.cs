@@ -12,6 +12,7 @@ using ConsoleSandbox;
 using Jay;
 using Jay.Collections;
 using Jay.Enums;
+using Jay.Randomization;
 using Jay.Reflection;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Building.Emission;
@@ -25,9 +26,13 @@ using Jay.Validation;
 #else
 using var text = TextBuilder.Borrow();
 
-var e = Enumeration.Wrap(Reflect.AllFlags);
+var wrapper = new ConsoleSandbox.EnumWrapper<eULong>();
+var hc = ConsoleSandbox.EnumWrapper<eULong>.GetHashCode(eULong.Yes);
+var c = ConsoleSandbox.EnumWrapper<eULong>.Compare(eULong.No, eULong.WE);
 
-
+BindingFlags flags = Reflect.AllFlags;
+SortedList<ConsoleSandbox.EnumWrapper<BindingFlags>, BindingFlags> list = new();
+list.IndexOfKey(null!);
 
 
 //IDEA: Each method upon firing should call a sub-method that look for stuff 'hanging around'

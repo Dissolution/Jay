@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using InlineIL;
 using Jay.Reflection;
 using Jay.Text;
