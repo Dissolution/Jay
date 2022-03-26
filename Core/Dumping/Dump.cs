@@ -97,7 +97,7 @@ public static partial class Dump
             new Format<Guid>("D", "D"),
             new Format<decimal>("N", "N"),
         };
-        Debug.Assert(_dumpers.Any(d => d is ObjectDumper));
+        //Debug.Assert(_dumpers.Any(d => d is ObjectDumper));
         _dumperMap = new(_dumpers.Count);
     }
 

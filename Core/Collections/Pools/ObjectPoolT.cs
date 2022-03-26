@@ -6,23 +6,27 @@ using Jay.Dumping;
 
 namespace Jay.Collections.Pools;
 
+/// <summary>
+/// A thread-safe pool of <typeparamref name="T"/> instances.
+/// </summary>
+/// <typeparam name="T">An instance class.</typeparam>
 /// <remarks>
-///     This is a generic implementation of the object pooling pattern.
-///     The main purpose is to re-use a limited number of objects rather than continuously `new()`ing them up. 
+/// This is a generic implementation of an object pool.
+/// The main purpose is to re-use a limited number of objects rather than continuously `new()`ing them up. 
 /// 
-///     - It is not the goal to keep all returned objects.
-///       - Pool is not meant for storage.
-///       - If there is no space in the pool, extra returned objects will be dropped.
-///     - It is implied that if object was obtained from a pool, the caller will return it back in a relatively short time.
-///       - Keeping checked out objects for long durations is ok, but reduces usefulness of pooling.
-///     - Not returning objects to the pool in not detrimental to the pool's work, but is a bad practice. 
-///       - If there is no intent for reusing the object, do not use pool
+/// - It is not the goal to keep all returned objects.
+///   - Pool is not meant for storage.
+///   - If there is no space in the pool, extra returned objects will be disposed.
+/// - It is implied that if object was obtained from a pool, the caller will return it back in a relatively short time.
+///   - Keeping checked out objects for long durations is ok, but reduces usefulness of pooling.
+/// - Not returning objects to the pool in not detrimental to the pool's work, but is a bad practice. 
+///   - If there is no intent for reusing the object, do not use pool
 /// </remarks>
 public sealed class ObjectPool<T> : IDisposable
     where T : class
 {
     /// <summary>
-    ///     An <see cref="IDisposable"/> wrapper around returning an instance to an object pool
+    /// An <see cref="IDisposable"/> that returns an instance to an object pool.
     /// </summary>
     private sealed class PoolReturner : IDisposable
     {
@@ -68,21 +72,52 @@ public sealed class ObjectPool<T> : IDisposable
     private readonly Item[] _items;
 
     /// <summary>
-    /// Value creation factory.
+    /// Instance creation function.
     /// </summary>
     private readonly Func<T> _factory;
 
+    /// <summary>
+    /// Optional instance clean action.
+    /// </summary>
     private readonly Action<T>? _clean;
 
+    /// <summary>
+    /// Optional instance disposal action.
+    /// </summary>
     private readonly Action<T>? _dispose;
 
+    internal bool IsDisposed
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Interlocked.CompareExchange(ref _disposed, 0, 0) > 0;
+    }
+
+    /// <summary>
+    /// Gets the maximum number of items retained by this pool.
+    /// </summary>
+    public int Capacity => _items.Length + 1;
+    
+    /// <summary>
+    /// Creates a new <see cref="ObjectPool{T}"/> for classes.
+    /// </summary>
+    /// <typeparam name="T">An instance class</typeparam>
+    /// <param name="factory">A function to create a new <typeparamref name="T"/> instance.</param>
+    /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
+    /// <param name="dispose">An optional action to perform on a <typeparamref name="T"/> if it is disposed.</param>
     public ObjectPool(Func<T> factory,
                       Action<T>? clean = null,
                       Action<T>? dispose = null)
-        : this(Pool.DefaultCapacity, factory, clean, dispose)
-    {
-    }
+        : this(Pool.DefaultCapacity, factory, clean, dispose) { }
 
+    
+    /// <summary>
+    /// Creates a new <see cref="ObjectPool{T}"/> for classes with a specified <paramref name="capacity"/>.
+    /// </summary>
+    /// <typeparam name="T">An instance class</typeparam>
+    /// <param name="capacity">The specific number of items that will ever be retained in the pool.</param>
+    /// <param name="factory">A function to create a new <typeparamref name="T"/> instance.</param>
+    /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
+    /// <param name="dispose">An optional action to perform on a <typeparamref name="T"/> if it is disposed.</param>
     public ObjectPool(int capacity,
                       Func<T> factory,
                       Action<T>? clean = null,
@@ -97,20 +132,18 @@ public sealed class ObjectPool<T> : IDisposable
         _factory = factory ?? throw new ArgumentNullException(nameof(factory));
         _clean = clean;
         _dispose = dispose;
-        // We have a _firstItem
+        _firstItem = default;
         _items = new Item[capacity - 1];
     }
-    ~ObjectPool()
-    {
-        this.Dispose();
-    }
+    /// <summary>
+    /// We really need to be sure we're disposed correctly.
+    /// </summary>
+    ~ObjectPool() => this.Dispose();
 
-    internal bool IsDisposed
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Interlocked.CompareExchange(ref _disposed, 0, 0) > 0;
-    }
-
+    /// <summary>
+    /// Check if this <see cref="ObjectPool{T}"/> has been disposed, and if it has, throw an <see cref="ObjectDisposedException"/>.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException"></exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void CheckDisposed()
     {
@@ -121,7 +154,7 @@ public sealed class ObjectPool<T> : IDisposable
     }
 
     /// <summary>
-    /// When we cannot find an available item quickly with Rent()
+    /// When we cannot find an available item quickly with <see cref="Rent"/>, we take this slower path
     /// </summary>
     private T RentSlow()
     {
@@ -132,8 +165,7 @@ public sealed class ObjectPool<T> : IDisposable
             /* Note that the initial read is optimistically not synchronized.
              * That is intentional. 
              * We will interlock only when we have a candidate.
-             * In a worst case we may miss some recently returned objects. Not a big deal.
-             */
+             * In a worst case we may miss some recently returned objects. Not a big deal. */
             instance = items[i].Value;
             if (instance != null)
             {
@@ -148,6 +180,10 @@ public sealed class ObjectPool<T> : IDisposable
         return _factory();
     }
 
+    /// <summary>
+    /// When we cannot return quickly with <see cref="Return"/>, we take this slower path.
+    /// </summary>
+    /// <param name="instance"></param>
     private void ReturnSlow(T instance)
     {
         var items = _items;
@@ -164,19 +200,21 @@ public sealed class ObjectPool<T> : IDisposable
             }
         }
 
-        // We couldn't store this value
+        // We couldn't store this value, dispose it and let it get collected
         _dispose?.Invoke(instance);
     }
 
     /// <summary>
-    /// Rents a <typeparamref name="T"/> instance that should be <see cref="Return"/>ed once it is done being used.
+    /// Rent a <typeparamref name="T"/> instance that should be <see cref="Return"/>ed.
     /// </summary>
     /// <remarks>
     /// Search strategy is a simple linear probing which is chosen for it cache-friendliness.
-    /// Note that Free will try to store recycled objects close to the start thus statistically reducing how far we will typically search.
+    /// Note that Rent will try to store recycled objects close to the start
+    /// thus statistically reducing how far we will typically search.
     /// </remarks>
     public T Rent()
     {
+        // Always check if we've been disposed
         CheckDisposed();
 
         /* PERF: Examine the first element.
@@ -208,14 +246,14 @@ public sealed class ObjectPool<T> : IDisposable
         // Always clean the item
         _clean?.Invoke(instance);
             
-        // Disposed check
+        // If we're disposed, just dispose the instance and exit
         if (IsDisposed)
         {
             _dispose?.Invoke(instance);
             return;
         }
 
-        // Examine first item, if that fails use the pool.
+        // Examine first item, if that fails, use the pool.
         // Initial read is not synchronized; we only interlock on a candidate.
         if (_firstItem == null)
         {
@@ -231,11 +269,15 @@ public sealed class ObjectPool<T> : IDisposable
     }
 
     /// <summary>
-    /// Rents a <typeparamref name="T"/> instance that will be returned the result of this operation is disposed.
+    /// Rents a <typeparamref name="T"/> <paramref name="instance"/>
+    /// that will be returned when the returned <see cref="IDisposable"/> is disposed.
     /// </summary>
-    /// <param name="instance">A fresh instance to be used, it will automatically be returned upon disposal.</param>
-    /// <returns>An <see cref="IDisposable"/> that will return the <paramref name="instance"/>. </returns>
-    /// <remarks><paramref name="instance"/> must not be used after this is disposed.</remarks>
+    /// <param name="instance">A <typeparamref name="T"/> instance,
+    /// it will be returned to its origin <see cref="ObjectPool{T}"/> when disposed.</param>
+    /// <returns>An <see cref="IDisposable"/> that will return the <paramref name="instance"/>.</returns>
+    /// <remarks>
+    /// <paramref name="instance"/> must not be used after this is disposed.
+    /// </remarks>
     public IDisposable Borrow(out T instance)
     {
         instance = Rent();
@@ -247,7 +289,9 @@ public sealed class ObjectPool<T> : IDisposable
     /// </summary>
     public void Dispose()
     {
+        // Have I already been disposed?
         if (Interlocked.Increment(ref _disposed) > 1) return;
+        // We only do anything if we have a disposer
         if (_dispose != null)
         {
             var dispose = _dispose!;
@@ -266,7 +310,7 @@ public sealed class ObjectPool<T> : IDisposable
                 }
             }
         }
-        Debug.Assert(_items.All(item => item.Value is null));
+        Debug.Assert(_items.All(item => item.Value == null));
         GC.SuppressFinalize(this);
     }
 }

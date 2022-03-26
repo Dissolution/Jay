@@ -1,5 +1,7 @@
 ﻿using System.Buffers;
+using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using InlineIL;
 using Jay.Exceptions;
 using Jay.Validation;
@@ -15,6 +17,8 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
                            IDisposable
 {
     internal const int MinLength = 1024;
+
+    internal static readonly string NewLine = Environment.NewLine;
 
     /// <summary>
     /// Builds a <see cref="string"/> with a <see cref="TextBuilder"/> instance delegate
@@ -330,6 +334,20 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
             {
                 GrowThenCopy(strValue);
             }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteLine()
+    {
+        ReadOnlySpan<char> newLine = NewLine;
+        if (TextHelper.TryCopyTo(newLine, Available))
+        {
+            _length += newLine.Length;
+        }
+        else
+        {
+            GrowThenCopy(newLine);
         }
     }
 

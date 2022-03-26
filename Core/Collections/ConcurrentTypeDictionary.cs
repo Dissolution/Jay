@@ -2,6 +2,10 @@
 
 namespace Jay.Collections;
 
+/// <summary>
+/// A <see cref="ConcurrentDictionary{TKey,TValue}"/> of <see cref="Type"/> and <typeparamref name="TValue"/>
+/// </summary>
+/// <typeparam name="TValue"></typeparam>
 public class ConcurrentTypeDictionary<TValue> : ConcurrentDictionary<Type, TValue>
 {
     public ConcurrentTypeDictionary()
@@ -9,6 +13,11 @@ public class ConcurrentTypeDictionary<TValue> : ConcurrentDictionary<Type, TValu
     public ConcurrentTypeDictionary(int capacity)
         : base(Environment.ProcessorCount, capacity) { }
 
+    /// <summary>
+    /// Determines whether the <see cref="ConcurrentTypeDictionary{TValue}"/> contains a key of type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The key <see cref="Type"/> to check for</typeparam>
+    /// <returns></returns>
     public bool ContainsKey<T>() => base.ContainsKey(typeof(T));
 
     public bool TryGetValue<T>([MaybeNullWhen(false)] out TValue value) => base.TryGetValue(typeof(T), out value);

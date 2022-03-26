@@ -26,13 +26,10 @@ using Jay.Validation;
 #else
 using var text = TextBuilder.Borrow();
 
-var wrapper = new ConsoleSandbox.EnumWrapper<eULong>();
-var hc = ConsoleSandbox.EnumWrapper<eULong>.GetHashCode(eULong.Yes);
-var c = ConsoleSandbox.EnumWrapper<eULong>.Compare(eULong.No, eULong.WE);
+var tree = DynamicTree.Create();
+tree[1][3] = 4;
 
-BindingFlags flags = Reflect.AllFlags;
-SortedList<ConsoleSandbox.EnumWrapper<BindingFlags>, BindingFlags> list = new();
-list.IndexOfKey(null!);
+var str = tree.ToString();
 
 
 //IDEA: Each method upon firing should call a sub-method that look for stuff 'hanging around'
