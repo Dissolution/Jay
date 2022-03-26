@@ -43,14 +43,18 @@ public static class EnumerableExtensions
             var count = collection.Count;
             if (count == 0)
                 yield break;
-            using (var e = collection.GetEnumerator())
+            int last = count - 1;
+            using var e = collection.GetEnumerator();
+            var i = 0;
+            while (e.MoveNext())
             {
-                var i = 0;
-                while (e.MoveNext())
-                {
-                    yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, e.Current);
-                    i++;
-                }
+                yield return new EnumeratorItem<T>(index: i, 
+                                                   sourceLength: 
+                                                   count, 
+                                                   isFirst: i == 0, 
+                                                   isLast: i == last, 
+                                                   value: e.Current);
+                i++;
             }
         }
         //IReadOnlyList<T>

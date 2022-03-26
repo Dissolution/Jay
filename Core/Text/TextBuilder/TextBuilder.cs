@@ -675,11 +675,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder AppendRepeat<T>(int count, T? value)
     {
-        if (value is null || count <= 1)
-        {
-            Write<T>(value);
-            return this;
-        }
+        if (value is null || count <= 0) return this;
         int start = _length;
         Write<T>(value);
         int end = _length;

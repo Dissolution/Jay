@@ -67,7 +67,7 @@ public static class TypeExtensions
         if (otherType.IsAssignableFrom(type)) return true;
         if (type.IsGenericType && otherType.IsGenericTypeDefinition)
             return type.GetGenericTypeDefinition() == otherType;
-
+        if (otherType.HasAttribute<DynamicAttribute>()) return true;
         // TODO: OTHER CHECKS
         //Debugger.Break();
         return false;

@@ -29,6 +29,9 @@ using var text = TextBuilder.Borrow();
 var tree = DynamicTree.Create();
 tree[1][3] = 4;
 
+decimal a = tree[1][3];
+
+
 var str = tree.ToString();
 
 

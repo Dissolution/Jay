@@ -43,26 +43,37 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
         return _hasValue;
     }
 
-    private void Dump(TextBuilder text, int indent)
+    private void Dump(TextBuilder text, DumpOptions options, int indent)
     {
-        DumpOptions options = new DumpOptions(true);
-            
         if (_hasValue)
         {
-            // We've already been indented here
-            text.AppendDump(_value, options);
+            text.AppendDump(_value, options).WriteLine();
         }
-        text.WriteLine();
 
-        foreach (var branch in _branches)
+        foreach (var item in _branches.Indexed())
         {
-            text.AppendRepeat(indent, "  ")
-                .AppendDump(branch.Key, options);
+            item.Deconstruct(out KeyValuePair<object, DynamicTree> branch);
+            text.AppendRepeat(indent, "  ");
+            if (item.IsLast)
+            {
+                text.Write('└');
+            }
+            else
+            {
+                text.Write('├');
+            }
+            text.Append('[')
+                .AppendDump(branch.Key, options)
+                .Write(']');
             if (branch.Value._hasValue)
             {
                 text.Write(": ");
             }
-            branch.Value.Dump(text, indent + 1);
+            else
+            {
+                text.WriteLine();
+            }
+            branch.Value.Dump(text, options, indent + 1);
         }
     }
         
@@ -96,7 +107,28 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
                         .SetValue(value);
     }
 
-        
+    public override bool TryConvert(ConvertBinder binder, out object? result)
+    {
+        if (_hasValue)
+        {
+            if (_value is null)
+            {
+                result = null;
+                return binder.ReturnType.CanBeNull();
+            }
+
+            if (_value.GetType().Implements(binder.ReturnType))
+            {
+                result = _value;
+                return true;
+            }
+        }
+
+        result = null;
+        return false;
+    }
+
+
     public IEnumerator<object?> GetEnumerator()
     {
         if (_hasValue)
@@ -119,7 +151,17 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
     public override string ToString()
     {
         using var text = TextBuilder.Borrow();
-        Dump(text, 0);
+        var options = new DumpOptions(true);
+        text.Write("DynamicTree");
+        if (_hasValue)
+        {
+            text.Write(": ");
+        }
+        else
+        {
+            text.WriteLine();
+        }
+        Dump(text, options, 0);
         return text.ToString();
     }
 }
