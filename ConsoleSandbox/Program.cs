@@ -31,6 +31,8 @@ tree[1][3] = 4;
 
 decimal a = tree[1][3];
 
+List<IEntity> list = new();
+list.Sort((x, y) => -1);
 
 var str = tree.ToString();
 
@@ -48,10 +50,6 @@ Console.WriteLine("Press Enter to close this window.");
 Console.ReadLine();
 return 0;
 
-static void ThOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
-{
-    throw new NotImplementedException();
-}
 
 namespace ConsoleSandbox
 {
@@ -72,7 +70,7 @@ namespace ConsoleSandbox
     
     
     
-    public interface Instance : IFluent<Instance>
+    public interface IInstance : IFluent<IInstance>
     {
     
     }
@@ -205,7 +203,7 @@ namespace ConsoleSandbox
 
         private static class S<T>
         {
-            public static T Default = default;
+            public static T Default = default!;
         }
 
         public static ref T GetRef<T>()
@@ -280,14 +278,14 @@ namespace ConsoleSandbox
         {
             throw new NotImplementedException();
 
-            return base.TryBinaryOperation(binder, arg, out result);
+            //return base.TryBinaryOperation(binder, arg, out result);
         }
 
         public override bool TryUnaryOperation(UnaryOperationBinder binder, out object? result)
         {
             throw new NotImplementedException();
 
-            return base.TryUnaryOperation(binder, out result);
+            //return base.TryUnaryOperation(binder, out result);
         }
     }
 
