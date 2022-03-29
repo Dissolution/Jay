@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleSandbox", "ConsoleSa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{3D43DF24-F639-4E9E-B3D2-C18416E8028D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lyph", "Lyph", "{0527E41C-3A46-4AAB-963E-C157A1B7938C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lyph.Core", "Lyph\Lyph.Core\Lyph.Core.csproj", "{88E5255B-6A10-4CE1-9282-65FD8CF26EB9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,9 +31,16 @@ Global
 		{3D43DF24-F639-4E9E-B3D2-C18416E8028D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D43DF24-F639-4E9E-B3D2-C18416E8028D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D43DF24-F639-4E9E-B3D2-C18416E8028D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88E5255B-6A10-4CE1-9282-65FD8CF26EB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88E5255B-6A10-4CE1-9282-65FD8CF26EB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88E5255B-6A10-4CE1-9282-65FD8CF26EB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88E5255B-6A10-4CE1-9282-65FD8CF26EB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{88E5255B-6A10-4CE1-9282-65FD8CF26EB9} = {0527E41C-3A46-4AAB-963E-C157A1B7938C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0A6F23F7-26AD-4011-BADC-0687231E9270}
