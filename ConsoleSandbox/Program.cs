@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using ConsoleSandbox;
 using Jay;
+using Jay.Benchmarking;
 using Jay.Collections;
 using Jay.Enums;
 using Jay.Randomization;
@@ -21,24 +22,14 @@ using Jay.Text;
 using Jay.Validation;
 
 #if RELEASE
-    var result = Runner.RunAndOpenHtml();
+    var result = Runner.RunAndOpenHtml<FixFilePathBenchmarks>();
     Console.WriteLine(result);
 #else
 using var text = TextBuilder.Borrow();
 
-var tree = DynamicTree.Create();
-tree[1][3] = 4;
-
-decimal a = tree[1][3];
-
-List<IEntity> list = new();
-list.Sort((x, y) => -1);
-
-var str = tree.ToString();
+int[] arrayA = new int[] { 1, 2, 3, 4, 5 };
 
 
-//IDEA: Each method upon firing should call a sub-method that look for stuff 'hanging around'
-// so it can be dealt with before the method. (LIke ending a Try?Catch block, what else?)
 
 
 

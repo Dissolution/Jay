@@ -5,9 +5,9 @@ namespace Jay.Benchmarking;
 
 public static class Runner
 {
-    public static Result RunAndOpenHtml()
+    public static Result RunAndOpenHtml<TBenchmark>()
     {
-        var summary = BenchmarkRunner.Run<TextEqualsBenchmarks>();
+        var summary = BenchmarkRunner.Run<TBenchmark>();
         if (summary.HasCriticalValidationErrors)
         {
             var ex = new AggregateException("", summary.ValidationErrors.Select(ve => new Exception(ve.Message)));

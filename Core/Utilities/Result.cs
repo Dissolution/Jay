@@ -97,6 +97,24 @@ public readonly struct Result : IEquatable<Result>
             return fallback;
         }
     }
+
+    public static Result Dispose<T>(T? value)
+    {
+        if (value is IDisposable)
+        {
+            try
+            {
+                ((IDisposable)value).Dispose();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+        return true;
+    }
+
     
     // _pass is the field (rather than _fail) because default(Result) should be a failure
     internal readonly bool _pass;
