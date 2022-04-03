@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers.Text;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using static InlineIL.IL;
 // ReSharper disable EntityNameCapturedOnly.Global
@@ -108,7 +109,7 @@ public static class TextHelper
                source.Length);
     }
 
-
+    #region Equals
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Equals(ReadOnlySpan<char> x, ReadOnlySpan<char> y)
     {
@@ -217,4 +218,6 @@ public static class TextHelper
     {
         return string.Equals(x, y, comparison);
     }
+    #endregion
+
 }

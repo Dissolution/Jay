@@ -6,7 +6,7 @@ namespace Jay;
 public static class ArrayExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T?[]? array)
+    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T[]? array)
     {
         return array is null || array.Length == 0;
     }
@@ -74,7 +74,8 @@ public static class ArrayExtensions
         return false;
     }
 
-    public static T? GetOrDefault<T>(this T?[]? array, int index, T? @default = default(T))
+    [return: MaybeNull]
+    public static T GetOrDefault<T>(this T[]? array, int index, [AllowNull] T @default = default(T))
     {
         if (array is null)
             return @default;
@@ -83,8 +84,20 @@ public static class ArrayExtensions
         return array[index];
     }
 
+    public static bool TryGetItem<T>(this T[]? array, int index, [MaybeNullWhen(false)] out T item)
+    {
+        if (array is null || (uint)index > (uint)array.Length)
+        {
+            item = default;
+            return false;
+        }
+
+        item = array[index];
+        return true;
+    }
+
     internal sealed class ArrayEnumerator<T> : IEnumerator<T>, IEnumerator,
-                                             IDisposable
+                                               IDisposable
     {
         private readonly IEnumerator _arrayEnumerator;
 

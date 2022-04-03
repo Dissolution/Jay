@@ -86,12 +86,11 @@ internal static class MethodInfoCache
         });
         _delegate_Remove_Method = new Lazy<MethodInfo>(() =>
         {
-            var method = typeof(Delegate).GetMethod(
-                                                    nameof(Delegate.Remove),
+            var method = typeof(Delegate).GetMethod(nameof(Delegate.Remove),
                                                     BindingFlags.Public | BindingFlags.Static,
                                                     new Type[2] { typeof(Delegate), typeof(Delegate) });
             if (method is null)
-                throw new RuntimeException($"Cannot fine {nameof(Delegate)}.{nameof(Delegate.Remove)}({nameof(Delegate)},{nameof(Delegate)})");
+                throw new RuntimeException($"Cannot find {nameof(Delegate)}.{nameof(Delegate.Remove)}({nameof(Delegate)},{nameof(Delegate)})");
             return method;
         });
         
@@ -101,10 +100,9 @@ internal static class MethodInfoCache
     public static bool IsReferenceOrContainsReferences(Type type)
     {
         return _runtimeHelpers_IsReferenceOrContainsReferences_TypeCache.GetOrAdd(type, 
-                                                                                  t => (bool)_runtimeHelpers_IsReferenceOrContainsReferences_Method
-                                                                                             .Value
-                                                                                             .MakeGenericMethod(t)
-                                                                                             .Invoke(null, null)!);
+            t => (bool)_runtimeHelpers_IsReferenceOrContainsReferences_Method.Value
+                                                                             .MakeGenericMethod(t)
+                                                                             .Invoke(null, null)!);
     }
 
     public static bool IsNonReferenced(Type type) => !IsReferenceOrContainsReferences(type);

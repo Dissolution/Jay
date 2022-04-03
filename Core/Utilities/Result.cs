@@ -100,19 +100,45 @@ public readonly struct Result : IEquatable<Result>
 
     public static Result Dispose<T>(T? value)
     {
-        if (value is IDisposable)
+        if (value is IDisposable disposable)
         {
             try
             {
-                ((IDisposable)value).Dispose();
-                return true;
+                disposable.Dispose();
             }
             catch (Exception ex)
             {
                 return ex;
             }
         }
-        return true;
+        return Pass;
+    }
+
+    public static async Task<Result> DisposeAsync<T>(T? value)
+    {
+        if (value is IAsyncDisposable asyncDisposable)
+        {
+            try
+            {
+                await asyncDisposable.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+        else if (value is IDisposable disposable)
+        {
+            try
+            {
+                disposable.Dispose();
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+        return Pass;
     }
 
     
