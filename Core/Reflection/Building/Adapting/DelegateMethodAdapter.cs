@@ -40,7 +40,7 @@ public class DelegateMethodAdapter
                  DelegateSignature.Parameters[offset].IsObjectArray() &&
                  !MethodSignature.Parameters[0].IsObjectArray())
         {
-            return Result.Try(() => emitter.LoadParams(DelegateSignature.Parameters[offset], MethodSignature.Parameters));
+            return Result.TryInvoke(() => emitter.LoadParams(DelegateSignature.Parameters[offset], MethodSignature.Parameters));
         }
         // Check for optional method params
         else if (MethodSignature.Parameters.Reverse().Any(p => p.HasDefaultValue))
@@ -63,7 +63,7 @@ public class DelegateMethodAdapter
             // Does method?
             if (MethodSignature.ReturnType != typeof(void))
             {
-                return Result.Try(() => emitter.Cast(MethodSignature.ReturnType, DelegateSignature.ReturnType));
+                return Result.TryInvoke(() => emitter.Cast(MethodSignature.ReturnType, DelegateSignature.ReturnType));
             }
             else
             {
@@ -109,7 +109,7 @@ public class DelegateMethodAdapter
             possibleInstanceParam = null;
         }
         int offset = default;
-        result = Result.Try(() => emitter.LoadInstanceFor(Method, possibleInstanceParam, out offset));
+        result = Result.TryInvoke(() => emitter.LoadInstanceFor(Method, possibleInstanceParam, out offset));
         if (!result) return result;
         result = TryLoadArgs(emitter, offset);
         if (!result) return result;

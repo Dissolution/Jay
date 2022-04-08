@@ -11,7 +11,16 @@ public class UnsuitableException : InvalidOperationException
     /// Throws a new <see cref="UnsuitableForGetHashCodeException"/>
     /// </summary>
     [DoesNotReturn]
-    public static int ThrowGetHashCode<T>(T? instance = default)
+    public static int ThrowGetHashCode<T>()
+    {
+        throw new UnsuitableForGetHashCodeException(typeof(T));
+    }
+    
+    /// <summary>
+    /// Throws a new <see cref="UnsuitableForGetHashCodeException"/>
+    /// </summary>
+    [DoesNotReturn]
+    public static int ThrowGetHashCode<T>(T? instance)
     {
         throw new UnsuitableForGetHashCodeException(typeof(T));
     }

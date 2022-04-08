@@ -57,7 +57,7 @@ public static partial class Reflect
                         .Where(assembly => !assembly.IsDynamic)
                         .SelectMany(assembly =>
                         {
-                            return Result.Swallow(() => assembly.ExportedTypes, Type.EmptyTypes);
+                            return Result.InvokeOrDefault(() => assembly.ExportedTypes, Type.EmptyTypes);
                         });
     }
 }

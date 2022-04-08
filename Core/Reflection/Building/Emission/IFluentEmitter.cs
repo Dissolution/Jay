@@ -511,10 +511,10 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
 
             Result result = member.TryGetInstanceType(out var methodInstanceType);
             if (!result)
-                return result.Failed<int>();
-            result = Result.Try(() => this.LoadAs(possibleInstanceParameter, methodInstanceType!));
+                return result.WithValue<int>(0);
+            result = Result.TryInvoke(() => this.LoadAs(possibleInstanceParameter, methodInstanceType!));
             if (!result)
-                return result.Failed<int>();
+                return result.WithValue<int>(0);
 
             // We loaded the instance, the rest of the parameters are used
             return 1;

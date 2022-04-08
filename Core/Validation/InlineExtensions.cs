@@ -60,7 +60,7 @@ public static class InlineExtensions
         try
         {
             var result = predicate(value);
-            if (result.Failed(out var ex))
+            if (result.IsFailure(out var ex))
             {
                 throw new ArgValidationException(value, $"Assert Failed: {predicateExpression}", ex);
             }
@@ -84,7 +84,7 @@ public static class InlineExtensions
         try
         {
             var result = predicate();
-            if (result.Failed(out var ex))
+            if (result.IsFailure(out var ex))
             {
                 throw new ValidationException($"Assert Failed: {predicateExpression}", ex);
             }
