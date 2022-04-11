@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -9,6 +10,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using ConsoleSandbox;
+using Dia2Lib;
 using Jay;
 using Jay.Benchmarking;
 using Jay.Collections;
@@ -29,7 +31,11 @@ using var text = TextBuilder.Borrow();
 
 int[] arrayA = new int[] { 1, 2, 3, 4, 5 };
 
-
+Football football = new();
+football.Append('a').AppendDelimit("kl", arrayA, (ref Football tb, int value) =>
+{
+    tb.Write<int>(value);
+});
 
 
 
@@ -44,6 +50,132 @@ return 0;
 
 namespace ConsoleSandbox
 {
+    [InterpolatedStringHandler]
+    public ref struct Football //: IDisposable
+    {
+        internal char[] _array;
+        internal int _length;
+
+        internal int Capacity
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _array.Length;
+        }
+
+        public int Length => _length;
+
+        public Span<char> Available
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new Span<char>(_array, _length, Capacity - _length);
+        }
+
+        public Football()
+        {
+            _array = ArrayPool<char>.Shared.Rent(1024);
+            _length = 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Write(char ch)
+        {
+            _array[_length++] = ch;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Write(ReadOnlySpan<char> text)
+        {
+            TextHelper.CopyTo(text, Available);
+            _length += text.Length;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Write(string? text)
+        {
+            if (text is not null)
+            {
+                TextHelper.CopyTo(text, Available);
+                _length += text.Length;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Write<T>(T value)
+        {
+            if (value is IFormattable)
+            {
+                if (value is ISpanFormattable)
+                {
+                    if (((ISpanFormattable)value).TryFormat(Available, out int charsWritten, default, default))
+                    {
+                        _length += charsWritten;
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+                else
+                {
+                    Write(((IFormattable)value).ToString(default, default));
+                }
+            }
+            else
+            {
+                Write(value?.ToString());
+            }
+        }
+
+        public void Dispose()
+        {
+            var array = Interlocked.Exchange(ref _array, null);
+            if (array is not null)
+            {
+                ArrayPool<char>.Shared.Return(array);
+            }
+        }
+
+        public override string ToString()
+        {
+            return new string(_array, 0, _length);
+        }
+    }
+
+    public delegate void PerValue<in T>(ref Football football, T value);
+
+    public static class FootballExtensions
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ref Football Append(this ref Football football, char ch)
+        {
+            football.Write(ch);
+            return ref football;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ref Football AppendDelimit<T>(this ref Football football, 
+                                                 ReadOnlySpan<char> delimiter,
+                                                 IEnumerable<T> values,
+                                                 PerValue<T> perValue)
+        {
+            using var e = values.GetEnumerator();
+            if (e.MoveNext())
+            {
+                perValue(ref football, e.Current);
+            }
+            while (e.MoveNext())
+            {
+                football.Write(delimiter);
+                perValue(ref football, e.Current);
+            }
+            return ref football;
+        }
+    }
+
+
+
+
+
     public interface IEntity : INotifyPropertyChanged,
                                INotifyPropertyChanging
     {
