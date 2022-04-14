@@ -1,50 +1,47 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AssemblyName>Jay</AssemblyName>
-    <RootNamespace>Jay</RootNamespace>
-    <ApplicationIcon>jay.ico</ApplicationIcon>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <SignAssembly>False</SignAssembly>
-    <GenerateDocumentationFile>False</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Authors>Timothy Jay</Authors>
-    <Title>Jay Core Libraries</Title>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>Jay</AssemblyName>
+        <RootNamespace>Jay</RootNamespace>
+        <ApplicationIcon>jay.ico</ApplicationIcon>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <SignAssembly>False</SignAssembly>
+        <GenerateDocumentationFile>False</GenerateDocumentationFile>
+        <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+        <Authors>Timothy Jay</Authors>
+        <Title>Jay Core Libraries</Title>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Using Include="System.Collections" />
-    <Using Include="System.Diagnostics.CodeAnalysis" />
-    <Using Include="System.Runtime.CompilerServices" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Content Include="jay.ico" />
-  </ItemGroup>
+    <ItemGroup>
+        <Using Include="System.Collections"/>
+        <Using Include="System.Diagnostics.CodeAnalysis"/>
+        <Using Include="System.Runtime.CompilerServices"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Fody" Version="6.6.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="InlineIL.Fody" Version="1.7.1">
-        <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="jay.ico"/>
+    </ItemGroup>
 
-	<ItemGroup>
-      <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-        <_Parameter1>ConsoleSandbox</_Parameter1>
-      </AssemblyAttribute>
-		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-			<_Parameter1>Benchmarking</_Parameter1>
-		</AssemblyAttribute>
+    <ItemGroup>
+        <PackageReference Include="Fody" Version="6.6.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="InlineIL.Fody" Version="1.7.1">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-            <_Parameter1>Jay.Tests</_Parameter1>
+            <_Parameter1>ConsoleSandbox</_Parameter1>
         </AssemblyAttribute>
-	</ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>BenchTests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 
 </Project>

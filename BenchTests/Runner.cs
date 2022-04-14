@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using BenchmarkDotNet.Running;
 
-namespace Jay.Benchmarking;
+namespace Jay.BenchTests;
 
 public static class Runner
 {

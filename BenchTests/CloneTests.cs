@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using Jay.Comparision;
 using Jay.Randomization;
-using Jay.Reflection;
 using Jay.Reflection.Cloning;
+using Xunit;
 
-namespace Jay.Tests;
+namespace Jay.BenchTests;
 
 public class CloneTests
 {
@@ -110,7 +107,7 @@ public class CloneTests
         Assert.False(EnumerableEqualityComparer<int>.Default.Equals(list, clone));
     }
 
-    [Fact]
+    /*[Fact]
     public void CloneDictionary()
     {
         var dict = new Dictionary<string, object?>
@@ -140,5 +137,5 @@ public class CloneTests
             }
         }
         
-    }
+    }*/
 }

@@ -1,34 +1,25 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
-using ConsoleSandbox;
-using Dia2Lib;
-using Jay;
-using Jay.Benchmarking;
+using Jay.BenchTests;
+using Jay.BenchTests.Text;
 using Jay.Collections;
-using Jay.Enums;
-using Jay.Randomization;
-using Jay.Reflection;
 using Jay.Reflection.Building.Deconstruction;
-using Jay.Reflection.Building.Emission;
-using Jay.Reflection.Building.Fulfilling;
 using Jay.Text;
-using Jay.Validation;
 
 #if RELEASE
-    var result = Runner.RunAndOpenHtml<FixFilePathBenchmarks>();
+    var result = Runner.RunAndOpenHtml<TextBuilderWriteBenchTests>();
     Console.WriteLine(result);
 #else
 using var text = TextBuilder.Borrow();
 
+/*
 int[] arrayA = new int[] { 1, 2, 3, 4, 5 };
 
 Football football = new();
@@ -36,7 +27,14 @@ football.Append('a').AppendDelimit("kl", arrayA, (ref Football tb, int value) =>
 {
     tb.Write<int>(value);
 });
+*/
 
+List<int> submissionIds = new List<int>() { 5, 3, 1, 4, 2 };
+var unsorted = string.Join(",", submissionIds);
+submissionIds.Sort((x,y) => x.CompareTo(y));
+var sortA = string.Join(",", submissionIds);
+submissionIds.Sort((x, y) => y.CompareTo(x));
+var sortB = string.Join(",", submissionIds);
 
 
 Debugger.Break();

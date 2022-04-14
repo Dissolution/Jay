@@ -1,7 +1,4 @@
-﻿using System;
-using Jay.Reflection;
-
-namespace Jay.Tests;
+﻿namespace Jay.BenchTests;
 
 public class ImplementsTests
 {

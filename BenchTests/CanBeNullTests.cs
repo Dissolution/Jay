@@ -1,8 +1,7 @@
-﻿using System;
-using System.Reflection;
-using Jay.Reflection;
+﻿using System.Reflection;
+using Xunit;
 
-namespace Jay.Tests;
+namespace Jay.BenchTests;
 
 public class CanBeNullTests
 {

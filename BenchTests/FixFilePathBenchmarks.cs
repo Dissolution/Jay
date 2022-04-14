@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using BenchmarkDotNet.Attributes;
 
-namespace Jay.Benchmarking;
+namespace Jay.BenchTests;
 
 [ShortRunJob]
 public class FixFilePathBenchmarks

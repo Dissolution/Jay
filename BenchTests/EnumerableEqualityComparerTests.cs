@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Jay.BenchTests.Entities;
 using Jay.Comparision;
-using Jay.Tests.Entities;
+
 // ReSharper disable ExpressionIsAlwaysNull
 // ReSharper disable StackAllocInsideLoop
 
-namespace Jay.Tests;
+namespace Jay.BenchTests;
 
 public class EnumerableEqualityComparerTests
 {

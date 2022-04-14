@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace Jay.Tests.Entities;
+namespace Jay.BenchTests.Entities;
 
 public class TestClass : INotifyPropertyChanged,
                          IEquatable<TestClass>

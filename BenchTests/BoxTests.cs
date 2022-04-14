@@ -1,8 +1,11 @@
-using System.Collections.Generic;
-using Jay.Reflection;
+
+
 // ReSharper disable EqualExpressionComparison
 
-namespace Jay.Tests;
+using Jay.Reflection;
+using Xunit;
+
+namespace Jay.BenchTests;
 
 public class BoxTests
 {

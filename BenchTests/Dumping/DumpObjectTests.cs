@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Jay.Dumping.Refactor;
+﻿/*using Jay.Dumping;
 
-namespace Jay.Tests.Dumping;
+namespace Jay.BenchTests.Dumping;
 
 public class DumpObjectTests
 {
@@ -56,4 +51,4 @@ public class DumpObjectTests
         string dx = Dump.Value<object?>(obj, DxOptions);
         Assert.True(dx == "(object)");
     }
-}
+}*/

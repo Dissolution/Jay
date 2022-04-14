@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
 using Jay.Text;
 
-namespace Jay.Benchmarking;
+namespace Jay.BenchTests.Text;
 
 //[ShortRunJob]
 public class TextCopyBenchmarks
