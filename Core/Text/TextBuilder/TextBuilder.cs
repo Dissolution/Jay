@@ -666,7 +666,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         var textChar = text.GetPinnableReference();
         for (var i = 0; i < count; i++)
         {
-            TextHelper.CopyTo(in textChar,
+            TextHelper.Copy(in textChar,
                               ref buffer[i * len],
                               len);
         }
@@ -686,7 +686,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         ref char textChar = ref this[start];
         for (var i = 0; i < count; i++)
         {
-            TextHelper.CopyTo(in textChar,
+            TextHelper.Copy(in textChar,
                               ref buffer[i * len],
                               len);
         }
@@ -710,7 +710,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         ref char textChar = ref this[start];
         for (var i = 0; i < count; i++)
         {
-            TextHelper.CopyTo(in textChar,
+            TextHelper.Copy(in textChar,
                               ref buffer[i * len],
                               len);
         }
@@ -925,7 +925,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         int i;
         while ((i = MemoryExtensions.IndexOf(scan, oldText, comparison)) >= 0)
         {
-            TextHelper.CopyTo(in refNewTextChar,
+            TextHelper.Copy(in refNewTextChar,
                               ref scan[i],
                               len);
             scan = scan.Slice(i + len);
@@ -941,7 +941,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         int i;
         while ((i = MemoryExtensions.IndexOf(scan, oldText, comparison)) >= 0)
         {
-            TextHelper.CopyTo(in refNewTextChar,
+            TextHelper.Copy(in refNewTextChar,
                               ref scan[i],
                               newLen);
             var right = scan.Slice(i + newLen);

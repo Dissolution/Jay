@@ -76,7 +76,7 @@ public class TextCopyBenchmarks
     [ArgumentsSource(nameof(Sources))]
     public void Write_TextHelper(string text)
     {
-        TextHelper.CopyTo(in text.GetPinnableReference(),
+        TextHelper.Copy(in text.GetPinnableReference(),
                           ref MemoryMarshal.GetArrayDataReference<char>(_charArray),
                           text.Length);
     }
