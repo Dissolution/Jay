@@ -108,6 +108,20 @@ public ref partial struct TextBuilder
             ArrayPool<char>.Shared.Return(toReturn);
         }
     }
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private Span<char> GrowSpan(int amount)
+    {
+        var newCapacity = Math.Clamp((Capacity + amount) * 2, MinCapacity, MaxCapacity);
+        char[] newArray = ArrayPool<char>.Shared.Rent(newCapacity);
+        TextHelper.CopyTo(Written, newArray);
+        char[]? toReturn = _charArray;
+        _charSpan = _charArray = newArray;
+        if (toReturn is not null)
+        {
+            ArrayPool<char>.Shared.Return(toReturn);
+        }
+        return Available;
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowCopy(char ch)
@@ -117,6 +131,7 @@ public ref partial struct TextBuilder
         _length++;
     }
     
+    #region WriteChar
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteCharA(char ch)
     {
@@ -142,14 +157,55 @@ public ref partial struct TextBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteCharC(char ch)
     {
-        if (_charSpan.Length - _length <= 0)
+        if (_charSpan.Length - _length == 0)
         {
             GrowBy(1);
         }
         _charSpan[0] = ch;
         _length++;
     }
-    
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteCharC1(char ch)
+    {
+        int len = _length;
+        if (_charSpan.Length - len == 0)
+        {
+            GrowBy(1);
+        }
+        _charSpan[0] = ch;
+        _length = len + 1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteCharC2(char ch)
+    {
+        Span<char> avail = Available;
+        if (Available.Length == 0)
+        {
+            avail = GrowSpan(1);
+        }
+        avail[0] = ch;
+        _length++;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteCharC3(char ch)
+    {
+        int newLen = _length + 1;
+        if (newLen >= _charSpan.Length)
+        {
+            GrowBy(1);
+        }
+        _charSpan[0] = ch;
+        _length = newLen;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteCharC4(char ch)
+    {
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteCharD(char ch)
     {
@@ -177,9 +233,85 @@ public ref partial struct TextBuilder
         _charSpan[pos] = ch;
         _length = pos + 1;
     }
-    
     #endregion
-    
+    #region WriteSpan
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteSpanA(ReadOnlySpan<char> span)
+    {
+        int spanLen = span.Length;
+        int newLen = _length + spanLen;
+        if (newLen >= _charSpan.Length)
+        {
+            GrowBy(spanLen);
+        }
+        TextHelper.CopyTo(span, Available);
+        _length = newLen;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteSpanB(ReadOnlySpan<char> span)
+    {
+        Span<char> avail = Available;
+        if (span.Length > avail.Length)
+        {
+            avail = GrowSpan(span.Length);
+        }
+        TextHelper.CopyTo(span, avail);
+        _length += span.Length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteSpanC(ReadOnlySpan<char> span)
+    {
+        if (span.Length + _length >= _charSpan.Length)
+        {
+            GrowBy(span.Length);
+        }
+        span.CopyTo(_charSpan[_length..]);
+        _length += span.Length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteSpanD(ReadOnlySpan<char> span)
+    {
+        int spanLen = span.Length;
+        if (spanLen + _length >= _charSpan.Length)
+        {
+            GrowBy(spanLen);
+        }
+        span.CopyTo(_charSpan[_length..]);
+        _length += spanLen;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteSpanE(ReadOnlySpan<char> span)
+    {
+        int spanLen = span.Length;
+        if (spanLen + _length >= _charSpan.Length)
+        {
+            GrowBy(spanLen);
+        }
+        TextHelper.CopyTo(span, _charSpan[_length..]);
+        _length += spanLen;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteSpanF(ReadOnlySpan<char> span)
+    {
+        int spanLen = span.Length;
+        int len = _length;
+        int newLen = spanLen + len;
+        if (newLen >= _charSpan.Length)
+        {
+            GrowBy(spanLen);
+        }
+        TextHelper.CopyTo(span, _charSpan[len..]);
+        _length = newLen;
+    }
+    #endregion
+    #endregion
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispose()
     {

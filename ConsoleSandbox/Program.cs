@@ -14,7 +14,7 @@ using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
 
 #if RELEASE
-    var result = Runner.RunAndOpenHtml<TextBuilderWriteBenchTests>();
+    var result = Runner.RunAndOpenHtml<TextBuilderWriteSpanBenchTests>();
     Console.WriteLine(result);
 #else
 using var text = TextBuilder.Borrow();
