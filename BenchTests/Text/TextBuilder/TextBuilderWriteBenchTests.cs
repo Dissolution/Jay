@@ -4,6 +4,7 @@ using BenchmarkDotNet.Attributes;
 namespace Jay.BenchTests.Text;
 
 //[ShortRunJob]
+[LongRunJob]
 [SuppressMessage("Usage", "xUnit1013:Public method should be marked as test")]
 public class TextBuilderWriteBenchTests
 {
@@ -32,6 +33,10 @@ public class TextBuilderWriteBenchTests
     {
         TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
         text.WriteCharA(' ');
+        text.WriteCharA(' ');
+        text.WriteCharA(' ');
+        text.WriteCharA(' ');
+        text.WriteCharA(' ');
     }
     
     [Fact]
@@ -47,6 +52,10 @@ public class TextBuilderWriteBenchTests
     public void WriteB()
     {
         TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        text.WriteCharB(' ');
+        text.WriteCharB(' ');
+        text.WriteCharB(' ');
+        text.WriteCharB(' ');
         text.WriteCharB(' ');
     }
     
@@ -64,6 +73,10 @@ public class TextBuilderWriteBenchTests
     {
         TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
         text.WriteCharC(' ');
+        text.WriteCharC(' ');
+        text.WriteCharC(' ');
+        text.WriteCharC(' ');
+        text.WriteCharC(' ');
     }
     
     [Fact]
@@ -80,6 +93,10 @@ public class TextBuilderWriteBenchTests
     {
         TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
         text.WriteCharD(' ');
+        text.WriteCharD(' ');
+        text.WriteCharD(' ');
+        text.WriteCharD(' ');
+        text.WriteCharD(' ');
     }
     
     [Fact]
@@ -95,6 +112,10 @@ public class TextBuilderWriteBenchTests
     public void WriteE()
     {
         TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        text.WriteCharE(' ');
+        text.WriteCharE(' ');
+        text.WriteCharE(' ');
+        text.WriteCharE(' ');
         text.WriteCharE(' ');
     }
 }
