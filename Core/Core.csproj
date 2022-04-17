@@ -16,13 +16,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Using Include="System.Collections"/>
-        <Using Include="System.Diagnostics.CodeAnalysis"/>
-        <Using Include="System.Runtime.CompilerServices"/>
+        <Using Include="System.Collections" />
+        <Using Include="System.Diagnostics.CodeAnalysis" />
+        <Using Include="System.Runtime.CompilerServices" />
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="jay.ico"/>
+        <Content Include="jay.ico" />
     </ItemGroup>
 
     <ItemGroup>

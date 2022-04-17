@@ -1,9 +1,8 @@
 ﻿using System.Buffers;
-using System.Runtime.CompilerServices;
 using Jay.Exceptions;
-using Jay.Text;
+using static InlineIL.IL;
 
-namespace Jay.BenchTests.Text;
+namespace Jay.Text.Scratch;
 
 public static class TextBuilderExtensions
 {
@@ -13,7 +12,6 @@ public static class TextBuilderExtensions
         textBuilder.Length = 0;
         return ref textBuilder;
     }
-
 }
 
 public ref partial struct TextBuilder
@@ -22,11 +20,35 @@ public ref partial struct TextBuilder
     internal const int MaxCapacity = 0x7FFFFFC7 / sizeof(char); // Array.MaxLength
 
     public static implicit operator TextBuilder(Span<char> buffer) => new TextBuilder(buffer);
-    
+
     static TextBuilder()
     {
         //DefaultInterpolatedStringHandler
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void* RefToVoidPointer(ref TextBuilder textBuilder)
+    {
+        Emit.Ldarg(nameof(textBuilder));
+        return ReturnPointer();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe ref TextBuilder VoidPointerToRef(void* pointer)
+    {
+        Emit.Ldarg(nameof(pointer));
+        Emit.Ret();
+        throw Unreachable();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref TextBuilder Ref(in TextBuilder textBuilder)
+    {
+        Emit.Ldarg(nameof(textBuilder));
+        Emit.Ret();
+        throw Unreachable();
+    }
+    
 }
 
 public ref partial struct TextBuilder
@@ -44,6 +66,7 @@ public ref partial struct TextBuilder
             {
                 return ref _charSpan[index];
             }
+
             throw new ArgumentOutOfRangeException(nameof(index), index, $"Index must be between 0 and {_length - 1}");
         }
     }
@@ -53,7 +76,7 @@ public ref partial struct TextBuilder
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _charSpan.Length;
     }
-    
+
     public int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -92,7 +115,7 @@ public ref partial struct TextBuilder
         _charSpan = buffer;
         _length = 0;
     }
-   
+
     #region Benchmark Methods
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -108,7 +131,24 @@ public ref partial struct TextBuilder
             ArrayPool<char>.Shared.Return(toReturn);
         }
     }
-    
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void GrowByB(int amount)
+    {
+        var span = _charSpan;
+        var newCapacity = Math.Clamp((span.Length + amount) * 2, MinCapacity, MaxCapacity);
+        char[] newArray = ArrayPool<char>.Shared.Rent(newCapacity);
+        TextHelper.Copy(in span.GetPinnableReference(),
+            ref newArray[0],
+            span.Length);
+        char[]? toReturn = _charArray;
+        _charSpan = _charArray = newArray;
+        if (toReturn is not null)
+        {
+            ArrayPool<char>.Shared.Return(toReturn);
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void GrowByInl(int amount)
     {
@@ -122,7 +162,7 @@ public ref partial struct TextBuilder
             ArrayPool<char>.Shared.Return(toReturn);
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private Span<char> GrowSpan(int amount)
     {
@@ -135,6 +175,7 @@ public ref partial struct TextBuilder
         {
             ArrayPool<char>.Shared.Return(toReturn);
         }
+
         return Available;
     }
 
@@ -142,10 +183,10 @@ public ref partial struct TextBuilder
     private void GrowCopy(char ch)
     {
         GrowBy(1);
-        _charSpan[0] = ch;
+        _charSpan[_length] = ch;
         _length++;
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowCopy(ReadOnlySpan<char> text)
     {
@@ -153,30 +194,53 @@ public ref partial struct TextBuilder
         TextHelper.CopyTo(text, Available);
         _length += text.Length;
     }
-    
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref TextBuilder AppendChar(char ch)
+    {
+        WriteCharC(ch);
+        // unsafe
+        // {
+        //     return ref VoidPointerToRef(RefToVoidPointer(ref this));
+        // }
+        Emit.Ldarg(0); // should be ref this
+        Emit.Ret();
+        throw Unreachable();
+    }
+
     #region WriteChar
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteCharA(char ch)
     {
-        if (Available.Length == 0)
+        if (_length == _charSpan.Length)
         {
             GrowBy(1);
         }
-        Available[0] = ch;
-        _length++;
+        _charSpan[_length++] = ch;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteCharB(char ch)
     {
-        if (Available.Length == 0)
+        if (_charSpan.Length - _length == 0)
         {
             GrowBy(1);
         }
-        _charSpan[0] = ch;
-        _length++;
+        _charSpan[_length++] = ch;
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteChar_BB(char ch)
+    {
+        if (_charSpan.Length - _length == 0)
+        {
+            GrowByB(1);
+        }
+        _charSpan[_length++] = ch;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteCharC(char ch)
     {
@@ -184,7 +248,20 @@ public ref partial struct TextBuilder
         {
             GrowBy(1);
         }
-        _charSpan[0] = ch;
+
+        _charSpan[_length] = ch;
+        _length++;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteChar_CB(char ch)
+    {
+        if (_charSpan.Length - _length == 0)
+        {
+            GrowByB(1);
+        }
+
+        _charSpan[_length] = ch;
         _length++;
     }
 
@@ -196,7 +273,21 @@ public ref partial struct TextBuilder
         {
             GrowBy(1);
         }
-        _charSpan[0] = ch;
+
+        _charSpan[len] = ch;
+        _length = len + 1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteChar_C1B(char ch)
+    {
+        int len = _length;
+        if (_charSpan.Length - len == 0)
+        {
+            GrowByB(1);
+        }
+
+        _charSpan[len] = ch;
         _length = len + 1;
     }
 
@@ -208,6 +299,7 @@ public ref partial struct TextBuilder
         {
             avail = GrowSpan(1);
         }
+
         avail[0] = ch;
         _length++;
     }
@@ -220,13 +312,9 @@ public ref partial struct TextBuilder
         {
             GrowBy(1);
         }
-        _charSpan[0] = ch;
-        _length = newLen;
-    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteCharC4(char ch)
-    {
+        _charSpan[_length] = ch;
+        _length = newLen;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -244,7 +332,7 @@ public ref partial struct TextBuilder
             GrowCopy(ch);
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteCharE(char ch)
     {
@@ -253,13 +341,14 @@ public ref partial struct TextBuilder
         {
             GrowBy(1);
         }
+
         _charSpan[pos] = ch;
         _length = pos + 1;
     }
+
     #endregion
+
     #region WriteSpan
-
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpan_3Locals(ReadOnlySpan<char> span)
@@ -271,12 +360,13 @@ public ref partial struct TextBuilder
         {
             GrowBy(spanLen);
         }
+
         TextHelper.Copy(in span.GetPinnableReference(),
-                        ref _charSpan[len],
-                        spanLen);
+            ref _charSpan[len],
+            spanLen);
         _length = newLen;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpan_SpanLen_Len(ReadOnlySpan<char> span)
     {
@@ -286,12 +376,13 @@ public ref partial struct TextBuilder
         {
             GrowBy(spanLen);
         }
+
         TextHelper.Copy(in span.GetPinnableReference(),
-                        ref _charSpan[len],
-                        spanLen);
+            ref _charSpan[len],
+            spanLen);
         _length = spanLen + len;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpan_Len_NewLen(ReadOnlySpan<char> span)
     {
@@ -301,12 +392,13 @@ public ref partial struct TextBuilder
         {
             GrowBy(span.Length);
         }
+
         TextHelper.Copy(in span.GetPinnableReference(),
-                        ref _charSpan[len],
-                        span.Length);
+            ref _charSpan[len],
+            span.Length);
         _length = newLen;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpan_SpanLen_NewLen(ReadOnlySpan<char> span)
     {
@@ -316,12 +408,13 @@ public ref partial struct TextBuilder
         {
             GrowBy(spanLen);
         }
+
         TextHelper.Copy(in span.GetPinnableReference(),
-                        ref _charSpan[_length],
-                        spanLen);
+            ref _charSpan[_length],
+            spanLen);
         _length = newLen;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpan_SpanLen(ReadOnlySpan<char> span)
     {
@@ -330,12 +423,13 @@ public ref partial struct TextBuilder
         {
             GrowBy(spanLen);
         }
+
         TextHelper.Copy(in span.GetPinnableReference(),
-                        ref _charSpan[_length],
-                        spanLen);
+            ref _charSpan[_length],
+            spanLen);
         _length += spanLen;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpan_NewLen(ReadOnlySpan<char> span)
     {
@@ -344,12 +438,13 @@ public ref partial struct TextBuilder
         {
             GrowBy(span.Length);
         }
+
         TextHelper.Copy(in span.GetPinnableReference(),
-                        ref _charSpan[_length],
-                        span.Length);
+            ref _charSpan[_length],
+            span.Length);
         _length = newLen;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpan_Len(ReadOnlySpan<char> span)
     {
@@ -358,12 +453,13 @@ public ref partial struct TextBuilder
         {
             GrowBy(span.Length);
         }
+
         TextHelper.Copy(in span.GetPinnableReference(),
-                        ref _charSpan[len],
-                        span.Length);
+            ref _charSpan[len],
+            span.Length);
         _length = len + span.Length;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpan(ReadOnlySpan<char> span)
     {
@@ -371,12 +467,15 @@ public ref partial struct TextBuilder
         {
             GrowBy(span.Length);
         }
+
         TextHelper.Copy(in span.GetPinnableReference(),
-                        ref _charSpan[_length],
-                        span.Length);
+            ref _charSpan[_length],
+            span.Length);
         _length += span.Length;
     }
+
     #endregion
+
     #endregion
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,52 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using BenchmarkDotNet.Attributes;
 using Jay.Text;
+using TextBuilder = Jay.Text.Scratch.TextBuilder;
 
 namespace Jay.BenchTests.Text;
-
-public class TextBuilderWriteSpanTests
-{
-    public delegate void TextAction(ref TextBuilder builder, ReadOnlySpan<char> text);
-
-    private readonly List<TextAction> _methods;
-    
-    public TextBuilderWriteSpanTests()
-    {
-        _methods = typeof(TextBuilder)
-                   .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                   .Where(method => method.Name.StartsWith("WriteSpan"))
-                   .Select(method => method.CreateDelegate<TextAction>())
-                   .ToList();
-    }
-
-    [Fact]
-    public void AllMethodsWork()
-    {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        try
-        {
-            foreach (var method in _methods)
-            {
-                method(ref text, "abc 123");
-                Assert.Equal('a', text[0]);
-                Assert.Equal('b', text[1]);
-                Assert.Equal('c', text[2]);
-                Assert.Equal(' ', text[3]);
-                Assert.Equal('1', text[4]);
-                Assert.Equal('2', text[5]);
-                Assert.Equal('3', text[6]);
-                Assert.Equal(7, text.Length);
-                text.Clear();
-                Assert.Equal(0, text.Length);
-            }
-        }
-        finally
-        {
-            text.Dispose();
-        }
-    }
-}
 
 [LongRunJob]
 [SuppressMessage("Usage", "xUnit1013:Public method should be marked as test")]

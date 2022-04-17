@@ -7,17 +7,29 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using Jay.BenchTests;
-using Jay.BenchTests.Text;
+
 using Jay.Collections;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
+using Jay.Text.Scratch;
+using TextBuilder = Jay.Text.Scratch.TextBuilder;
 
 #if RELEASE
-    var result = Runner.RunAndOpenHtml<TextBuilderWriteSpanBenchTests>();
+using Jay.BenchTests;
+using Jay.BenchTests.Text;
+
+
+
+    var result = Runner.RunAndOpenHtml<TextBuilderWriteCharBenchTests>();
     Console.WriteLine(result);
 #else
-using var text = TextBuilder.Borrow();
+//using var text = TextBuilder.Borrow();
+
+using var text = new TextBuilder();
+text.AppendChar('a').AppendChar('b').AppendChar('c');
+string str = text.ToString();
+
+Debugger.Break();
 
 /*
 int[] arrayA = new int[] { 1, 2, 3, 4, 5 };
@@ -38,7 +50,7 @@ var sortB = string.Join(",", submissionIds);
 
 
 Debugger.Break();
-Console.WriteLine(text.ToString());
+//Console.WriteLine(text.ToString());
 #endif
     
 Console.WriteLine("Press Enter to close this window.");

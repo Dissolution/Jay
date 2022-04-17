@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using BenchmarkDotNet.Attributes;
+using Jay.Text.Scratch;
 
 namespace Jay.BenchTests.Text;
 
-//[ShortRunJob]
+[ShortRunJob]
 [SuppressMessage("Usage", "xUnit1013:Public method should be marked as test")]
 public class TextBuilderWriteCharBenchTests
 {
@@ -18,150 +19,117 @@ public class TextBuilderWriteCharBenchTests
         
     }
 
-    [Fact]
-    public void CanWriteA()
+    [Benchmark]
+    public void WriteA()
     {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharA(' ');
-        Assert.Equal(' ', text[0]);
-        Assert.Equal(1, text.Length);
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteCharA((char)i);
+        }
     }
-    
-    // [Benchmark]
-    // public void WriteA()
-    // {
-    //     TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-    //     text.WriteCharA(' ');
-    // }
-    
-    [Fact]
-    public void CanWriteB()
-    {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharB(' ');
-        Assert.Equal(' ', text[0]);
-        Assert.Equal(1, text.Length);
-    }
-    
-    // [Benchmark]
-    // public void WriteB()
-    // {
-    //     TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-    //     text.WriteCharB(' ');
-    // }
-    
-    [Fact]
-    public void CanWriteC()
-    {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharC(' ');
-        Assert.Equal(' ', text[0]);
-        Assert.Equal(1, text.Length);
-    }
+   
     
     [Benchmark(Baseline = true)]
+    public void WriteB()
+    {
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteCharB((char)i);
+        }
+    }
+    
+    [Benchmark]
+    public void Write_BB()
+    {
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteChar_BB((char)i);
+        }
+    }
+    
+    [Benchmark]
     public void WriteC()
     {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharC('a');
-        text.WriteCharC('b');
-        text.WriteCharC('c');
-        text.WriteCharC(' ');
-        text.WriteCharC('1');
-        text.WriteCharC('2');
-        text.WriteCharC('3');
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteCharC((char)i);
+        }
+    }
+    
+    [Benchmark()]
+    public void Write_CB()
+    {
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteChar_CB((char)i);
+        }
     }
 
     [Benchmark]
     public void WriteC1()
     {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharC1('a');
-        text.WriteCharC1('b');
-        text.WriteCharC1('c');
-        text.WriteCharC1(' ');
-        text.WriteCharC1('1');
-        text.WriteCharC1('2');
-        text.WriteCharC1('3');
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteCharC1((char)i);
+        }
+    }
+    
+    [Benchmark]
+    public void Write_C1B()
+    {
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteChar_C1B((char)i);
+        }
     }
 
+    /*
     [Benchmark]
     public void WriteC2()
     {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharC2('a');
-        text.WriteCharC2('b');
-        text.WriteCharC2('c');
-        text.WriteCharC2(' ');
-        text.WriteCharC2('1');
-        text.WriteCharC2('2');
-        text.WriteCharC2('3');
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteCharC2((char)i);
+        }
     }
+    */
 
     [Benchmark]
     public void WriteC3()
     {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharC3('a');
-        text.WriteCharC3('b');
-        text.WriteCharC3('c');
-        text.WriteCharC3(' ');
-        text.WriteCharC3('1');
-        text.WriteCharC3('2');
-        text.WriteCharC3('3');
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteCharC3((char)i);
+        }
     }
 
-    [Fact]
-    public void CanWriteC1()
-    {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharC1(' ');
-        Assert.Equal(' ', text[0]);
-        Assert.Equal(1, text.Length);
-    }
-
-    [Fact]
-    public void CanWriteC2()
-    {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharC2(' ');
-        Assert.Equal(' ', text[0]);
-        Assert.Equal(1, text.Length);
-    }
-
-   
-
-
-
-    [Fact]
-    public void CanWriteD()
-    {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharD(' ');
-        Assert.Equal(' ', text[0]);
-        Assert.Equal(1, text.Length);
-    }
     
-    // [Benchmark]
-    // public void WriteD()
-    // {
-    //     TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-    //     text.WriteCharD(' ');
-    // }
-    
-    [Fact]
-    public void CanWriteE()
+    [Benchmark]
+    public void WriteD()
     {
-        TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-        text.WriteCharE(' ');
-        Assert.Equal(' ', text[0]);
-        Assert.Equal(1, text.Length);
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteCharD((char)i);
+        }
     }
-    
-    // [Benchmark]
-    // public void WriteE()
-    // {
-    //     TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
-    //     text.WriteCharE(' ');
-    // }
+
+    [Benchmark]
+    public void WriteE()
+    {
+        using TextBuilder text = stackalloc char[TextBuilder.MinCapacity];
+        for (int i = 0; i <= char.MaxValue; i++)
+        {
+            text.WriteCharE((char)i);
+        }
+    }
 }
