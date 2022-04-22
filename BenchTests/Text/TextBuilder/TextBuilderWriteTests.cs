@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Jay.Text.Scratch;
 
 namespace Jay.BenchTests.Text;
@@ -92,5 +93,10 @@ public class TextBuilderWriteTests
         Assert.Equal('c', text[2]);
         Assert.Equal('d', text[3]);
         Assert.Equal('e', text[4]);
+
+        text.AppendDelimit(",", Enumerable.Range(1, 4), (ref TextBuilder builder, int value) => builder.Write<int>(value));
+        Assert.Equal(12, text.Length);
+        Assert.Equal(3, text.Where());
+        Debugger.Break();
     }
 }
