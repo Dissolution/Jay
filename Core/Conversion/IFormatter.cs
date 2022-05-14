@@ -1,6 +1,4 @@
-﻿using Jay.Reflection;
-
-namespace Jay.Conversion;
+﻿namespace Jay.Conversion;
 
 public interface IFormatter
 {

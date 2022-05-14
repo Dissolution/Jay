@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
 
-namespace Jay.Reflection.Building.Adapting;
+namespace Jay.Reflection.Caching;
 
 public sealed class DelegateAndMember : IEquatable<DelegateAndMember>
 {
-    public static DelegateAndMember Create(DelegateSig sig, MemberInfo member)
+    public static DelegateAndMember Create(MethodSig sig, MemberInfo member)
     {
         ArgumentNullException.ThrowIfNull(sig);
         ArgumentNullException.ThrowIfNull(member);
@@ -15,10 +15,10 @@ public sealed class DelegateAndMember : IEquatable<DelegateAndMember>
         where TDelegate : Delegate
     {
         ArgumentNullException.ThrowIfNull(member);
-        return new DelegateAndMember(DelegateSig.Of<TDelegate>(), member);
+        return new DelegateAndMember(MethodSig.Of<TDelegate>(), member);
     }
 
-    public static DelegateAndMember Create<TMember>(DelegateSig sig, TMember member)
+    public static DelegateAndMember Create<TMember>(MethodSig sig, TMember member)
         where TMember : MemberInfo
     {
         ArgumentNullException.ThrowIfNull(sig);
@@ -31,26 +31,26 @@ public sealed class DelegateAndMember : IEquatable<DelegateAndMember>
         where TMember : MemberInfo
     {
         ArgumentNullException.ThrowIfNull(member);
-        return new DelegateAndMember(DelegateSig.Of<TDelegate>(), member);
+        return new DelegateAndMember(MethodSig.Of<TDelegate>(), member);
     }
 
-    public DelegateSig DelegateSig { get; }
+    public MethodSig MethodSig { get; }
     public MemberInfo Member { get; }
 
-    private DelegateAndMember(DelegateSig sig, MemberInfo member)
+    private DelegateAndMember(MethodSig sig, MemberInfo member)
     {
-        this.DelegateSig = sig;
+        this.MethodSig = sig;
         this.Member = member;
     }
-    public void Deconstruct(out DelegateSig delegateSig, out MemberInfo member)
+    public void Deconstruct(out MethodSig methodSig, out MemberInfo member)
     {
-        delegateSig = DelegateSig;
+        methodSig = MethodSig;
         member = Member;
     }
     public bool Equals(DelegateAndMember? delMem)
     {
         return delMem is not null &&
-               delMem.DelegateSig == this.DelegateSig &&
+               delMem.MethodSig == this.MethodSig &&
                delMem.Member == this.Member;
     }
 
@@ -61,11 +61,11 @@ public sealed class DelegateAndMember : IEquatable<DelegateAndMember>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(DelegateSig, Member);
+        return HashCode.Combine(MethodSig, Member);
     }
 
     public override string ToString()
     {
-        return $"({DelegateSig}){Member}";
+        return $"({MethodSig}){Member}";
     }
 }

@@ -1,11 +1,4 @@
-﻿using System.Collections.Specialized;
-using System.Diagnostics;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Jay.Reflection;
-
-namespace Jay.Text;
+﻿namespace Jay.Text;
 
 /// <summary>
 /// 

@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Jay.Reflection;
-using static InlineIL.IL;
+﻿using static InlineIL.IL;
 
 namespace Jay;
 

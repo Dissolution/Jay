@@ -3,7 +3,6 @@
 // ReSharper disable EqualExpressionComparison
 
 using Jay.Reflection;
-using Xunit;
 
 namespace Jay.BenchTests;
 

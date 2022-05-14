@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using Jay.Collections;
 using Jay.Dumping;
 using Jay.Reflection.Building;
+using Jay.Reflection.Caching;
 using Jay.Reflection.Search;
 using Jay.Validation;
 
@@ -406,7 +406,7 @@ public static class Muq
         var delType = typeof(CloneValue<>).MakeGenericType(type);
 
         var dm = RuntimeBuilder.CreateDynamicMethod(Dump.Text($"{type}_clone"), 
-            DelegateSig.Of(delType));
+            MethodSig.Of(delType));
             
         var emitter = dm.GetEmitter();
 

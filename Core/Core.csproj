@@ -44,4 +44,8 @@
         </AssemblyAttribute>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Reflection\Comparison" />
+    </ItemGroup>
+
 </Project>

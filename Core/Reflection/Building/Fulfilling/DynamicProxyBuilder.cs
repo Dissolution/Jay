@@ -2,8 +2,7 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Comparision;
-using Jay.Reflection.Building.Adapting;
-using Jay.Validation;
+using Jay.Reflection.Caching;
 
 namespace Jay.Reflection.Building.Fulfilling;
 
@@ -146,7 +145,7 @@ public static class DynamicProxyBuilder
                 // Do not re-implement
                 if (implementedMembers.Contains(method)) return;
 
-                var data = DelegateSig.Of(method);
+                var data = MethodSig.Of(method);
                     
                 // Find the method on the source type that we're pulling from
                 var sourceMethod = baseField.FieldType.GetMethod(method.Name, 

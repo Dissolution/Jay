@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using Jay.Reflection.Building;
+using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
 
 namespace Jay.Reflection;
@@ -99,7 +100,7 @@ public static class EventInfoExtensions
             var backingField = eventInfo.GetBackingField();
             if (backingField is null)
                 throw new ReflectionException($"Unable to find {eventInfo}'s backing field for a Raiser");
-            var handlerSig = DelegateSig.Of(backingField.FieldType, out var invokeMethod);
+            var handlerSig = MethodSig.Of(backingField.FieldType, out var invokeMethod);
             Debug.Assert(handlerSig.ParameterCount == 2);
             var senderParam = handlerSig.Parameters[0];
             Debug.Assert(senderParam.ParameterType == typeof(object));

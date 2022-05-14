@@ -1,23 +1,24 @@
 ﻿using System.Reflection;
 using Jay.Reflection.Building.Emission;
+using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
 
 namespace Jay.Reflection.Building.Adapting;
 
 public class DelegateMethodAdapter
 {
-    public DelegateSig DelegateSignature { get; }
+    public MethodSig MethodSig { get; }
     public MethodBase Method { get; }
-    public DelegateSig MethodSignature { get; }
+    public MethodSig MethodSignature { get; }
     public Safety Safety { get; }
 
-    public DelegateMethodAdapter(DelegateSig delegateSig,
+    public DelegateMethodAdapter(MethodSig methodSig,
                                  MethodBase method,
                                  Safety safety = Safety.Safe)
     {
-        this.DelegateSignature = delegateSig;
+        this.MethodSig = methodSig;
         this.Method = method ?? throw new ArgumentNullException(nameof(method));
-        this.MethodSignature = DelegateSig.Of(Method);
+        this.MethodSignature = MethodSig.Of(Method);
         this.Safety = safety;
     }
 
@@ -31,16 +32,16 @@ public class DelegateMethodAdapter
         }
 
         // Check 1:1
-        if (MethodSignature.ParameterCount == (DelegateSignature.ParameterCount - offset))
+        if (MethodSignature.ParameterCount == (MethodSig.ParameterCount - offset))
         {
             return new NotImplementedException();
         }
         // Check for only params
-        else if (DelegateSignature.ParameterCount == offset + 1 &&
-                 DelegateSignature.Parameters[offset].IsObjectArray() &&
-                 !MethodSignature.Parameters[0].IsObjectArray())
+        else if (MethodSig.ParameterCount == offset + 1 &&
+                 MethodSig.ParameterTypes[offset].IsObjectArray() &&
+                 !MethodSignature.ParameterTypes[0].IsObjectArray())
         {
-            return Result.TryInvoke(() => emitter.LoadParams(DelegateSignature.Parameters[offset], MethodSignature.Parameters));
+            return Result.TryInvoke(() => emitter.LoadParams(MethodSig.Parameters[offset], MethodSignature.Parameters));
         }
         // Check for optional method params
         else if (MethodSignature.Parameters.Reverse().Any(p => p.HasDefaultValue))
@@ -58,21 +59,21 @@ public class DelegateMethodAdapter
         where TEmitter : class, IFluentEmitter<TEmitter>
     {
         // Does delegate have one?
-        if (DelegateSignature.ReturnType != typeof(void))
+        if (MethodSig.ReturnType != typeof(void))
         {
             // Does method?
             if (MethodSignature.ReturnType != typeof(void))
             {
-                return Result.TryInvoke(() => emitter.Cast(MethodSignature.ReturnType, DelegateSignature.ReturnType));
+                return Result.TryInvoke(() => emitter.Cast(MethodSignature.ReturnType, MethodSig.ReturnType));
             }
             else
             {
                 if (Safety.HasFlag<Safety>(Safety.AllowReturnDefault))
                 {
-                    emitter.LoadDefault(DelegateSignature.ReturnType);
+                    emitter.LoadDefault(MethodSig.ReturnType);
                     return true;
                 }
-                return new AdapterException($"Delegate requires a returned {DelegateSignature.ReturnType} value, Method does not return one");
+                return new AdapterException($"Delegate requires a returned {MethodSig.ReturnType} value, Method does not return one");
             }
         }
         else
@@ -100,9 +101,9 @@ public class DelegateMethodAdapter
     {
         Result result;
         ParameterInfo? possibleInstanceParam;
-        if (DelegateSignature.ParameterCount > 0)
+        if (MethodSig.ParameterCount > 0)
         {
-            possibleInstanceParam = DelegateSignature.Parameters[0];
+            possibleInstanceParam = MethodSig.Parameters[0];
         }
         else
         {
@@ -125,7 +126,7 @@ public class DelegateMethodAdapter<TDelegate> : DelegateMethodAdapter
 {
     public DelegateMethodAdapter(MethodBase method,
                                  Safety safety = Safety.Safe)
-        : base(DelegateSig.Of<TDelegate>(), method, safety)
+        : base(MethodSig.Of<TDelegate>(), method, safety)
     {
 
     }

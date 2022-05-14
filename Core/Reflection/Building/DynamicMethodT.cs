@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Reflection.Building.Emission;
+using Jay.Reflection.Caching;
 
 namespace Jay.Reflection.Building;
 
@@ -16,14 +17,18 @@ public class DynamicMethod<TDelegate>
     public ILGenerator ILGenerator => _ilGenerator ??= _dynamicMethod.GetILGenerator();
     public IILGeneratorEmitter Emitter => new ILGeneratorEmitter(this.ILGenerator);
     //public IILGeneratorFluentEmitter FluentEmitter => new ILGeneratorEmitter(this.ILGenerator);
-    public DelegateSig DelegateSignature { get; }
-    public ParameterInfo[] Parameters => DelegateSignature.Parameters;
-    public Type ReturnType => DelegateSignature.ReturnType;
-
+    public MethodSig MethodSig { get; }
+    public IReadOnlyList<ParameterInfo> Parameters { get; }
+    public Type ReturnType { get; }
+    
+    
     public DynamicMethod(DynamicMethod dynamicMethod)
     {
         _dynamicMethod = dynamicMethod;
-        this.DelegateSignature = DelegateSig.Of<TDelegate>();
+        var invokeMethod = typeof(TDelegate).GetMethod("Invoke", Reflect.PublicFlags)!;
+        this.MethodSig = MethodSig.Of(invokeMethod);
+        this.Parameters = invokeMethod.GetParameters();
+        this.ReturnType = invokeMethod.ReturnType;
     }
 
     public TDelegate CreateDelegate() => _dynamicMethod.CreateDelegate<TDelegate>();

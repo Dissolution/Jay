@@ -1,20 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace Jay.Reflection;
 
 public static class ParameterInfoExtensions
 {
-    public enum Access
-    {
-        Default,
-        In,
-        Ref,
-        Out,
-    }
+   
 
-    public static Access GetAccess(this ParameterInfo parameter, out Type parameterType)
+    public static ParameterAccess GetAccess(this ParameterInfo parameter, out Type parameterType)
     {
         parameterType = parameter.ParameterType;
         if (parameterType.IsByRef)
@@ -22,17 +15,17 @@ public static class ParameterInfoExtensions
             parameterType = parameterType.GetElementType()!;
             if (parameter.IsIn)
             {
-                return Access.In;
+                return ParameterAccess.In;
             }
 
             if (parameter.IsOut)
             {
-                return Access.Out;
+                return ParameterAccess.Out;
             }
 
-            return Access.Ref;
+            return ParameterAccess.Ref;
         }
-        return Access.Default;
+        return ParameterAccess.Default;
     }
 
     [return: NotNullIfNotNull("parameter")]

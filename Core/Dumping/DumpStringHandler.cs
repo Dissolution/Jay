@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Jay.Exceptions;
+﻿using Jay.Exceptions;
 using Jay.Text;
 
 namespace Jay.Dumping;

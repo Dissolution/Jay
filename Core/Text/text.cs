@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Jay.Reflection;
+﻿using Jay.Reflection;
 // ReSharper disable InconsistentNaming
 
 namespace Jay.Text;

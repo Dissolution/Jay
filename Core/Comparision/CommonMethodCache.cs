@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
+﻿using System.Reflection;
 using Jay.Collections;
 using Jay.Reflection;
 using Jay.Validation;
@@ -51,35 +48,37 @@ public static class CommonMethodCache
     private static readonly ConcurrentTypeDictionary<IComparer> _comparers;
 
     public static CacheComparer Comparer { get; } = new CacheComparer();
-    
+
     static CommonMethodCache()
     {
         _equalityComparers = new();
         _comparers = new();
     }
 
-    public static FuncEqualityComparer<T> CreateEqualityComparer<T>(Func<T?, T?, bool> equals, Func<T?, int> getHashCode) => new FuncEqualityComparer<T>(equals, getHashCode);
-    
-    public static FuncComparer<T> CreateComparer<T>(Func<T?, T?, int> compare) => new FuncComparer<T>(compare);
+    public static FuncEqualityComparer<T> CreateEqualityComparer<T>(Func<T?, T?, bool> equals, Func<T?, int> getHashCode) 
+        => new FuncEqualityComparer<T>(equals, getHashCode);
+
+    public static FuncComparer<T> CreateComparer<T>(Func<T?, T?, int> compare) 
+        => new FuncComparer<T>(compare);
 
     private static IEqualityComparer GetEqualityComparer(Type type)
     {
         return _equalityComparers.GetOrAdd(type, t => typeof(EqualityComparer<>).MakeGenericType(t)
-                                                                                .GetProperty(nameof(EqualityComparer<byte>.Default),
-                                                                                             BindingFlags.Public | BindingFlags.Static)
-                                                                                .ThrowIfNull($"Cannot find EqualityComparer<{t}>.Default")
-                                                                                .GetStaticValue<IEqualityComparer>()
-                                                                                .ThrowIfNull($"Cannot cast EqualityComparer<{t}> to IEqualityComparer"));
+            .GetProperty(nameof(EqualityComparer<byte>.Default),
+                BindingFlags.Public | BindingFlags.Static)
+            .ThrowIfNull($"Cannot find EqualityComparer<{t}>.Default")
+            .GetStaticValue<IEqualityComparer>()
+            .ThrowIfNull($"Cannot cast EqualityComparer<{t}> to IEqualityComparer"));
     }
 
     private static IComparer GetComparer(Type type)
     {
         return _comparers.GetOrAdd(type, t => typeof(Comparer<>).MakeGenericType(t)
-                                                                .GetProperty(nameof(Comparer<byte>.Default),
-                                                                             BindingFlags.Public | BindingFlags.Static)
-                                                                .ThrowIfNull($"Cannot find the Comparer<{t}>.Default property")
-                                                                .GetStaticValue<IComparer>()
-                                                                .ThrowIfNull($"Cannot cast Comparer<{t}> to IComparer"));
+            .GetProperty(nameof(Comparer<byte>.Default),
+                BindingFlags.Public | BindingFlags.Static)
+            .ThrowIfNull($"Cannot find the Comparer<{t}>.Default property")
+            .GetStaticValue<IComparer>()
+            .ThrowIfNull($"Cannot cast Comparer<{t}> to IComparer"));
     }
 
     public static bool Equals(Type type, object? x, object? y)
@@ -97,10 +96,10 @@ public static class CommonMethodCache
     {
         return GetComparer(type).Compare(left, right);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T? Default<T>() => default(T);
-        
+
     public static object? Default(Type? type)
     {
         if (type is null)
@@ -109,7 +108,7 @@ public static class CommonMethodCache
             return null;
         return Activator.CreateInstance(type);
     }
-        
+
     /// <summary>
     /// Create a new, Uninitialized object of the specified type.
     /// </summary>

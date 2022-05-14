@@ -603,6 +603,8 @@ public ref partial struct TextBuilder
             {
                 return false;
             }
+
+            throw new NotImplementedException();
         }
     }
 

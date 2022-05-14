@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Jay.Text.Comparision;
+﻿namespace Jay.Text.Comparision;
 
 /// <summary>
 /// A utility for simplifying <see cref="string"/>s by stripping all non-ASCII characters, non-digits, non-letters, then uppercasing.

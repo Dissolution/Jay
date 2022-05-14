@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-
+using Jay.Reflection.Caching;
 using ExprType = System.Linq.Expressions.ExpressionType;
 
 namespace Jay.Reflection.Building.Fulfilling;
@@ -35,7 +34,7 @@ public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
         Targets = Targets.Unary,
         Symbol = "!",
         MethodName = "op_LogicalNot",
-        Signature = DelegateSig.Of(typeof(Func<bool, bool>)),
+        Signature = MethodSig.Of(typeof(Func<bool, bool>)),
         ExpressionType = ExprType.Not,
     };
 
@@ -46,7 +45,7 @@ public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
         Targets = Targets.Binary,
         Symbol = "&",
         MethodName = "op_LogicalAnd",
-        Signature = DelegateSig.Of(typeof(Func<,,>)),
+        Signature = MethodSig.Of(typeof(Func<,,>)),
         ExpressionType = ExprType.And,
     };
 
@@ -57,7 +56,7 @@ public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
         Targets = Targets.Binary,
         Symbol = "|",
         MethodName = "op_LogicalOr",
-        Signature = DelegateSig.Of(typeof(Func<,,>)),
+        Signature = MethodSig.Of(typeof(Func<,,>)),
         ExpressionType = ExprType.Or,
     };
 
@@ -68,7 +67,7 @@ public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
         Targets = Targets.Binary,
         Symbol = "^",
         MethodName = "op_ExclusiveOr",
-        Signature = DelegateSig.Of(typeof(Func<,,>)),
+        Signature = MethodSig.Of(typeof(Func<,,>)),
         ExpressionType = ExprType.ExclusiveOr,
     };
 
@@ -79,7 +78,7 @@ public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
         Targets = Targets.Binary,
         Symbol = "&&",
         MethodName = "op_LogicalAnd",
-        Signature = DelegateSig.Of(typeof(Func<,,>)),
+        Signature = MethodSig.Of(typeof(Func<,,>)),
         ExpressionType = ExprType.AndAlso,
     };
 
@@ -91,7 +90,7 @@ public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
         Targets = Targets.Binary,
         Symbol = "||",
         MethodName = "op_LogicalOr",
-        Signature = DelegateSig.Of(typeof(Func<,,>)),
+        Signature = MethodSig.Of(typeof(Func<,,>)),
         ExpressionType = ExprType.OrElse,
     };
 
@@ -116,7 +115,7 @@ public sealed class Operator : IEquatable<Operator>, IComparable<Operator>
     public string Symbol { get; init; }
 
     public string MethodName { get; init; }
-    public DelegateSig Signature { get; init; }
+    public MethodSig Signature { get; init; }
 
     public ExpressionType? ExpressionType { get; init; }
 

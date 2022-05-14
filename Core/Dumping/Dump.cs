@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Jay.Collections;
+﻿using Jay.Collections;
 using Jay.Reflection;
 using Jay.Reflection.Building;
 using Jay.Reflection.Search;

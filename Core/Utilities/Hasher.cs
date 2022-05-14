@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using Jay.Exceptions;
 using Jay.Reflection;
@@ -10,7 +9,7 @@ namespace Jay;
 /// <summary>
 /// A HashCode generator similar to <see cref="System.HashCode"/> with more methods available
 /// </summary>
-public ref struct Hasher
+public ref partial struct Hasher
 {
     // Primes from HashCode
     private const uint Prime1 = 2654435761U;
@@ -509,7 +508,9 @@ public ref struct Hasher
         }
         return hasher.ToHashCode();
     }
-
+   
+    
+    
     // State variables
     private uint _v1, _v2, _v3, _v4;
     private uint _queue1, _queue2, _queue3;
@@ -607,6 +608,21 @@ public ref struct Hasher
             }
         }
     }
+    
+    public void Add<T>(T?[]? values, IEqualityComparer<T>? comparer)
+    {
+        if (values is null)
+        {
+            AddHash(0);
+        }
+        else
+        {
+            for (var i = 0; i < values.Length; i++)
+            {
+                Add<T>(values[i], comparer);
+            }
+        }
+    }
 
     public void Add<T>(IEnumerable<T>? values)
     {
@@ -619,6 +635,21 @@ public ref struct Hasher
             foreach (var value in values)
             {
                 Add<T>(value);
+            }
+        }
+    }
+    
+    public void Add<T>(IEnumerable<T>? values, IEqualityComparer<T>? comparer)
+    {
+        if (values is null)
+        {
+            AddHash(0);
+        }
+        else
+        {
+            foreach (var value in values)
+            {
+                Add<T>(value, comparer);
             }
         }
     }

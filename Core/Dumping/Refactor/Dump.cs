@@ -1,36 +1,122 @@
-﻿using Jay.Collections;
+﻿using System.Buffers;
+using System.Collections.Concurrent;
+using Jay.Exceptions;
+using Jay.Text;
+using static InlineIL.IL;
 
 namespace Jay.Dumping.Refactor;
 
-public static class DumpExtensions
+[InterpolatedStringHandler]
+public ref struct Dumper
 {
-    public static string Dump<T>(this T? value, DumpOptions options = default) 
-        => Refactor.Dump.Value<T>(value, options);
-}
+    
+    private static int GetCapacity(int literalLength, int formattedCount) 
+        => Math.Min(1024, literalLength + (formattedCount * 16));
+    
+    
+    private char[]? _charArray;
+    private Span<char> _charSpan;
+    private int _index;
 
-public readonly struct DumpOptions
-{
-    public readonly bool TypeHints = false;
+    public int Length => _index;
 
-    public DumpOptions() { }
+    internal Span<char> Written => _charSpan[.._index];
+    internal Span<char> Available => _charSpan[_index..];
 
-    public DumpOptions(bool typeHints)
+    public Dumper(int literalLength, int formattedCount)
     {
-        this.TypeHints = typeHints;
+        _charSpan = _charArray = ArrayPool<char>.Shared.Rent(GetCapacity(literalLength, formattedCount));
+        _index = 0;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void Grow(int adding)
+    {
+        // string.MaxLength < array.MaxLength
+        const int maxCapacity = 0x3FFFFFDF;
+        int newCapacity = Math.Clamp(_index + adding, _charSpan.Length * 2, maxCapacity);
+        char[] newArray = ArrayPool<char>.Shared.Rent(newCapacity);
+        TextHelper.Copy(in _charSpan.GetPinnableReference(),
+            ref newArray[0],
+            _index);
+        char[]? toReturn = _charArray;
+        _charSpan = _charArray = newArray;
+        if (toReturn is not null)
+        {
+            ArrayPool<char>.Shared.Return(toReturn);
+        }
+    }
+    
+    public void AppendLiteral(string text)
+    {
+        while (!text.TryCopyTo(Available))
+        {
+            Grow(text.Length);
+        }
+        _index += text.Length;
+    }
+
+    public void AppendFormatted<T>(T value)
+    {
+        DumpCache
+    }
+
+    public void Clear()
+    {
+        _index = 0;
+    }
+    
+    public void Dispose()
+    {
+        char[]? toReturn = _charArray;
+        this = default; // defensive clear
+        if (toReturn is not null)
+        {
+            ArrayPool<char>.Shared.Return(toReturn);
+        }
+    }
+
+    public string GetStringAndDispose()
+    {
+        string str = new string(Written);
+        Dispose();
+        return str;
+    }
+    
+    public override bool Equals(object? obj) => UnsuitableException.ThrowEquals(typeof(Dumper));
+
+    public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(typeof(Dumper));
+
+    public override string ToString()
+    {
+        return new string(Written);
     }
 }
 
-    
+public delegate void Dump(ref Dumper dumper);
 
-
-public static partial class Dump
+public static class DumpCache
 {
-    private static readonly ConcurrentTypeDictionary<object?> _cache = new();
+    private static readonly List<Dump> _dumpDelegateList;
+    private static readonly ConcurrentDictionary<Type, Dump> _dumpDelegateCache;
 
-
-
-    public static string Value<T>(T? value, DumpOptions options = default)
+    static DumpCache()
     {
-        throw new NotImplementedException();
+        _dumpDelegateList = new();
+        _dumpDelegateCache = new();
+    }
+
+    public static Dump GetDumpDelegate(Type type)
+    {
+        if (_dumpDelegateCache.TryGetValue(type, out var dump))
+        {
+            return dump;
+        }
+
+        for (var i = 0; i < _dumpDelegateList.Count; i++)
+        {
+            dump = _dumpDelegateList[i];
+            if (dump.)
+        }
     }
 }

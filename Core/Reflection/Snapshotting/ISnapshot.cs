@@ -1,7 +1,4 @@
-﻿using System.Reflection;
-using Jay.Reflection.Building;
-
-namespace Jay.Reflection.Snapshotting;
+﻿namespace Jay.Reflection.Snapshotting;
 
 public static class Snapshot
 {

@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Jay.Text;
+﻿namespace Jay.Text;
 
 public ref struct TextPosition
 {

@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using InlineIL;
-// ReSharper disable EntityNameCapturedOnly.Global
+﻿// ReSharper disable EntityNameCapturedOnly.Global
 using static InlineIL.IL;
 
 namespace Jay;

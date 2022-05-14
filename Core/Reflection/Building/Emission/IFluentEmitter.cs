@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
 
 // ReSharper disable UnusedMember.Global
@@ -185,7 +185,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
         }
 
         var inputAccess = input.GetAccess(out var inputType);
-        bool inputIsRef = inputAccess != ParameterInfoExtensions.Access.Default;
+        bool inputIsRef = inputAccess != ParameterAccess.Default;
 
         bool outputIsRef = outputType.IsByRef;
         if (outputIsRef)
@@ -412,15 +412,13 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
         throw new NotImplementedException($"Cannot cast from {inputType} to {outputType}");
     }
 
-    TEmitter LoadParams(ParameterInfo paramsParameter, ParameterInfo[] parameters)
+    TEmitter LoadParams(ParameterInfo paramsParameter, IReadOnlyList<ParameterInfo> parameters)
     {
-        if (paramsParameter is null)
-            throw new ArgumentNullException(nameof(paramsParameter));
         if (/*!paramsParameter.IsParams() || */paramsParameter.ParameterType != typeof(object[]))
             throw new ArgumentException("Parameter is not params", nameof(paramsParameter));
         if (parameters is null)
             throw new ArgumentNullException(nameof(parameters));
-        var count = parameters.Length;
+        var count = parameters.Count;
 
         DefineLabel(out Label lblOk)
                // Load the params value (object[])
@@ -442,18 +440,18 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
                    // Load element index
                    .Ldc_I4(i);
             var parameter = parameters[i];
-            var access = parameter.GetAccess(out var parameterType);
+            var access = parameter.GetAccess(out _);
             // TODO: Test this!
-            if (access == ParameterInfoExtensions.Access.Default)
+            if (access == ParameterAccess.Default)
             {
                 // Load the element
-                Ldelem(parameterType);
+                Ldelem(parameter.ParameterType);
             }
             else
             {
                 // TODO: Safety checks
                 // Load the element reference
-                Ldelema(parameterType);
+                Ldelema(parameter.ParameterType);
             }
         }
         // All params are loaded in order with nothing extra laying on the stack

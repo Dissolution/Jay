@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Diagnostics.CodeAnalysis;
-
-namespace Jay;
+﻿namespace Jay;
 
 /// <summary>
 /// Represents an optional value.

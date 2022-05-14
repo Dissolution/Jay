@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Jay.Validation;
+﻿namespace Jay.Validation;
 
 public static class Validate
 {

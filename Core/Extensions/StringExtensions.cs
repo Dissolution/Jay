@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Jay;
+﻿namespace Jay;
 
 public static class StringExtensions
 {

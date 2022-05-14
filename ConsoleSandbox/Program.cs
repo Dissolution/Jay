@@ -7,49 +7,38 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-
+using ConsoleSandbox;
 using Jay.Collections;
+using Jay.Dumping;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
-using Jay.Text.Scratch;
-using TextBuilder = Jay.Text.Scratch.TextBuilder;
+
+//using TextBuilder = Jay.Text.Scratch.TextBuilder;
 
 #if RELEASE
 using Jay.BenchTests;
 using Jay.BenchTests.Text;
 
-
-
     var result = Runner.RunAndOpenHtml<TextBuilderWriteCharBenchTests>();
     Console.WriteLine(result);
+
 #else
 //using var text = TextBuilder.Borrow();
 
-using var text = new TextBuilder();
-text.AppendChar('a').AppendChar('b').AppendChar('c');
-string str = text.ToString();
+var member = Reflector.GetMember(typeof(KeyValuePair<,>), kvp => kvp.GetProperty(nameof(KeyValuePair<object, object>.Key)));
 
-Debugger.Break();
-
-/*
-int[] arrayA = new int[] { 1, 2, 3, 4, 5 };
-
-Football football = new();
-football.Append('a').AppendDelimit("kl", arrayA, (ref Football tb, int value) =>
-{
-    tb.Write<int>(value);
-});
-*/
-
-List<int> submissionIds = new List<int>() { 5, 3, 1, 4, 2 };
-var unsorted = string.Join(",", submissionIds);
-submissionIds.Sort((x,y) => x.CompareTo(y));
-var sortA = string.Join(",", submissionIds);
-submissionIds.Sort((x, y) => y.CompareTo(x));
-var sortB = string.Join(",", submissionIds);
+Console.WriteLine(Dump.Value(member));
 
 
-Debugger.Break();
+
+
+
+
+
+
+
+
+
 //Console.WriteLine(text.ToString());
 #endif
     
@@ -60,6 +49,66 @@ return 0;
 
 namespace ConsoleSandbox
 {
+    public static class Reflector
+    {
+        /*public static MemberInfo GetMember<TInstance>(TInstance instance, Expression<Func<TInstance, object?>> selectMemberExpression)
+        {
+            Func<TInstance, object?> selectMemberFunc;
+            try
+            {
+                selectMemberFunc = selectMemberExpression.Compile();
+            }
+            catch (Exception ex)
+            {
+                Debugger.Break();
+                throw new ArgumentException($"Could not compile the given {nameof(selectMemberExpression)}", nameof(selectMemberExpression), ex);
+            }
+
+            MemberInfo member;
+            try
+            {
+                member = selectMemberFunc(instance);
+            }
+            catch (Exception ex)
+            {
+                Debugger.Break();
+                throw new ArgumentException($"Could not find the given {nameof(selectMemberExpression)}", nameof(selectMemberExpression), ex);
+            }
+
+            return member;
+        }*/
+
+        public static TMember GetMember<TMember>(Type type, Expression<Func<Type, TMember>> selectMemberExpression)
+            where TMember : MemberInfo
+        {
+            ArgumentNullException.ThrowIfNull(type);
+            Func<Type, TMember> selectMemberFunc;
+            try
+            {
+                selectMemberFunc = selectMemberExpression.Compile();
+            }
+            catch (Exception ex)
+            {
+                Debugger.Break();
+                throw new ArgumentException($"Could not compile the given {nameof(selectMemberExpression)}", nameof(selectMemberExpression), ex);
+            }
+
+            TMember member;
+            try
+            {
+                member = selectMemberFunc(type);
+            }
+            catch (Exception ex)
+            {
+                Debugger.Break();
+                throw new ArgumentException($"Could not find the given {nameof(selectMemberExpression)}", nameof(selectMemberExpression), ex);
+            }
+
+            return member;
+        }
+        
+    }
+    
     [InterpolatedStringHandler]
     public ref struct Football //: IDisposable
     {

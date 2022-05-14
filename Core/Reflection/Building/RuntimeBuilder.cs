@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Dumping;
+using Jay.Reflection.Caching;
 using Jay.Reflection.Search;
 using Jay.Text;
 
@@ -92,13 +93,13 @@ public static class RuntimeBuilder
         return builder.Length > start;
     }
 
-    public static string CreateMethodName(string? name, DelegateSig delegateSig)
+    public static string CreateMethodName(string? name, MethodSig methodSig)
     {
         using var builder = TextBuilder.Borrow();
         if (!TryAppendName(name, builder))
         {
             builder.Clear();
-            if (delegateSig.IsAction)
+            if (methodSig.IsAction)
             {
                 builder.Write("Action_");
             }
@@ -164,13 +165,13 @@ public static class RuntimeBuilder
     }
 
     public static DynamicMethod CreateDynamicMethod(string? name,
-                                                    DelegateSig delegateSig)
+                                                    MethodSig methodSig)
     {
-        return new DynamicMethod(CreateMethodName(name, delegateSig),
+        return new DynamicMethod(CreateMethodName(name, methodSig),
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
-            delegateSig.ReturnType,
-            delegateSig.ParameterTypes,
+            methodSig.ReturnType,
+            methodSig.ParameterTypes,
             ModuleBuilder,
             true);
     }
@@ -178,7 +179,7 @@ public static class RuntimeBuilder
     public static DynamicMethod<TDelegate> CreateDynamicMethod<TDelegate>(string? name)
         where TDelegate : Delegate
     {
-        return new DynamicMethod<TDelegate>(CreateDynamicMethod(name, DelegateSig.Of<TDelegate>()));
+        return new DynamicMethod<TDelegate>(CreateDynamicMethod(name, MethodSig.Of<TDelegate>()));
     }
 
     public static TDelegate CreateDelegate<TDelegate>(string? name, Action<DynamicMethod<TDelegate>> buildDelegate)
@@ -193,7 +194,7 @@ public static class RuntimeBuilder
     {
         if (!delegateType.Implements<Delegate>())
             throw new ArgumentException("Must be a delegate", nameof(delegateType));
-        var dm = CreateDynamicMethod(name, DelegateSig.Of(delegateType));
+        var dm = CreateDynamicMethod(name, MethodSig.Of(delegateType));
         buildDelegate(dm);
         return dm.CreateDelegate(delegateType);
     }

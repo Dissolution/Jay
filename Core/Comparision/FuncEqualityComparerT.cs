@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Jay.Comparision;
+﻿namespace Jay.Comparision;
 
 public sealed class FuncEqualityComparer<T> : EqualityComparer<T>
 {
