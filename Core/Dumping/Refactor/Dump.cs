@@ -93,11 +93,11 @@ public ref struct Dumper
     }
 }
 
-public delegate void Dump(ref Dumper dumper);
+public delegate void Dump<TInstance>(ref TInstance instance, ref Dumper dumper);
 
 public static class DumpCache
 {
-    private static readonly List<Dump> _dumpDelegateList;
+    private static readonly List<Delegate> _dumpDelegateList;
     private static readonly ConcurrentDictionary<Type, Dump> _dumpDelegateCache;
 
     static DumpCache()
