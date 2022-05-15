@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using ConsoleSandbox;
 using Jay.Collections;
 using Jay.Dumping;
+using Jay.Dumping.Refactor;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
 
@@ -25,17 +26,10 @@ using Jay.BenchTests.Text;
 #else
 //using var text = TextBuilder.Borrow();
 
-var member = Reflector.GetMember(typeof(KeyValuePair<,>), kvp => kvp.GetProperty(nameof(KeyValuePair<object, object>.Key)));
 
-Console.WriteLine(Dump.Value(member));
-
-
-
-
-
-
-
-
+string text = DumperTest.DumpWith($"Look mom, no {147:DumpOptions.Default}!");
+Console.WriteLine(text);
+Debugger.Break();
 
 
 

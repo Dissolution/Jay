@@ -1,10 +1,31 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Reflection;
+using Jay.Collections;
 using Jay.Exceptions;
+using Jay.Reflection;
+using Jay.Reflection.Building;
 using Jay.Text;
+using Jay.Validation;
 using static InlineIL.IL;
 
 namespace Jay.Dumping.Refactor;
+
+public static class DumperTest
+{
+
+    public static string DumpWith(ref Dumper dumper)
+    {
+        return dumper.GetStringAndDispose();
+    }
+}
+
+
+public readonly struct DumpOptions
+{
+    public static readonly DumpOptions Default = default;
+}
 
 [InterpolatedStringHandler]
 public ref struct Dumper
@@ -47,19 +68,77 @@ public ref struct Dumper
         }
     }
     
-    public void AppendLiteral(string text)
+    public void AppendLiteral(string? text)
     {
-        while (!text.TryCopyTo(Available))
+        if (text is not null)
         {
-            Grow(text.Length);
+            while (!TextHelper.TryCopyTo(text, Available))
+            {
+                Grow(text.Length);
+            }
+            _index += text.Length;
         }
-        _index += text.Length;
     }
 
     public void AppendFormatted<T>(T value)
     {
-        DumpCache
+        if (!DumpCache.TryDump<T>(value, ref this))
+        {
+            if (value is IFormattable)
+            {
+                if (value is ISpanFormattable)
+                {
+                    int charsWritten;
+                    while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, default, default))
+                    {
+                        Grow(charsWritten);
+                    }
+                    _index += charsWritten;
+                }
+                else
+                {
+                    AppendLiteral(((IFormattable)value).ToString(null, null));
+                }
+            }
+            else
+            {
+                AppendLiteral(value?.ToString());
+            }
+        }
     }
+    
+    public void AppendFormatted<T>(T value, string? format)
+    {
+        if (!DumpCache.TryDump<T>(value, ref this))
+        {
+            if (value is IFormattable)
+            {
+                if (value is ISpanFormattable)
+                {
+                    int charsWritten;
+                    while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, format, default))
+                    {
+                        Grow(charsWritten);
+                    }
+                    _index += charsWritten;
+                }
+                else
+                {
+                    AppendLiteral(((IFormattable)value).ToString(format, null));
+                }
+            }
+            else
+            {
+                AppendLiteral(value?.ToString());
+            }
+        }
+    }
+
+    public void AppendFormatted<T>(T value, DumpOptions options)
+    {
+        
+    }
+
 
     public void Clear()
     {
@@ -93,30 +172,59 @@ public ref struct Dumper
     }
 }
 
-public delegate void Dump<TInstance>(ref TInstance instance, ref Dumper dumper);
+public delegate void Dump<TInstance>(TInstance instance, ref Dumper dumper);
+
+public interface IDumpable
+{
+    void Dump(ref Dumper dumper);
+}
 
 public static class DumpCache
 {
-    private static readonly List<Delegate> _dumpDelegateList;
-    private static readonly ConcurrentDictionary<Type, Dump> _dumpDelegateCache;
+    private static readonly ConcurrentTypeDictionary<Delegate?> _dumpDelegateCache;
 
     static DumpCache()
     {
-        _dumpDelegateList = new();
         _dumpDelegateCache = new();
     }
 
-    public static Dump GetDumpDelegate(Type type)
+    public static bool TryDump<T>(T value, ref Dumper dumper)
     {
-        if (_dumpDelegateCache.TryGetValue(type, out var dump))
+        if (_dumpDelegateCache.GetOrAdd<T>(FindDumpDelegate) is Dump<T> dump)
         {
-            return dump;
+            dump(value, ref dumper);
+            return true;
+        }
+        return false;
+    }
+    
+    private static Delegate? FindDumpDelegate(Type instanceType)
+    {
+        // Check implements
+        // TODO: order by distance between pair.Key and InstanceType
+        var implemented = _dumpDelegateCache.Where(pair => pair.Key.Implements(instanceType))
+            .Select(pair => pair.Value)
+            .FirstOrDefault();
+        if (implemented is not null)
+        {
+            return implemented;
         }
 
-        for (var i = 0; i < _dumpDelegateList.Count; i++)
+        MethodInfo? method;
+        
+        // Find IDumpable / delegate (duck-typed)
+        method = instanceType.GetMethod(name: "Dump",
+            bindingAttr: BindingFlags.Public | BindingFlags.Instance,
+            types: new Type[1] { typeof(Dumper).MakeByRefType() });
+        if (method is not null)
         {
-            dump = _dumpDelegateList[i];
-            if (dump.)
+            return RuntimeBuilder.CreateDelegate(typeof(Dump<>).MakeGenericType(instanceType),
+                "Invoke",
+                emitter => emitter.Ldarg(0).Ldarg(1).Call(method).Ret());
         }
+
+        // Todo: What else can we manually implement?
+
+        return null;
     }
 }

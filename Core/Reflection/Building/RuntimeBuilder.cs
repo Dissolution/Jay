@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Dumping;
+using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Search;
 using Jay.Text;
@@ -196,6 +197,15 @@ public static class RuntimeBuilder
             throw new ArgumentException("Must be a delegate", nameof(delegateType));
         var dm = CreateDynamicMethod(name, MethodSig.Of(delegateType));
         buildDelegate(dm);
+        return dm.CreateDelegate(delegateType);
+    }
+    
+    public static Delegate CreateDelegate(Type delegateType, string? name, Action<IILGeneratorEmitter> emitDelegate)
+    {
+        if (!delegateType.Implements<Delegate>())
+            throw new ArgumentException("Must be a delegate", nameof(delegateType));
+        var dm = CreateDynamicMethod(name, MethodSig.Of(delegateType));
+        emitDelegate(dm.GetEmitter());
         return dm.CreateDelegate(delegateType);
     }
 
