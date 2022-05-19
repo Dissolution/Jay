@@ -27,7 +27,7 @@ using Jay.BenchTests.Text;
 //using var text = TextBuilder.Borrow();
 
 
-string text = DumperTest.DumpWith($"Look mom, no {147:DumpOptions.Default}!");
+string text = DumperTest.DumpWith($"Look mom, no {147}!");
 Console.WriteLine(text);
 Debugger.Break();
 

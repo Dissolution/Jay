@@ -17,20 +17,50 @@ public static class DumperTest
 
     public static string DumpWith(ref Dumper dumper)
     {
-        return dumper.GetStringAndDispose();
+        return dumper.ToStringAndDispose();
+        //DefaultInterpolatedStringHandler
     }
 }
 
-
-public readonly struct DumpOptions
+public static class DumperExtensions
 {
-    public static readonly DumpOptions Default = default;
+    public static ref Dumper Append(this ref Dumper dumper, char ch)
+    {
+        dumper.AppendFormatted(ch);
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
+
+    public static ref Dumper Append(this ref Dumper dumper, ReadOnlySpan<char> text)
+    {
+        dumper.AppendFormatted(text);
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
+
+    public static ref Dumper Append(this ref Dumper dumper, object? value)
+    {
+        dumper.AppendFormatted(value);
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
+
+
+    public static ref Dumper Append<T>(this ref Dumper dumper, T? value)
+    {
+        dumper.AppendFormatted<T>(value);
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
 }
 
 [InterpolatedStringHandler]
 public ref struct Dumper
 {
-    
     private static int GetCapacity(int literalLength, int formattedCount) 
         => Math.Min(1024, literalLength + (formattedCount * 16));
     
@@ -67,7 +97,7 @@ public ref struct Dumper
             ArrayPool<char>.Shared.Return(toReturn);
         }
     }
-    
+
     public void AppendLiteral(string? text)
     {
         if (text is not null)
@@ -80,34 +110,33 @@ public ref struct Dumper
         }
     }
 
-    public void AppendFormatted<T>(T value)
+    public void AppendFormatted(char ch)
     {
-        if (!DumpCache.TryDump<T>(value, ref this))
+        if (Available.Length == 0)
+            Grow(1);
+        Available[0] = ch;
+    }
+
+    public void AppendFormatted(string? text)
+    {
+        AppendLiteral(text);
+    }
+
+    public void AppendFormatted(ReadOnlySpan<char> text)
+    {
+        while (!TextHelper.TryCopyTo(text, Available))
         {
-            if (value is IFormattable)
-            {
-                if (value is ISpanFormattable)
-                {
-                    int charsWritten;
-                    while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, default, default))
-                    {
-                        Grow(charsWritten);
-                    }
-                    _index += charsWritten;
-                }
-                else
-                {
-                    AppendLiteral(((IFormattable)value).ToString(null, null));
-                }
-            }
-            else
-            {
-                AppendLiteral(value?.ToString());
-            }
+            Grow(text.Length);
         }
+        _index += text.Length;
     }
     
-    public void AppendFormatted<T>(T value, string? format)
+    public void AppendFormatted(object? value, string? format = null)
+    {
+        AppendFormatted<object>(value, format);
+    }
+
+    public void AppendFormatted<T>(T? value, string? format = null)
     {
         if (!DumpCache.TryDump<T>(value, ref this))
         {
@@ -134,12 +163,6 @@ public ref struct Dumper
         }
     }
 
-    public void AppendFormatted<T>(T value, DumpOptions options)
-    {
-        
-    }
-
-
     public void Clear()
     {
         _index = 0;
@@ -155,7 +178,7 @@ public ref struct Dumper
         }
     }
 
-    public string GetStringAndDispose()
+    public string ToStringAndDispose()
     {
         string str = new string(Written);
         Dispose();
@@ -172,23 +195,132 @@ public ref struct Dumper
     }
 }
 
-public delegate void Dump<TInstance>(TInstance instance, ref Dumper dumper);
+public delegate void Dump<in TInstance>(TInstance? instance, ref Dumper dumper);
 
 public interface IDumpable
 {
     void Dump(ref Dumper dumper);
 }
 
-public static class DumpCache
+public static partial class DumpCache
+{
+    private static void DumpType(Type? type, ref Dumper dumper)
+    {
+        switch (Type.GetTypeCode(type))
+        {
+            case TypeCode.Empty:
+                dumper.AppendLiteral("null");
+                return;
+            case TypeCode.DBNull:
+                dumper.AppendLiteral(nameof(DBNull));
+                return;
+            case TypeCode.Boolean:
+                dumper.AppendLiteral("bool");
+                return;
+            case TypeCode.Char:
+                dumper.AppendLiteral("char");
+                return;
+            case TypeCode.SByte:
+                dumper.AppendLiteral("sbyte");
+                return;
+            case TypeCode.Byte:
+                dumper.AppendLiteral("byte");
+                return;
+            case TypeCode.Int16:
+                dumper.AppendLiteral("short");
+                return;
+            case TypeCode.UInt16:
+                dumper.AppendLiteral("ushort");
+                return;
+            case TypeCode.Int32:
+                dumper.AppendLiteral("int");
+                return;
+            case TypeCode.UInt32:
+                dumper.AppendLiteral("uint");
+                return;
+            case TypeCode.Int64:
+                dumper.AppendLiteral("long");
+                return;
+            case TypeCode.UInt64:
+                dumper.AppendLiteral("ulong");
+                return;
+            case TypeCode.Single:
+                dumper.AppendLiteral("float");
+                return;
+            case TypeCode.Double:
+                dumper.AppendLiteral("double");
+                return;
+            case TypeCode.Decimal:
+                dumper.AppendLiteral("decimal");
+                return;
+            case TypeCode.DateTime:
+                dumper.AppendLiteral(nameof(DateTime));
+                return;
+            case TypeCode.String:
+                dumper.AppendLiteral("string");
+                return;
+            case TypeCode.Object:
+            default:
+                break;
+        }
+        Debug.Assert(type != null);
+        Type? underlyingType;
+        
+        underlyingType = Nullable.GetUnderlyingType(type);
+        if (underlyingType is not null)
+        {
+            DumpType(underlyingType, ref dumper);
+            dumper.AppendFormatted('?');
+            return;
+        }
+
+        if (type.IsArray)
+        {
+            underlyingType = type.GetElementType();
+            Debug.Assert(underlyingType != null);
+            DumpType(underlyingType, ref dumper);
+            dumper.AppendLiteral("[]");
+            return;
+        }
+
+        var nameSpace = type.Namespace ?? "";
+        if (nameSpace.StartsWith("System.", StringComparison.OrdinalIgnoreCase))
+        {
+            dumper.AppendLiteral(type.Name);
+            return;
+        }
+
+        if (type.IsGenericType)
+        {
+            throw new NotImplementedException();
+        }
+
+        throw new NotImplementedException();
+    }
+
+}
+
+public static partial class DumpCache
 {
     private static readonly ConcurrentTypeDictionary<Delegate?> _dumpDelegateCache;
 
     static DumpCache()
     {
-        _dumpDelegateCache = new();
+        _dumpDelegateCache = new()
+        {
+            [typeof(Type)] = (Dump<Type>)DumpType,
+        };
     }
 
-    public static bool TryDump<T>(T value, ref Dumper dumper)
+
+    public static string Dump<T>(this T? value)
+    {
+        using var dumper = new Dumper();
+        dumper.AppendFormatted<T>(value);
+        return dumper.ToString();
+    }
+
+    internal static bool TryDump<T>(T? value, ref Dumper dumper)
     {
         if (_dumpDelegateCache.GetOrAdd<T>(FindDumpDelegate) is Dump<T> dump)
         {
