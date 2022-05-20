@@ -8,7 +8,9 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using ConsoleSandbox;
+using Jay;
 using Jay.Collections;
+using Jay.Comparision;
 using Jay.Dumping;
 using Jay.Dumping.Refactor;
 using Jay.Reflection.Building.Deconstruction;
@@ -27,8 +29,11 @@ using Jay.BenchTests.Text;
 //using var text = TextBuilder.Borrow();
 
 
-string text = DumperTest.DumpWith($"Look mom, no {147}!");
-Console.WriteLine(text);
+
+
+
+
+string text = DumperTest.DumpWith($"Look mom, no {typeof(IDictionary<,>)}");
 Debugger.Break();
 
 
@@ -43,8 +48,11 @@ return 0;
 
 namespace ConsoleSandbox
 {
+    
     public static class Reflector
     {
+
+
         /*public static MemberInfo GetMember<TInstance>(TInstance instance, Expression<Func<TInstance, object?>> selectMemberExpression)
         {
             Func<TInstance, object?> selectMemberFunc;

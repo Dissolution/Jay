@@ -1,7 +1,9 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Net;
 using System.Reflection;
+using InlineIL;
 using Jay.Collections;
 using Jay.Exceptions;
 using Jay.Reflection;
@@ -27,7 +29,7 @@ public static class DumperExtensions
     public static ref Dumper Append(this ref Dumper dumper, char ch)
     {
         dumper.AppendFormatted(ch);
-        Emit.Ldarga(0);
+        Emit.Ldarg(0);
         Emit.Ret();
         throw Unreachable();
     }
@@ -35,7 +37,7 @@ public static class DumperExtensions
     public static ref Dumper Append(this ref Dumper dumper, ReadOnlySpan<char> text)
     {
         dumper.AppendFormatted(text);
-        Emit.Ldarga(0);
+        Emit.Ldarg(0);
         Emit.Ret();
         throw Unreachable();
     }
@@ -43,7 +45,7 @@ public static class DumperExtensions
     public static ref Dumper Append(this ref Dumper dumper, object? value)
     {
         dumper.AppendFormatted(value);
-        Emit.Ldarga(0);
+        Emit.Ldarg(0);
         Emit.Ret();
         throw Unreachable();
     }
@@ -52,7 +54,7 @@ public static class DumperExtensions
     public static ref Dumper Append<T>(this ref Dumper dumper, T? value)
     {
         dumper.AppendFormatted<T>(value);
-        Emit.Ldarga(0);
+        Emit.Ldarg(0);
         Emit.Ret();
         throw Unreachable();
     }
@@ -62,14 +64,22 @@ public static class DumperExtensions
 public ref struct Dumper
 {
     private static int GetCapacity(int literalLength, int formattedCount) 
-        => Math.Min(1024, literalLength + (formattedCount * 16));
+        => Math.Max(1024, literalLength + (formattedCount * 16));
     
     
     private char[]? _charArray;
     private Span<char> _charSpan;
+
     private int _index;
+    private bool _deep;
 
     public int Length => _index;
+
+    public bool Deep
+    {
+        get => _deep;
+        set => _deep = value;
+    }
 
     internal Span<char> Written => _charSpan[.._index];
     internal Span<char> Available => _charSpan[_index..];
@@ -78,6 +88,7 @@ public ref struct Dumper
     {
         _charSpan = _charArray = ArrayPool<char>.Shared.Rent(GetCapacity(literalLength, formattedCount));
         _index = 0;
+        _deep = false;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -115,6 +126,7 @@ public ref struct Dumper
         if (Available.Length == 0)
             Grow(1);
         Available[0] = ch;
+        _index++;
     }
 
     public void AppendFormatted(string? text)
@@ -202,8 +214,17 @@ public interface IDumpable
     void Dump(ref Dumper dumper);
 }
 
+/// <summary>
+/// DumpCache: MemberInfo
+/// </summary>
 public static partial class DumpCache
 {
+    private static readonly HashSet<string> _ignoredNamespaces = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "System",
+        "Microsoft",
+    };
+
     private static void DumpType(Type? type, ref Dumper dumper)
     {
         switch (Type.GetTypeCode(type))
@@ -265,12 +286,45 @@ public static partial class DumpCache
         }
         Debug.Assert(type != null);
         Type? underlyingType;
+
+        if (type == typeof(object))
+        {
+            dumper.AppendLiteral("object");
+            return;
+        }
         
+        // TODO: deep print namespace
+
+        // Print a Declaring Type for Nested Types
+        if (type.IsNested && !type.IsGenericParameter)
+        {
+            DumpType(type.DeclaringType, ref dumper);
+            dumper.AppendFormatted('.');
+        }
+
         underlyingType = Nullable.GetUnderlyingType(type);
         if (underlyingType is not null)
         {
             DumpType(underlyingType, ref dumper);
             dumper.AppendFormatted('?');
+            return;
+        }
+
+        if (type.IsPointer)
+        {
+            underlyingType = type.GetElementType();
+            Debug.Assert(underlyingType != null);
+            DumpType(underlyingType, ref dumper);
+            dumper.AppendLiteral("*");
+            return;
+        }
+
+        if (type.IsByRef)
+        {
+            underlyingType = type.GetElementType();
+            Debug.Assert(underlyingType != null);
+            dumper.AppendLiteral("ref ");
+            DumpType(underlyingType, ref dumper);
             return;
         }
 
@@ -282,22 +336,176 @@ public static partial class DumpCache
             dumper.AppendLiteral("[]");
             return;
         }
-
-        var nameSpace = type.Namespace ?? "";
-        if (nameSpace.StartsWith("System.", StringComparison.OrdinalIgnoreCase))
-        {
-            dumper.AppendLiteral(type.Name);
-            return;
-        }
+        
+        string name = type.Name;
 
         if (type.IsGenericType)
         {
-            throw new NotImplementedException();
-        }
+            if (type.IsGenericParameter)
+            {
+                dumper.AppendLiteral(name);
+                var constraints = type.GetGenericParameterConstraints();
+                if (constraints.Length > 0 && dumper.Deep)
+                {
+                    dumper.AppendLiteral(" : ");
+                    Debugger.Break();
+                }
+                return;
+            }
 
-        throw new NotImplementedException();
+            var genericTypes = type.GetGenericArguments();
+            var i = name.IndexOf('`');
+            Debug.Assert(i >= 0);
+            dumper.Append(name[..i]).Append('<');
+            for (i = 0; i < genericTypes.Length; i++)
+            {
+                if (i > 0) dumper.Append(',');
+                DumpType(genericTypes[i], ref dumper);
+            }
+            dumper.Append('>');
+        }
+        else
+        {
+            dumper.Append(name);
+        }
     }
 
+    private static void DumpField(FieldInfo? field, ref Dumper dumper)
+    {
+        if (dumper.Deep)
+        {
+            var visibility = field.Visibility();
+            
+        }
+    }
+}
+
+public static partial class DumpCache
+{
+    private static void DumpEnum<TEnum>(TEnum @enum, ref Dumper dumper)
+        where TEnum : struct, Enum
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public static class EnumExtensions
+{
+    private static class EnumTypeInfo<TEnum> where TEnum : struct, Enum
+    {
+        private sealed class EnumInfo : IEquatable<EnumInfo>,
+                                        IEquatable<TEnum>
+        {
+            public TEnum Enum { get; }
+            public string Name { get; }
+            public Attribute[] Attributes { get; }
+
+            public EnumInfo(FieldInfo enumMemberField)
+            {
+                this.Name = enumMemberField.Name;
+                this.Attributes = Attribute.GetCustomAttributes(enumMemberField, true);
+                this.Enum = (TEnum)enumMemberField.GetValue(null)!;
+            }
+
+            public bool Equals(EnumInfo? enumInfo)
+            {
+                return enumInfo is not null && EnumTypeInfo<TEnum>.Equals(Enum, enumInfo.Enum);
+            }
+
+            public bool Equals(TEnum @enum)
+            {
+                return EnumTypeInfo<TEnum>.Equals(Enum, @enum);
+            }
+
+            public override bool Equals(object? obj)
+            {
+                if (obj is EnumInfo enumInfo) return Equals(enumInfo);
+                if (obj is TEnum @enum) return Equals(@enum);
+                if (obj is Enum) Debugger.Break();
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                Emit.Ldarg_0();
+                Emit.Ldfld(FieldRef.Field(typeof(EnumInfo), nameof(Enum)));
+                Emit.Conv_I4();
+                return Return<int>();
+            }
+
+            public override string ToString()
+            {
+                return $"({EnumTypeInfo<TEnum>.Name}){Name}";
+            }
+        }
+
+
+        static EnumTypeInfo()
+        {
+            Type = typeof(TEnum);
+            Debug.Assert(Type.IsEnum);
+            Attributes = Attribute.GetCustomAttributes(Type, true);
+            Name = Type.Dump();
+        }
+
+        public static Type Type { get; }
+        public static Attribute[] Attributes { get; }
+        public static string Name { get; }
+
+        private static readonly Dictionary<TEnum, EnumInfo> _enumInfos;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Equals(TEnum x, TEnum y)
+        {
+            Emit.Ldarg(nameof(x));
+            Emit.Ldarg(nameof(y));
+            Emit.Ceq();
+            return Return<bool>();
+        }
+
+    }
+
+    public static Attribute[] GetAttributes<TEnum>(this TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        //return EnumTypeInfo<TEnum>
+        throw new NotImplementedException();
+    }
+}
+
+[AttributeUsage(AttributeTargets.Enum)]
+public class DumpAsAttribute : Attribute
+{
+    public string? Dump { get; }
+
+    public DumpAsAttribute(char ch)
+    {
+        if (ch == default)
+        {
+            Dump = default;
+        }
+        else
+        {
+            Dump = new string(ch, 1);
+        }
+    }
+
+    public DumpAsAttribute(string? dump)
+    {
+        if (string.IsNullOrWhiteSpace(dump))
+        {
+            Dump = default;
+        }
+        else
+        {
+            Dump = dump;
+        }
+    }
+
+    public override string ToString()
+    {
+        return $"Dump as '{Dump}'";
+    }
 }
 
 public static partial class DumpCache
