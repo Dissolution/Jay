@@ -15,7 +15,6 @@ namespace Jay.Dumping.Refactor;
 
 public static class DumperTest
 {
-
     public static string DumpWith(ref Dumper dumper)
     {
         return dumper.ToStringAndDispose();
@@ -62,10 +61,10 @@ public static class DumperExtensions
 [InterpolatedStringHandler]
 public ref struct Dumper
 {
-    private static int GetCapacity(int literalLength, int formattedCount) 
+    private static int GetCapacity(int literalLength, int formattedCount)
         => Math.Max(1024, literalLength + (formattedCount * 16));
-    
-    
+
+
     private char[]? _charArray;
     private Span<char> _charSpan;
 
@@ -116,6 +115,7 @@ public ref struct Dumper
             {
                 Grow(text.Length);
             }
+
             _index += text.Length;
         }
     }
@@ -139,9 +139,10 @@ public ref struct Dumper
         {
             Grow(text.Length);
         }
+
         _index += text.Length;
     }
-    
+
     public void AppendFormatted(object? value, string? format = null)
     {
         AppendFormatted<object>(value, format);
@@ -160,6 +161,7 @@ public ref struct Dumper
                     {
                         Grow(charsWritten);
                     }
+
                     _index += charsWritten;
                 }
                 else
@@ -178,7 +180,7 @@ public ref struct Dumper
     {
         _index = 0;
     }
-    
+
     public void Dispose()
     {
         char[]? toReturn = _charArray;
@@ -195,7 +197,7 @@ public ref struct Dumper
         Dispose();
         return str;
     }
-    
+
     public override bool Equals(object? obj) => UnsuitableException.ThrowEquals(typeof(Dumper));
 
     public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(typeof(Dumper));
@@ -315,13 +317,13 @@ public static partial class DumpCache
             dumper.AppendLiteral("string");
             return;
         }
-       
+
         if (type == typeof(object))
         {
             dumper.AppendLiteral("object");
             return;
         }
-        
+
         // TODO: deep print namespace
 
         Type? underlyingType;
@@ -374,7 +376,7 @@ public static partial class DumpCache
             dumper.AppendLiteral("[]");
             return;
         }
-        
+
         string name = type.Name;
 
         if (type.IsGenericType)
@@ -388,6 +390,7 @@ public static partial class DumpCache
                     dumper.AppendLiteral(" : ");
                     Debugger.Break();
                 }
+
                 return;
             }
 
@@ -400,6 +403,7 @@ public static partial class DumpCache
                 if (i > 0) dumper.Append(',');
                 DumpType(genericTypes[i], ref dumper);
             }
+
             dumper.Append('>');
         }
         else
@@ -413,7 +417,6 @@ public static partial class DumpCache
         if (dumper.Deep)
         {
             var visibility = field.Visibility();
-            
         }
     }
 }
@@ -423,42 +426,16 @@ public static partial class DumpCache
     private static void DumpEnum<TEnum>(TEnum @enum, ref Dumper dumper)
         where TEnum : struct, Enum
     {
-        dumper.AppendLiteral(@enum.GetInfo().Name);
-    }
-}
-
-[AttributeUsage(AttributeTargets.Enum)]
-public class DumpAsAttribute : Attribute
-{
-    public string? Dump { get; }
-
-    public DumpAsAttribute(char ch)
-    {
-        if (ch == default)
+        var enumInfo = @enum.GetInfo();
+        var dumpAsAttr = enumInfo.GetAttribute<DumpAsAttribute>();
+        if ((dumpAsAttr?.Value).IsNonWhiteSpace())
         {
-            Dump = default;
+            dumper.AppendLiteral(dumpAsAttr.Value);
         }
         else
         {
-            Dump = new string(ch, 1);
+            dumper.AppendLiteral(enumInfo.Name);
         }
-    }
-
-    public DumpAsAttribute(string? dump)
-    {
-        if (string.IsNullOrWhiteSpace(dump))
-        {
-            Dump = default;
-        }
-        else
-        {
-            Dump = dump;
-        }
-    }
-
-    public override string ToString()
-    {
-        return $"Dump as '{Dump}'";
     }
 }
 
@@ -489,9 +466,10 @@ public static partial class DumpCache
             dump(value, ref dumper);
             return true;
         }
+
         return false;
     }
-    
+
     private static Delegate? FindDumpDelegate(Type instanceType)
     {
         // Check implements
@@ -504,12 +482,10 @@ public static partial class DumpCache
             return implemented;
         }
 
-        MethodInfo? method;
-        
         // Find IDumpable / delegate (duck-typed)
-        method = instanceType.GetMethod(name: "Dump",
+        MethodInfo? method = instanceType.GetMethod(name: "Dump",
             bindingAttr: BindingFlags.Public | BindingFlags.Instance,
-            types: new Type[1] { typeof(Dumper).MakeByRefType() });
+            types: new Type[1] {typeof(Dumper).MakeByRefType()});
         if (method is not null)
         {
             return RuntimeBuilder.CreateDelegate(typeof(Dump<>).MakeGenericType(instanceType),
@@ -517,8 +493,37 @@ public static partial class DumpCache
                 emitter => emitter.Ldarg(0).Ldarg(1).Call(method).Ret());
         }
 
+        // Check for DumpAsAttribute
+        DumpAsAttribute? attr = instanceType.GetCustomAttribute<DumpAsAttribute>();
+        if (attr is not null && !string.IsNullOrWhiteSpace(attr.Value))
+        {
+            return GetDumpString(instanceType, attr.Value);
+        }
+
         // Todo: What else can we manually implement?
 
         return null;
+    }
+
+    private static readonly MethodInfo _dumperAppendLiteral =
+        typeof(Dumper).GetMethod(nameof(Dumper.AppendLiteral),
+            BindingFlags.Public | BindingFlags.Instance,
+            null,
+            new Type[1] {typeof(string)},
+            null).ThrowIfNull($"Could not find Dumper.AppendLiteral(string?)");
+
+    private static Delegate GetDumpString(Type instanceType, string value)
+    {
+        return RuntimeBuilder.CreateDelegate(typeof(Dump<>).MakeGenericType(instanceType),
+            "DumpAsAttr",
+            emitter => emitter
+                // we never load TInstance, as it is overridden with this string
+                // ref Dumper
+                .Ldarg(1)
+                // string
+                .Ldstr(value)
+                // Dumper.AppendLiteral(string)
+                .Call(_dumperAppendLiteral)
+                .Ret());
     }
 }

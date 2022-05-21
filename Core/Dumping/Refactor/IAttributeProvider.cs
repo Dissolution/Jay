@@ -1,51 +1,20 @@
-﻿using System.Reflection;
+﻿namespace Jay.Dumping.Refactor;
 
-namespace Jay.Dumping.Refactor;
-
-public interface IAttributeProvider : ICustomAttributeProvider
+public interface IAttributeProvider
 {
-    object[] ICustomAttributeProvider.GetCustomAttributes(Type attributeType, bool inherit)
-    {
-        object[] customAttributes = GetCustomAttributes(inherit);
-        var attributes = new List<Attribute>(customAttributes.Length);
-        foreach (Attribute customAttribute in customAttributes)
-        {
-            if (customAttribute.GetType().Implements(attributeType))
-            {
-                attributes.Add(customAttribute);
-            }
-        }
+    IReadOnlyList<Attribute> Attributes { get; }
 
-        // ReSharper disable once CoVariantArrayConversion
-        return (object[])attributes.ToArray();
-    }
-
-    bool ICustomAttributeProvider.IsDefined(Type attributeType, bool inherit)
-    {
-        return GetCustomAttributes(attributeType, inherit).Length > 0;
-    }
-
-    public bool HasAttribute<TAttribute>(bool inherit = true) 
+    public bool HasAttribute<TAttribute>() 
         where TAttribute : Attribute
     {
-        foreach (Attribute customAttribute in GetCustomAttributes(inherit))
-        {
-            if (customAttribute is TAttribute)
-                return true;
-        }
-        return false;
+        return Attributes.Any(attr => attr is TAttribute);
     }
 
-    public TAttribute? GetAttribute<TAttribute>(bool inherit = true)
+    public TAttribute? GetAttribute<TAttribute>()
         where TAttribute : Attribute
     {
-        foreach (Attribute customAttribute in GetCustomAttributes(inherit))
-        {
-            if (customAttribute is TAttribute attribute)
-                return attribute;
-        }
-        return null;
+        return Attributes
+            .SelectWhere((Attribute attr, out TAttribute? tAttr) => attr.Is(out tAttr))
+            .FirstOrDefault();
     }
-
-    public IReadOnlyList<Attribute> Attributes { get; }
 }
