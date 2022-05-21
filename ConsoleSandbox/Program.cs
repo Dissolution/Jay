@@ -15,6 +15,7 @@ using Jay.Dumping;
 using Jay.Dumping.Refactor;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
+using EnumExtensions = Jay.Dumping.Refactor.EnumExtensions;
 
 //using TextBuilder = Jay.Text.Scratch.TextBuilder;
 
@@ -26,19 +27,16 @@ using Jay.BenchTests.Text;
     Console.WriteLine(result);
 
 #else
-//using var text = TextBuilder.Borrow();
+using var text = TextBuilder.Borrow();
 
+var info = BindingFlags.DoNotWrapExceptions.GetInfo();
 
-
-
-
-
-string text = DumperTest.DumpWith($"Look mom, no {typeof(IDictionary<,>)}");
+// string text = DumperTest.DumpWith($"Look mom, no {typeof(IDictionary<,>)}");
 Debugger.Break();
 
 
 
-//Console.WriteLine(text.ToString());
+Console.WriteLine(text.ToString());
 #endif
     
 Console.WriteLine("Press Enter to close this window.");
@@ -48,7 +46,18 @@ return 0;
 
 namespace ConsoleSandbox
 {
-    
+    public enum TestEnum : ulong
+    {
+        Zero = 0,
+        One = 1,
+        Just = 1L << 32,
+        Q1 = (ulong)(ulong.MaxValue * (1d / 4d)),
+        Q2 = (ulong)(ulong.MaxValue * (2d / 4d)),
+        Q3 = (ulong)(ulong.MaxValue * (3d / 4d)),
+        Q4 = ulong.MaxValue,
+    }
+
+
     public static class Reflector
     {
 

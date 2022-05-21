@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
-using InlineIL;
 using Jay.Collections;
 using Jay.Exceptions;
 using Jay.Reflection;
@@ -227,66 +226,96 @@ public static partial class DumpCache
 
     private static void DumpType(Type? type, ref Dumper dumper)
     {
-        switch (Type.GetTypeCode(type))
+        if (type is null)
         {
-            case TypeCode.Empty:
-                dumper.AppendLiteral("null");
-                return;
-            case TypeCode.DBNull:
-                dumper.AppendLiteral(nameof(DBNull));
-                return;
-            case TypeCode.Boolean:
-                dumper.AppendLiteral("bool");
-                return;
-            case TypeCode.Char:
-                dumper.AppendLiteral("char");
-                return;
-            case TypeCode.SByte:
-                dumper.AppendLiteral("sbyte");
-                return;
-            case TypeCode.Byte:
-                dumper.AppendLiteral("byte");
-                return;
-            case TypeCode.Int16:
-                dumper.AppendLiteral("short");
-                return;
-            case TypeCode.UInt16:
-                dumper.AppendLiteral("ushort");
-                return;
-            case TypeCode.Int32:
-                dumper.AppendLiteral("int");
-                return;
-            case TypeCode.UInt32:
-                dumper.AppendLiteral("uint");
-                return;
-            case TypeCode.Int64:
-                dumper.AppendLiteral("long");
-                return;
-            case TypeCode.UInt64:
-                dumper.AppendLiteral("ulong");
-                return;
-            case TypeCode.Single:
-                dumper.AppendLiteral("float");
-                return;
-            case TypeCode.Double:
-                dumper.AppendLiteral("double");
-                return;
-            case TypeCode.Decimal:
-                dumper.AppendLiteral("decimal");
-                return;
-            case TypeCode.DateTime:
-                dumper.AppendLiteral(nameof(DateTime));
-                return;
-            case TypeCode.String:
-                dumper.AppendLiteral("string");
-                return;
-            case TypeCode.Object:
-            default:
-                break;
+            dumper.AppendLiteral("null");
+            return;
         }
-        Debug.Assert(type != null);
-        Type? underlyingType;
 
+        if (type == typeof(bool))
+        {
+            dumper.AppendLiteral("bool");
+            return;
+        }
+
+        if (type == typeof(char))
+        {
+            dumper.AppendLiteral("char");
+            return;
+        }
+
+        if (type == typeof(sbyte))
+        {
+            dumper.AppendLiteral("sbyte");
+            return;
+        }
+
+        if (type == typeof(byte))
+        {
+            dumper.AppendLiteral("byte");
+            return;
+        }
+
+        if (type == typeof(short))
+        {
+            dumper.AppendLiteral("short");
+            return;
+        }
+
+        if (type == typeof(ushort))
+        {
+            dumper.AppendLiteral("ushort");
+            return;
+        }
+
+        if (type == typeof(int))
+        {
+            dumper.AppendLiteral("int");
+            return;
+        }
+
+        if (type == typeof(uint))
+        {
+            dumper.AppendLiteral("uint");
+            return;
+        }
+
+        if (type == typeof(long))
+        {
+            dumper.AppendLiteral("long");
+            return;
+        }
+
+        if (type == typeof(ulong))
+        {
+            dumper.AppendLiteral("ulong");
+            return;
+        }
+
+        if (type == typeof(float))
+        {
+            dumper.AppendLiteral("float");
+            return;
+        }
+
+        if (type == typeof(double))
+        {
+            dumper.AppendLiteral("double");
+            return;
+        }
+
+        if (type == typeof(decimal))
+        {
+            dumper.AppendLiteral("decimal");
+            return;
+        }
+
+        if (type == typeof(string))
+        {
+            dumper.AppendLiteral("string");
+            return;
+        }
+       
         if (type == typeof(object))
         {
             dumper.AppendLiteral("object");
@@ -294,6 +323,15 @@ public static partial class DumpCache
         }
         
         // TODO: deep print namespace
+
+        Type? underlyingType;
+
+        // Enums
+        if (type.IsEnum)
+        {
+            dumper.AppendLiteral(type.Name);
+            return;
+        }
 
         // Print a Declaring Type for Nested Types
         if (type.IsNested && !type.IsGenericParameter)
@@ -385,91 +423,7 @@ public static partial class DumpCache
     private static void DumpEnum<TEnum>(TEnum @enum, ref Dumper dumper)
         where TEnum : struct, Enum
     {
-        throw new NotImplementedException();
-    }
-}
-
-public static class EnumExtensions
-{
-    private static class EnumTypeInfo<TEnum> where TEnum : struct, Enum
-    {
-        private sealed class EnumInfo : IEquatable<EnumInfo>,
-                                        IEquatable<TEnum>
-        {
-            public TEnum Enum { get; }
-            public string Name { get; }
-            public Attribute[] Attributes { get; }
-
-            public EnumInfo(FieldInfo enumMemberField)
-            {
-                this.Name = enumMemberField.Name;
-                this.Attributes = Attribute.GetCustomAttributes(enumMemberField, true);
-                this.Enum = (TEnum)enumMemberField.GetValue(null)!;
-            }
-
-            public bool Equals(EnumInfo? enumInfo)
-            {
-                return enumInfo is not null && EnumTypeInfo<TEnum>.Equals(Enum, enumInfo.Enum);
-            }
-
-            public bool Equals(TEnum @enum)
-            {
-                return EnumTypeInfo<TEnum>.Equals(Enum, @enum);
-            }
-
-            public override bool Equals(object? obj)
-            {
-                if (obj is EnumInfo enumInfo) return Equals(enumInfo);
-                if (obj is TEnum @enum) return Equals(@enum);
-                if (obj is Enum) Debugger.Break();
-                return false;
-            }
-
-            public override int GetHashCode()
-            {
-                Emit.Ldarg_0();
-                Emit.Ldfld(FieldRef.Field(typeof(EnumInfo), nameof(Enum)));
-                Emit.Conv_I4();
-                return Return<int>();
-            }
-
-            public override string ToString()
-            {
-                return $"({EnumTypeInfo<TEnum>.Name}){Name}";
-            }
-        }
-
-
-        static EnumTypeInfo()
-        {
-            Type = typeof(TEnum);
-            Debug.Assert(Type.IsEnum);
-            Attributes = Attribute.GetCustomAttributes(Type, true);
-            Name = Type.Dump();
-        }
-
-        public static Type Type { get; }
-        public static Attribute[] Attributes { get; }
-        public static string Name { get; }
-
-        private static readonly Dictionary<TEnum, EnumInfo> _enumInfos;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Equals(TEnum x, TEnum y)
-        {
-            Emit.Ldarg(nameof(x));
-            Emit.Ldarg(nameof(y));
-            Emit.Ceq();
-            return Return<bool>();
-        }
-
-    }
-
-    public static Attribute[] GetAttributes<TEnum>(this TEnum @enum)
-        where TEnum : struct, Enum
-    {
-        //return EnumTypeInfo<TEnum>
-        throw new NotImplementedException();
+        dumper.AppendLiteral(@enum.GetInfo().Name);
     }
 }
 
@@ -523,9 +477,9 @@ public static partial class DumpCache
 
     public static string Dump<T>(this T? value)
     {
-        using var dumper = new Dumper();
+        var dumper = new Dumper();
         dumper.AppendFormatted<T>(value);
-        return dumper.ToString();
+        return dumper.ToStringAndDispose();
     }
 
     internal static bool TryDump<T>(T? value, ref Dumper dumper)
