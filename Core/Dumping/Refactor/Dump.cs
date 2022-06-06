@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
@@ -22,42 +23,6 @@ public static class DumperTest
     }
 }
 
-public static class DumperExtensions
-{
-    public static ref Dumper Append(this ref Dumper dumper, char ch)
-    {
-        dumper.AppendFormatted(ch);
-        Emit.Ldarg(0);
-        Emit.Ret();
-        throw Unreachable();
-    }
-
-    public static ref Dumper Append(this ref Dumper dumper, ReadOnlySpan<char> text)
-    {
-        dumper.AppendFormatted(text);
-        Emit.Ldarg(0);
-        Emit.Ret();
-        throw Unreachable();
-    }
-
-    public static ref Dumper Append(this ref Dumper dumper, object? value)
-    {
-        dumper.AppendFormatted(value);
-        Emit.Ldarg(0);
-        Emit.Ret();
-        throw Unreachable();
-    }
-
-
-    public static ref Dumper Append<T>(this ref Dumper dumper, T? value)
-    {
-        dumper.AppendFormatted<T>(value);
-        Emit.Ldarg(0);
-        Emit.Ret();
-        throw Unreachable();
-    }
-}
-
 [InterpolatedStringHandler]
 public ref struct Dumper
 {
@@ -67,26 +32,25 @@ public ref struct Dumper
 
     private char[]? _charArray;
     private Span<char> _charSpan;
-
     private int _index;
-    private bool _deep;
+    private bool _verbose;
 
     public int Length => _index;
 
-    public bool Deep
+    public bool Verbose
     {
-        get => _deep;
-        set => _deep = value;
+        get => _verbose;
+        set => _verbose = value;
     }
 
-    internal Span<char> Written => _charSpan[.._index];
-    internal Span<char> Available => _charSpan[_index..];
+    internal Span<char> Written => _charSpan.Slice(0, _index);
+    internal Span<char> Available => _charSpan.Slice(_index);
 
     public Dumper(int literalLength, int formattedCount)
     {
         _charSpan = _charArray = ArrayPool<char>.Shared.Rent(GetCapacity(literalLength, formattedCount));
         _index = 0;
-        _deep = false;
+        _verbose = false;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -107,6 +71,7 @@ public ref struct Dumper
         }
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public void AppendLiteral(string? text)
     {
         if (text is not null)
@@ -120,6 +85,7 @@ public ref struct Dumper
         }
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public void AppendFormatted(char ch)
     {
         if (Available.Length == 0)
@@ -128,11 +94,13 @@ public ref struct Dumper
         _index++;
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public void AppendFormatted(string? text)
     {
         AppendLiteral(text);
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public void AppendFormatted(ReadOnlySpan<char> text)
     {
         while (!TextHelper.TryCopyTo(text, Available))
@@ -143,11 +111,13 @@ public ref struct Dumper
         _index += text.Length;
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public void AppendFormatted(object? value, string? format = null)
     {
         AppendFormatted<object>(value, format);
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public void AppendFormatted<T>(T? value, string? format = null)
     {
         if (!DumpCache.TryDump<T>(value, ref this))
@@ -176,6 +146,66 @@ public ref struct Dumper
         }
     }
 
+    public ref Dumper Append(char ch)
+    {
+        AppendFormatted(ch);
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
+    
+    public ref Dumper Append(string? str)
+    {
+        AppendLiteral(str);
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
+    
+    public ref Dumper Append(ReadOnlySpan<char> text)
+    {
+        AppendFormatted(text);
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
+    
+    public ref Dumper Append<T>(T? value)
+    {
+        AppendFormatted<T>(value);
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
+    
+    public ref Dumper AppendLine(int count = 1)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            AppendLiteral(Environment.NewLine);
+        }
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
+
+    public ref Dumper AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T> values)
+    {
+        using var e = values.GetEnumerator();
+        if (e.MoveNext())
+        {
+            AppendFormatted<T>(e.Current);
+        }
+        while (e.MoveNext())
+        {
+            AppendFormatted(delimiter);
+            AppendFormatted<T>(e.Current);
+        }
+        Emit.Ldarga(0);
+        Emit.Ret();
+        throw Unreachable();
+    }
+    
     public void Clear()
     {
         _index = 0;
@@ -202,10 +232,7 @@ public ref struct Dumper
 
     public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(typeof(Dumper));
 
-    public override string ToString()
-    {
-        return new string(Written);
-    }
+    public override string ToString() => new string(_charSpan.Slice(0, _index));
 }
 
 public delegate void Dump<in TInstance>(TInstance? instance, ref Dumper dumper);
@@ -385,7 +412,7 @@ public static partial class DumpCache
             {
                 dumper.AppendLiteral(name);
                 var constraints = type.GetGenericParameterConstraints();
-                if (constraints.Length > 0 && dumper.Deep)
+                if (constraints.Length > 0 && dumper.Verbose)
                 {
                     dumper.AppendLiteral(" : ");
                     Debugger.Break();
@@ -397,14 +424,7 @@ public static partial class DumpCache
             var genericTypes = type.GetGenericArguments();
             var i = name.IndexOf('`');
             Debug.Assert(i >= 0);
-            dumper.Append(name[..i]).Append('<');
-            for (i = 0; i < genericTypes.Length; i++)
-            {
-                if (i > 0) dumper.Append(',');
-                DumpType(genericTypes[i], ref dumper);
-            }
-
-            dumper.Append('>');
+            dumper.Append(name[..i]).Append('<').AppendDelimit(",", genericTypes).Append('>');
         }
         else
         {
@@ -412,13 +432,6 @@ public static partial class DumpCache
         }
     }
 
-    private static void DumpField(FieldInfo? field, ref Dumper dumper)
-    {
-        if (dumper.Deep)
-        {
-            var visibility = field.Visibility();
-        }
-    }
 }
 
 public static partial class DumpCache
@@ -430,11 +443,11 @@ public static partial class DumpCache
         var dumpAsAttr = enumInfo.GetAttribute<DumpAsAttribute>();
         if ((dumpAsAttr?.Value).IsNonWhiteSpace())
         {
-            dumper.AppendLiteral(dumpAsAttr.Value);
+            dumper.Append(dumpAsAttr.Value);
         }
         else
         {
-            dumper.AppendLiteral(enumInfo.Name);
+            dumper.Append(enumInfo.Name);
         }
     }
 }

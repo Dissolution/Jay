@@ -5,16 +5,16 @@
 namespace Jay.Collections.Pools;
 
 /// <remarks>
-///     This is a generic implementation of the object pooling pattern.
-///     The main purpose is to re-use a limited number of objects rather than continuously `new()`ing them up. 
+/// This is a generic implementation of the object pooling pattern.
+/// The main purpose is to re-use a limited number of objects rather than continuously new-ing them up. 
 /// 
-///     - It is not the goal to keep all returned objects.
-///       - Pool is not meant for storage.
-///       - If there is no space in the pool, extra returned objects will be dropped.
-///     - It is implied that if object was obtained from a pool, the caller will return it back in a relatively short time.
-///       - Keeping checked out objects for long durations is ok, but reduces usefulness of pooling.
-///     - Not returning objects to the pool in not detrimental to the pool's work, but is a bad practice. 
-///       - If there is no intent for reusing the object, do not use pool
+/// - It is not the goal to keep all returned objects.
+///   - Pool is not meant for storage.
+///   - If there is no space in the pool, extra returned objects will be dropped.
+/// - It is implied that if object was obtained from a pool, the caller will return it back in a relatively short time.
+///   - Keeping checked out objects for long durations is ok, but reduces usefulness of pooling.
+/// - Not returning objects to the pool in not detrimental to the pool's work, but is a bad practice. 
+///   - If there is no intent for reusing the object, do not use pool
 /// </remarks>
 public sealed class AsyncObjectPool<T> : IAsyncDisposable
     where T : class

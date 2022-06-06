@@ -13,10 +13,10 @@ public static class EnumTypeInfo<TEnum> where TEnum : struct, Enum
         Name = Type.Dump();
 
         var fields = Type.GetFields(BindingFlags.Public | BindingFlags.Static);
-        var infos = new Dictionary<TEnum, EnumInfo<TEnum>>(fields.Length, EnumComparer<TEnum>.Default);
+        var infos = new Dictionary<TEnum, EnumMemberInfo<TEnum>>(fields.Length, EnumComparer<TEnum>.Default);
         foreach (var field in fields)
         {
-            var info = new EnumInfo<TEnum>(field);
+            var info = new EnumMemberInfo<TEnum>(field);
             infos.Add(info.Enum, info);
         }
         _enumInfos = infos;
@@ -28,13 +28,13 @@ public static class EnumTypeInfo<TEnum> where TEnum : struct, Enum
 
     public static IReadOnlyCollection<TEnum> Members => _enumInfos.Keys;
 
-    public static EnumInfo<TEnum> GetInfo(TEnum e)
+    public static EnumMemberInfo<TEnum> GetInfo(TEnum e)
     {
         if (_enumInfos.TryGetValue(e, out var info))
             return info;
-        return new EnumInfo<TEnum>(e);
+        return new EnumMemberInfo<TEnum>(e);
     }
 
-    private static readonly Dictionary<TEnum, EnumInfo<TEnum>> _enumInfos;
+    private static readonly Dictionary<TEnum, EnumMemberInfo<TEnum>> _enumInfos;
 
 }

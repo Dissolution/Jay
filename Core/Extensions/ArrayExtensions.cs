@@ -71,8 +71,8 @@ public static class ArrayExtensions
         return false;
     }
 
-    [return: MaybeNull]
-    public static T GetOrDefault<T>(this T[]? array, int index, [AllowNull] T @default = default(T))
+    [return: NotNullIfNotNull("default")]
+    public static T? GetOrDefault<T>(this T[]? array, int index, T? @default = default(T))
     {
         if (array is null)
             return @default;

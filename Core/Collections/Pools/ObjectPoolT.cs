@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Jay.Dumping;
+using Jay.Exceptions;
 
 // ReSharper disable MethodOverloadWithOptionalParameter
 
@@ -8,24 +9,12 @@ namespace Jay.Collections.Pools;
 /// <summary>
 /// A thread-safe pool of <typeparamref name="T"/> instances.
 /// </summary>
-/// <typeparam name="T">An instance class.</typeparam>
-/// <remarks>
-/// This is a generic implementation of an object pool.
-/// The main purpose is to re-use a limited number of objects rather than continuously `new()`ing them up. 
-/// 
-/// - It is not the goal to keep all returned objects.
-///   - Pool is not meant for storage.
-///   - If there is no space in the pool, extra returned objects will be disposed.
-/// - It is implied that if object was obtained from a pool, the caller will return it back in a relatively short time.
-///   - Keeping checked out objects for long durations is ok, but reduces usefulness of pooling.
-/// - Not returning objects to the pool in not detrimental to the pool's work, but is a bad practice. 
-///   - If there is no intent for reusing the object, do not use pool
-/// </remarks>
+/// <typeparam name="T">An instance class</typeparam>
 public sealed class ObjectPool<T> : IDisposable
     where T : class
 {
     /// <summary>
-    /// An <see cref="IDisposable"/> that returns an instance to an object pool.
+    /// An <see cref="IDisposable"/> that returns an instance <typeparamref name="T"/> to a <see cref="ObjectPool{T}"/>
     /// </summary>
     private sealed class PoolReturner : IDisposable
     {
@@ -43,6 +32,12 @@ public sealed class ObjectPool<T> : IDisposable
             T? instance = Interlocked.Exchange(ref _instance, null);
             _pool.Return(instance);
         }
+
+        public override bool Equals(object? obj) => UnsuitableException.ThrowEquals(this);
+
+        public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(this);
+
+        public override string ToString() => $"Returns {_instance} to {_pool}";
     }
         
     [DebuggerDisplay("{" + nameof(Value) + ",nq}")]
@@ -95,6 +90,20 @@ public sealed class ObjectPool<T> : IDisposable
     /// Gets the maximum number of items retained by this pool.
     /// </summary>
     public int Capacity => _items.Length + 1;
+
+    public int Count
+    {
+        get
+        {
+            int count = 0;
+            if (_firstItem is not null) count++;
+            for (var i = 0; i < _items.Length; i++)
+            {
+                if (_items[i].Value is not null) count++;
+            }
+            return count;
+        }
+    }
     
     /// <summary>
     /// Creates a new <see cref="ObjectPool{T}"/> for classes.

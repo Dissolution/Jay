@@ -4,7 +4,7 @@ using InlineIL;
 
 namespace Jay.Dumping.Refactor;
 
-public sealed class EnumInfo<TEnum> : IEquatable<EnumInfo<TEnum>>, 
+public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>, 
                                       IEquatable<TEnum>,
                                       IAttributeProvider
     where TEnum : struct, Enum
@@ -17,14 +17,14 @@ public sealed class EnumInfo<TEnum> : IEquatable<EnumInfo<TEnum>>,
     public string Name => _name;
     public IReadOnlyList<Attribute> Attributes => _attributes;
 
-    public EnumInfo(FieldInfo enumMemberField)
+    public EnumMemberInfo(FieldInfo enumMemberField)
     {
         _name = enumMemberField.Name;
         _attributes = Attribute.GetCustomAttributes(enumMemberField, true);
         _enum = (TEnum)enumMemberField.GetValue(null)!;
     }
 
-    public EnumInfo(TEnum flag, string? name = null)
+    public EnumMemberInfo(TEnum flag, string? name = null)
     {
         _enum = flag;
         _name = name ?? flag.ToString();
@@ -38,7 +38,7 @@ public sealed class EnumInfo<TEnum> : IEquatable<EnumInfo<TEnum>>,
             .FirstOrDefault();
     }
 
-    public bool Equals(EnumInfo<TEnum>? enumInfo)
+    public bool Equals(EnumMemberInfo<TEnum>? enumInfo)
     {
         return enumInfo is not null && EnumTypeInfo<TEnum>.Equals(Enum, enumInfo.Enum);
     }
@@ -50,7 +50,7 @@ public sealed class EnumInfo<TEnum> : IEquatable<EnumInfo<TEnum>>,
 
     public override bool Equals(object? obj)
     {
-        if (obj is EnumInfo<TEnum> enumInfo) return Equals(enumInfo);
+        if (obj is EnumMemberInfo<TEnum> enumInfo) return Equals(enumInfo);
         if (obj is TEnum @enum) return Equals(@enum);
         if (obj is Enum) Debugger.Break();
         return false;
@@ -59,7 +59,7 @@ public sealed class EnumInfo<TEnum> : IEquatable<EnumInfo<TEnum>>,
     public override int GetHashCode()
     {
         IL.Emit.Ldarg_0();
-        IL.Emit.Ldfld(FieldRef.Field(typeof(EnumInfo<TEnum>), nameof(_enum)));
+        IL.Emit.Ldfld(FieldRef.Field(typeof(EnumMemberInfo<TEnum>), nameof(_enum)));
         IL.Emit.Conv_I4();
         return IL.Return<int>();
     }
