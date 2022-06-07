@@ -2,7 +2,7 @@
 
 namespace Jay.Collections;
 
-public readonly struct EnumeratorItem<T> : IEquatable<T>
+public sealed class EnumeratorItem<T> : IEquatable<T>
 {
     public static implicit operator T?(EnumeratorItem<T?> enumeratorItem) 
         => enumeratorItem.Value;

@@ -2,6 +2,7 @@
 using Jay.Comparision;
 using Jay.Dumping;
 using Jay.Exceptions;
+using Jay.Reflection;
 using Jay.Text;
 
 namespace Jay.Collections;
@@ -138,7 +139,7 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        return _hasValue && CommonMethodCache.Comparer.Equal(obj, _value);
+        return _hasValue && ComparerCache.EqualityComparer.Equals(obj, _value);
     }
 
     /// <inheritdoc />

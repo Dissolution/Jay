@@ -1,78 +1,58 @@
 ﻿using System.Diagnostics;
+using Jay.Dumping;
+using Jay.Exceptions;
 
 // ReSharper disable MethodOverloadWithOptionalParameter
 
 namespace Jay.Collections.Pools;
 
-/// <remarks>
-/// This is a generic implementation of the object pooling pattern.
-/// The main purpose is to re-use a limited number of objects rather than continuously new-ing them up. 
-/// 
-/// - It is not the goal to keep all returned objects.
-///   - Pool is not meant for storage.
-///   - If there is no space in the pool, extra returned objects will be dropped.
-/// - It is implied that if object was obtained from a pool, the caller will return it back in a relatively short time.
-///   - Keeping checked out objects for long durations is ok, but reduces usefulness of pooling.
-/// - Not returning objects to the pool in not detrimental to the pool's work, but is a bad practice. 
-///   - If there is no intent for reusing the object, do not use pool
-/// </remarks>
-public sealed class AsyncObjectPool<T> : IAsyncDisposable
+/// <summary>
+/// A thread-safe async-pool of <typeparamref name="T"/> instances.
+/// </summary>
+/// <typeparam name="T">An instance class</typeparam>
+public class AsyncObjectPool<T> : ObjectPool<T>, IAsyncObjectPool<T>,
+                                         IAsyncDisposable, IDisposable
     where T : class
 {
-    /// <summary>
-    ///     An <see cref="IDisposable"/> wrapper around returning an instance to an object pool
-    /// </summary>
-    private sealed class PoolReturner : IAsyncDisposable
+    private static readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
+    
+    private static T CreateInstanceSync(AsyncFunc<T> asyncFactory)
     {
-        private readonly AsyncObjectPool<T> _pool;
-        private T? _instance;
-
-        public PoolReturner(AsyncObjectPool<T> pool, T instance)
+        try
         {
-            _pool = pool;
-            _instance = instance;
+            return Task.Run(async () =>
+            {
+                using var cts = new CancellationTokenSource();
+                var task = asyncFactory(cts.Token);
+                var timeout = Task.Delay(_timeout, cts.Token);
+                var completed = await Task.WhenAny(task, timeout);
+                cts.Cancel();
+                if (completed == task)
+                    return await task.ConfigureAwait(false);
+                throw new TimeoutException(Dump.Text($"Could not create a {typeof(T)} instance in {_timeout}"));
+            }).GetAwaiter().GetResult();
         }
-
-        public async ValueTask DisposeAsync()
+        catch (Exception ex)
         {
-            T? instance = Interlocked.Exchange(ref _instance, null);
-            await _pool.ReturnAsync(instance);
+            Debugger.Break();
+            throw;
         }
     }
-        
-    [DebuggerDisplay("{" + nameof(Value) + ",nq}")]
-    private struct Item
-    {
-        internal T? Value;
-    }
-
-    /// <summary>
-    /// Whether or not this pool has been disposed.
-    /// </summary>
-    /// <remarks>
-    /// We want disposal to be thread-safe (as the rest of the methods are), so we use <see cref="Interlocked"/> to manage it.
-    /// Since `Interlocked.CompareExchange` does not work on <see cref="bool"/> values, we use an <see cref="int"/> where `> 0` means disposed.
-    /// </remarks>
-    private int _disposed;
-
-    /// <summary>
-    /// The first item is stored in a dedicated field because we expect to be able to satisfy most requests from it.
-    /// </summary>
-    private T? _firstItem;
-
-    /// <summary>
-    /// Storage for the pool items.
-    /// </summary>
-    private readonly Item[] _items;
-
+    
     /// <summary>
     /// Value creation factory.
     /// </summary>
-    private readonly AsyncFunc<T> _factory;
+    private readonly AsyncFunc<T> _asyncFactory;
 
-    private readonly AsyncAction<T>? _clean;
+    /// <summary>
+    /// Optional instance clean action.
+    /// </summary>
+    private readonly AsyncAction<T>? _asyncClean;
 
-    private readonly AsyncAction<T>? _dispose;
+    /// <summary>
+    /// Optional instance disposal action.
+    /// </summary>
+    private readonly AsyncAction<T>? _asyncDispose;
 
     public AsyncObjectPool(AsyncFunc<T> factory,
                            AsyncAction<T>? clean = null,
@@ -85,6 +65,7 @@ public sealed class AsyncObjectPool<T> : IAsyncDisposable
                            AsyncFunc<T> factory,
                            AsyncAction<T>? clean = null,
                            AsyncAction<T>? dispose = null)
+        : base(capacity, () => CreateInstanceSync(factory), null, null)
     {
         if (capacity < 1 || capacity > Pool.MaxCapacity)
         {
@@ -92,19 +73,11 @@ public sealed class AsyncObjectPool<T> : IAsyncDisposable
                 $"Pool Capacity must be 1 <= {capacity} <= {Pool.MaxCapacity}");
         }
 
-        _factory = factory ?? throw new ArgumentNullException(nameof(factory));
-        _clean = clean;
-        _dispose = dispose;
-        // We have a _firstItem
-        _items = new Item[capacity - 1];
+        _asyncFactory = factory ?? throw new ArgumentNullException(nameof(factory));
+        _asyncClean = clean;
+        _asyncDispose = dispose;
     }
-
-    internal bool IsDisposed
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Interlocked.CompareExchange(ref _disposed, 0, 0) > 0;
-    }
-
+    
     /// <summary>
     /// When we cannot find an available item quickly with Rent()
     /// </summary>
@@ -130,7 +103,7 @@ public sealed class AsyncObjectPool<T> : IAsyncDisposable
         }
 
         //Just create a new value.
-        return await _factory();
+        return await _asyncFactory();
     }
 
     private async Task ReturnSlowAsync(T instance)
@@ -150,9 +123,9 @@ public sealed class AsyncObjectPool<T> : IAsyncDisposable
         }
 
         // We couldn't store this value
-        if (_dispose != null)
+        if (_asyncDispose != null)
         {
-            await _dispose(instance);
+            await _asyncDispose(instance);
         }
     }
 
@@ -195,9 +168,9 @@ public sealed class AsyncObjectPool<T> : IAsyncDisposable
         if (instance is null) return;
 
         // Always clean the item
-        if (_clean != null)
+        if (_asyncClean != null)
         {
-            await _clean(instance);
+            await _asyncClean(instance);
         }
             
         // Disposed check
@@ -225,9 +198,9 @@ public sealed class AsyncObjectPool<T> : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Increment(ref _disposed) > 1) return;
-        if (_dispose != null)
+        if (_asyncDispose != null)
         {
-            var dispose = _dispose!;
+            var dispose = _asyncDispose!;
             T? item = Reference.Exchange(ref _firstItem, null);
             if (item != null)
                 await dispose(item);

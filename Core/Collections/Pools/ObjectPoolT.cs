@@ -10,38 +10,11 @@ namespace Jay.Collections.Pools;
 /// A thread-safe pool of <typeparamref name="T"/> instances.
 /// </summary>
 /// <typeparam name="T">An instance class</typeparam>
-public sealed class ObjectPool<T> : IDisposable
+public class ObjectPool<T> : IObjectPool<T>, IDisposable 
     where T : class
 {
-    /// <summary>
-    /// An <see cref="IDisposable"/> that returns an instance <typeparamref name="T"/> to a <see cref="ObjectPool{T}"/>
-    /// </summary>
-    private sealed class PoolReturner : IDisposable
-    {
-        private readonly ObjectPool<T> _pool;
-        private T? _instance;
-
-        public PoolReturner(ObjectPool<T> pool, T instance)
-        {
-            _pool = pool;
-            _instance = instance;
-        }
-
-        public void Dispose()
-        {
-            T? instance = Interlocked.Exchange(ref _instance, null);
-            _pool.Return(instance);
-        }
-
-        public override bool Equals(object? obj) => UnsuitableException.ThrowEquals(this);
-
-        public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(this);
-
-        public override string ToString() => $"Returns {_instance} to {_pool}";
-    }
-        
     [DebuggerDisplay("{" + nameof(Value) + ",nq}")]
-    private struct Item
+    protected struct Item
     {
         internal T? Value;
     }
@@ -53,17 +26,17 @@ public sealed class ObjectPool<T> : IDisposable
     /// We want disposal to be thread-safe (as the rest of the methods are), so we use <see cref="Interlocked"/> to manage it.
     /// Since `Interlocked.CompareExchange` does not work on <see cref="bool"/> values, we use an <see cref="int"/> where `> 0` means disposed.
     /// </remarks>
-    private int _disposed;
+    protected int _disposed;
 
     /// <summary>
     /// The first item is stored in a dedicated field because we expect to be able to satisfy most requests from it.
     /// </summary>
-    private T? _firstItem;
+    protected T? _firstItem;
 
     /// <summary>
     /// Storage for the pool items.
     /// </summary>
-    private readonly Item[] _items;
+    protected readonly Item[] _items;
 
     /// <summary>
     /// Instance creation function.
@@ -143,10 +116,6 @@ public sealed class ObjectPool<T> : IDisposable
         _firstItem = default;
         _items = new Item[capacity - 1];
     }
-    /// <summary>
-    /// We really need to be sure we're disposed correctly.
-    /// </summary>
-    ~ObjectPool() => this.Dispose();
 
     /// <summary>
     /// Check if this <see cref="ObjectPool{T}"/> has been disposed, and if it has, throw an <see cref="ObjectDisposedException"/>.
@@ -157,7 +126,7 @@ public sealed class ObjectPool<T> : IDisposable
     {
         if (IsDisposed)
         {
-            throw new ObjectDisposedException(Dump.Value(GetType()), "This ObjectPool has been disposed");
+            throw new ObjectDisposedException(Dump.Value(GetType()), Dump.Text($"This {GetType()} has been disposed"));
         }
     }
 
@@ -286,10 +255,10 @@ public sealed class ObjectPool<T> : IDisposable
     /// <remarks>
     /// <paramref name="instance"/> must not be used after this is disposed.
     /// </remarks>
-    public IDisposable Borrow(out T instance)
+    public IPoolInstance<T> Borrow(out T instance)
     {
         instance = Rent();
-        return new PoolReturner(this, instance);
+        return new PoolInstance<T>(this, instance);
     }
         
     /// <summary>

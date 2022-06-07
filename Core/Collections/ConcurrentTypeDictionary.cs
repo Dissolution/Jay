@@ -31,9 +31,17 @@ public class ConcurrentTypeDictionary<TValue> : ConcurrentDictionary<Type, TValu
         return base.GetOrAdd(typeof(T), addValue);
     }
 
+    public TValue AddOrUpdate<T>(TValue addValue, Func<TValue, TValue> updateValue)
+    {
+        return base.AddOrUpdate(typeof(T), addValue, (type, existing) => updateValue(existing));
+    }
     public TValue AddOrUpdate<T>(TValue addValue, Func<Type, TValue, TValue> updateValue)
     {
         return base.AddOrUpdate(typeof(T), addValue, updateValue);
+    }
+    public TValue AddOrUpdate<T>(Func<Type, TValue> addValue, Func<TValue, TValue> updateValue)
+    {
+        return base.AddOrUpdate(typeof(T), addValue, (type, existing) => updateValue(existing));
     }
     public TValue AddOrUpdate<T>(Func<Type, TValue> addValue, Func<Type, TValue, TValue> updateValue)
     {

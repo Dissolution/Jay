@@ -5,15 +5,12 @@ using Jay.Validation;
 
 namespace Jay.Comparision;
 
-/// <summary>
-/// A cache of <see cref="IEqualityComparer{T}"/>.Default and <see cref="IComparer{T}"/>.Default instances accessible
-/// with a <see cref="Type"/>.
-/// </summary>
-public static class CommonMethodCache
+public static class ComparerCache
 {
-    public sealed class CacheComparer : IEqualityComparer, IComparer
+    private sealed class CacheLookupComparers : IEqualityComparer, IComparer
     {
-        public bool Equal(object? x, object? y)
+        /// <inheritdoc />
+        bool IEqualityComparer.Equals(object? x, object? y)
         {
             if (ReferenceEquals(x, y)) return true;
             if (x is null || y is null) return false;
@@ -21,9 +18,6 @@ public static class CommonMethodCache
             if (!y.GetType().Implements(xType)) return false;
             return GetEqualityComparer(xType).Equals(x, y);
         }
-
-        /// <inheritdoc />
-        bool IEqualityComparer.Equals(object? x, object? y) => Equal(x, y);
 
         /// <inheritdoc />
         public int GetHashCode(object? obj)
@@ -46,10 +40,13 @@ public static class CommonMethodCache
 
     private static readonly ConcurrentTypeDictionary<IEqualityComparer> _equalityComparers;
     private static readonly ConcurrentTypeDictionary<IComparer> _comparers;
+    private static readonly CacheLookupComparers _cacheLookupComparers = new CacheLookupComparers();
 
-    public static CacheComparer Comparer { get; } = new CacheComparer();
 
-    static CommonMethodCache()
+    public static IEqualityComparer EqualityComparer => _cacheLookupComparers;
+    public static IComparer Comparer => _cacheLookupComparers;
+
+    static ComparerCache()
     {
         _equalityComparers = new();
         _comparers = new();
@@ -97,34 +94,19 @@ public static class CommonMethodCache
         return GetComparer(type).Compare(left, right);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T? Default<T>() => default(T);
-
-    public static object? Default(Type? type)
+    public static bool Equals<T>(T? x, T? y)
     {
-        if (type is null)
-            return null;
-        if (type.IsClass)
-            return null;
-        return Activator.CreateInstance(type);
+        return EqualityComparer<T>.Default.Equals(x, y);
     }
 
-    /// <summary>
-    /// Create a new, Uninitialized object of the specified type.
-    /// </summary>
-    [return: NotNull]
-    public static T CreateRaw<T>()
+    public static int GetHashCode<T>(T? value)
     {
-        return (T)RuntimeHelpers.GetUninitializedObject(typeof(T))!;
+        if (value is null) return 0;
+        return EqualityComparer<T>.Default.GetHashCode(value);
     }
 
-    /// <summary>
-    /// Create a new, Uninitialized object of the specified type.
-    /// </summary>
-    [return: NotNullIfNotNull("type")]
-    public static object? CreateRaw(Type? type)
+    public static int Compare<T>(T? x, T? y)
     {
-        if (type is null) return null;
-        return RuntimeHelpers.GetUninitializedObject(type);
+        return Comparer<T>.Default.Compare(x, y);
     }
 }

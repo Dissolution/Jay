@@ -3,9 +3,9 @@ using Jay.Reflection;
 
 namespace Jay.Collections;
 
-public sealed class TestB914E146
+public sealed class LocalTest
 {
-    public TestB914E146()
+    public LocalTest()
     {
         var dict = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         dict["abc"] = "Alphabet";

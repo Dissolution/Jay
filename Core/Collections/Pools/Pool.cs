@@ -19,7 +19,7 @@ public static class Pool
     /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
     /// <param name="dispose">An optional action to perform on a <typeparamref name="T"/> if it is disposed.</param>
     /// <returns>A new <see cref="ObjectPool{T}"/> instance.</returns>
-    public static ObjectPool<T> Create<T>(Action<T>? clean = null, 
+    public static IObjectPool<T> Create<T>(Action<T>? clean = null, 
                                           Action<T>? dispose = null,
                                           Constraints.IsNew<T> _ = default)
         where T : class, new()
@@ -34,7 +34,7 @@ public static class Pool
     /// <param name="factory">A function to create a new <typeparamref name="T"/> instance.</param>
     /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
     /// <returns>A new <see cref="ObjectPool{T}"/> instance.</returns>
-    public static ObjectPool<T> Create<T>(Func<T> factory,
+    public static IObjectPool<T> Create<T>(Func<T> factory,
                                           Action<T>? clean = null,
                                           Constraints.IsDisposable<T> _ = default)
         where T : class, IDisposable
@@ -48,7 +48,7 @@ public static class Pool
     /// <typeparam name="T">An <see cref="IDisposable"/> class with a default constructor.</typeparam>
     /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
     /// <returns>A new <see cref="ObjectPool{T}"/> instance.</returns>
-    public static ObjectPool<T> Create<T>(Action<T>? clean = null,
+    public static IObjectPool<T> Create<T>(Action<T>? clean = null,
                                           Constraints.IsNewDisposable<T> _ = default)
         where T : class, IDisposable, new()
     {
@@ -63,7 +63,7 @@ public static class Pool
     /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
     /// <param name="dispose">An optional action to perform on a <typeparamref name="T"/> if it is disposed.</param>
     /// <returns>A new <see cref="ObjectPool{T}"/> instance.</returns>
-    public static ObjectPool<T> Create<T>(Func<T> factory,
+    public static IObjectPool<T> Create<T>(Func<T> factory,
                                           Action<T>? clean = null,
                                           Action<T>? dispose = null)
         where T : class
