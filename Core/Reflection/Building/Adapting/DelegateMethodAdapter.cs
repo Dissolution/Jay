@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Jay.Enums;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
@@ -22,7 +23,7 @@ public class DelegateMethodAdapter
         this.Safety = safety;
     }
 
-    protected Result TryLoadArgs<TEmitter>(TEmitter emitter, int offset)
+    protected Result.Result TryLoadArgs<TEmitter>(TEmitter emitter, int offset)
         where TEmitter : class, IFluentEmitter<TEmitter>
     {
         // None?
@@ -41,7 +42,7 @@ public class DelegateMethodAdapter
                  MethodSig.ParameterTypes[offset].IsObjectArray() &&
                  !MethodSignature.ParameterTypes[0].IsObjectArray())
         {
-            return Result.TryInvoke(() => emitter.LoadParams(MethodSig.Parameters[offset], MethodSignature.Parameters));
+            return Result.Result.TryInvoke(() => emitter.LoadParams(MethodSig.Parameters[offset], MethodSignature.Parameters));
         }
         // Check for optional method params
         else if (MethodSignature.Parameters.Reverse().Any(p => p.HasDefaultValue))
@@ -55,7 +56,7 @@ public class DelegateMethodAdapter
         }
     }
 
-    protected Result TryCastReturn<TEmitter>(TEmitter emitter)
+    protected Result.Result TryCastReturn<TEmitter>(TEmitter emitter)
         where TEmitter : class, IFluentEmitter<TEmitter>
     {
         // Does delegate have one?
@@ -64,7 +65,7 @@ public class DelegateMethodAdapter
             // Does method?
             if (MethodSignature.ReturnType != typeof(void))
             {
-                return Result.TryInvoke(() => emitter.Cast(MethodSignature.ReturnType, MethodSig.ReturnType));
+                return Result.Result.TryInvoke(() => emitter.Cast(MethodSignature.ReturnType, MethodSig.ReturnType));
             }
             else
             {
@@ -96,10 +97,10 @@ public class DelegateMethodAdapter
         }
     }
 
-    public Result TryAdapt<TEmitter>(TEmitter emitter)
+    public Result.Result TryAdapt<TEmitter>(TEmitter emitter)
         where TEmitter : class, IFluentEmitter<TEmitter>
     {
-        Result result;
+        Result.Result result;
         ParameterInfo? possibleInstanceParam;
         if (MethodSig.ParameterCount > 0)
         {
@@ -110,7 +111,7 @@ public class DelegateMethodAdapter
             possibleInstanceParam = null;
         }
         int offset = default;
-        result = Result.TryInvoke(() => emitter.LoadInstanceFor(Method, possibleInstanceParam, out offset));
+        result = Result.Result.TryInvoke(() => emitter.LoadInstanceFor(Method, possibleInstanceParam, out offset));
         if (!result) return result;
         result = TryLoadArgs(emitter, offset);
         if (!result) return result;

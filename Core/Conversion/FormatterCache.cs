@@ -18,14 +18,14 @@ public sealed class FormatterCache : IFormatter
             return input?.ToString() ?? "";
         }
 
-        public Result TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options = default)
+        public Result.Result TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options = default)
         {
             if (input is IFormattable)
             {
                 if (input is ISpanFormattable)
                 {
                     bool formatted = ((ISpanFormattable)input).TryFormat(destination, out charsWritten, options.Format, options.Provider);
-                    if (formatted) return Result.Pass;
+                    if (formatted) return Result.Result.Pass;
                 }
 
                 string text = ((IFormattable)input).ToString(options.Format, options.Provider);
@@ -61,7 +61,7 @@ public sealed class FormatterCache : IFormatter
                                                    return Type.EmptyTypes;
                                                }
                                            })
-                                           .SelectWhere((Type type, out IFormatter? formatter) =>
+                                           .SelectWhere((Type type, [NotNullWhen(true)] out IFormatter? formatter) =>
                                            {
                                                if (type.Implements<IFormatter>() &&
                                                    type.IsClass && !type.IsAbstract && !type.IsInterface && !type.IsNested &&
@@ -144,7 +144,7 @@ public sealed class FormatterCache : IFormatter
         return GetFormatter(input.GetType()).Format(input, options);
     }
 
-    Result IFormatter.TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options)
+    Result.Result IFormatter.TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options)
     {
         if (input is null)
         {
@@ -163,7 +163,7 @@ public sealed class FormatterCache : IFormatter
         return formatter.Format(input, options);
     }
     
-    public Result TryFormat<T>(T? input, Span<char> destination, out int charsWritten, FormatOptions options = default)
+    public Result.Result TryFormat<T>(T? input, Span<char> destination, out int charsWritten, FormatOptions options = default)
     {
         if (input is null)
         {

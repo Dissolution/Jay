@@ -15,6 +15,11 @@
         <Title>Jay Core Libraries</Title>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <WarningLevel>preview</WarningLevel>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+    
     <ItemGroup>
         <Using Include="System.Collections" />
         <Using Include="System.Diagnostics.CodeAnalysis" />

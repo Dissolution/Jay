@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using Jay.Reflection.Building;
-using Jay.Reflection.Building.Adapting;
+using Jay.Reflection.Caching;
 
-namespace Jay.Reflection;
+namespace Jay.Reflection.Extensions;
 
 public static class FieldInfoExtensions
 {
@@ -179,7 +179,7 @@ public static class FieldInfoExtensions
         where TStruct : struct
     {
         var setter = DelegateMemberCache.Instance
-                                        .GetOrAdd(fieldInfo, CreateStructSetter<TStruct, TValue>);
+                                        .GetOrAdd(fieldInfo, CreateStructSetter<TStruct, TValue?>);
         setter(ref instance, value);
     }
 
@@ -190,7 +190,7 @@ public static class FieldInfoExtensions
         where TClass : class
     {
         var setter = DelegateMemberCache.Instance
-                                        .GetOrAdd(fieldInfo, CreateClassSetter<TClass, TValue>);
+                                        .GetOrAdd(fieldInfo, CreateClassSetter<TClass, TValue?>);
         setter(instance, value);
     }
 
@@ -198,7 +198,7 @@ public static class FieldInfoExtensions
                                         TValue? value)
     {
         var setter = DelegateMemberCache.Instance
-                                        .GetOrAdd(fieldInfo, CreateStaticSetter<TValue>);
+                                        .GetOrAdd(fieldInfo, CreateStaticSetter<TValue?>);
         setter(value);
     }
 }

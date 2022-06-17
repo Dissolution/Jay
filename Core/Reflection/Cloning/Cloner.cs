@@ -4,6 +4,8 @@ using Jay.Collections;
 using Jay.Dumping;
 using Jay.Reflection.Building;
 using Jay.Reflection.Caching;
+using Jay.Reflection.Extensions;
+using Jay.Reflection.Internal;
 using Jay.Reflection.Search;
 using Jay.Validation;
 

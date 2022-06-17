@@ -1,6 +1,4 @@
-﻿using Jay.Text.Comparision;
-
-namespace Jay.Text;
+﻿namespace Jay.Text.Comparision;
 
 /// <inheritdoc />
 /// <summary>

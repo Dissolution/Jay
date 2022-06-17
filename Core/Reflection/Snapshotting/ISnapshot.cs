@@ -1,4 +1,6 @@
-﻿namespace Jay.Reflection.Snapshotting;
+﻿using Jay.Reflection.Extensions;
+
+namespace Jay.Reflection.Snapshotting;
 
 public static class Snapshot
 {

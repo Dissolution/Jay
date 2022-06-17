@@ -24,8 +24,8 @@ public static class Operator<T>
             Zero = default(T);
         }
 
-        _isTrue = new Lazy<Func<T, bool>>(() => Jay.Expressions.CompileUnaryExpression<T, bool>(Expression.IsTrue));
-        _isFalse = new Lazy<Func<T, bool>>(() => Jay.Expressions.CompileUnaryExpression<T, bool>(Expression.IsFalse));
+        _isTrue = new Lazy<Func<T, bool>>(() => Expressions.Expressions.CompileUnaryExpression<T, bool>(Expression.IsTrue));
+        _isFalse = new Lazy<Func<T, bool>>(() => Expressions.Expressions.CompileUnaryExpression<T, bool>(Expression.IsFalse));
     }
 
     public static bool HasValue(T? value) => value is not null;

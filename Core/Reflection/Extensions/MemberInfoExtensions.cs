@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Jay.Reflection;
+namespace Jay.Reflection.Extensions;
 
 public static class MemberInfoExtensions
 {
@@ -10,7 +10,7 @@ public static class MemberInfoExtensions
                memberInfo?.DeclaringType;
     }
 
-    internal static Result TryGetInstanceType(this MemberInfo? memberInfo, [NotNullWhen(true)] out Type? instanceType)
+    internal static Result.Result TryGetInstanceType(this MemberInfo? memberInfo, [NotNullWhen(true)] out Type? instanceType)
     {
         if (memberInfo is null)
         {

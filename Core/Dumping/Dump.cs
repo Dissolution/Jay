@@ -1,6 +1,7 @@
 ﻿using Jay.Collections;
 using Jay.Reflection;
 using Jay.Reflection.Building;
+using Jay.Reflection.Extensions;
 using Jay.Reflection.Search;
 using Jay.Text;
 using Jay.Validation;
@@ -80,13 +81,13 @@ public static partial class Dump
                                    .Where(assembly => !assembly.IsDynamic)
                                    .SelectMany(assembly =>
                                    {
-                                       return Result.InvokeOrDefault(() => assembly.ExportedTypes, Type.EmptyTypes);
+                                       return Result.Result.InvokeOrDefault(() => assembly.ExportedTypes, Type.EmptyTypes);
                                    })
                                    .Where(type => type.Implements(typeof(Dumper<>)))
                                    .Where(type => type.IsClass && !type.IsAbstract && !type.IsInterface && !type.IsNested)
                                    .SelectWhere((Type type, out IObjectDumper dumper) =>
                                    {
-                                       return Result.TryInvoke(() => Activator.CreateInstance(type) as IObjectDumper!, out dumper!);
+                                       return Result.Result.TryInvoke(() => Activator.CreateInstance(type) as IObjectDumper!, out dumper!);
                                    });
         _dumpers = new List<IObjectDumper>(dumperTypes)
         {

@@ -50,7 +50,7 @@ public static class InlineExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Assert<T>(this T value, 
-                              Expression<Func<T, Result>> predicateExpression)
+                              Expression<Func<T, Result.Result>> predicateExpression)
     {
 #if DEBUG
         if (predicateExpression is null)
@@ -74,7 +74,7 @@ public static class InlineExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Assert<T>(this T value,
-                              Expression<Func<Result>> predicateExpression)
+                              Expression<Func<Result.Result>> predicateExpression)
     {
 #if DEBUG
         if (predicateExpression is null)

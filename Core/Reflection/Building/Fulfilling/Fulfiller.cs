@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
+﻿/*
+using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
+using Jay.Reflection.Extensions;
 using Jay.Text;
 
 namespace Jay.Reflection.Building.Fulfilling;
@@ -70,7 +72,7 @@ public partial class Fulfiller
          *      _field = value;
          *      this.NotifyPropertyChanged?();
          *  }};
-         * */
+         * #1#
         
         var emitter = setter.GetEmitter();
         
@@ -134,4 +136,5 @@ public partial class Fulfiller
         });
     }
 }
+*/
 

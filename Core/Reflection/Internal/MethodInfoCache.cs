@@ -5,7 +5,7 @@ using Jay.Reflection.Exceptions;
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 
-namespace Jay.Reflection;
+namespace Jay.Reflection.Internal;
 
 internal static class MethodInfoCache
 {

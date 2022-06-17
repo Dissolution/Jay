@@ -2,7 +2,7 @@
 
 #pragma warning disable CS0659 // Overrides Equals but not GetHashCode
 
-namespace Jay;
+namespace Jay.Enums;
 
 public abstract class EnumLike : IComparable, IFormattable
 {
@@ -43,7 +43,7 @@ public abstract class EnumLike : IComparable, IFormattable
 
     public abstract override bool Equals(object? obj);
 
-    public sealed override int GetHashCode()
+    public override int GetHashCode()
     {
         return _value;
     }
@@ -180,5 +180,10 @@ public abstract class EnumLike<TEnum> : EnumLike, IEquatable<TEnum>, IComparable
         if (obj is TEnum enumLike)
             return Equals(enumLike);
         return false;
+    }
+
+    public sealed override int GetHashCode()
+    {
+        return _value;
     }
 }

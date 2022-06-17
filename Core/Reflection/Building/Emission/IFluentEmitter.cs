@@ -4,6 +4,9 @@ using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
+using Jay.Reflection.Extensions;
+using Jay.Reflection.Internal;
+using Jay.Result;
 
 // ReSharper disable UnusedMember.Global
 #pragma warning disable CS8321
@@ -92,7 +95,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
     TEmitter Cle() => Cgt().Not();
     TEmitter Cle_Un() => Cgt_Un().Not();
 
-    Result CanLoad(Type? type)
+    Result.Result CanLoad(Type? type)
     {
         if (type is null)
             return true;
@@ -245,7 +248,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
                     throw new NotImplementedException("Non-default outputs are not yet supported");
                 }
             }
-            return (TEmitter)this; ;
+            return (TEmitter)this;
         }
 
         if (inputIsRef)
@@ -271,7 +274,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
                 // Is already object
                 Ldarg(input.Position);
             }
-            return (TEmitter)this; ;
+            return (TEmitter)this;
         }
 
         // Implements?
@@ -282,7 +285,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             Debug.Assert(outputType.IsClass);
             Ldarg(input.Position)
                    .Castclass(outputType);
-            return (TEmitter)this; ;
+            return (TEmitter)this;
         }
 
         throw new NotImplementedException($"Cannot cast from {input} to {outputType}");
@@ -507,10 +510,10 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             if (possibleInstanceParameter is null)
                 return new ArgumentNullException(nameof(possibleInstanceParameter));
 
-            Result result = member.TryGetInstanceType(out var methodInstanceType);
+            Result.Result result = member.TryGetInstanceType(out var methodInstanceType);
             if (!result)
                 return result.WithValue<int>(0);
-            result = Result.TryInvoke(() => this.LoadAs(possibleInstanceParameter, methodInstanceType!));
+            result = Result.Result.TryInvoke(() => this.LoadAs(possibleInstanceParameter, methodInstanceType!));
             if (!result)
                 return result.WithValue<int>(0);
 

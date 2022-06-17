@@ -3,8 +3,9 @@ using System.Reflection;
 using Jay.Reflection.Building;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
+using Jay.Reflection.Internal;
 
-namespace Jay.Reflection;
+namespace Jay.Reflection.Extensions;
 
 public static class EventInfoExtensions
 {

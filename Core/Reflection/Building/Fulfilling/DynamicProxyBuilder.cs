@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Comparision;
 using Jay.Reflection.Caching;
+using Jay.Reflection.Extensions;
 
 namespace Jay.Reflection.Building.Fulfilling;
 
@@ -111,7 +112,7 @@ public static class DynamicProxyBuilder
         if (destType.IsInterface)
         {
             var implementedMembers = new HashSet<MemberInfo>(0);
-            var builders = new Dictionary<MemberInfo, object>(0);
+            Dictionary<MemberInfo, object> builders = new Dictionary<MemberInfo, object>(0);
                 
             SEARCH_FLAGS = BindingFlags.Public | 
                            BindingFlags.NonPublic | 
@@ -177,7 +178,7 @@ public static class DynamicProxyBuilder
                        .Ret();
                     
                 // Cache
-                builders[method] = methodBuilder;
+                builders![method] = methodBuilder;
             }
 
             void ImplementProperty(PropertyInfo property)
@@ -197,7 +198,7 @@ public static class DynamicProxyBuilder
                 {
                     // We already implemented this Method
                     var getBuilder = builders[getMethod] as MethodBuilder;
-                    propertyBuilder.SetGetMethod(getBuilder);
+                    propertyBuilder.SetGetMethod(getBuilder!);
                 }
                     
                 // Implement Set method
@@ -206,7 +207,7 @@ public static class DynamicProxyBuilder
                 {
                     // We already implemented this Method
                     var setBuilder = builders[setMethod] as MethodBuilder;
-                    propertyBuilder.SetSetMethod(setBuilder);
+                    propertyBuilder.SetSetMethod(setBuilder!);
                 }
 
                 // Cache
@@ -221,7 +222,7 @@ public static class DynamicProxyBuilder
                 // Build the event
                 var eventBuilder = typeBuilder.DefineEvent(@event.Name,
                                                            EventAttributes.None,
-                                                           @event.EventHandlerType);
+                                                           @event.EventHandlerType!);
                     
                 // Implement Add method
                 var addMethod = @event.GetAddMethod();
@@ -229,7 +230,7 @@ public static class DynamicProxyBuilder
                 {
                     // We already implemented this Method
                     var addBuilder = builders[addMethod] as MethodBuilder;
-                    eventBuilder.SetAddOnMethod(addBuilder);
+                    eventBuilder.SetAddOnMethod(addBuilder!);
                 }
                     
                 // Implement Remove method
@@ -238,7 +239,7 @@ public static class DynamicProxyBuilder
                 {
                     // We already implemented this Method
                     var removeBuilder = builders[removeMethod] as MethodBuilder;
-                    eventBuilder.SetRemoveOnMethod(removeBuilder);
+                    eventBuilder.SetRemoveOnMethod(removeBuilder!);
                 }
                     
                 // TODO: Implement Raise Method
@@ -247,7 +248,7 @@ public static class DynamicProxyBuilder
                 {
                     // We've already implemented this Method
                     var raiseBuilder = builders[raiseMethod] as MethodBuilder;
-                    eventBuilder.SetRaiseMethod(raiseBuilder);
+                    eventBuilder.SetRaiseMethod(raiseBuilder!);
                 }
 
                 // Cache
@@ -282,7 +283,7 @@ public static class DynamicProxyBuilder
             // Implement everything
             ImplementMembers(destType);
 
-            return typeBuilder.CreateType();
+            return typeBuilder.CreateType()!;
         }
         else if (destType.IsClass)
         {

@@ -1,4 +1,4 @@
-namespace Jay.Reflection;
+namespace Jay.Reflection.Extensions;
 
 public enum ParameterAccess
 {

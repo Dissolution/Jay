@@ -23,7 +23,13 @@ public static class InstanceCounter<T>
 
     public static string GetIdentifier(T value)
     {
-        //if (_instanceIds.TryGetValue(value, out string identifier))
-        throw new NotImplementedException();
+        if (_instanceIds.TryGetValue(value, out var identifier))
+        {
+            return identifier;
+        }
+        var id = Interlocked.Increment(ref _id);
+        identifier = $"{typeof(T).Name}_{id}";
+        _instanceIds.AddOrUpdate(value, identifier);
+        return identifier;
     }
 }

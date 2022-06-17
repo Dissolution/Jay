@@ -1,6 +1,6 @@
 ﻿using Jay.Exceptions;
 
-namespace Jay;
+namespace Jay.Result;
 
 /// <summary>
 /// Represents the result of an operation as a Pass or a Failure with <see cref="Exception"/> information.

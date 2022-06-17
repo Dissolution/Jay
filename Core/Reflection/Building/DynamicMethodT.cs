@@ -33,7 +33,7 @@ public class DynamicMethod<TDelegate>
 
     public TDelegate CreateDelegate() => _dynamicMethod.CreateDelegate<TDelegate>();
 
-    public Result TryCreateDelegate([NotNullWhen(true)] out TDelegate? @delegate)
+    public Result.Result TryCreateDelegate([NotNullWhen(true)] out TDelegate? @delegate)
     {
         try
         {

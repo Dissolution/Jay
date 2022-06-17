@@ -5,11 +5,11 @@ public interface ICaster<TIn, TOut> : ICaster
     bool ICaster.CanCastFrom(Type inType) => inType.IsAssignableTo(typeof(TIn));
     bool ICaster.CanCastTo(Type outType) => outType.IsAssignableTo(typeof(TOut));
 
-    Result ICaster.TryCast(object? input, [NotNullWhen(true)] out object? output, CastOptions options)
+    Result.Result ICaster.TryCast(object? input, [NotNullWhen(true)] out object? output, CastOptions options)
     {
         if (input is TIn)
         {
-            Result result = TryCast((TIn)input, out TOut? outValue, options);
+            Result.Result result = TryCast((TIn)input, out TOut? outValue, options);
             if (!result)
             {
                 output = null;
@@ -28,5 +28,5 @@ public interface ICaster<TIn, TOut> : ICaster
         }
     }
 
-    Result TryCast(TIn? input, [NotNullWhen(true)] out TOut? output, CastOptions options = default);
+    Result.Result TryCast(TIn? input, [NotNullWhen(true)] out TOut? output, CastOptions options = default);
 }

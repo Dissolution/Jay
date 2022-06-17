@@ -2,7 +2,9 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Jay.Collections;
+using Jay.Expressions;
 using Jay.Reflection;
+using Jay.Reflection.Extensions;
 using Jay.Validation;
 
 namespace Jay;
@@ -101,7 +103,7 @@ public static class TypeExtensions
         return type.MakeGenericType(typeof(T));
     }
 
-    public static Result TryFind<TMember>(this Type type, 
+    public static Result.Result TryFind<TMember>(this Type type, 
                                           Expression memberExpression,
                                           [NotNullWhen(true)] out TMember? member)
         where TMember : MemberInfo

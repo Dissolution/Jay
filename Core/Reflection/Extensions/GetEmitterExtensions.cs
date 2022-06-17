@@ -1,7 +1,7 @@
 ﻿using System.Reflection.Emit;
 using Jay.Reflection.Building.Emission;
 
-namespace Jay.Reflection;
+namespace Jay.Reflection.Extensions;
 
 public static  class GetEmitterExtensions
 {

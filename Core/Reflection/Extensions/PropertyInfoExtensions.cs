@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Reflection.Building;
-using Jay.Reflection.Building.Adapting;
 using Jay.Reflection.Building.Emission;
+using Jay.Reflection.Caching;
 using Jay.Text;
 
-namespace Jay.Reflection;
+namespace Jay.Reflection.Extensions;
 
 public static class PropertyInfoExtensions
 {
@@ -58,7 +58,7 @@ public static class PropertyInfoExtensions
                               .Where(inst =>
                                   inst.OpCode == OpCodes.Ldfld || inst.OpCode == OpCodes.Ldflda ||
                                   inst.OpCode == OpCodes.Ldsfld || inst.OpCode == OpCodes.Ldsflda)
-                              .SelectWhere((Instruction inst, out FieldInfo? fld) =>
+                              .SelectWhere((Instruction inst, [NotNullWhen(true)] out FieldInfo? fld) =>
                               {
                                   if (inst.Arg.Is(out fld) &&
                                       fld.DeclaringType == owner &&
@@ -82,7 +82,7 @@ public static class PropertyInfoExtensions
             {
                 field = setter.GetInstructions()
                               .Where(inst => inst.OpCode == OpCodes.Stfld || inst.OpCode == OpCodes.Stsfld)
-                              .SelectWhere((Instruction inst, out FieldInfo? fld) =>
+                              .SelectWhere((Instruction inst, [NotNullWhen(true)] out FieldInfo? fld) =>
                               {
                                   if (inst.Arg.Is(out fld) &&
                                       fld.DeclaringType == owner &&
@@ -244,7 +244,7 @@ public static class PropertyInfoExtensions
         where TStruct : struct
     {
         var setter = DelegateMemberCache.Instance
-                                        .GetOrAdd(property, CreateStructSetter<TStruct, TValue>);
+                                        .GetOrAdd(property, CreateStructSetter<TStruct, TValue?>);
         setter(ref instance, value);
     }
 
@@ -255,7 +255,7 @@ public static class PropertyInfoExtensions
         where TClass : class
     {
         var setter = DelegateMemberCache.Instance
-                                        .GetOrAdd(property, CreateClassSetter<TClass, TValue>);
+                                        .GetOrAdd(property, CreateClassSetter<TClass, TValue?>);
         setter(instance, value);
     }
 
@@ -263,7 +263,7 @@ public static class PropertyInfoExtensions
                                         TValue? value)
     {
         var setter = DelegateMemberCache.Instance
-                                        .GetOrAdd(property, CreateStaticSetter<TValue>);
+                                        .GetOrAdd(property, CreateStaticSetter<TValue?>);
         setter(value);
     }
 }

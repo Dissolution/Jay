@@ -1,4 +1,4 @@
-﻿namespace Jay;
+﻿namespace Jay.Result;
 
 public readonly partial struct Result<T>
 {

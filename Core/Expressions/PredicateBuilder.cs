@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Jay;
+namespace Jay.Expressions;
 
 public static class PredicateBuilder
 {

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using Jay.Collections;
+using Jay.Enums;
 using Jay.Exceptions;
 using Jay.Reflection;
 using Jay.Reflection.Building;

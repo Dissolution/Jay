@@ -2,8 +2,10 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Dumping;
+using Jay.Enums;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
+using Jay.Reflection.Extensions;
 using Jay.Reflection.Search;
 using Jay.Text;
 

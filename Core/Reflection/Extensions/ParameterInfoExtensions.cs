@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 
-namespace Jay.Reflection;
+namespace Jay.Reflection.Extensions;
 
 public static class ParameterInfoExtensions
 {

@@ -34,6 +34,7 @@ public class AsyncObjectPool<T> : ObjectPool<T>, IAsyncObjectPool<T>,
         }
         catch (Exception ex)
         {
+            var dex = Dump.Value(ex);
             Debugger.Break();
             throw;
         }

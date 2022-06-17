@@ -1,4 +1,4 @@
-﻿namespace Jay;
+﻿namespace Jay.Result;
 
 /// <remarks>
 /// This is the <see langword="const"/> and <see langword="static"/> part of <see cref="Result"/>

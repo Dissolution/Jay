@@ -641,6 +641,6 @@ public ref partial struct TextBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override string ToString()
     {
-        return new string(_charArray, 0, _length);
+        return new string(Written);
     }
 }

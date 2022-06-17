@@ -2,10 +2,17 @@
 using InlineIL;
 using static InlineIL.IL;
 
-namespace Jay;
+namespace Jay.Enums;
 
 public static class EnumExtensions
 {
+    public static EnumMemberInfo<TEnum> GetInfo<TEnum>(this TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        return EnumInfo.For<TEnum>(@enum);
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasFlag<TEnum>(this TEnum @enum, TEnum flag)
         where TEnum : unmanaged, Enum

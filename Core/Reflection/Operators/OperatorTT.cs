@@ -26,25 +26,25 @@ public static class Operator<TValue, TResult>
 
     static Operator()
     {
-        _lessThan = new Lazy<Func<TValue, TResult, bool>>(() => Jay.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.LessThan));
-        _lessThanOrEqual = new Lazy<Func<TValue, TResult, bool>>(() => Jay.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.LessThanOrEqual));
-        _greaterThan = new Lazy<Func<TValue, TResult, bool>>(() => Jay.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.GreaterThan));
-        _greaterThanOrEqual = new Lazy<Func<TValue, TResult, bool>>(() => Jay.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.GreaterThanOrEqual));
+        _lessThan = new Lazy<Func<TValue, TResult, bool>>(() => Expressions.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.LessThan));
+        _lessThanOrEqual = new Lazy<Func<TValue, TResult, bool>>(() => Expressions.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.LessThanOrEqual));
+        _greaterThan = new Lazy<Func<TValue, TResult, bool>>(() => Expressions.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.GreaterThan));
+        _greaterThanOrEqual = new Lazy<Func<TValue, TResult, bool>>(() => Expressions.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.GreaterThanOrEqual));
 
-        _equal = new Lazy<Func<TValue, TResult, bool>>(() => Jay.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.Equal));
-        _notEqual = new Lazy<Func<TValue, TResult, bool>>(() => Jay.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.NotEqual));
+        _equal = new Lazy<Func<TValue, TResult, bool>>(() => Expressions.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.Equal));
+        _notEqual = new Lazy<Func<TValue, TResult, bool>>(() => Expressions.Expressions.CompileBinaryExpression<TValue, TResult, bool>(Expression.NotEqual));
 
-        _increment = new Lazy<Func<TValue, TResult>>(() => Jay.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.Increment));
-        _decrement = new Lazy<Func<TValue, TResult>>(() => Jay.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.Decrement));
-        _plus = new Lazy<Func<TValue, TResult>>(() => Jay.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.UnaryPlus));
-        _minus = new Lazy<Func<TValue, TResult>>(() => Jay.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.Negate));
-        _not = new Lazy<Func<TValue, TResult>>(() => Jay.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.Not));
-        _complement = new Lazy<Func<TValue, TResult>>(() => Jay.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.OnesComplement));
+        _increment = new Lazy<Func<TValue, TResult>>(() => Expressions.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.Increment));
+        _decrement = new Lazy<Func<TValue, TResult>>(() => Expressions.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.Decrement));
+        _plus = new Lazy<Func<TValue, TResult>>(() => Expressions.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.UnaryPlus));
+        _minus = new Lazy<Func<TValue, TResult>>(() => Expressions.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.Negate));
+        _not = new Lazy<Func<TValue, TResult>>(() => Expressions.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.Not));
+        _complement = new Lazy<Func<TValue, TResult>>(() => Expressions.Expressions.CompileUnaryExpression<TValue, TResult>(Expression.OnesComplement));
 
-        _convert = new Lazy<Func<TValue, TResult>>(() => Jay.Expressions.CompileUnaryExpression<TValue, TResult>(body => Expression.Convert(body, typeof(TResult))));
+        _convert = new Lazy<Func<TValue, TResult>>(() => Expressions.Expressions.CompileUnaryExpression<TValue, TResult>(body => Expression.Convert(body, typeof(TResult))));
 
-        _leftShift = new Lazy<Func<TValue, int, TResult>>(() => Jay.Expressions.CompileBinaryExpression<TValue, int, TResult>(Expression.LeftShift));
-        _rightShift = new Lazy<Func<TValue, int, TResult>>(() => Jay.Expressions.CompileBinaryExpression<TValue, int, TResult>(Expression.RightShift));
+        _leftShift = new Lazy<Func<TValue, int, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<TValue, int, TResult>(Expression.LeftShift));
+        _rightShift = new Lazy<Func<TValue, int, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<TValue, int, TResult>(Expression.RightShift));
     }
 
     public static bool LessThan(TValue left, TResult right) => _lessThan.Value(left, right);

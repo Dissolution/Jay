@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using InlineIL;
+using Jay.Dumping.Refactor;
 
-namespace Jay.Dumping.Refactor;
+namespace Jay.Enums;
 
 public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>, 
-                                      IEquatable<TEnum>,
-                                      IAttributeProvider
+                                      IEquatable<TEnum>
     where TEnum : struct, Enum
 {
     private readonly TEnum _enum;
@@ -34,7 +34,7 @@ public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>,
     public TAttribute? GetAttribute<TAttribute>() where TAttribute : Attribute
     {
         return _attributes
-            .SelectWhere((Attribute attr, out TAttribute? tAttr) => attr.Is(out tAttr))
+            .SelectWhere((Attribute attr, [NotNullWhen(true)] out TAttribute? tAttr) => attr.Is(out tAttr))
             .FirstOrDefault();
     }
 
@@ -45,7 +45,7 @@ public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>,
 
     public bool Equals(TEnum @enum)
     {
-        return EnumTypeInfo<TEnum>.Equals(Enum, @enum);
+        return EnumComparer<TEnum>.Default.Equals(_enum, @enum);
     }
 
     public override bool Equals(object? obj)
@@ -56,16 +56,10 @@ public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>,
         return false;
     }
 
-    public override int GetHashCode()
-    {
-        IL.Emit.Ldarg_0();
-        IL.Emit.Ldfld(FieldRef.Field(typeof(EnumMemberInfo<TEnum>), nameof(_enum)));
-        IL.Emit.Conv_I4();
-        return IL.Return<int>();
-    }
+    public override int GetHashCode() => EnumComparer<TEnum>.Default.GetHashCode(_enum);
 
     public override string ToString()
     {
-        return $"{EnumTypeInfo<TEnum>.Name}.{Name}";
+        return $"{typeof(TEnum)}.{Name}";
     }
 }

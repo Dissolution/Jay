@@ -16,15 +16,15 @@ public static class Operators<T1, T2, TResult>
 
     static Operators()
     {
-        _add = new Lazy<Func<T1, T2, TResult>>(() => Jay.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Add));
-        _subtract = new Lazy<Func<T1, T2, TResult>>(() => Jay.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Subtract));
-        _multiply = new Lazy<Func<T1, T2, TResult>>(() => Jay.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Multiply));
-        _divide = new Lazy<Func<T1, T2, TResult>>(() => Jay.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Divide));
-        _modulo = new Lazy<Func<T1, T2, TResult>>(() => Jay.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Modulo));
+        _add = new Lazy<Func<T1, T2, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Add));
+        _subtract = new Lazy<Func<T1, T2, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Subtract));
+        _multiply = new Lazy<Func<T1, T2, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Multiply));
+        _divide = new Lazy<Func<T1, T2, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Divide));
+        _modulo = new Lazy<Func<T1, T2, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Modulo));
 
-        _and = new Lazy<Func<T1, T2, TResult>>(() => Jay.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.And));
-        _or = new Lazy<Func<T1, T2, TResult>>(() => Jay.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Or));
-        _xor = new Lazy<Func<T1, T2, TResult>>(() => Jay.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.ExclusiveOr));
+        _and = new Lazy<Func<T1, T2, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.And));
+        _or = new Lazy<Func<T1, T2, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.Or));
+        _xor = new Lazy<Func<T1, T2, TResult>>(() => Expressions.Expressions.CompileBinaryExpression<T1, T2, TResult>(Expression.ExclusiveOr));
     }
 
     public static TResult Multiply(T1 value1, T2 value2) => _multiply.Value(value1, value2);

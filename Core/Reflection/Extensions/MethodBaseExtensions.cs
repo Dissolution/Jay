@@ -3,8 +3,9 @@ using Jay.Reflection.Building;
 using Jay.Reflection.Building.Adapting;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Building.Emission;
+using Jay.Reflection.Caching;
 
-namespace Jay.Reflection;
+namespace Jay.Reflection.Extensions;
 
 public static class MethodBaseExtensions
 {
@@ -46,7 +47,7 @@ public static class MethodBaseExtensions
             .GetInstructions();
     }
     
-    public static Result TryAdapt<TDelegate>(this MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate)
+    public static Result.Result TryAdapt<TDelegate>(this MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate)
         where TDelegate : Delegate
     {
         var dynamicMethod = RuntimeBuilder.CreateDynamicMethod<TDelegate>($"{typeof(TDelegate)}_{method.GetType()}_adapter");

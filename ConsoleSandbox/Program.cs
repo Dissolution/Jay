@@ -13,6 +13,7 @@ using Jay.Collections;
 using Jay.Comparision;
 using Jay.Dumping;
 using Jay.Dumping.Refactor;
+using Jay.Enums;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
 using EnumExtensions = Jay.Dumping.Refactor.EnumExtensions;

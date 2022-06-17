@@ -21,6 +21,7 @@ public static class Bits<T> where T : unmanaged
     private static readonly T _one;
 
     public static int BitSize => _bitSize;
+    public static int ByteSize => _byteSize;
     public static T Zero => default;
     public static T One => _one;
 

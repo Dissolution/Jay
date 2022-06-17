@@ -1,6 +1,6 @@
 ﻿using Jay.Exceptions;
 
-namespace Jay;
+namespace Jay.Result;
 
 /// <summary>
 ///
