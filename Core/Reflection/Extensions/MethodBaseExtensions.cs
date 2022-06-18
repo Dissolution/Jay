@@ -47,7 +47,7 @@ public static class MethodBaseExtensions
             .GetInstructions();
     }
     
-    public static Result.Result TryAdapt<TDelegate>(this MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate)
+    public static Result TryAdapt<TDelegate>(this MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate)
         where TDelegate : Delegate
     {
         var dynamicMethod = RuntimeBuilder.CreateDynamicMethod<TDelegate>($"{typeof(TDelegate)}_{method.GetType()}_adapter");

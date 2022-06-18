@@ -6,7 +6,6 @@ using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Extensions;
 using Jay.Reflection.Internal;
-using Jay.Result;
 
 // ReSharper disable UnusedMember.Global
 #pragma warning disable CS8321
@@ -95,7 +94,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
     TEmitter Cle() => Cgt().Not();
     TEmitter Cle_Un() => Cgt_Un().Not();
 
-    Result.Result CanLoad(Type? type)
+    Result CanLoad(Type? type)
     {
         if (type is null)
             return true;
@@ -510,10 +509,10 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             if (possibleInstanceParameter is null)
                 return new ArgumentNullException(nameof(possibleInstanceParameter));
 
-            Result.Result result = member.TryGetInstanceType(out var methodInstanceType);
+            Result result = member.TryGetInstanceType(out var methodInstanceType);
             if (!result)
                 return result.WithValue<int>(0);
-            result = Result.Result.TryInvoke(() => this.LoadAs(possibleInstanceParameter, methodInstanceType!));
+            result = Result.TryInvoke(() => this.LoadAs(possibleInstanceParameter, methodInstanceType!));
             if (!result)
                 return result.WithValue<int>(0);
 

@@ -29,6 +29,6 @@ public static partial class Reflect
         return AppDomain.CurrentDomain
                         .GetAssemblies()
                         .Where(assembly => !assembly.IsDynamic)
-                        .SelectMany(assembly => Result.Result.InvokeOrDefault(() => assembly.ExportedTypes, Type.EmptyTypes));
+                        .SelectMany(assembly => Result.InvokeOrDefault(() => assembly.ExportedTypes, Type.EmptyTypes));
     }
 }

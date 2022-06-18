@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Jay.Dumping;
+using Dumper = Jay.Dumping.Refactor.Dumper;
 
 namespace Jay.Validation;
 
@@ -27,30 +28,36 @@ public static class InlineExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNull]
-    public static T ThrowIfNull<T>([AllowNull, NotNull] this T? value)
+    public static T ThrowIfNull<T>([NotNull] this T? value, 
+        [CallerArgumentExpression("value")] string? valueName = null)
     {
         if (value is null)
         {
-            throw new ValidationException("Value is null");
+            throw new ArgumentNullException(
+                valueName,
+                Dumper.Dump($"{typeof(T)} value is null"));
         }
         return value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNull]
-    public static T ThrowIfNull<T>([AllowNull, NotNull] this T? value,
-                                   ref DumpStringHandler message)
+    public static T ThrowIfNull<T>([NotNull] this T? value,
+                                   ref DumpStringHandler message,
+                                   [CallerArgumentExpression("value")] string? valueName = null)
     {
         if (value is null)
         {
-            throw new ValidationException(message.ToStringAndClear());
+            throw new ArgumentNullException(
+                valueName,
+                message.ToStringAndClear());
         }
         return value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Assert<T>(this T value, 
-                              Expression<Func<T, Result.Result>> predicateExpression)
+                              Expression<Func<T, Result>> predicateExpression)
     {
 #if DEBUG
         if (predicateExpression is null)
@@ -74,7 +81,7 @@ public static class InlineExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Assert<T>(this T value,
-                              Expression<Func<Result.Result>> predicateExpression)
+                              Expression<Func<Result>> predicateExpression)
     {
 #if DEBUG
         if (predicateExpression is null)

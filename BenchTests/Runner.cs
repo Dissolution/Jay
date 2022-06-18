@@ -5,7 +5,7 @@ namespace Jay.BenchTests;
 
 public static class Runner
 {
-    public static Result.Result RunAndOpenHtml<TBenchmark>()
+    public static Result RunAndOpenHtml<TBenchmark>()
     {
         var summary = BenchmarkRunner.Run<TBenchmark>();
         if (summary.HasCriticalValidationErrors)

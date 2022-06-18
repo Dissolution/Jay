@@ -8,7 +8,7 @@ public interface IFormatter
 
     string Format(object? input, FormatOptions options = default);
 
-    Result.Result TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options = default);
+    Result TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options = default);
 }
 
 public interface IFormatter<T> : IFormatter
@@ -26,7 +26,7 @@ public interface IFormatter<T> : IFormatter
                                     nameof(input));
     }
 
-    Result.Result IFormatter.TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options)
+    Result IFormatter.TryFormat(object? input, Span<char> destination, out int charsWritten, FormatOptions options)
     {
         if (input is null)
         {
@@ -47,5 +47,5 @@ public interface IFormatter<T> : IFormatter
 
     string Format(T? value, FormatOptions options = default);
 
-    Result.Result TryFormat(T? value, Span<char> destination, out int charsWritten, FormatOptions options = default);
+    Result TryFormat(T? value, Span<char> destination, out int charsWritten, FormatOptions options = default);
 }

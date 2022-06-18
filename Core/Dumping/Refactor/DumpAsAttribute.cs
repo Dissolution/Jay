@@ -1,19 +1,21 @@
-﻿namespace Jay.Dumping.Refactor;
+﻿using Jay.Text;
+
+namespace Jay.Dumping.Refactor;
 
 [AttributeUsage(AttributeTargets.Enum)]
-public class DumpAsAttribute : Attribute, IDumpable
+public class DumpAsAttribute : Attribute
 {
-    internal string? Value { get; }
+    public string? DumpString { get; }
 
     public DumpAsAttribute(char ch)
     {
         if (ch == default)
         {
-            Value = default;
+            DumpString = default;
         }
         else
         {
-            Value = new string(ch, 1);
+            DumpString = new string(ch, 1);
         }
     }
 
@@ -21,21 +23,16 @@ public class DumpAsAttribute : Attribute, IDumpable
     {
         if (string.IsNullOrWhiteSpace(dump))
         {
-            Value = default;
+            DumpString = default;
         }
         else
         {
-            Value = dump;
+            DumpString = dump;
         }
-    }
-
-    public void Dump(ref Dumper dumper)
-    {
-        dumper.AppendLiteral(Value);
     }
 
     public override string ToString()
     {
-        return $"Dump as '{Value}'";
+        return $"Dump as '{DumpString}'";
     }
 }

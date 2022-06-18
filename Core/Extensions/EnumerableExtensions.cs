@@ -287,18 +287,28 @@ public static class EnumerableExtensions
 		}
 	}
 
-	public static TSource OneOrDefault<TSource>(this IEnumerable<TSource>? source, TSource @default)
+	[return: NotNullIfNotNull("default")]
+	public static TSource? OneOrDefault<TSource>(this IEnumerable<TSource>? source, TSource? @default = default)
 	{
 		if (source is null)
 			return @default;
 
+		if (source is IList<TSource> list)
+		{
+			if (list.Count == 1)
+				return list[0];
+			return @default;
+		}
+		
 		if (source is ICollection<TSource> collection)
 		{
-			if (collection.Count != 1)
-				return @default;
-
-			if (source is IList<TSource> list)
-				return list[0];
+			if (collection.Count == 1)
+			{
+				using var e = collection.GetEnumerator();
+				e.MoveNext();
+				return e.Current;
+			}
+			return @default;
 		}
 		
 		using (var e = source.GetEnumerator())
@@ -309,6 +319,7 @@ public static class EnumerableExtensions
 			TSource result = e.Current;
 			if (e.MoveNext())
 				return @default;
+			
 			return result;
 		}
 	}

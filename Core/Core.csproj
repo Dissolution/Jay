@@ -16,6 +16,8 @@
     </PropertyGroup>
 
     <PropertyGroup>
+        <LangVersion>preview</LangVersion>
+        <EnablePreviewFeatures>true</EnablePreviewFeatures>
         <WarningLevel>preview</WarningLevel>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>

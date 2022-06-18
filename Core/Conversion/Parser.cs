@@ -4,7 +4,7 @@ namespace Jay.Conversion;
 
 internal partial class Parser
 {
-    private static Result.Result TryConvert(ReadOnlySpan<char> text, out bool boolean, ParseOptions options = default)
+    private static Result TryConvert(ReadOnlySpan<char> text, out bool boolean, ParseOptions options = default)
     {
         if (text.Length == 0)
         {
@@ -46,7 +46,7 @@ internal partial class Parser
         return ParseException.Create<bool>(text, options);
     }
 
-    private static Result.Result TryConvert(ReadOnlySpan<char> text, out char character, ParseOptions options = default)
+    private static Result TryConvert(ReadOnlySpan<char> text, out char character, ParseOptions options = default)
     {
         if (text.Length == 0)
         {
@@ -64,7 +64,7 @@ internal partial class Parser
         return ParseException.Create<char>(text, options);
     }
 
-    private static Result.Result TryConvert(ReadOnlySpan<char> text, out Guid guid, ParseOptions options = default)
+    private static Result TryConvert(ReadOnlySpan<char> text, out Guid guid, ParseOptions options = default)
     {
         if (options.HasExactFormat(out var exactFormat) && 
             Guid.TryParseExact(text, exactFormat, out guid))
@@ -81,7 +81,7 @@ internal partial class Parser
         return ParseException.Create<char>(text, options);
     }
 
-    private static Result.Result TryConvert(ReadOnlySpan<char> text, out TimeSpan timeSpan, ParseOptions options = default)
+    private static Result TryConvert(ReadOnlySpan<char> text, out TimeSpan timeSpan, ParseOptions options = default)
     {
         if (options.HasExactFormat(out var exactFormat) && 
             TimeSpan.TryParseExact(text, exactFormat, options.FormatProvider, options.TimeSpanStyles, out timeSpan))
@@ -104,7 +104,7 @@ internal partial class Parser
         return ParseException.Create<TimeSpan>(text, options);
     }
 
-    private static Result.Result TryConvert(ReadOnlySpan<char> text, out DateTime dateTime, ParseOptions options = default)
+    private static Result TryConvert(ReadOnlySpan<char> text, out DateTime dateTime, ParseOptions options = default)
     {
         if (options.HasExactFormat(out var exactFormat) && 
             DateTime.TryParseExact(text, exactFormat, options.FormatProvider, options.DateTimeStyles, out dateTime))
@@ -127,7 +127,7 @@ internal partial class Parser
         return ParseException.Create<DateTime>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out DateTimeOffset dateTimeOffset, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out DateTimeOffset dateTimeOffset, ParseOptions options = default)
     {
         if (options.HasExactFormat(out var exactFormat) && 
             DateTimeOffset.TryParseExact(text, exactFormat, options.FormatProvider, options.DateTimeStyles, out dateTimeOffset))
@@ -150,7 +150,7 @@ internal partial class Parser
         return ParseException.Create<DateTimeOffset>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out byte value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out byte value, ParseOptions options = default)
     {
         if (byte.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -161,7 +161,7 @@ internal partial class Parser
         return ParseException.Create<byte>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out sbyte value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out sbyte value, ParseOptions options = default)
     {
         if (sbyte.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -172,7 +172,7 @@ internal partial class Parser
         return ParseException.Create<sbyte>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out short value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out short value, ParseOptions options = default)
     {
         if (short.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -183,7 +183,7 @@ internal partial class Parser
         return ParseException.Create<short>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out ushort value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out ushort value, ParseOptions options = default)
     {
         if (ushort.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -194,7 +194,7 @@ internal partial class Parser
         return ParseException.Create<ushort>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out int value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out int value, ParseOptions options = default)
     {
         if (int.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -205,7 +205,7 @@ internal partial class Parser
         return ParseException.Create<int>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out uint value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out uint value, ParseOptions options = default)
     {
         if (uint.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -216,7 +216,7 @@ internal partial class Parser
         return ParseException.Create<uint>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out long value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out long value, ParseOptions options = default)
     {
         if (long.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -227,7 +227,7 @@ internal partial class Parser
         return ParseException.Create<long>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out ulong value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out ulong value, ParseOptions options = default)
     {
         if (ulong.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -238,7 +238,7 @@ internal partial class Parser
         return ParseException.Create<ulong>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out float value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out float value, ParseOptions options = default)
     {
         if (float.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -249,7 +249,7 @@ internal partial class Parser
         return ParseException.Create<float>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out double value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out double value, ParseOptions options = default)
     {
         if (double.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -260,7 +260,7 @@ internal partial class Parser
         return ParseException.Create<double>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out decimal value, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out decimal value, ParseOptions options = default)
     {
         if (decimal.TryParse(text, options.NumberStyles, options.FormatProvider, out value))
         {
@@ -271,7 +271,7 @@ internal partial class Parser
         return ParseException.Create<decimal>(text, options);
     }
 
-    public static Result.Result TryConvert(ReadOnlySpan<char> text, out string str, ParseOptions options = default)
+    public static Result TryConvert(ReadOnlySpan<char> text, out string str, ParseOptions options = default)
     {
         str = new string(text);
         return true;

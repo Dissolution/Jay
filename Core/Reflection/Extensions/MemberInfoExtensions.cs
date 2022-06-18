@@ -10,7 +10,7 @@ public static class MemberInfoExtensions
                memberInfo?.DeclaringType;
     }
 
-    internal static Result.Result TryGetInstanceType(this MemberInfo? memberInfo, [NotNullWhen(true)] out Type? instanceType)
+    internal static Result TryGetInstanceType(this MemberInfo? memberInfo, [NotNullWhen(true)] out Type? instanceType)
     {
         if (memberInfo is null)
         {

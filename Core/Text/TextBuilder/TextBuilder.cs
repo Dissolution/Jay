@@ -45,6 +45,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     }
 
     public static TextBuilder Borrow() => new TextBuilder();
+    public static TextBuilder Borrow(int minCapacity) => new TextBuilder(minCapacity);
 
 
     protected char[]? _charArray;
@@ -126,6 +127,12 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     private TextBuilder()
     {
         _charArray = ArrayPool<char>.Shared.Rent(MinLength);
+        _length = 0;
+    }
+
+    private TextBuilder(int minCapacity)
+    {
+        _charArray = ArrayPool<char>.Shared.Rent(Math.Max(minCapacity, MinLength));
         _length = 0;
     }
 
@@ -1069,6 +1076,66 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
     void ICollection<char>.Clear() => this.Clear();
+
+    public int Measure(Action<TextBuilder> buildText)
+    {
+        int start = _length;
+        buildText(this);
+        return _length - start;
+    }
+    public int[] Measure(params Action<TextBuilder>[] writeTexts)
+    {
+        int len = writeTexts.Length;
+        int[] measurements = new int[len];
+        for (var i = 0; i < writeTexts.Length; i++)
+        {
+            measurements[i] = Measure(writeTexts[i]);
+        }
+        return measurements;
+    }
+
+    public void WriteWrap(int maxLengthBeforeWrap,
+        params Action<TextBuilder>[] writeTexts)
+    {
+        var len = writeTexts.Length;
+        var measurements = Measure(writeTexts);
+        var total = measurements.Sum();
+        if (total > maxLengthBeforeWrap)
+        {
+            var index = _length;
+            // Not the first
+            for (var i = len - 1; i > 0; i--)
+            {
+                index -= measurements[i];
+                Insert(index, NewLine);
+            }
+        }
+    }
+
+    public void WriteWrap<T>(int maxLengthBeforeWrap,
+        IEnumerable<T> values,
+        Action<TextBuilder, T> writeValue)
+    {
+        var writeLengths = new List<int>();
+        foreach (var value in values)
+        {
+            int start = _length;
+            writeValue(this, value);
+            writeLengths.Add(_length - start);
+        }
+        var total = writeLengths.Sum();
+        if (total > maxLengthBeforeWrap)
+        {
+            var index = _length;
+            // Not the first
+            for (var i = writeLengths.Count - 1; i > 0; i--)
+            {
+                index -= writeLengths[i];
+                Insert(index, NewLine);
+            }
+        }
+    }
+    
     
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,440 +1,232 @@
-﻿using System.Buffers;
-using System.Collections.Concurrent;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Net;
+﻿using System.Diagnostics;
 using System.Reflection;
 using Jay.Collections;
-using Jay.Enums;
-using Jay.Exceptions;
-using Jay.Reflection;
 using Jay.Reflection.Building;
 using Jay.Text;
-using Jay.Validation;
-using static InlineIL.IL;
 
 namespace Jay.Dumping.Refactor;
 
-public static class DumperTest
+public static class Dumper
 {
-    public static string DumpWith(ref Dumper dumper)
+    private static readonly ConcurrentTypeDictionary<Delegate> _dumpValueCache;
+
+    static Dumper()
     {
-        return dumper.ToStringAndDispose();
-        //DefaultInterpolatedStringHandler
-    }
-}
-
-[InterpolatedStringHandler]
-public ref struct Dumper
-{
-    private static int GetCapacity(int literalLength, int formattedCount)
-        => Math.Max(1024, literalLength + (formattedCount * 16));
-
-
-    private char[]? _charArray;
-    private Span<char> _charSpan;
-    private int _index;
-    private bool _verbose;
-
-    public int Length => _index;
-
-    public bool Verbose
-    {
-        get => _verbose;
-        set => _verbose = value;
-    }
-
-    internal Span<char> Written => _charSpan.Slice(0, _index);
-    internal Span<char> Available => _charSpan.Slice(_index);
-
-    public Dumper(int literalLength, int formattedCount)
-    {
-        _charSpan = _charArray = ArrayPool<char>.Shared.Rent(GetCapacity(literalLength, formattedCount));
-        _index = 0;
-        _verbose = false;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void Grow(int adding)
-    {
-        // string.MaxLength < array.MaxLength
-        const int maxCapacity = 0x3FFFFFDF;
-        int newCapacity = Math.Clamp(_index + adding, _charSpan.Length * 2, maxCapacity);
-        char[] newArray = ArrayPool<char>.Shared.Rent(newCapacity);
-        TextHelper.Copy(in _charSpan.GetPinnableReference(),
-            ref newArray[0],
-            _index);
-        char[]? toReturn = _charArray;
-        _charSpan = _charArray = newArray;
-        if (toReturn is not null)
+        _dumpValueCache = new()
         {
-            ArrayPool<char>.Shared.Return(toReturn);
+            [typeof(Type)] = (DumpValue<Type>)TypeDumper.Dump,
+            [typeof(IEnumerable)] = (DumpValue<IEnumerable>)EnumerableDumper.Dump,
+        };
+    }
+
+    public Delegate GetDumpDelegate(Type? type)
+    {
+        if (type is null) return CreateDumpConstValue<object, string>("(Type)null");
+        var del = _dumpValueCache.GetOrAdd(type, t => CreateDumpValueDelegate(t));
+        return del;
+    }
+    
+    public DumpValue<T> GetDumpDelegate<T>()
+    {
+        return _dumpValueCache.Get
+    }
+
+
+    private static Delegate CreateDumpValueDelegate(Type type)
+    {
+        // Check for and use [DumpAs]
+        var attr = type.GetCustomAttribute<DumpAsAttribute>();
+        if (attr is not null && attr.DumpString is not null)
+        {
+            return CreateDumpConstValue<T, string>(attr.DumpString);
         }
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendLiteral(string? text)
-    {
-        if (text is not null)
+       
+        // Check for IDumpable
+        if (type.Implements<IDumpable>())
         {
-            while (!TextHelper.TryCopyTo(text, Available))
-            {
-                Grow(text.Length);
-            }
-
-            _index += text.Length;
-        }
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted(char ch)
-    {
-        if (Available.Length == 0)
-            Grow(1);
-        Available[0] = ch;
-        _index++;
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted(string? text)
-    {
-        AppendLiteral(text);
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted(ReadOnlySpan<char> text)
-    {
-        while (!TextHelper.TryCopyTo(text, Available))
-        {
-            Grow(text.Length);
-        }
-
-        _index += text.Length;
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted(object? value, string? format = null)
-    {
-        AppendFormatted<object>(value, format);
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted<T>(T? value, string? format = null)
-    {
-        if (!DumpCache.TryDump<T>(value, ref this))
-        {
-            if (value is IFormattable)
-            {
-                if (value is ISpanFormattable)
+            return RuntimeBuilder.CreateDelegate<DumpValue<T>>($"Dump_{type.FullName}",
+                dynamicMethod =>
                 {
-                    int charsWritten;
-                    while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, format, default))
-                    {
-                        Grow(charsWritten);
-                    }
+                    var emitter = dynamicMethod.Emitter;
+                    var dumpMethod = type.GetMethod(nameof(IDumpable.DumpTo),
+                        BindingFlags.Public | BindingFlags.Instance,
+                        new Type[] { typeof(TextBuilder), typeof(DumpOptions) });
+                    Debug.Assert(dumpMethod is not null);
+                    emitter.Ldarg_0()
+                        .Ldarg_1()
+                        .Ldarg_2()
+                        .Call(dumpMethod)
+                        .Ret();
+                });
+        }
 
-                    _index += charsWritten;
-                }
-                else
+        // Trust TextBuilder
+        return DefaultDumpValue;
+    }
+    
+    private static DumpValue<T> CreateDumpValueDelegate<T>()
+    {
+        var type = typeof(T);
+
+        // Check for and use [DumpAs]
+        var attr = type.GetCustomAttribute<DumpAsAttribute>();
+        if (attr is not null && attr.DumpString is not null)
+        {
+            return CreateDumpConstValue<T, string>(attr.DumpString);
+        }
+       
+        // Check for IDumpable
+        if (type.Implements<IDumpable>())
+        {
+            return RuntimeBuilder.CreateDelegate<DumpValue<T>>($"Dump_{type.FullName}",
+                dynamicMethod =>
                 {
-                    AppendLiteral(((IFormattable)value).ToString(format, null));
-                }
-            }
-            else
-            {
-                AppendLiteral(value?.ToString());
-            }
+                    var emitter = dynamicMethod.Emitter;
+                    var dumpMethod = type.GetMethod(nameof(IDumpable.DumpTo),
+                        BindingFlags.Public | BindingFlags.Instance,
+                        new Type[] { typeof(TextBuilder), typeof(DumpOptions) });
+                    Debug.Assert(dumpMethod is not null);
+                    emitter.Ldarg_0()
+                        .Ldarg_1()
+                        .Ldarg_2()
+                        .Call(dumpMethod)
+                        .Ret();
+                });
         }
+
+        // Trust TextBuilder
+        return DefaultDumpValue;
     }
 
-    public ref Dumper Append(char ch)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void DefaultDumpValue<T>(T? value, TextBuilder text, DumpOptions? options)
     {
-        AppendFormatted(ch);
-        Emit.Ldarga(0);
-        Emit.Ret();
-        throw Unreachable();
+        text.WriteFormatted(value, options?.Format, options?.FormatProvider);
     }
-    
-    public ref Dumper Append(string? str)
+
+    private static DumpValue<T> GetOrCreateDumpDelegate<T>()
     {
-        AppendLiteral(str);
-        Emit.Ldarga(0);
-        Emit.Ret();
-        throw Unreachable();
-    }
-    
-    public ref Dumper Append(ReadOnlySpan<char> text)
-    {
-        AppendFormatted(text);
-        Emit.Ldarga(0);
-        Emit.Ret();
-        throw Unreachable();
-    }
-    
-    public ref Dumper Append<T>(T? value)
-    {
-        AppendFormatted<T>(value);
-        Emit.Ldarga(0);
-        Emit.Ret();
-        throw Unreachable();
-    }
-    
-    public ref Dumper AppendLine(int count = 1)
-    {
-        for (var i = 0; i < count; i++)
+        Delegate? del;
+        Delegate CreateValue(Type _)
         {
-            AppendLiteral(Environment.NewLine);
+            del = CreateDumpValueDelegate<T>();
+            return del;
         }
-        Emit.Ldarga(0);
-        Emit.Ret();
-        throw Unreachable();
+
+        del = _dumpValueCache.GetOrAdd<T>(CreateValue);
+        if (del is DumpValue<T> dumpValue)
+            return dumpValue;
+        
+        throw new NotImplementedException();
     }
 
-    public ref Dumper AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T> values)
+    internal static DumpValue<TDump> CreateDumpConstValue<TDump, TConst>(TConst? constValue)
     {
-        using var e = values.GetEnumerator();
-        if (e.MoveNext())
+        return (TDump? _, TextBuilder text, DumpOptions? _) =>
         {
-            AppendFormatted<T>(e.Current);
-        }
-        while (e.MoveNext())
+            text.Write<TConst>(constValue);
+        };
+    }
+
+    public static void AddOrUpdateDumper<T>(DumpValue<T> dumpDelegate)
+    {
+        _dumpValueCache[typeof(T)] = (DumpValue<T>)dumpDelegate;
+    }
+
+    public static bool TryGetDumper<T>([NotNullWhen(true)] out DumpValue<T>? dumpDelegate)
+    {
+        if (_dumpValueCache.TryGetValue<T>(out var del))
         {
-            AppendFormatted(delimiter);
-            AppendFormatted<T>(e.Current);
+            return del.Is(out dumpDelegate);
         }
-        Emit.Ldarga(0);
-        Emit.Ret();
-        throw Unreachable();
+
+        dumpDelegate = null;
+        return false;
+    }
+
+    public static void Dump<T>(T? value, TextBuilder text, DumpOptions? options = default)
+    {
+        if (options is null)
+            options = DumpOptions.Default;
+        var dumpDelegate = GetOrCreateDumpDelegate<T>();
+        dumpDelegate(value, text, options);
+    }
+
+    public static string Dump<T>(this T? value, DumpOptions? options = default)
+    {
+        using var text = TextBuilder.Borrow();
+        Dump<T>(value, text, options);
+        return text.ToString();
+    }
+
+    public static TextBuilder AppendDump(this TextBuilder textBuilder, object? value, DumpOptions? options = default)
+    {
+        Dump<T>(value, textBuilder, options);
+        return textBuilder;
     }
     
-    public void Clear()
+    public static TextBuilder AppendDump<T>(this TextBuilder textBuilder, T? value, DumpOptions? options = default)
     {
-        _index = 0;
+        Dump<T>(value, textBuilder, options);
+        return textBuilder;
     }
 
-    public void Dispose()
+    public static TextBuilder AppendDump<T>(this TextBuilder textBuilder,
+        [InterpolatedStringHandlerArgument("textBuilder")]
+        ref InterpolatedDumpHandler dumpString)
     {
-        char[]? toReturn = _charArray;
-        this = default; // defensive clear
-        if (toReturn is not null)
-        {
-            ArrayPool<char>.Shared.Return(toReturn);
-        }
+        // dumpString evaluation will write to textbuilder
+        Debugger.Break();
+        return textBuilder;
     }
 
-    public string ToStringAndDispose()
+    public static string Dump(ref InterpolatedDumpHandler dumpString)
     {
-        string str = new string(Written);
-        Dispose();
-        return str;
+        return dumpString.ToStringAndDispose();
     }
-
-    public override bool Equals(object? obj) => UnsuitableException.ThrowEquals(typeof(Dumper));
-
-    public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(typeof(Dumper));
-
-    public override string ToString() => new string(_charSpan.Slice(0, _index));
 }
 
-public delegate void Dump<in TInstance>(TInstance? instance, ref Dumper dumper);
-
-public interface IDumpable
+public abstract class ValueDumper
 {
-    void Dump(ref Dumper dumper);
+    protected static bool DumpNull<T>([NotNullWhen(false)] T? value, 
+        TextBuilder text,
+        DumpOptions? options)
+    {
+        if (value is not null) return false;
+        if (options?.Verbose == true)
+        {
+            text.Append('(')
+                .AppendDump(typeof(T))
+                .Append(')');
+        }
+        text.Write("null");
+        return true;
+    }
 }
 
-/// <summary>
-/// DumpCache: MemberInfo
-/// </summary>
-public static partial class DumpCache
+
+public abstract class ValueDumper<T> : ValueDumper
 {
-    private static readonly HashSet<string> _ignoredNamespaces = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    protected static DumpValue<T> DumpConst<TConst>(TConst? constValue)
     {
-        "System",
-        "Microsoft",
-    };
-
-    private static void DumpType(Type? type, ref Dumper dumper)
-    {
-        if (type is null)
+        return (T? value, TextBuilder builder, DumpOptions? options) =>
         {
-            dumper.AppendLiteral("null");
-            return;
-        }
-
-        if (type == typeof(bool))
-        {
-            dumper.AppendLiteral("bool");
-            return;
-        }
-
-        if (type == typeof(char))
-        {
-            dumper.AppendLiteral("char");
-            return;
-        }
-
-        if (type == typeof(sbyte))
-        {
-            dumper.AppendLiteral("sbyte");
-            return;
-        }
-
-        if (type == typeof(byte))
-        {
-            dumper.AppendLiteral("byte");
-            return;
-        }
-
-        if (type == typeof(short))
-        {
-            dumper.AppendLiteral("short");
-            return;
-        }
-
-        if (type == typeof(ushort))
-        {
-            dumper.AppendLiteral("ushort");
-            return;
-        }
-
-        if (type == typeof(int))
-        {
-            dumper.AppendLiteral("int");
-            return;
-        }
-
-        if (type == typeof(uint))
-        {
-            dumper.AppendLiteral("uint");
-            return;
-        }
-
-        if (type == typeof(long))
-        {
-            dumper.AppendLiteral("long");
-            return;
-        }
-
-        if (type == typeof(ulong))
-        {
-            dumper.AppendLiteral("ulong");
-            return;
-        }
-
-        if (type == typeof(float))
-        {
-            dumper.AppendLiteral("float");
-            return;
-        }
-
-        if (type == typeof(double))
-        {
-            dumper.AppendLiteral("double");
-            return;
-        }
-
-        if (type == typeof(decimal))
-        {
-            dumper.AppendLiteral("decimal");
-            return;
-        }
-
-        if (type == typeof(string))
-        {
-            dumper.AppendLiteral("string");
-            return;
-        }
-
-        if (type == typeof(object))
-        {
-            dumper.AppendLiteral("object");
-            return;
-        }
-
-        // TODO: deep print namespace
-
-        Type? underlyingType;
-
-        // Enums
-        if (type.IsEnum)
-        {
-            dumper.AppendLiteral(type.Name);
-            return;
-        }
-
-        // Print a Declaring Type for Nested Types
-        if (type.IsNested && !type.IsGenericParameter)
-        {
-            DumpType(type.DeclaringType, ref dumper);
-            dumper.AppendFormatted('.');
-        }
-
-        underlyingType = Nullable.GetUnderlyingType(type);
-        if (underlyingType is not null)
-        {
-            DumpType(underlyingType, ref dumper);
-            dumper.AppendFormatted('?');
-            return;
-        }
-
-        if (type.IsPointer)
-        {
-            underlyingType = type.GetElementType();
-            Debug.Assert(underlyingType != null);
-            DumpType(underlyingType, ref dumper);
-            dumper.AppendLiteral("*");
-            return;
-        }
-
-        if (type.IsByRef)
-        {
-            underlyingType = type.GetElementType();
-            Debug.Assert(underlyingType != null);
-            dumper.AppendLiteral("ref ");
-            DumpType(underlyingType, ref dumper);
-            return;
-        }
-
-        if (type.IsArray)
-        {
-            underlyingType = type.GetElementType();
-            Debug.Assert(underlyingType != null);
-            DumpType(underlyingType, ref dumper);
-            dumper.AppendLiteral("[]");
-            return;
-        }
-
-        string name = type.Name;
-
-        if (type.IsGenericType)
-        {
-            if (type.IsGenericParameter)
-            {
-                dumper.AppendLiteral(name);
-                var constraints = type.GetGenericParameterConstraints();
-                if (constraints.Length > 0 && dumper.Verbose)
-                {
-                    dumper.AppendLiteral(" : ");
-                    Debugger.Break();
-                }
-
-                return;
-            }
-
-            var genericTypes = type.GetGenericArguments();
-            var i = name.IndexOf('`');
-            Debug.Assert(i >= 0);
-            dumper.Append(name[..i]).Append('<').AppendDelimit(",", genericTypes).Append('>');
-        }
-        else
-        {
-            dumper.Append(name);
-        }
+            builder.WriteFormatted<TConst>(constValue, options?.Format, options?.FormatProvider);
+        };
     }
 
 }
 
+public interface IDumper<T>
+{
+    static abstract void Dump(T? value, TextBuilder textBuilder, DumpOptions? options = default);
+
+   
+   
+}
+
+
+/*
 public static partial class DumpCache
 {
     private static void DumpEnum<TEnum>(TEnum @enum, ref Dumper dumper)
@@ -442,9 +234,9 @@ public static partial class DumpCache
     {
         var enumInfo = @enum.GetInfo();
         var dumpAsAttr = enumInfo.GetAttribute<DumpAsAttribute>();
-        if ((dumpAsAttr?.Value).IsNonWhiteSpace())
+        if ((dumpAsAttr?.DumpString).IsNonWhiteSpace())
         {
-            dumper.Append(dumpAsAttr.Value);
+            dumper.Append(dumpAsAttr.DumpString);
         }
         else
         {
@@ -509,9 +301,9 @@ public static partial class DumpCache
 
         // Check for DumpAsAttribute
         DumpAsAttribute? attr = instanceType.GetCustomAttribute<DumpAsAttribute>();
-        if (attr is not null && !string.IsNullOrWhiteSpace(attr.Value))
+        if (attr is not null && !string.IsNullOrWhiteSpace(attr.DumpString))
         {
-            return GetDumpString(instanceType, attr.Value);
+            return GetDumpString(instanceType, attr.DumpString);
         }
 
         // Todo: What else can we manually implement?
@@ -541,3 +333,5 @@ public static partial class DumpCache
                 .Ret());
     }
 }
+
+*/

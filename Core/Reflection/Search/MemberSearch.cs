@@ -7,7 +7,7 @@ namespace Jay.Reflection.Search;
 
 public static class MemberSearch
 {
-    public static Result.Result TryFind<TMember>(Expression memberExpression,
+    public static Result TryFind<TMember>(Expression memberExpression,
                                           [NotNullWhen(true)] out TMember? member)
         where TMember : MemberInfo
     {

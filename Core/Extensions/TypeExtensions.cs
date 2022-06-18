@@ -103,7 +103,7 @@ public static class TypeExtensions
         return type.MakeGenericType(typeof(T));
     }
 
-    public static Result.Result TryFind<TMember>(this Type type, 
+    public static Result TryFind<TMember>(this Type type, 
                                           Expression memberExpression,
                                           [NotNullWhen(true)] out TMember? member)
         where TMember : MemberInfo

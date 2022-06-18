@@ -5,5 +5,5 @@ public interface ICaster
     bool CanCastFrom(Type inType);
     bool CanCastTo(Type outType);
 
-    Result.Result TryCast(object? input, [NotNullWhen(true)] out object? output, CastOptions options = default);
+    Result TryCast(object? input, [NotNullWhen(true)] out object? output, CastOptions options = default);
 }
