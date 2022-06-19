@@ -407,8 +407,7 @@ public static class Muq
 
         var delType = typeof(CloneValue<>).MakeGenericType(type);
 
-        var dm = RuntimeBuilder.CreateDynamicMethod(Dump.Text($"{type}_clone"), 
-            MethodSig.Of(delType));
+        var dm = RuntimeBuilder.CreateDynamicMethod(MethodSig.Of(delType), Dump.Text($"{type}_clone"));
             
         var emitter = dm.GetEmitter();
 

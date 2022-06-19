@@ -43,6 +43,25 @@ public static partial class Dump_Cache
                     .Ret();
             });
     }
+
+    private static void DumpObject(object? obj, TextBuilder textBuilder)
+    {
+        if (obj is null)
+        {
+            textBuilder.Write("null");
+        }
+        else
+        {
+            var valueDump = _cache.GetOrAdd(obj.GetType(), CreateValueDumpDelegate);
+        
+            
+            todo
+                emit all of this
+            
+        }
+        
+        
+    }
 }
 
 public static partial class Dump_Cache
@@ -56,19 +75,22 @@ public static partial class Dump_Cache
         _cache[typeof(object)] = null!;
     }
 
-    private static Delegate GetValueDump(Type valueType)
+    private static Delegate CreateValueDumpDelegate(Type valueType)
     {
         
     }
 
-    private static ValueDump<T> GetValueDump<T>()
+    private static ValueDump<T> CreateValueDumpDelegate<T>()
     {
-        return (GetValueDump(typeof(T)) as ValueDump<T>)!;
+        return (CreateValueDumpDelegate(typeof(T)) as ValueDump<T>)!;
     }
 
-    public static void DumpValueTo<T>(T? value, TextBuilder text)
+    public static void DumpValue<T>(T? value, TextBuilder text)
     {
-        if (typeof(T) == typeof(object))
+        var valueDump = _cache.GetOrAdd<T>(CreateValueDumpDelegate) as ValueDump<T>;
+        if (valueDump is null)
+            throw new InvalidOperationException();
+        valueDump(value, text);
     }
 }
 
@@ -77,7 +99,7 @@ public static class DumpExtensions
     public static string Dump<T>(this T? value)
     {
         using var text = TextBuilder.Borrow();
-        Dump_Cache.DumpValueTo<T>(value, text);
+        Dump_Cache.DumpValue<T>(value, text);
         return text.ToString();
     }
 }
