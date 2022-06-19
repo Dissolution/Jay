@@ -1,10 +1,22 @@
 ﻿using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using Jay.Validation;
 
 namespace Jay.Text;
 
 internal static class TextBuilderReflections
 {
+    public static MethodInfo WriteString { get; }
+
+    static TextBuilderReflections()
+    {
+        WriteString = typeof(TextBuilder).GetMethod(
+                nameof(TextBuilder.Write),
+                BindingFlags.Public | BindingFlags.Instance,
+                new Type[] { typeof(string) })
+            .ThrowIfNull("Could not find TextBuilder.Write(string)");
+    }
+    
     public static MethodInfo GetWriteValue(Type valueType)
     {
         // Examine all Write(?) methods

@@ -49,7 +49,7 @@ public sealed class DelegateMemberCache : ConcurrentDictionary<DelegateAndMember
     }
 
     public TDelegate GetOrAdd<TMember, TDelegate>(TMember member,
-                                                  Action<DynamicMethod<TDelegate>> buildMethod)
+                                                  Action<RuntimeMethod<TDelegate>> buildMethod)
         where TMember : MemberInfo
         where TDelegate : Delegate
     {

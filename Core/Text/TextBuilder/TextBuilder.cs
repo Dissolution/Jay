@@ -112,6 +112,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _length;
+        internal set => _length = value;
     }
     /// <inheritdoc cref="ICollection{T}"/>
     int ICollection<char>.Count => _length;

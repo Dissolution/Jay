@@ -1,13 +1,9 @@
-﻿using System.Globalization;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Dumping;
-using Jay.Enums;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
-using Jay.Reflection.Extensions;
 using Jay.Reflection.Search;
-using Jay.Text;
 
 namespace Jay.Reflection.Building;
 
@@ -20,157 +16,14 @@ public static class RuntimeBuilder
 
     static RuntimeBuilder()
     {
-        AssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Jay.Reflection.Building.Runtime"), 
-                                                                AssemblyBuilderAccess.Run);
+        var assemblyName = new AssemblyName($"{typeof(RuntimeBuilder).Namespace}.Runtime");
+        AssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
         ModuleBuilder = AssemblyBuilder.DefineDynamicModule("RuntimeModuleBuilder");
     }
 
-    //https://stackoverflow.com/questions/950616/what-characters-are-allowed-in-c-sharp-class-name
-    private static bool IsValidNameFirstChar(char ch)
+    internal static DynamicMethod CreateDynamicMethod(MethodSig methodSig, string? name = null)
     {
-        var category = char.GetUnicodeCategory(ch);
-        return ch == '_' ||
-               category == UnicodeCategory.UppercaseLetter ||
-               category == UnicodeCategory.LowercaseLetter ||
-               category == UnicodeCategory.TitlecaseLetter ||
-               category == UnicodeCategory.ModifierLetter ||
-               category == UnicodeCategory.OtherLetter;
-    }
-
-    private static bool IsValidNameChar(char ch)
-    {
-        var category = char.GetUnicodeCategory(ch);
-        return category == UnicodeCategory.UppercaseLetter ||
-               category == UnicodeCategory.LowercaseLetter ||
-               category == UnicodeCategory.TitlecaseLetter ||
-               category == UnicodeCategory.ModifierLetter ||
-               category == UnicodeCategory.OtherLetter ||
-               category == UnicodeCategory.LetterNumber ||
-               category == UnicodeCategory.NonSpacingMark ||
-               category == UnicodeCategory.SpacingCombiningMark ||
-               category == UnicodeCategory.DecimalDigitNumber ||
-               category == UnicodeCategory.ConnectorPunctuation ||
-               category == UnicodeCategory.Format;
-    }
-
-
-    public static bool IsValidMemberName(string? name)
-    {
-        if (name is null) return false;
-        var len = name.Length;
-        if (len == 0) return false;
-        char ch = name[0];
-        if (!IsValidNameFirstChar(ch)) return false;
-        for (var i = 1; i < len; i++)
-        {
-            if (!IsValidNameChar(ch)) return false;
-        }
-        return true;
-    }
-
-    internal static bool TryAppendName(string? name, TextBuilder builder)
-    {
-        if (name is null || name.Length == 0)
-            return false;
-        int start;
-        char ch = name[0];
-        if (IsValidNameFirstChar(ch))
-        {
-            builder.Write(ch);
-            start = 1;
-        }
-        else
-        {
-            builder.Write('_');
-            start = 0;
-        }
-
-        for (var i = start; i < name.Length; i++)
-        {
-            ch = name[i];
-            if (IsValidNameChar(ch))
-            {
-                builder.Write(ch);
-            }
-        }
-        return builder.Length > start;
-    }
-
-    public static string CreateMethodName(string? name, MethodSig methodSig)
-    {
-        using var builder = TextBuilder.Borrow();
-        if (!TryAppendName(name, builder))
-        {
-            builder.Clear();
-            if (methodSig.IsAction)
-            {
-                builder.Write("Action_");
-            }
-            else
-            {
-                builder.Write("Func_");
-            }
-            var ctr = Interlocked.Increment(ref _counter);
-            builder.Write(ctr);
-        }
-        return builder.ToString();
-    }
-
-    public static string CreateTypeName(string? name, TypeAttributes typeAttributes)
-    {
-        using var builder = TextBuilder.Borrow();
-        if (!TryAppendName(name, builder))
-        {
-            builder.Clear();
-            if (typeAttributes.HasAnyFlags(TypeAttributes.Interface))
-            {
-                builder.Write("Interface_");
-            }
-            else if (typeAttributes.HasAnyFlags(TypeAttributes.Abstract, TypeAttributes.AnsiClass, TypeAttributes.AutoClass, TypeAttributes.Class, TypeAttributes.UnicodeClass))
-            {
-                builder.Write("Class_");
-            }
-            else
-            {
-                builder.Write("Struct_");
-            }
-            var ctr = Interlocked.Increment(ref _counter);
-            builder.Write(ctr);
-        }
-        return builder.ToString();
-    }
-
-    public static string FixedMemberName(string? name, MemberTypes memberType)
-    {
-        using var text = TextBuilder.Borrow();
-        if (!TryAppendName(name, text))
-        {
-            var ctr = Interlocked.Increment(ref _counter);
-            text.Clear()
-                .Append(memberType)
-                .Append('_')
-                .Append(ctr);
-        }
-        return text.ToString();
-    }
-
-    public static string FieldName(string propertyName)
-    {
-        return string.Create(propertyName.Length + 1, propertyName, (span, name) =>
-        {
-            span[0] = '_';
-            span[1] = char.ToLower(name[0]);
-            for (var i = 1; i < name.Length; i++)
-            {
-                span[i + 1] = name[i];
-            }
-        });
-    }
-
-    public static DynamicMethod CreateDynamicMethod(string? name,
-                                                    MethodSig methodSig)
-    {
-        return new DynamicMethod(CreateMethodName(name, methodSig),
+        return new DynamicMethod(MemberNaming.CreateMemberName(name),
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
             methodSig.ReturnType,
@@ -178,43 +31,66 @@ public static class RuntimeBuilder
             ModuleBuilder,
             true);
     }
-
-    public static DynamicMethod<TDelegate> CreateDynamicMethod<TDelegate>(string? name)
-        where TDelegate : Delegate
+   
+    public static RuntimeMethod CreateMethod(MethodSig methodSig, string? name = null)
     {
-        return new DynamicMethod<TDelegate>(CreateDynamicMethod(name, MethodSig.Of<TDelegate>()));
+        return new RuntimeMethod(CreateDynamicMethod(methodSig, name), methodSig);
     }
 
-    public static TDelegate CreateDelegate<TDelegate>(string? name, Action<DynamicMethod<TDelegate>> buildDelegate)
-        where TDelegate : Delegate
+    public static Delegate CreateDelegate(Type delegateType, Action<RuntimeMethod> buildDelegate)
     {
-        var dm = CreateDynamicMethod<TDelegate>(name);
-        buildDelegate(dm);
-        return dm.CreateDelegate();
+        return CreateDelegate(delegateType, null, buildDelegate);
     }
-    
-    public static Delegate CreateDelegate(Type delegateType, string? name, Action<DynamicMethod> buildDelegate)
+
+    public static Delegate CreateDelegate(Type delegateType, string? name, Action<RuntimeMethod> buildDelegate)
     {
         if (!delegateType.Implements<Delegate>())
             throw new ArgumentException("Must be a delegate", nameof(delegateType));
-        var dm = CreateDynamicMethod(name, MethodSig.Of(delegateType));
-        buildDelegate(dm);
-        return dm.CreateDelegate(delegateType);
+        var runtimeMethod = CreateMethod(MethodSig.Of(delegateType), name);
+        buildDelegate(runtimeMethod);
+        return runtimeMethod.CreateDelegate(delegateType);
     }
-    
+
+    public static Delegate CreateDelegate(Type delegateType, Action<IILGeneratorEmitter> emitDelegate)
+    {
+        return CreateDelegate(delegateType, null, emitDelegate);
+    }
+
     public static Delegate CreateDelegate(Type delegateType, string? name, Action<IILGeneratorEmitter> emitDelegate)
     {
         if (!delegateType.Implements<Delegate>())
             throw new ArgumentException("Must be a delegate", nameof(delegateType));
-        var dm = CreateDynamicMethod(name, MethodSig.Of(delegateType));
-        emitDelegate(dm.GetEmitter());
-        return dm.CreateDelegate(delegateType);
+        var runtimeMethod = CreateMethod(MethodSig.Of(delegateType), name);
+        emitDelegate(runtimeMethod.Emitter);
+        return runtimeMethod.CreateDelegate(delegateType);
+    }
+    
+    public static RuntimeMethod<TDelegate> CreateMethod<TDelegate>(string? name = null)
+        where TDelegate : Delegate
+    {
+        return new RuntimeMethod<TDelegate>(CreateDynamicMethod(MethodSig.Of<TDelegate>(), name));
     }
 
-    public static TypeBuilder DefineType(string? name, TypeAttributes typeAttributes)
+    public static TDelegate CreateDelegate<TDelegate>(Action<RuntimeMethod<TDelegate>> buildDelegate)
+        where TDelegate : Delegate
     {
-        return ModuleBuilder.DefineType(CreateTypeName(name, typeAttributes),
-            typeAttributes, typeof(RuntimeBuilder));
+        return CreateDelegate<TDelegate>(null, buildDelegate);
+    }
+
+    public static TDelegate CreateDelegate<TDelegate>(string? name, Action<RuntimeMethod<TDelegate>> buildDelegate)
+        where TDelegate : Delegate
+    {
+        var runtimeMethod = CreateMethod<TDelegate>(name);
+        buildDelegate(runtimeMethod);
+        return runtimeMethod.CreateDelegate();
+    }
+
+    public static TypeBuilder DefineType(TypeAttributes typeAttributes, string? name = null)
+    {
+        return ModuleBuilder.DefineType(
+            MemberNaming.CreateMemberName(name),
+            typeAttributes, 
+            typeof(RuntimeBuilder));
     }
 
     public static CustomAttributeBuilder GetCustomAttributeBuilder<TAttribute>()

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Jay.Collections;
 using Jay.Reflection.Building;
+using Jay.Reflection.Building.Emission;
 using Jay.Text;
 
 namespace Jay.Dumping.Refactor2;
@@ -33,10 +34,14 @@ public static partial class Dump_Cache
     private static Delegate CreateDumpNull(Type valueType)
     {
         return RuntimeBuilder.CreateDelegate(typeof(ValueDump<>).MakeGenericType(valueType),
-            emitter =>
+            runtimeMethod =>
             {
-                
-            }
+                var emitter = runtimeMethod.Emitter;
+                emitter.Ldarg_1()
+                    .Ldstr("null")
+                    .Call(TextBuilderReflections.WriteString)
+                    .Ret();
+            });
     }
 }
 

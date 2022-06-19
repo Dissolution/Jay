@@ -5,39 +5,107 @@ using Jay.Reflection.Caching;
 
 namespace Jay.Reflection.Building;
 
-public class DynamicMethod<TDelegate>
-    where TDelegate : Delegate
+public class RuntimeMethod
 {
-    public static implicit operator DynamicMethod(DynamicMethod<TDelegate> dynamicMethod) =>
-        dynamicMethod._dynamicMethod;
+    public static implicit operator DynamicMethod(RuntimeMethod runtimeMethod) => runtimeMethod.DynamicMethod;
 
     protected readonly DynamicMethod _dynamicMethod;
-    protected ILGenerator? _ilGenerator;
+    protected readonly MethodSig _methodSig;
+    private ILGenerator? _ilGenerator = null;
+    private ILGeneratorEmitter? _emitter = null;
 
-    public ILGenerator ILGenerator => _ilGenerator ??= _dynamicMethod.GetILGenerator();
-    public IILGeneratorEmitter Emitter => new ILGeneratorEmitter(this.ILGenerator);
-    //public IILGeneratorFluentEmitter FluentEmitter => new ILGeneratorEmitter(this.ILGenerator);
-    public MethodSig MethodSig { get; }
-    public IReadOnlyList<ParameterInfo> Parameters { get; }
-    public Type ReturnType { get; }
-    
-    
-    public DynamicMethod(DynamicMethod dynamicMethod)
+    public DynamicMethod DynamicMethod => _dynamicMethod;
+    public MethodSig MethodSig => _methodSig;
+
+    public ILGenerator ILGenerator => _ilGenerator ??= DynamicMethod.GetILGenerator();
+    public IILGeneratorEmitter Emitter => _emitter ??= new ILGeneratorEmitter(this.ILGenerator);
+    public IReadOnlyList<ParameterInfo> Parameters => _methodSig.Parameters;
+    public Type[] ParameterTypes => _methodSig.ParameterTypes;
+    public int ParameterCount => _methodSig.ParameterCount;
+    public Type ReturnType => _methodSig.ReturnType;
+
+    public RuntimeMethod(DynamicMethod dynamicMethod, MethodSig methodSig)
     {
         _dynamicMethod = dynamicMethod;
-        var invokeMethod = typeof(TDelegate).GetMethod("Invoke", Reflect.PublicFlags)!;
-        this.MethodSig = MethodSig.Of(invokeMethod);
-        this.Parameters = invokeMethod.GetParameters();
-        this.ReturnType = invokeMethod.ReturnType;
+        _methodSig = methodSig;
     }
 
-    public TDelegate CreateDelegate() => _dynamicMethod.CreateDelegate<TDelegate>();
+    public Delegate CreateDelegate()
+    {
+        return _dynamicMethod.CreateDelegate(_methodSig.DelegateType);
+    }
+    
+    public Delegate CreateDelegate(object? target)
+    {
+        return _dynamicMethod.CreateDelegate(_methodSig.DelegateType, target);
+    }
+    
+    public Result TryCreateDelegate([NotNullWhen(true)] out Delegate? @delegate)
+    {
+        try
+        {
+            @delegate = _dynamicMethod.CreateDelegate(_methodSig.DelegateType);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            @delegate = null;
+            return ex;
+        }
+    }
+    
+    public Result TryCreateDelegate(object? target, [NotNullWhen(true)] out Delegate? @delegate)
+    {
+        try
+        {
+            @delegate = _dynamicMethod.CreateDelegate(_methodSig.DelegateType, target);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            @delegate = null;
+            return ex;
+        }
+    }
+}
+
+public class RuntimeMethod<TDelegate> : RuntimeMethod
+    where TDelegate : Delegate
+{
+    public RuntimeMethod(DynamicMethod dynamicMethod)
+        : base(dynamicMethod, MethodSig.Of<TDelegate>())
+    {
+    }
+
+    public new TDelegate CreateDelegate()
+    {
+        return _dynamicMethod.CreateDelegate<TDelegate>();
+    }
+    
+    public new TDelegate CreateDelegate(object? target)
+    {
+        return _dynamicMethod.CreateDelegate<TDelegate>(target);
+    }
 
     public Result TryCreateDelegate([NotNullWhen(true)] out TDelegate? @delegate)
     {
         try
         {
             @delegate = _dynamicMethod.CreateDelegate<TDelegate>();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            @delegate = null;
+            return ex;
+        }
+    }
+    
+    public Result TryCreateDelegate(object? target, [NotNullWhen(true)] out TDelegate? @delegate)
+    {
+        try
+        {
+            @delegate = _dynamicMethod.CreateDelegate<TDelegate>(target);
             return true;
         }
         catch (Exception ex)

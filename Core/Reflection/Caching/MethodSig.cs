@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq.Expressions;
+using System.Reflection;
 using Jay.Dumping;
 using Jay.Reflection.Extensions;
 using Jay.Text;
@@ -10,7 +11,6 @@ public partial class MethodSig
 {
     static MethodSig()
     {
-        
     }
 
     public static MethodSig Of(MethodBase method)
@@ -33,7 +33,8 @@ public partial class MethodSig
             .ThrowIfNull($"{delegateType} did not have an Invoke method!");
         return new MethodSig(invokeMethod);
     }
-    public static MethodSig Of<TDelegate>(out MethodInfo invokeMethod) 
+
+    public static MethodSig Of<TDelegate>(out MethodInfo invokeMethod)
         where TDelegate : Delegate
     {
         invokeMethod = typeof(TDelegate).GetInvokeMethod()
@@ -57,7 +58,9 @@ public partial class MethodSig
 public partial class MethodSig : IEquatable<MethodSig>, IEquatable<MethodBase>
 {
     protected readonly MethodBase _method;
-    
+
+    internal MethodBase MethodBase => _method;
+
     public Attribute[] Attributes { get; }
     public Type ReturnType { get; }
     public ParameterInfo[] Parameters { get; }
@@ -69,6 +72,30 @@ public partial class MethodSig : IEquatable<MethodSig>, IEquatable<MethodBase>
 
     public bool IsAction => ReturnType == typeof(void);
     public bool IsFunc => ReturnType != typeof(void);
+
+    internal Type[] ParameterAndReturnTypes
+    {
+        get
+        {
+            var types = new Type[ParameterCount + 1];
+            int i = ParameterCount;
+            types[i] = ReturnType;
+            for (; i >= 0; i--)
+            {
+                types[i] = ParameterTypes[i];
+            }
+            return types;
+        }
+    }
+    internal Type DelegateType
+    {
+        get
+        {
+            if (IsAction)
+                return Expression.GetActionType(ParameterTypes);
+            return Expression.GetFuncType(ParameterAndReturnTypes);
+        }
+    }
 
     public MethodSig(MethodBase method)
     {
@@ -92,7 +119,7 @@ public partial class MethodSig : IEquatable<MethodSig>, IEquatable<MethodBase>
 
     public bool Equals(Type delegateType)
         => Equals(Of(delegateType));
-    
+
     public bool Equals(MethodSig? methodSig)
     {
         return methodSig is not null &&
@@ -104,7 +131,7 @@ public partial class MethodSig : IEquatable<MethodSig>, IEquatable<MethodBase>
         return method is not null &&
                _method.HasSameMetadataDefinitionAs(method);
     }
-    
+
     public override bool Equals(object? obj)
     {
         if (obj is MethodBase method) return _method.HasSameMetadataDefinitionAs(method);
@@ -139,6 +166,4 @@ public partial class MethodSig : IEquatable<MethodSig>, IEquatable<MethodBase>
             }).Append(')');
         return text.ToString();
     }
-
-   
 }
