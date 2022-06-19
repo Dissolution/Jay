@@ -47,7 +47,7 @@ public ref struct InterpolatedDumpHandler
     
     public void AppendFormatted<T>(T? value, string? format = null)
     {
-        Dumper.Dump(value, _textBuilder, new DumpOptions{ Format = format});
+        Dumping.Dumper.Dump(value, _textBuilder, new DumpOptions{ Format = format});
     }
 
     public void Dispose()
@@ -62,9 +62,9 @@ public ref struct InterpolatedDumpHandler
         return str;
     }
 
-    public override bool Equals(object? obj) => UnsuitableException.ThrowEquals(typeof(Dumper));
+    public override bool Equals(object? obj) => UnsuitableException.ThrowEquals(typeof(Dumping.Dumper));
 
-    public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(typeof(Dumper));
+    public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(typeof(Dumping.Dumper));
 
     public override string ToString() => _textBuilder.ToString();
 }

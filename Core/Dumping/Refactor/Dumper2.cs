@@ -8,11 +8,11 @@ using Jay.Validation;
 
 namespace Jay.Dumping.Refactor;
 
-public abstract class DumperBase
+public abstract class Dumper
 {
     private static readonly ConcurrentTypeDictionary<Delegate> _dumpValueCache;
 
-    static DumperBase()
+    static Dumper()
     {
         _dumpValueCache = new()
         {
@@ -22,7 +22,7 @@ public abstract class DumperBase
         // TODO: auto-lookup for IDumper<T> implementations in assemblies
     }
 
-    protected static Delegate CreateConstDumpValueDelegate<T>(Type valueType, T? constValue)
+    protected static Delegate CreateConstDumpValueDelegate<TConst>(Type valueType, TConst? constValue)
     {
         return RuntimeBuilder.CreateDelegate(typeof(DumpValue<>).MakeGenericType(valueType),
             $"Dump_{valueType.Name}_override",
@@ -75,11 +75,11 @@ public abstract class DumperBase
 
     private static MethodInfo GetDumperDefaultDumpValue(Type type)
     {
-        return typeof(DumperBase)
+        return typeof(Dumper)
             .GetMethod(nameof(DefaultDumpValue),
                 BindingFlags.NonPublic | BindingFlags.Static,
                 new Type[] { type, typeof(TextBuilder), typeof(DumpOptions) })
-            .ThrowIfNull($"Could not find {nameof(DumperBase)}.{nameof(DefaultDumpValue)}")
+            .ThrowIfNull($"Could not find {nameof(Dumper)}.{nameof(DefaultDumpValue)}")
             .MakeGenericMethod(type);
     }
     
@@ -89,8 +89,95 @@ public abstract class DumperBase
         text.WriteFormatted(value, options?.Format, options?.FormatProvider);
     }
     
-    protected static Delegate GetOrCreateDelegate(Type type)
+    protected static Delegate GetOrCreateDelegate(Type? type)
     {
+        if (type is null)
+            return
+        
         return _dumpValueCache.GetOrAdd(type, t => CreateDumpValueDelegate(t));
     }
+
+    protected static DumpValue<T> GetOrCreateDelegate<T>()
+    {
+        var dumpValue = GetOrCreateDelegate(typeof(T)) as DumpValue<T>;
+        if (dumpValue is null)
+            throw new InvalidOperationException();
+        return dumpValue;
+    }
+    
+    protected static bool TryDumpNull<T>([NotNullWhen(false)] T? value, 
+        TextBuilder text,
+        DumpOptions? options)
+    {
+        if (value is not null) return false;
+        if (options?.Verbose == true)
+        {
+            text.Append('(')
+                .AppendDump(typeof(T))
+                .Append(')');
+        }
+        text.Write("null");
+        return true;
+    }
+
+    public static void Dump(object? obj, TextBuilder text, DumpOptions? options = default)
+    {
+        var dumpDelegate = GetOrCreateDelegate(obj?)
+    }
+    
+    public static void Dump<T>(T? value, TextBuilder text, DumpOptions? options = default)
+    {
+        var dumpDelegate = GetOrCreateDelegate<T>();
+        dumpDelegate(value, text, options);
+    }
+    
+    
+
+    public static string Dump(ref InterpolatedDumpHandler dumpString)
+    {
+        return dumpString.ToStringAndDispose();
+    }
+
+}
+
+public static class DumpExtensions
+{
+    public static string Dump<T>(this T? value, DumpOptions? options = default)
+    {
+        using var text = TextBuilder.Borrow();
+        Dumper.Dump<T>(value, text, options);
+        return text.ToString();
+    }
+
+    public static TextBuilder AppendDump(this TextBuilder textBuilder, object? value, DumpOptions? options = default)
+    {
+        Dumper.Dump(value, textBuilder, options);
+        return textBuilder;
+    }
+    
+    public static TextBuilder AppendDump<T>(this TextBuilder textBuilder, T? value, DumpOptions? options = default)
+    {
+        Dump<T>(value, textBuilder, options);
+        return textBuilder;
+    }
+
+    public static TextBuilder AppendDump<T>(this TextBuilder textBuilder,
+        [InterpolatedStringHandlerArgument("textBuilder")]
+        ref InterpolatedDumpHandler dumpString)
+    {
+        // dumpString evaluation will write to textbuilder
+        Debugger.Break();
+        return textBuilder;
+    }
+}
+
+public abstract class Dumper<T> : Dumper
+{
+    protected static DumpValue<T> CreateConstDumpValueDelegate<TConst>(TConst? constValue)
+    {
+        return (CreateConstDumpValueDelegate(typeof(T), constValue) as DumpValue<T>)
+            .ThrowIfNull();
+    }
+
+   
 }

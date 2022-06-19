@@ -33,7 +33,7 @@ using var text = TextBuilder.Borrow();
 
 var dumpable = new Dumpable();
 
-string d = Dumper.Dump($"Look mom, no {typeof(IDictionary<,>).MakeGenericType(typeof(string), typeof(int))}");
+string d = Jay.Dumping.Dumper.Dump($"Look mom, no {typeof(IDictionary<,>).MakeGenericType(typeof(string), typeof(int))}");
 
 Debugger.Break();
 

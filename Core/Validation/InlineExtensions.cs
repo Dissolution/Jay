@@ -35,7 +35,7 @@ public static class InlineExtensions
         {
             throw new ArgumentNullException(
                 valueName,
-                Dumper.Dump($"{typeof(T)} value is null"));
+                Dumping.Dumper.Dump($"{typeof(T)} value is null"));
         }
         return value;
     }
