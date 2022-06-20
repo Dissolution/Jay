@@ -1,4 +1,4 @@
-﻿using Jay.Exceptions;
+﻿/*using Jay.Exceptions;
 using Jay.Text;
 
 namespace Jay.Dumping.Refactor;
@@ -67,4 +67,4 @@ public ref struct InterpolatedDumpHandler
     public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(typeof(Dumping.Dumper));
 
     public override string ToString() => _textBuilder.ToString();
-}
+}*/

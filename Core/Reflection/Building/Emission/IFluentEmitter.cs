@@ -18,6 +18,8 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
     where TEmitter : class, IFluentEmitter<TEmitter>
 {
 
+    TEmitter Ldarg(ParameterInfo parameter) => Ldarg(parameter.Position);
+    
     ITryCatchFinallyEmitter<TEmitter> Try(Action<TEmitter> tryBlock);
 
     TEmitter DefineAndMarkLabel(out Label label, [CallerArgumentExpression("label")] string lblName = "") 

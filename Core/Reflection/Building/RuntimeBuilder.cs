@@ -9,8 +9,6 @@ namespace Jay.Reflection.Building;
 
 public static class RuntimeBuilder
 {
-    private static int _counter = 0;
-
     public static AssemblyBuilder AssemblyBuilder { get; }
     public static ModuleBuilder ModuleBuilder { get; }
 

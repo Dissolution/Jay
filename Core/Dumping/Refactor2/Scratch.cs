@@ -1,8 +1,14 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Reflection;
+using InlineIL;
 using Jay.Collections;
+using Jay.Expressions;
+using Jay.Reflection;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
 using Jay.Text;
+using Jay.Validation;
 
 namespace Jay.Dumping.Refactor2;
 
@@ -11,7 +17,6 @@ public static class Scratch
     static Scratch()
     {
         var thing = new ConcurrentStack<int>();
-        
     }
 }
 
@@ -20,7 +25,7 @@ public delegate void ValueDump<in T>(T? value, TextBuilder text);
 public interface IDumpable
 {
     void DumpTo(TextBuilder text);
-    
+
     string Dump()
     {
         using var text = TextBuilder.Borrow();
@@ -44,23 +49,59 @@ public static partial class Dump_Cache
             });
     }
 
-    private static void DumpObject(object? obj, TextBuilder textBuilder)
+    private static MethodInfo _objectGetTypeMethod = Reflect.On<object>().Get<MethodInfo>(obj => obj.GetType());
+
+
+    private static T UnboxOrCastClass<T>(object obj)
     {
-        if (obj is null)
-        {
-            textBuilder.Write("null");
-        }
-        else
-        {
-            var valueDump = _cache.GetOrAdd(obj.GetType(), CreateValueDumpDelegate);
-        
-            
-            todo
-                emit all of this
-            
-        }
-        
-        
+        IL.Emit.Ldarg(nameof(obj));
+        IL.Emit.Unbox_Any<T>();
+        return IL.Return<T>();
+    }
+    
+    private static ValueDump<object> CreateObjectDump()
+    {
+        return RuntimeBuilder.CreateDelegate<ValueDump<object>>("Dump_Object",
+            runtimeMethod =>
+            {
+                var emitter = runtimeMethod.Emitter;
+                var valueArg = runtimeMethod.Parameters[0];
+                var textBuilderArg = runtimeMethod.Parameters[1];
+
+                /* Roughly:
+                 * if (obj is null)
+                 *      text.Write("null");
+                 *      return;                 
+                 * GetDumpValueDelegate(obj.GetType())((T)obj, text)
+                 */
+                
+                // Null check
+                emitter.Ldarg(valueArg)
+                    .Brtrue(out var lblNotNull)
+                    .Ldarg(textBuilderArg)
+                    .Ldstr("null")
+                    .Call(TextBuilderReflections.WriteString)
+                    .Ret();
+                
+                // Get delegate
+                emitter.MarkLabel(lblNotNull)
+                    .Ldarg(valueArg)
+                    .Call(_objectGetTypeMethod)
+                    .Call(GetDumpValueDelegateMethod)
+                    // Add value and text
+                    .Ldarg(valueArg)
+                    .Call(Reflect.Get<MethodInfo>(() => UnboxOrCastClass<int>(null!)).Mak
+                    
+                
+                
+                // Load type
+              
+              
+                // Get the DumpValue Delegate for that type
+                throw new NotImplementedException();
+
+
+            });
     }
 }
 
@@ -71,13 +112,13 @@ public static partial class Dump_Cache
     static Dump_Cache()
     {
         _cache = new();
-        _cache[typeof(Type)] = null!;
-        _cache[typeof(object)] = null!;
+        //_cache[typeof(Type)] = null!;
+        //_cache[typeof(object)] = null!;
     }
 
-    private static Delegate CreateValueDumpDelegate(Type valueType)
+    internal static Delegate CreateValueDumpDelegate(Type valueType)
     {
-        
+        throw new NotImplementedException();
     }
 
     private static ValueDump<T> CreateValueDumpDelegate<T>()
@@ -85,12 +126,26 @@ public static partial class Dump_Cache
         return (CreateValueDumpDelegate(typeof(T)) as ValueDump<T>)!;
     }
 
+    internal static MethodInfo GetDumpValueDelegateMethod { get; } = Reflect.Get<MethodInfo>(() => GetDumpValueDelegate((Type)null!));
+    internal static MethodInfo GetDumpValueDelegateInvokeMethod { get; } = GetDumpValueDelegateMethod
+    
+    internal static Delegate GetDumpValueDelegate(Type type)
+    {
+        var del = _cache.GetOrAdd(type, CreateValueDumpDelegate);
+        return del;
+    }
+    
+    internal static ValueDump<T> GetDumpValueDelegate<T>()
+    {
+        var del = _cache.GetOrAdd<T>(CreateValueDumpDelegate);
+        if (del is ValueDump<T> valueDump)
+            return valueDump;
+        throw new InvalidOperationException();
+    }
+
     public static void DumpValue<T>(T? value, TextBuilder text)
     {
-        var valueDump = _cache.GetOrAdd<T>(CreateValueDumpDelegate) as ValueDump<T>;
-        if (valueDump is null)
-            throw new InvalidOperationException();
-        valueDump(value, text);
+        GetDumpValueDelegate<T>()(value, text);
     }
 }
 

@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
 using Jay.Dumping;
-using Dumper = Jay.Dumping.Refactor.Dumper;
 
 namespace Jay.Validation;
 
@@ -35,7 +34,7 @@ public static class InlineExtensions
         {
             throw new ArgumentNullException(
                 valueName,
-                Dumping.Dumper.Dump($"{typeof(T)} value is null"));
+                Dump.Text($"{typeof(T)} value is null"));
         }
         return value;
     }

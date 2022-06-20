@@ -16,8 +16,6 @@ using Jay.Dumping.Refactor;
 using Jay.Enums;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
-using Dumper = Jay.Dumping.Refactor.Dumper;
-using DumpOptions = Jay.Dumping.Refactor.DumpOptions;
 
 //using TextBuilder = Jay.Text.Scratch.TextBuilder;
 
@@ -31,9 +29,6 @@ using Jay.BenchTests.Text;
 #else
 using var text = TextBuilder.Borrow();
 
-var dumpable = new Dumpable();
-
-string d = Jay.Dumping.Dumper.Dump($"Look mom, no {typeof(IDictionary<,>).MakeGenericType(typeof(string), typeof(int))}");
 
 Debugger.Break();
 
@@ -49,13 +44,13 @@ return 0;
 
 namespace ConsoleSandbox
 {
-    public class Dumpable : IDumpable
-    {
-        public void DumpTo(TextBuilder textBuilder, DumpOptions? options = default)
-        {
-            textBuilder.Write("Dumpable Default Message");
-        }
-    }
+    // public class Dumpable : IDumpable
+    // {
+    //     public void DumpTo(TextBuilder textBuilder, DumpOptions? options = default)
+    //     {
+    //         textBuilder.Write("Dumpable Default Message");
+    //     }
+    // }
     
     public enum TestEnum : ulong
     {
