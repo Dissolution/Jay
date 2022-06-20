@@ -2,10 +2,12 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+using Jay.Dumping;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Extensions;
 using Jay.Reflection.Internal;
+using Jay.Validation;
 
 // ReSharper disable UnusedMember.Global
 #pragma warning disable CS8321
@@ -293,30 +295,32 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
 
     }
 
-    TEmitter Cast(Type? inputType, Type? outputType)
+    internal Result TryEmitCast(Type? inputType, Type? outputType)
     {
-        if (outputType is null || outputType == typeof(void))
-        {
-            // Output requires nothing, we have nothing loaded
-            return (TEmitter)this;
-        }
+        inputType ??= typeof(void);
+        outputType ??= typeof(void);
 
-        if (outputType == typeof(void*))
+        if (inputType.IsPointer || outputType.IsPointer)
+            return new NotImplementedException(Dump.Text($"Cannot cast from {inputType} to {outputType}: Pointers not supported"));
+        
+        // Have nothing?
+        if (inputType == typeof(void))
         {
-            throw new NotImplementedException("Does not support void*");
+            // Only okay if we also expect nothing
+            if (outputType == typeof(void))
+                return true;
+            return new ArgumentException(Dump.Text($"Cannot cast from {inputType} to {outputType}: Nothing to input"), nameof(inputType));
         }
-
-        if (inputType is null || inputType == typeof(void))
+        
+        // Expect nothing?
+        if (outputType == typeof(void))
         {
-            // We're expecting a value that we're not given
-            throw new ArgumentException("We're expecting a value that we're not given", nameof(inputType));
+            // We know that InputType != null (from above)
+            // So just pop the value off the stack
+            Pop();
+            return true;
         }
-
-        if (inputType == typeof(void*))
-        {
-            throw new NotImplementedException("Does not support void*");
-        }
-
+        
         bool inputIsRef = inputType.IsByRef;
         if (inputIsRef)
         {
@@ -334,63 +338,59 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
         {
             if (inputIsRef == outputIsRef)
             {
-                // Exactly what we want
+                // Exactly what we want, do nothing
             }
-            else if (!inputIsRef)
+            else if (!inputIsRef)  // !inputIsRef == outputIsRef
             {
-                // out is ref
-                throw new NotImplementedException("Non-default outputs are not yet supported");
+                // in -> ref out
+                DeclareLocal(outputType, out var lclOutput)
+                    .Stloc(lclOutput)
+                    .Ldloca(lclOutput);
             }
-            else
+            else   // inputIsRef == !outputIsRef
             {
-                Debug.Assert(!outputIsRef);
-                // in is ref
-                // todo: safety shit
+                // ref in -> out
                 Ldind(outputType);
             }
-            return (TEmitter)this;
+            return true;
         }
 
         // Coming from object?
         if (inputType == typeof(object) && !inputIsRef)
         {
+            // To struct?
             if (outputType.IsValueType)
             {
                 if (!outputIsRef)
                 {
+                    // object -> struct
                     Unbox_Any(outputType);
                 }
                 else
                 {
+                    // object -> ref struct
                     Unbox(outputType);
                 }
             }
+            // To class
             else
             {
                 if (!outputIsRef)
                 {
+                    // object -> class
                     Castclass(outputType);
                 }
                 else
                 {
-                    throw new NotImplementedException("Non-default outputs are not yet supported");
+                    // object -> ref class
+                    return new ArgumentException(Dump.Text($"Cannot cast from {inputType} to {outputType}: Not possible"), nameof(outputType));
                 }
             }
-            return (TEmitter)this;
+            return true;
         }
-
-        if (inputIsRef)
-        {
-            throw new NotImplementedException("Non-default inputs are not yet supported");
-        }
-
-        if (outputIsRef)
-        {
-            throw new NotImplementedException("Non-default outputs are not yet supported");
-        }
-
+        
         // Going to object?
-        if (outputType == typeof(object))
+        if (outputType == typeof(object) && !outputIsRef)
         {
             if (inputType.IsValueType)
             {
@@ -398,22 +398,25 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             }
             else
             {
-                // Is already object
+                // Is already object, do nothing
             }
-            return (TEmitter)this;
+            return true;
         }
 
         // Implements?
-        // TODO: More advanced logic here?
         if (inputType.IsAssignableTo(outputType))
         {
-            //Debug.Assert(inputType.IsClass);
-            //Debug.Assert(outputType.IsClass);
             Castclass(outputType);
-            return (TEmitter)this;
+            return true;
         }
 
-        throw new NotImplementedException($"Cannot cast from {inputType} to {outputType}");
+        return new NotImplementedException(Dump.Text($"Cannot cast from {inputType} to {outputType}: Not implemented"));
+    }
+    
+    TEmitter Cast(Type? inputType, Type? outputType)
+    {
+        TryEmitCast(inputType, outputType).ThrowIfNull();
+        return (TEmitter)this;
     }
 
     TEmitter LoadParams(ParameterInfo paramsParameter, IReadOnlyList<ParameterInfo> parameters)

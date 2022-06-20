@@ -13,6 +13,7 @@ using Jay.Collections;
 using Jay.Comparision;
 using Jay.Dumping;
 using Jay.Dumping.Refactor;
+using Jay.Dumping.Refactor2;
 using Jay.Enums;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
@@ -30,6 +31,12 @@ using Jay.BenchTests.Text;
 using var text = TextBuilder.Borrow();
 
 
+var str = DumpExtensions.Dump<int>(147);
+var str2 = DumpExtensions.Dump<object>(147);
+
+
+var counts = (Dump_Cache._objectDumpCache.Count, Dump_Cache._valueDumpCache.Count);
+
 Debugger.Break();
 
 
@@ -44,6 +51,35 @@ return 0;
 
 namespace ConsoleSandbox
 {
+    public static class Sandbox
+    {
+        public struct TestStruct
+        {
+            
+        }
+
+        public class TestClass
+        {
+            
+        }
+        
+        public static ref TestStruct ToRefStruct(object obj)
+        {
+            return ref Unsafe.Unbox<TestStruct>(obj);
+        }
+        
+        // public static ref TestClass ToRefClass(object obj)
+        // {
+        //     var tc = obj as TestClass;
+        //     return ref tc;
+        // }
+        
+        /*public static ref TestClass ToRefClass(TestClass testClass)
+        {
+            return ref testClass;
+        }*/
+    }
+    
     // public class Dumpable : IDumpable
     // {
     //     public void DumpTo(TextBuilder textBuilder, DumpOptions? options = default)
