@@ -1,13 +1,8 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Reflection;
-using InlineIL;
 using Jay.Collections;
 using Jay.Dumping.Refactor;
-using Jay.Expressions;
-using Jay.Reflection;
 using Jay.Reflection.Building;
-using Jay.Reflection.Building.Emission;
 using Jay.Text;
 using Jay.Validation;
 
@@ -21,8 +16,6 @@ public static class Scratch
     }
 }
 
-public delegate void ValueDump<in T>(T? value, TextBuilder text);
-
 public interface IDumpable
 {
     void DumpTo(TextBuilder text);
@@ -35,6 +28,7 @@ public interface IDumpable
     }
 }
 
+
 public static class Dump_Cache
 {
     internal static readonly ConcurrentTypeDictionary<Delegate> _valueDumpCache;
@@ -44,7 +38,7 @@ public static class Dump_Cache
     {
         _objectDumpCache = new();
         _valueDumpCache = new();
-        _valueDumpCache[typeof(object)] = (ValueDump<object>)(DumpObjectTo);
+        _valueDumpCache[typeof(object)] = (DumpValueTo<object>)(DumpObjectTo);
 
     }
 
@@ -60,7 +54,7 @@ public static class Dump_Cache
         {
             var valueDumpDel = GetDumpValueDelegate(type);
             var valueDumpDelInvokeMethod = valueDumpDel.Method;
-            return RuntimeBuilder.CreateDelegate<ValueDump<object>>($"Dump_Object_{type}",
+            return RuntimeBuilder.CreateDelegate<DumpValueTo<object>>($"Dump_Object_{type}",
                 runtimeMethod =>
                 {
                     var emitter = runtimeMethod.Emitter;
@@ -73,7 +67,7 @@ public static class Dump_Cache
                 });
         });
 
-        if (del is ValueDump<object> objectDump)
+        if (del is DumpValueTo<object> objectDump)
         {
             objectDump(obj, text);
         }
@@ -109,12 +103,12 @@ public static class Dump_Cache
                 BindingFlags.NonPublic | BindingFlags.Static)
             .ThrowIfNull()
             .MakeGenericMethod(valueType);
-        return Delegate.CreateDelegate(typeof(ValueDump<>).MakeGenericType(valueType), method);
+        return Delegate.CreateDelegate(typeof(DumpValueTo<>).MakeGenericType(valueType), method);
     }
 
-    private static ValueDump<T> CreateValueDumpDelegate<T>()
+    private static DumpValueTo<T> CreateValueDumpDelegate<T>()
     {
-        return (CreateValueDumpDelegate(typeof(T)) as ValueDump<T>)!;
+        return (CreateValueDumpDelegate(typeof(T)) as DumpValueTo<T>)!;
     }
     
     internal static Delegate GetDumpValueDelegate(Type type)
@@ -123,10 +117,10 @@ public static class Dump_Cache
         return del;
     }
     
-    internal static ValueDump<T> GetDumpValueDelegate<T>()
+    internal static DumpValueTo<T> GetDumpValueDelegate<T>()
     {
         var del = _valueDumpCache.GetOrAdd<T>(CreateValueDumpDelegate);
-        if (del is ValueDump<T> valueDump)
+        if (del is DumpValueTo<T> valueDump)
             return valueDump;
         throw new InvalidOperationException();
     }
