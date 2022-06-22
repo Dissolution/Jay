@@ -7,7 +7,7 @@ using Jay.Text;
 
 namespace Jay.Collections;
 
-public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
+public sealed class DynamicTree : DynamicObject, IEnumerable<object?>, IDumpable
 {
     public static dynamic Create()
     {
@@ -44,11 +44,11 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
         return _hasValue;
     }
 
-    private void Dump(TextBuilder text, DumpOptions options, int indent)
+    private void Dump(TextBuilder text, int indent)
     {
         if (_hasValue)
         {
-            text.AppendDump(_value, options).WriteLine();
+            text.AppendDump(_value).WriteLine();
         }
 
         foreach (var item in _branches.Indexed())
@@ -64,7 +64,7 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
                 text.Write('├');
             }
             text.Append('[')
-                .AppendDump(branch.Key, options)
+                .AppendDump(branch.Key)
                 .Write(']');
             if (branch.Value._hasValue)
             {
@@ -74,7 +74,7 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
             {
                 text.WriteLine();
             }
-            branch.Value.Dump(text, options, indent + 1);
+            branch.Value.Dump(text, indent + 1);
         }
     }
         
@@ -147,12 +147,10 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
     {
         return UnsuitableException.ThrowGetHashCode(this);
     }
-        
+
     /// <inheritdoc />
-    public override string ToString()
+    public void DumpTo(TextBuilder text)
     {
-        using var text = TextBuilder.Borrow();
-        var options = new DumpOptions(true);
         text.Write("DynamicTree");
         if (_hasValue)
         {
@@ -162,7 +160,8 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
         {
             text.WriteLine();
         }
-        Dump(text, options, 0);
-        return text.ToString();
+        Dump(text, 0);
     }
+    
+    public override string ToString() => this.Dump();
 }

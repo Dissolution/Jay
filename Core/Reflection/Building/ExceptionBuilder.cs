@@ -18,7 +18,7 @@ public static class ExceptionBuilder
     private static CommonExceptionConstructor<TException> CreateCtor<TException>(Type exceptionType)
         where TException : Exception
     {
-        var dm = RuntimeBuilder.CreateMethod<CommonExceptionConstructor<TException>>($"ctor_{typeof(TException).Name}");
+        var dm = RuntimeBuilder.CreateRuntimeMethod<CommonExceptionConstructor<TException>>($"ctor_{typeof(TException).Name}");
         var emitter = dm.Emitter;
         ConstructorInfo? ctor;
         ctor = exceptionType.GetConstructor(Reflect.InstanceFlags, new Type[2] { typeof(string), typeof(Exception) });

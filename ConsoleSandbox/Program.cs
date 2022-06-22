@@ -12,11 +12,10 @@ using Jay;
 using Jay.Collections;
 using Jay.Comparision;
 using Jay.Dumping;
-using Jay.Dumping.Refactor2;
 using Jay.Enums;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
-using Dumper = Jay.Dumping.Refactor2.Dumper;
+using Dumper = Jay.Dumping.Dumper;
 
 //using TextBuilder = Jay.Text.Scratch.TextBuilder;
 

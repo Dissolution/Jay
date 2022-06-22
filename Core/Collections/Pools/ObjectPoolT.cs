@@ -126,7 +126,9 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     {
         if (IsDisposed)
         {
-            throw new ObjectDisposedException(Dump.Value(GetType()), Dump.Text($"This {GetType()} has been disposed"));
+            throw new ObjectDisposedException(
+                Dumper.Dump(GetType()), 
+                Dumper.Dump($"This {GetType()} has been disposed"));
         }
     }
 

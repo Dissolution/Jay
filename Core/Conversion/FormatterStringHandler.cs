@@ -118,12 +118,12 @@ public ref struct FormatterStringHandler
     
     public override bool Equals(object? obj)
     {
-        return UnsuitableException.ThrowEquals(typeof(DumpStringHandler));
+        return UnsuitableException.ThrowEquals(typeof(FormatterStringHandler));
     }
 
     public override int GetHashCode()
     {
-        return UnsuitableException.ThrowGetHashCode(typeof(DumpStringHandler));
+        return UnsuitableException.ThrowGetHashCode(typeof(FormatterStringHandler));
     }
 
     public override string ToString()

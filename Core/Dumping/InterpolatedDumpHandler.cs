@@ -1,7 +1,7 @@
 ﻿using Jay.Exceptions;
 using Jay.Text;
 
-namespace Jay.Dumping.Refactor2;
+namespace Jay.Dumping;
 
 [InterpolatedStringHandler]
 public ref struct InterpolatedDumpHandler

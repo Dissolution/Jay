@@ -30,7 +30,7 @@ public static class RuntimeBuilder
             true);
     }
    
-    public static RuntimeMethod CreateMethod(MethodSig methodSig, string? name = null)
+    public static RuntimeMethod CreateRuntimeMethod(MethodSig methodSig, string? name = null)
     {
         return new RuntimeMethod(CreateDynamicMethod(methodSig, name), methodSig);
     }
@@ -44,7 +44,7 @@ public static class RuntimeBuilder
     {
         if (!delegateType.Implements<Delegate>())
             throw new ArgumentException("Must be a delegate", nameof(delegateType));
-        var runtimeMethod = CreateMethod(MethodSig.Of(delegateType), name);
+        var runtimeMethod = CreateRuntimeMethod(MethodSig.Of(delegateType), name);
         buildDelegate(runtimeMethod);
         return runtimeMethod.CreateDelegate(delegateType);
     }
@@ -58,28 +58,42 @@ public static class RuntimeBuilder
     {
         if (!delegateType.Implements<Delegate>())
             throw new ArgumentException("Must be a delegate", nameof(delegateType));
-        var runtimeMethod = CreateMethod(MethodSig.Of(delegateType), name);
+        var runtimeMethod = CreateRuntimeMethod(MethodSig.Of(delegateType), name);
         emitDelegate(runtimeMethod.Emitter);
         return runtimeMethod.CreateDelegate(delegateType);
     }
     
-    public static RuntimeMethod<TDelegate> CreateMethod<TDelegate>(string? name = null)
+    public static RuntimeMethod<TDelegate> CreateRuntimeMethod<TDelegate>(string? name = null)
         where TDelegate : Delegate
     {
         return new RuntimeMethod<TDelegate>(CreateDynamicMethod(MethodSig.Of<TDelegate>(), name));
     }
-
+    
     public static TDelegate CreateDelegate<TDelegate>(Action<RuntimeMethod<TDelegate>> buildDelegate)
         where TDelegate : Delegate
     {
         return CreateDelegate<TDelegate>(null, buildDelegate);
     }
+    
+    public static TDelegate CreateDelegate<TDelegate>(Action<IILGeneratorEmitter> emitDelegate)
+        where TDelegate : Delegate
+    {
+        return CreateDelegate<TDelegate>(null, emitDelegate);
+    }
 
     public static TDelegate CreateDelegate<TDelegate>(string? name, Action<RuntimeMethod<TDelegate>> buildDelegate)
         where TDelegate : Delegate
     {
-        var runtimeMethod = CreateMethod<TDelegate>(name);
+        var runtimeMethod = CreateRuntimeMethod<TDelegate>(name);
         buildDelegate(runtimeMethod);
+        return runtimeMethod.CreateDelegate();
+    }
+    
+    public static TDelegate CreateDelegate<TDelegate>(string? name, Action<IILGeneratorEmitter> emitDelegate)
+        where TDelegate : Delegate
+    {
+        var runtimeMethod = CreateRuntimeMethod<TDelegate>(name);
+        emitDelegate(runtimeMethod.Emitter);
         return runtimeMethod.CreateDelegate();
     }
 
@@ -96,7 +110,7 @@ public static class RuntimeBuilder
     {
         var ctor = typeof(TAttribute).GetConstructor(Reflect.InstanceFlags, Type.EmptyTypes);
         if (ctor is null)
-            Dump.ThrowException<InvalidOperationException>($"Cannot find an empty {typeof(TAttribute)} constructor.");
+            Dumper.ThrowException<InvalidOperationException>($"Cannot find an empty {typeof(TAttribute)} constructor.");
         return new CustomAttributeBuilder(ctor, Array.Empty<object>());
     }
 
@@ -105,17 +119,17 @@ public static class RuntimeBuilder
     {
         var ctor = MemberSearch.FindBestConstructor(typeof(TAttribute), Reflect.InstanceFlags, ctorArgs);
         if (ctor is null)
-            Dump.ThrowException<InvalidOperationException>($"Cannot find a {typeof(TAttribute)} constructor that matches {ctorArgs}");
+            Dumper.ThrowException<InvalidOperationException>($"Cannot find a {typeof(TAttribute)} constructor that matches {ctorArgs}");
         return new CustomAttributeBuilder(ctor, ctorArgs);
     }
 
     public static CustomAttributeBuilder GetCustomAttributeBuilder(Type attributeType, params object?[] ctorArgs)
     {
         if (!attributeType.Implements<Attribute>())
-            Dump.ThrowException<ArgumentException>($"{attributeType} is not an Attribute");
+            Dumper.ThrowException<ArgumentException>($"{attributeType} is not an Attribute");
         var ctor = MemberSearch.FindBestConstructor(attributeType, Reflect.InstanceFlags, ctorArgs);
         if (ctor is null)
-            Dump.ThrowException<InvalidOperationException>($"Cannot find a {attributeType} constructor that matches {ctorArgs}");
+            Dumper.ThrowException<InvalidOperationException>($"Cannot find a {attributeType} constructor that matches {ctorArgs}");
         return new CustomAttributeBuilder(ctor, ctorArgs);
     }
 }

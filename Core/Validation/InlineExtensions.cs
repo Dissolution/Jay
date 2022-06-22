@@ -34,7 +34,7 @@ public static class InlineExtensions
         {
             throw new ArgumentNullException(
                 valueName,
-                Dump.Text($"{typeof(T)} value is null"));
+                Dumper.Dump($"{typeof(T)} value is null"));
         }
         return value;
     }
@@ -42,14 +42,14 @@ public static class InlineExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNull]
     public static T ThrowIfNull<T>([NotNull] this T? value,
-                                   ref DumpStringHandler message,
+                                   ref InterpolatedDumpHandler message,
                                    [CallerArgumentExpression("value")] string? valueName = null)
     {
         if (value is null)
         {
             throw new ArgumentNullException(
                 valueName,
-                message.ToStringAndClear());
+                message.ToStringAndDispose());
         }
         return value;
     }

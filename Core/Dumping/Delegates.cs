@@ -1,8 +1,9 @@
 ﻿using Jay.Text;
+
 // ReSharper disable TypeParameterCanBeVariant
 // ReSharper disable UseNullableAnnotationInsteadOfAttribute
 
-namespace Jay.Dumping.Refactor2;
+namespace Jay.Dumping;
 
 /// <summary>
 /// Dumps a <typeparamref name="T"/> <paramref name="value"/> to a <paramref name="textBuilder"/>

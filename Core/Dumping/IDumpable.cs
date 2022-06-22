@@ -1,6 +1,6 @@
 ﻿using Jay.Text;
 
-namespace Jay.Dumping.Refactor2;
+namespace Jay.Dumping;
 
 public interface IDumpable
 {
@@ -12,4 +12,6 @@ public interface IDumpable
         DumpTo(text);
         return text.ToString();
     }
+
+    string ToString() => Dump();
 }

@@ -71,7 +71,7 @@ public ref struct ByteReader
         where T : unmanaged
     {
         if (!TryRead<T>(out var value))
-            throw Dump.GetException<InvalidOperationException>($"Cannot read a {typeof(T)} value");
+            throw Dumper.GetException<InvalidOperationException>($"Cannot read a {typeof(T)} value");
         return value;
     }
 }

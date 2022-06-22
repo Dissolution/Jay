@@ -301,7 +301,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
         outputType ??= typeof(void);
 
         if (inputType.IsPointer || outputType.IsPointer)
-            return new NotImplementedException(Dump.Text($"Cannot cast from {inputType} to {outputType}: Pointers not supported"));
+            return new NotImplementedException(Dumper.Dump($"Cannot cast from {inputType} to {outputType}: Pointers not supported"));
         
         // Have nothing?
         if (inputType == typeof(void))
@@ -309,7 +309,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             // Only okay if we also expect nothing
             if (outputType == typeof(void))
                 return true;
-            return new ArgumentException(Dump.Text($"Cannot cast from {inputType} to {outputType}: Nothing to input"), nameof(inputType));
+            return new ArgumentException(Dumper.Dump($"Cannot cast from {inputType} to {outputType}: Nothing to input"), nameof(inputType));
         }
         
         // Expect nothing?
@@ -383,7 +383,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
                 else
                 {
                     // object -> ref class
-                    return new ArgumentException(Dump.Text($"Cannot cast from {inputType} to {outputType}: Not possible"), nameof(outputType));
+                    return new ArgumentException(Dumper.Dump($"Cannot cast from {inputType} to {outputType}: Not possible"), nameof(outputType));
                 }
             }
             return true;
@@ -410,7 +410,7 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             return true;
         }
 
-        return new NotImplementedException(Dump.Text($"Cannot cast from {inputType} to {outputType}: Not implemented"));
+        return new NotImplementedException(Dumper.Dump($"Cannot cast from {inputType} to {outputType}: Not implemented"));
     }
     
     TEmitter Cast(Type? inputType, Type? outputType)

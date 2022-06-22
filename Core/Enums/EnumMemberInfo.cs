@@ -1,14 +1,14 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using Jay.Text;
-using DumpAsAttribute = Jay.Dumping.Refactor2.DumpAsAttribute;
-using IDumpable = Jay.Dumping.Refactor2.IDumpable;
+using DumpAsAttribute = Jay.Dumping.DumpAsAttribute;
+using IDumpable = Jay.Dumping.IDumpable;
 
 namespace Jay.Enums;
 
 public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>, 
                                       IEquatable<TEnum>,
-                                      IDumpable
+                                      Dumping.IDumpable
     where TEnum : struct, Enum
 {
     private readonly TEnum _enum;

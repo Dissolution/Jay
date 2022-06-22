@@ -209,7 +209,7 @@ namespace Jay.Reflection.Cloning;
 
     private static CloneDelegate<T> CreateCloneDelegate<T>(Type type)
     {
-        var dm = RuntimeBuilder.CreateDynamicMethod<CloneDelegate<T>>(Dump.Text($"clone_{type}"));
+        var dm = RuntimeBuilder.CreateDynamicMethod<CloneDelegate<T>>(Dumper.Dump($"clone_{type}"));
         var emitter = dm.Emitter;
         // Start with a blank clone
         emitter.DeclareLocal<T>(out var clone);
@@ -407,7 +407,7 @@ public static class Muq
 
         var delType = typeof(CloneValue<>).MakeGenericType(type);
 
-        var dm = RuntimeBuilder.CreateDynamicMethod(MethodSig.Of(delType), Dump.Text($"{type}_clone"));
+        var dm = RuntimeBuilder.CreateDynamicMethod(MethodSig.Of(delType), Dumper.Dump($"{type}_clone"));
             
         var emitter = dm.GetEmitter();
 

@@ -803,6 +803,20 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         }
         return this;
     }
+    
+    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, T[] values, Action<TextBuilder, T> appendValue)
+    {
+        if (values.Length >= 1)
+        {
+            appendValue(this, values[0]);
+            for (var i = 1; i < values.Length; i++)
+            {
+                Write(delimiter);
+                appendValue(this, values[i]);
+            }
+        }
+        return this;
+    }
 
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T> values, Action<TextBuilder, T> appendValue)
     {

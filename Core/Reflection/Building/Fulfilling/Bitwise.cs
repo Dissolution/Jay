@@ -101,12 +101,12 @@ public static class TypeOperatorCache
             {
                 if (delSig.ParameterCount != 1)
                 {
-                    return Dump.GetException<ArgumentException>($"{typeof(TDelegate)} is not valid for Unary Operand {@operator}", nameof(@operator));
+                    return Dumper.GetException<ArgumentException>($"{typeof(TDelegate)} is not valid for Unary Operand {@operator}", nameof(@operator));
                 }
                 var returnType = delSig.ReturnType;
                 if (returnType != delSig.ParameterTypes[0])
                 {
-                    return Dump.GetException<ArgumentException>($"{typeof(TDelegate)} is not valid for Unary Operand {@operator}", nameof(@operator));
+                    return Dumper.GetException<ArgumentException>($"{typeof(TDelegate)} is not valid for Unary Operand {@operator}", nameof(@operator));
                 }
                 
             }

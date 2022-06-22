@@ -6,8 +6,7 @@ public static class MemberInfoExtensions
 {
     public static Type? OwnerType(this MemberInfo? memberInfo)
     {
-        return memberInfo?.ReflectedType ??
-               memberInfo?.DeclaringType;
+        return memberInfo?.ReflectedType ?? memberInfo?.DeclaringType;
     }
 
     internal static Result TryGetInstanceType(this MemberInfo? memberInfo, [NotNullWhen(true)] out Type? instanceType)

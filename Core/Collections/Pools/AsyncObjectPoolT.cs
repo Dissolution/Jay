@@ -29,12 +29,12 @@ public class AsyncObjectPool<T> : ObjectPool<T>, IAsyncObjectPool<T>,
                 cts.Cancel();
                 if (completed == task)
                     return await task.ConfigureAwait(false);
-                throw new TimeoutException(Dump.Text($"Could not create a {typeof(T)} instance in {_timeout}"));
+                throw new TimeoutException(Dumper.Dump($"Could not create a {typeof(T)} instance in {_timeout}"));
             }).GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
-            var dex = Dump.Value(ex);
+            var dex = Dumper.Dump(ex);
             Debugger.Break();
             throw;
         }

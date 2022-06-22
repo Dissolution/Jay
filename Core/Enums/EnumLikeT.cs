@@ -166,7 +166,7 @@ public abstract class EnumLike<TEnum> : EnumLike, IEquatable<TEnum>, IComparable
         if (obj is null) return 1;
         if (obj is TEnum @enum)
             return CompareTo(@enum);
-        throw Dump.GetException<ArgumentException>($"{obj.GetType()} is not a valid {typeof(TEnum)}", nameof(obj));
+        throw Dumper.GetException<ArgumentException>($"{obj.GetType()} is not a valid {typeof(TEnum)}", nameof(obj));
     }
 
     public virtual bool Equals(TEnum? @enum)
