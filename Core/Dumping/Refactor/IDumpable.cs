@@ -1,13 +1,15 @@
 ﻿using Jay.Text;
 
-namespace Jay.Dumping.Refactor;
+namespace Jay.Dumping.Refactor2;
 
 public interface IDumpable
 {
-    /// <summary>
-    /// Dumps this value to a <paramref name="textBuilder"/> with <paramref name="options"/>
-    /// </summary>
-    /// <param name="textBuilder"></param>
-    /// <param name="options"></param>
-    void DumpTo(TextBuilder textBuilder, DumpOptions? options = default);
+    void DumpTo(TextBuilder text);
+
+    string Dump()
+    {
+        using var text = TextBuilder.Borrow();
+        DumpTo(text);
+        return text.ToString();
+    }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using Jay.Validation;
 
 namespace Jay.Text;
@@ -25,6 +24,7 @@ internal static class TextBuilderReflections
             .Where(method => method.Name == nameof(TextBuilder.Write))
             .Where(method => method.GetParameters().Length == 1)
             .ToList();
+        // See if we can write the valueType directly (not through T)
         var writeMethod = writeMethods.FirstOrDefault(method =>
         {
             var arg = method.GetParameters()[0];
@@ -34,7 +34,8 @@ internal static class TextBuilderReflections
             return writeMethod;
         
         // Use Write<T>
-        writeMethod = writeMethods.Where(method => method.ContainsGenericParameters)
+        writeMethod = writeMethods
+            .Where(method => method.ContainsGenericParameters)
             .OneOrDefault();
         if (writeMethod is not null)
             return writeMethod.MakeGenericMethod(valueType);

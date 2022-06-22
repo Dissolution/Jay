@@ -1,12 +1,14 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using InlineIL;
-using Jay.Dumping.Refactor;
+using Jay.Text;
+using DumpAsAttribute = Jay.Dumping.Refactor2.DumpAsAttribute;
+using IDumpable = Jay.Dumping.Refactor2.IDumpable;
 
 namespace Jay.Enums;
 
 public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>, 
-                                      IEquatable<TEnum>
+                                      IEquatable<TEnum>,
+                                      IDumpable
     where TEnum : struct, Enum
 {
     private readonly TEnum _enum;
@@ -57,6 +59,20 @@ public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>,
     }
 
     public override int GetHashCode() => EnumComparer<TEnum>.Default.GetHashCode(_enum);
+
+    /// <inheritdoc />
+    public void DumpTo(TextBuilder text)
+    {
+        var attr = GetAttribute<DumpAsAttribute>();
+        if (attr is not null)
+        {
+            text.Write(attr.ToString());
+        }
+        else
+        {
+            text.Write(Name);
+        }
+    }
 
     public override string ToString()
     {

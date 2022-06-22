@@ -1,7 +1,7 @@
-﻿/*using Jay.Exceptions;
+﻿using Jay.Exceptions;
 using Jay.Text;
 
-namespace Jay.Dumping.Refactor;
+namespace Jay.Dumping.Refactor2;
 
 [InterpolatedStringHandler]
 public ref struct InterpolatedDumpHandler
@@ -25,6 +25,7 @@ public ref struct InterpolatedDumpHandler
     {
         _textBuilder.Write(text);
     }
+    
     public void AppendFormatted(char ch)
     {
         _textBuilder.Write(ch);
@@ -40,14 +41,14 @@ public ref struct InterpolatedDumpHandler
         _textBuilder.Write(text);
     }
     
-    public void AppendFormatted(object? value, string? format = null)
+    public void AppendFormatted(object? value)
     {
-        AppendFormatted<object>(value, format);
+        Dumper.DumpValueTo<object>(value, _textBuilder);
     }
     
-    public void AppendFormatted<T>(T? value, string? format = null)
+    public void AppendFormatted<T>(T? value)
     {
-        Dumping.Dumper.Dump(value, _textBuilder, new DumpOptions{ Format = format});
+        Dumper.DumpValueTo<T>(value, _textBuilder);
     }
 
     public void Dispose()
@@ -62,9 +63,9 @@ public ref struct InterpolatedDumpHandler
         return str;
     }
 
-    public override bool Equals(object? obj) => UnsuitableException.ThrowEquals(typeof(Dumping.Dumper));
+    public override bool Equals(object? obj) => UnsuitableException.ThrowEquals(typeof(InterpolatedDumpHandler));
 
-    public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(typeof(Dumping.Dumper));
+    public override int GetHashCode() => UnsuitableException.ThrowGetHashCode(typeof(InterpolatedDumpHandler));
 
     public override string ToString() => _textBuilder.ToString();
-}*/
+}

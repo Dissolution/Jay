@@ -1,38 +1,23 @@
-﻿using Jay.Text;
-
-namespace Jay.Dumping.Refactor;
+﻿namespace Jay.Dumping.Refactor2;
 
 [AttributeUsage(AttributeTargets.Enum)]
-public class DumpAsAttribute : Attribute
+public sealed class DumpAsAttribute : Attribute
 {
-    public string? DumpString { get; }
+    internal string DumpAs { get; }
 
     public DumpAsAttribute(char ch)
     {
         if (ch == default)
-        {
-            DumpString = default;
-        }
-        else
-        {
-            DumpString = new string(ch, 1);
-        }
+            throw new ArgumentException("Cannot dump as '\\0'", nameof(ch));
+        DumpAs = new string(ch, 1);
     }
 
-    public DumpAsAttribute(string? dump)
+    public DumpAsAttribute(string str)
     {
-        if (string.IsNullOrWhiteSpace(dump))
-        {
-            DumpString = default;
-        }
-        else
-        {
-            DumpString = dump;
-        }
+        if (string.IsNullOrWhiteSpace(str))
+            throw new ArgumentException("Cannot dump as null or whitespace", nameof(str));
+        DumpAs = str;
     }
 
-    public override string ToString()
-    {
-        return $"Dump as '{DumpString}'";
-    }
+    public override string ToString() => DumpAs;
 }

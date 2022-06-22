@@ -12,11 +12,11 @@ using Jay;
 using Jay.Collections;
 using Jay.Comparision;
 using Jay.Dumping;
-using Jay.Dumping.Refactor;
 using Jay.Dumping.Refactor2;
 using Jay.Enums;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
+using Dumper = Jay.Dumping.Refactor2.Dumper;
 
 //using TextBuilder = Jay.Text.Scratch.TextBuilder;
 
@@ -35,7 +35,7 @@ var str = DumpExtensions.Dump<int>(147);
 var str2 = DumpExtensions.Dump<object>(147);
 
 
-var counts = (Dump_Cache._objectDumpCache.Count, Dump_Cache._valueDumpCache.Count);
+var counts = (Dumper._objectDumpCache.Count, Dumper._valueDumpCache.Count);
 
 Debugger.Break();
 
