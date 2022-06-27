@@ -6,6 +6,12 @@
         <Nullable>enable</Nullable>
         <AssemblyName>Jay.Geometry</AssemblyName>
         <RootNamespace>Jay.Geometry</RootNamespace>
+        <LangVersion>preview</LangVersion>
+        <EnablePreviewFeatures>true</EnablePreviewFeatures>
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
+    </ItemGroup>
 
 </Project>
