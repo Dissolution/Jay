@@ -34,8 +34,6 @@ var str = DumpExtensions.Dump<int>(147);
 var str2 = DumpExtensions.Dump<object>(147);
 
 
-var counts = (Dumper._objectDumpCache.Count, Dumper._valueDumpCache.Count);
-
 Debugger.Break();
 
 
