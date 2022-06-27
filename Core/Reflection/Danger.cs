@@ -1,4 +1,6 @@
-﻿using static InlineIL.IL;
+﻿using System.Runtime.InteropServices;
+using InlineIL;
+using static InlineIL.IL;
 
 // ReSharper disable EntityNameCapturedOnly.Global
 
@@ -123,6 +125,13 @@ public static unsafe class Danger
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Span<T> VoidPointerToSpan<T>(void* pointer, int length)
+        where T : unmanaged
+    {
+        return new Span<T>(pointer, length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* PointerToVoidPointer<T>(T* pointer)
         where T : unmanaged
     {
@@ -137,6 +146,13 @@ public static unsafe class Danger
     {
         Emit.Ldarg(nameof(pointer));
         return ref ReturnRef<T>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Span<T> PointerToSpan<T>(T* pointer, int length)
+        where T : unmanaged
+    {
+        return new Span<T>(pointer, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -158,10 +174,16 @@ public static unsafe class Danger
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref T InToRef<T>(in T @in)
-        where T : unmanaged
     {
         Emit.Ldarg(nameof(@in));
         return ref ReturnRef<T>();
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Span<T> InToSpan<T>(in T @in, int length)
+    {
+        return MemoryMarshal.CreateSpan(ref InToRef<T>(in @in), length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -181,28 +203,93 @@ public static unsafe class Danger
         return ReturnPointer<T>();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Span<T> RefToSpan<T>(ref T @ref, int length)
+    {
+        return MemoryMarshal.CreateSpan<T>(ref @ref, length);
+    }
+
+    /// <remarks>
+    /// This is stupid and dangerous
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref T OutToRef<T>(out T @out)
+    {
+        Emit.Ldarg(nameof(@out));
+        Emit.Ret();
+        throw Unreachable();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void* SpanToVoidPointer<T>(Span<T> span)
+        where T : unmanaged
+    {
+        return RefToVoidPointer(ref span.GetPinnableReference());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* SpanToPointer<T>(Span<T> span)
+        where T : unmanaged
+    {
+        return RefToPointer(ref span.GetPinnableReference());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref T SpanToRef<T>(Span<T> span)
+    {
+        return ref span.GetPinnableReference();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Span<T> ReadOnlySpanToSpan<T>(ReadOnlySpan<T> readOnlySpan)
+    {
+        ref T first = ref MemoryMarshal.GetReference(readOnlySpan);
+        return MemoryMarshal.CreateSpan(ref first, readOnlySpan.Length);
+    }
+
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void* ReadOnlySpanToVoidPointer<T>(ReadOnlySpan<T> span)
+        where T : unmanaged
+    {
+        return RefToVoidPointer<T>(ref ReadOnlySpanToRef<T>(span));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* ReadOnlySpanToPointer<T>(ReadOnlySpan<T> span)
+        where T : unmanaged
+    {
+        return RefToPointer<T>(ref ReadOnlySpanToRef(span));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref T ReadOnlySpanToRef<T>(ReadOnlySpan<T> readOnlySpan)
+    {
+        return ref MemoryMarshal.GetReference(readOnlySpan);
+    }
+
 #endregion
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull("obj")]
-    public static T? As<T>(object? obj)
+    public static T? CastClass<T>(object? obj)
         where T : class
     {
         Emit.Ldarg(nameof(obj));
-        // Emit.Castclass<T>();
+        Emit.Castclass<T>();
         return Return<T>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TOut As<TIn, TOut>(TIn input)
+    public static TOut DirectCast<TIn, TOut>(TIn input)
     {
         Emit.Ldarg(nameof(input));
         return Return<TOut>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref TOut As<TIn, TOut>(ref TIn source)
+    public static ref TOut DirectCast<TIn, TOut>(ref TIn source)
     {
         Emit.Ldarg(nameof(source));
         return ref ReturnRef<TOut>();
@@ -210,7 +297,7 @@ public static unsafe class Danger
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref T Unbox<T>(object box)
+    public static ref T UnboxToRef<T>(object box)
         where T : struct
     {
         //Push(box);
@@ -320,6 +407,29 @@ public static unsafe class Danger
         Emit.Unaligned(1);
         Emit.Initblk();
     }
+    
+    /// <summary>
+    /// Makes an exact copy of the given <see cref="byte"/> array.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte[] Copy(byte[] bytes)
+    {
+        DeclareLocals(new LocalVar("len", typeof(int)),
+            new LocalVar("newArray", typeof(byte[])));
+        Emit.Ldarg(nameof(bytes));
+        Emit.Ldlen();
+        Emit.Stloc("len");
+        Emit.Ldloc("len");
+        Emit.Newarr(typeof(byte));
+        Emit.Stloc("newArray");
+        Emit.Ldloca("newArray");
+        Emit.Ldarga(nameof(bytes));
+        Emit.Ldloc("len");
+        Emit.Cpblk();
+        Emit.Ldloc("newArray");
+        return Return<byte[]>();
+    }
+
 
 #endregion
 
@@ -431,7 +541,7 @@ public static unsafe class Danger
         Emit.Conv_U();
         return ref ReturnRef<T>();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe T* NullPointer<T>()
         where T : unmanaged
@@ -440,4 +550,29 @@ public static unsafe class Danger
         Emit.Conv_U();
         return ReturnPointer<T>();
     }
+
+#region Spans
+
+   
+
+    // in T
+
+    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // public static Span<char> AsSpan(in string text)
+    // {
+    //     fixed (char* ptr = text)
+    //     {
+    //         return PointerToSpan<char>(ptr, text.Length);
+    //     }
+    // }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Span<char> AsSpan(in string text)
+    {
+        ref readonly char ch = ref text.GetPinnableReference();
+        return MemoryMarshal.CreateSpan<char>(
+            ref InToRef(in ch), text.Length);
+    }
+
+#endregion
 }

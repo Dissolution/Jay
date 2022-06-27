@@ -7,15 +7,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using ConsoleSandbox;
 using Jay;
 using Jay.Collections;
-using Jay.Comparision;
 using Jay.Dumping;
-using Jay.Enums;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
-using Dumper = Jay.Dumping.Dumper;
 
 //using TextBuilder = Jay.Text.Scratch.TextBuilder;
 
@@ -30,13 +26,11 @@ using Jay.BenchTests.Text;
 using var text = TextBuilder.Borrow();
 
 
-var str = DumpExtensions.Dump<int>(147);
-var str2 = DumpExtensions.Dump<object>(147);
+var type = typeof(Dictionary<string, object?>);
+var def = type.GetDefaultValue();
 
 
 Debugger.Break();
-
-
 
 Console.WriteLine(text.ToString());
 #endif

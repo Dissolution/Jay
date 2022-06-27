@@ -77,7 +77,7 @@ public static class MemberSearch
     {
         if (argType is null)
         {
-            return paramType.CanBeNull();
+            return paramType.CanContainNull();
         }
 
         if (argType == paramType) return true;

@@ -8,12 +8,18 @@ namespace Jay.Enums;
 
 public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>, 
                                       IEquatable<TEnum>,
-                                      Dumping.IDumpable
+                                      IDumpable
     where TEnum : struct, Enum
 {
+    public static implicit operator TEnum(EnumMemberInfo<TEnum> enumMemberInfo) => enumMemberInfo.Enum;
+    public static implicit operator EnumMemberInfo<TEnum>(TEnum @enum) => EnumInfo.For<TEnum>(@enum);
+    public static bool operator ==(EnumMemberInfo<TEnum> x, EnumMemberInfo<TEnum> y) => x.Equals(y);
+    public static bool operator !=(EnumMemberInfo<TEnum> x, EnumMemberInfo<TEnum> y) => !(x == y);
+
     private readonly TEnum _enum;
     private readonly string _name;
     private readonly Attribute[] _attributes;
+    private readonly string _dump;
 
     public TEnum Enum => _enum;
     public string Name => _name;
@@ -24,6 +30,15 @@ public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>,
         _name = enumMemberField.Name;
         _attributes = Attribute.GetCustomAttributes(enumMemberField, true);
         _enum = (TEnum)enumMemberField.GetValue(null)!;
+        var dumpAttr = GetAttribute<DumpAsAttribute>();
+        if (dumpAttr is not null)
+        {
+            _dump = dumpAttr.DumpAs;
+        }
+        else
+        {
+            _dump = _name;
+        }
     }
 
     public EnumMemberInfo(TEnum flag, string? name = null)
@@ -31,6 +46,7 @@ public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>,
         _enum = flag;
         _name = name ?? flag.ToString();
         _attributes = Array.Empty<Attribute>();
+        _dump = _name;
     }
 
     public TAttribute? GetAttribute<TAttribute>() where TAttribute : Attribute

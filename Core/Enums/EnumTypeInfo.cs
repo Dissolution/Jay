@@ -32,6 +32,7 @@ public abstract class EnumTypeInfo
 
     public Type EnumType { get; }
     public IReadOnlyList<Attribute> Attributes => _attributes;
+    public bool HasFlags => _attributes.OfType<FlagsAttribute>().Any();
     public string Name { get; }
 
     protected EnumTypeInfo(Type enumType)
@@ -73,5 +74,25 @@ public class EnumTypeInfo<TEnum> : EnumTypeInfo
     public EnumMemberInfo<TEnum> GetMemberInfo(TEnum @enum)
     {
         return _enumMemberInfos.GetOrAdd(@enum, e => new EnumMemberInfo<TEnum>(e));
+    }
+    
+    public static bool TryParse(ReadOnlySpan<char> value, out TEnum @enum)
+    {
+        if (value.Length == 0)
+        {
+            @enum = default;
+            return false;
+        }
+
+        // Try to use the built-in parser
+        if (Enum.TryParse(value, true, out @enum))
+        {
+            return true;
+        }
+        
+        // TODO: Check int value and string values against name/dump
+
+        @enum = default;
+        return false;
     }
 }

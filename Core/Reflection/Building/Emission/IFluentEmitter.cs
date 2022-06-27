@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using Jay.Dumping;
-using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Extensions;
 using Jay.Reflection.Internal;

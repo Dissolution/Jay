@@ -5,7 +5,6 @@ namespace Jay;
 
 public static class GenericExtensions
 {
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsDefault<T>(this T? value)
     {
@@ -85,5 +84,14 @@ public static class GenericExtensions
                 return true;
         }
         return false;
+    }
+    
+    /// <summary>
+    /// Pushes this <paramref name="value"/> to an <see langword="out"/> <paramref name="output"/>.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Out<T>(this T value, out T output)
+    {
+        output = value;
     }
 }

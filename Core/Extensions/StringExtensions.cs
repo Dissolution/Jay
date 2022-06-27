@@ -2,13 +2,11 @@
 
 public static class StringExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrEmpty([NotNullWhen(false)] this string? text)
     {
         return text == null || (uint)text.Length <= 0u;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? text)
     {
         if (text == null) return true;
@@ -18,8 +16,7 @@ public static class StringExtensions
         }
         return true;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
     public static bool IsNonWhiteSpace([NotNullWhen(true)] this string? text)
     {
         if (text == null) return false;
@@ -29,8 +26,7 @@ public static class StringExtensions
         }
         return false;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
     public static bool TryGetChar(this string? text, int index, out char ch)
     {
         if (text is not null && (uint)index < (uint)text.Length)
@@ -40,5 +36,27 @@ public static class StringExtensions
         }
         ch = default;
         return false;
+    }
+    
+    [return: NotNullIfNotNull("ifInvalid")]
+    public static string? IfNull(this string? str, string ifInvalid)
+    {
+        return str ?? ifInvalid;
+    }
+
+    [return: NotNullIfNotNull("ifInvalid")]
+    public static string? IfNullOrEmpty(this string? str, string ifInvalid)
+    {
+        if (string.IsNullOrEmpty(str))
+            return ifInvalid;
+        return str;
+    }
+
+    [return: NotNullIfNotNull("ifInvalid")]
+    public static string? IfNullOrWhiteSpace(this string? str, string ifInvalid)
+    {
+        if (string.IsNullOrWhiteSpace(str))
+            return ifInvalid;
+        return str;
     }
 }

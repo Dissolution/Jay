@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using Jay.Collections;
 using Jay.Enums;
 using Jay.Reflection;
@@ -133,7 +132,7 @@ public static partial class Dumper
     {
         return dumpString.ToStringAndDispose();
     }
-    #endregion
+#endregion
     
     #region Exceptions
     public static TException GetException<TException>(ref InterpolatedDumpHandler message, Exception? innerException = null)

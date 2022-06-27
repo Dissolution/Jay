@@ -11,8 +11,8 @@ public struct Bit64 : ISpanFormattable
     internal const int FormatLength = 6 + 64 + 1;
     internal const ulong LeftMostBitMask = 1UL << 63;
 
-    public static implicit operator ulong(Bit64 bits) => Danger.As<Bit64, ulong>(bits);
-    public static implicit operator Bit64(ulong data) => Danger.As<ulong, Bit64>(data);
+    public static implicit operator ulong(Bit64 bits) => Danger.DirectCast<Bit64, ulong>(bits);
+    public static implicit operator Bit64(ulong data) => Danger.DirectCast<ulong, Bit64>(data);
 
     public static bool operator ==(Bit64 left, Bit64 right) => Unmanaged.Equals(left, right);
     public static bool operator !=(Bit64 left, Bit64 right) => !Unmanaged.Equals(left, right);

@@ -1,61 +1,114 @@
-﻿using Jay.Dumping;
+﻿namespace Jay.Enums;
 
-#pragma warning disable CS0659 // Overrides Equals but not GetHashCode
-
-namespace Jay.Enums;
-
-public abstract class EnumLike : IComparable, IFormattable
+public abstract class EnumLike<TEnum> : 
+    IEquatable<TEnum>,
+    IComparable<TEnum>, IComparable,
+    IFormattable
+    where TEnum : EnumLike<TEnum>
 {
-    public static bool operator ==(EnumLike? enumLike, EnumLike? @enum) => Equals(enumLike, @enum);
-    public static bool operator !=(EnumLike? enumLike, EnumLike? @enum) => !Equals(enumLike, @enum);
-    public static bool operator <(EnumLike? enumLike, EnumLike? @enum) => Compare(enumLike, @enum) < 0;
-    public static bool operator <=(EnumLike? enumLike, EnumLike? @enum) => Compare(enumLike, @enum) <= 0;
-    public static bool operator >(EnumLike? enumLike, EnumLike? @enum) => Compare(enumLike, @enum) > 0;
-    public static bool operator >=(EnumLike? enumLike, EnumLike? @enum) => Compare(enumLike, @enum) >= 0;
+    public static bool operator ==(EnumLike<TEnum> left, TEnum right) => left.Equals(right);
+    public static bool operator !=(EnumLike<TEnum> left, TEnum right) => !left.Equals(right);
+    public static bool operator <(EnumLike<TEnum> left, TEnum right) => left.CompareTo(right) < 0;
+    public static bool operator <=(EnumLike<TEnum> left, TEnum right) => left.CompareTo(right) <= 0;
+    public static bool operator >(EnumLike<TEnum> left, TEnum right) => left.CompareTo(right) > 0;
+    public static bool operator >=(EnumLike<TEnum> left, TEnum right) => left.CompareTo(right) >= 0;
 
-    internal static bool Equals(EnumLike? left, EnumLike? right)
-    {
-        if (ReferenceEquals(left, right)) return true;
-        if (left is null || right is null) return false;
-        return left.Equals(right);
-    }
-
-    internal static int Compare(EnumLike? left, EnumLike? right)
-    {
-        if (left == null) return right == null ? 0 : -1;
-        if (right == null) return 1;
-        return left.CompareTo(right);
-    }
-
-
-    protected readonly int _value;
-    protected readonly string _name;
+    protected static readonly List<TEnum> _members;
     
-    public abstract bool HasFlags { get; }
+    public static bool HasFlags { get; } = false;
+    public static IReadOnlyList<Attribute> Attributes { get; } = Attribute.GetCustomAttributes(typeof(TEnum));
+    public static IReadOnlyList<TEnum> Members => _members;
 
-    protected EnumLike(int value, string? name)
+    static EnumLike()
     {
-        _value = value;
-        _name = name ?? value.ToString("D");
+        _members = new List<TEnum>();
     }
 
-    public abstract int CompareTo(object? obj);
+    public static bool TryParse(ulong value, [NotNullWhen(true)] out TEnum? enumLike)
+    {
+        // _members[x]'s value is x
+        if (value <= (ulong)_members.Count)
+        {
+            enumLike = _members[(int)value];
+            return true;
+        }
 
-    public abstract override bool Equals(object? obj);
+        enumLike = null;
+        return false;
+    }
+
+    public static bool TryParse(ReadOnlySpan<char> text, [NotNullWhen(true)] out TEnum? enumLike)
+    {
+        foreach (var member in _members)
+        {
+            if (text.Equals(member._name, StringComparison.OrdinalIgnoreCase))
+            {
+                enumLike = member;
+                return true;
+            }
+        }
+
+        enumLike = null;
+        return false;
+    }
+
+    protected readonly ulong _value;
+    protected readonly string _name;
+
+    public string Name => _name;
+    
+    protected EnumLike([CallerMemberName] string memberName = "")
+    {
+        if (string.IsNullOrWhiteSpace(memberName))
+            throw new ArgumentNullException(nameof(memberName));
+        _value = (ulong)_members.Count;
+        _name = memberName;
+        _members.Add((TEnum)this);
+    }
+    
+    public int CompareTo(TEnum? enumLike)
+    {
+        if (enumLike is not null)
+            return _value.CompareTo(enumLike._value);
+        return 1;
+    }
+
+    int IComparable.CompareTo(object? obj)
+    {
+        if (obj is TEnum enumLike) return _value.CompareTo(enumLike._value);
+        return 1;
+    }
+    
+    public bool Equals(TEnum? enumLike)
+    {
+        return enumLike is not null && _value == enumLike._value;
+    }
+    
+    public override bool Equals(object? obj)
+    {
+        if (obj is TEnum enumLike) return _value == enumLike._value;
+        return false;
+    }
 
     public override int GetHashCode()
     {
-        return _value;
+        return (int)((uint)(_value >> 32) ^ (uint)_value);
     }
 
-    public virtual string ToString(string? format, IFormatProvider? _ = null)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="format"></param>
+    /// <param name="formatProvider"></param>
+    /// <returns></returns>
+    /// <see cref="https://docs.microsoft.com/en-us/dotnet/api/system.enum.format?view=net-6.0"/>
+    public virtual string ToString(string? format, IFormatProvider? formatProvider = null)
     {
-        if (format is null) return _name;
-        var len = format.Length;
-        if (len == 0) return _name;
-        if (len == 1)
+        if (format is not null && format.Length == 1)
         {
             var ch = format[0];
+            
+            /* We aren't flags (in this base), so ignore G + F
             if (ch == 'G' || ch == 'g')
             {
                 // We're not Flags
@@ -67,7 +120,7 @@ public abstract class EnumLike : IComparable, IFormattable
                 // We're not Flags
                 return _name;
             }
-
+            */
             if (ch == 'D' || ch == 'd')
             {
                 return _value.ToString("D");
@@ -82,108 +135,9 @@ public abstract class EnumLike : IComparable, IFormattable
         // Always fallback to name
         return _name;
     }
-
+    
     public override string ToString()
     {
         return _name;
-    }
-}
-
-public abstract class EnumLike<TEnum> : EnumLike, IEquatable<TEnum>, IComparable<TEnum>, IFormattable
-    where TEnum : EnumLike<TEnum>
-{
-    public static bool operator ==(EnumLike<TEnum> enumLike, TEnum? @enum) => enumLike.Equals(@enum);
-    public static bool operator !=(EnumLike<TEnum> enumLike, TEnum? @enum) => !enumLike.Equals(@enum);
-    public static bool operator <(EnumLike<TEnum> enumLike, TEnum? @enum) => enumLike.CompareTo(@enum) < 0;
-    public static bool operator <=(EnumLike<TEnum> enumLike, TEnum? @enum) => enumLike.CompareTo(@enum) <= 0;
-    public static bool operator >(EnumLike<TEnum> enumLike, TEnum? @enum) => enumLike.CompareTo(@enum) > 0;
-    public static bool operator >=(EnumLike<TEnum> enumLike, TEnum? @enum) => enumLike.CompareTo(@enum) >= 0;
-
-    protected static readonly List<TEnum> _members;
-
-    public static TEnum? Default
-    {
-        get
-        {
-            if (_members.Count == 0) return default;
-            return _members[0];
-        }
-    }
-
-    public static IReadOnlyList<TEnum> Members => _members;
-
-    static EnumLike()
-    {
-        _members = new List<TEnum>();
-    }
-
-    public static bool TryParse(int value, [NotNullWhen(true)] out TEnum? @enum)
-    {
-        if (value < _members.Count)
-        {
-            @enum = _members[value];
-            return true;
-        }
-        else
-        {
-            @enum = null;
-            return false;
-        }
-    }
-
-    public static bool TryParse(string name, [NotNullWhen(true)] out TEnum? @enum)
-    {
-        foreach (var member in _members)
-        {
-            if (string.Equals(member._name, name, StringComparison.OrdinalIgnoreCase))
-            {
-                @enum = member;
-                return true;
-            }
-        }
-
-        @enum = null;
-        return false;
-    }
-    
-    public override bool HasFlags => false;
-    
-    protected EnumLike(string name)
-        : base(_members.Count, name)
-    {
-        _members.Add((TEnum)this);
-    }
-
-    public virtual int CompareTo(TEnum? @enum)
-    {
-        // NonNull > null
-        if (@enum is null) return 1;
-        return _value.CompareTo(@enum._value);
-    }
-
-    public sealed override int CompareTo(object? obj)
-    {
-        if (obj is null) return 1;
-        if (obj is TEnum @enum)
-            return CompareTo(@enum);
-        throw Dumper.GetException<ArgumentException>($"{obj.GetType()} is not a valid {typeof(TEnum)}", nameof(obj));
-    }
-
-    public virtual bool Equals(TEnum? @enum)
-    {
-        if (@enum is null) return false;
-        return _value == @enum._value;
-    }
-
-    public sealed override bool Equals(object? obj)
-    {
-        if (obj is TEnum enumLike)
-            return Equals(enumLike);
-        return false;
-    }
-
-    public sealed override int GetHashCode()
-    {
-        return _value;
     }
 }

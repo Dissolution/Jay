@@ -2,7 +2,6 @@
 using Jay.Comparision;
 using Jay.Dumping;
 using Jay.Exceptions;
-using Jay.Reflection;
 using Jay.Text;
 
 namespace Jay.Collections;
@@ -115,7 +114,7 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>, IDumpable
             if (_value is null)
             {
                 result = null;
-                return binder.ReturnType.CanBeNull();
+                return binder.ReturnType.CanContainNull();
             }
 
             if (_value.GetType().Implements(binder.ReturnType))

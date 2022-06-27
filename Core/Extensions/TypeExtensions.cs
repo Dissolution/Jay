@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
+using InlineIL;
 using Jay.Collections;
+using Jay.Comparision;
 using Jay.Expressions;
 using Jay.Reflection;
 using Jay.Reflection.Extensions;
@@ -68,12 +70,17 @@ public static class TypeExtensions
         if (type.IsGenericType && otherType.IsGenericTypeDefinition)
             return type.GetGenericTypeDefinition() == otherType;
         if (otherType.HasAttribute<DynamicAttribute>()) return true;
-        // TODO: OTHER CHECKS
-        //Debugger.Break();
+        if (otherType.IsGenericTypeDefinition)
+        {
+            // Check interface generic types
+            // e.g. List<int> : IList<>
+            if (type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == otherType))
+                return true;
+        }
         return false;
     }
 
-    public static bool CanBeNull(this Type? type)
+    public static bool CanContainNull(this Type? type)
     {
         if (type is null) return true;
         if (type.IsValueType)
@@ -172,5 +179,25 @@ public static class TypeExtensions
         });
     }
 
+    public static IReadOnlyCollection<Type> GetAllImplementedTypes(this Type type)
+    {
+        var types = new HashSet<Type>();
+        Type? baseType = type;
+        while (baseType != null)
+        {
+            types.Add(baseType);
+            foreach (var face in baseType.GetInterfaces())
+                types.Add(face);
+            baseType = type.BaseType;
+        }
+        return types;
+    }
+
+    public static object? GetDefaultValue(this Type? type)
+    {
+        if (type is null || type.CanContainNull())
+            return null;
+        return Activator.CreateInstance(type);
+    }
 
 }

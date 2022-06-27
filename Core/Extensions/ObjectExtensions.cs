@@ -5,15 +5,6 @@ namespace Jay;
 public static class ObjectExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNull(this object? obj)
-    {
-        Emit.Ldarg(nameof(obj));
-        Emit.Ldnull();
-        Emit.Ceq();
-        return Return<bool>();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref T UnboxRef<T>(this object? obj)
     {
         Emit.Ldarg(nameof(obj));
