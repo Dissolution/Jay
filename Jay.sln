@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JayCOM", "JayCOM\JayCOM.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchTests", "BenchTests\BenchTests.csproj", "{1B290482-213F-44CC-B26F-1112605A0009}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geometry", "Geometry\Geometry.csproj", "{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{1B290482-213F-44CC-B26F-1112605A0009}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B290482-213F-44CC-B26F-1112605A0009}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B290482-213F-44CC-B26F-1112605A0009}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
