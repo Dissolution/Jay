@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchTests", "BenchTests\Be
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geometry", "Geometry\Geometry.csproj", "{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JORM", "JORM", "{8C72C8B0-D0B7-43C1-BEC6-D41BF9005CCF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entities", "JORM\Entities\Entities.csproj", "{0F96EF29-5121-4DD9-8416-4D8874ED0DD4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,11 +43,18 @@ Global
 		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F96EF29-5121-4DD9-8416-4D8874ED0DD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F96EF29-5121-4DD9-8416-4D8874ED0DD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F96EF29-5121-4DD9-8416-4D8874ED0DD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F96EF29-5121-4DD9-8416-4D8874ED0DD4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0A6F23F7-26AD-4011-BADC-0687231E9270}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0F96EF29-5121-4DD9-8416-4D8874ED0DD4} = {8C72C8B0-D0B7-43C1-BEC6-D41BF9005CCF}
 	EndGlobalSection
 EndGlobal
