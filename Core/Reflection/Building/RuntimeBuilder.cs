@@ -1,8 +1,10 @@
-﻿using System.Reflection;
+﻿using System.ComponentModel;
+using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Dumping;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
+using Jay.Reflection.Extensions;
 using Jay.Reflection.Search;
 
 namespace Jay.Reflection.Building;
@@ -132,4 +134,99 @@ public static class RuntimeBuilder
             Dumper.ThrowException<InvalidOperationException>($"Cannot find a {attributeType} constructor that matches {ctorArgs}");
         return new CustomAttributeBuilder(ctor, ctorArgs);
     }
+}
+
+public interface IPropertyBacker
+{
+    (FieldBuilder Field, PropertyBuilder Property) CreateProperty(TypeBuilder typeBuilder,
+        PropertyAttributes attributes,
+        Type propertyType,
+        string name);
+}
+
+
+STATIC PROPERY BUILDERT?
+
+public class PropertyBacker : IPropertyBacker
+{
+    /// <inheritdoc />
+    public (FieldBuilder Field, PropertyBuilder Property) CreateProperty(TypeBuilder typeBuilder, 
+        PropertyAttributes attributes,
+        Type propertyType, 
+        string name)
+    {
+        string propertyName = MemberNaming.CreateMemberName(name);
+        FieldAttributes fieldAttributes;
+        CallingConventions callingConventions;
+
+        if (typeBuilder.IsStatic())
+        {
+            fieldAttributes = FieldAttributes.Private | FieldAttributes.Static;
+            callingConventions = CallingConventions.Standard;
+        }
+        else
+        {
+            fieldAttributes = FieldAttributes.Private;
+            callingConventions = CallingConventions.HasThis;
+        }
+        
+        var fieldBuilder = typeBuilder.DefineField(
+            MemberNaming.FieldName(propertyName),
+            propertyType,
+            fieldAttributes);
+        var propertyBuilder = typeBuilder.DefineProperty(
+            propertyName,
+            attributes,
+            callingConventions,
+            propertyType,
+            null);
+
+        var getMethod = typeBuilder.DefineMethod($"get_{propertyName}",
+            MethodAttributes.Private,
+            callingConventions,
+            propertyType,
+            Type.EmptyTypes);
+        var getEmitter = getMethod.GetEmitter()
+            
+
+        return (fieldBuilder, propertyBuilder);
+    }
+}
+
+public class NotifyPropertyBacker : IPropertyBacker
+{
+    private readonly bool _changed;
+    private readonly bool _changing;
+
+    public NotifyPropertyBacker(bool changed = true, bool changing = false)
+    {
+        _changed = changed;
+        _changing = changing;
+    }
+}
+
+public class InterfaceBacker
+{
+    public Type InterfaceType { get; }
+    
+    public InterfaceBacker(Type interfaceType)
+    {
+        InterfaceType = interfaceType;
+    }
+
+
+
+    public Type CreateBackingType()
+    {
+        IPropertyBacker propertyBacker;
+        
+        var interfaces = this.InterfaceType.GetInterfaces();
+        if (interfaces.Contains(typeof(INotifyPropertyChanged)))
+        {
+            propertyBacker = 
+        }
+        
+        // TODO: need a way to control keep/overwrite of default interface implementations (and way to detect!)
+    }
+
 }
