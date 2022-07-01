@@ -39,6 +39,19 @@ public static class PropertyInfoExtensions
                propertyInfo.GetSetter().IsStatic();
     }
 
+    public static Type[] GetIndexParameterTypes(this PropertyInfo property)
+    {
+        var indexerParams = property.GetIndexParameters();
+        var len = indexerParams.Length;
+        if (len == 0) return Type.EmptyTypes;
+        var types = new Type[len];
+        for (var i = 0; i < len; i++)
+        {
+            types[i] = indexerParams[i].ParameterType;
+        }
+        return types;
+    }
+    
     private static string GetBackingFieldName(PropertyInfo property) => $"<{property.Name}>k__BackingField";
 
     public static FieldInfo? GetBackingField(this PropertyInfo? propertyInfo)

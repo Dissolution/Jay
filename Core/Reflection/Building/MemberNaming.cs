@@ -117,11 +117,11 @@ public static class MemberNaming
     }
 
     /// <summary>
-    /// Gets a backing <see cref="FieldInfo"/> name from a <see cref="PropertyInfo"/> name
+    /// Creates a backing <see cref="FieldInfo"/> name for a <see cref="PropertyInfo"/>
     /// </summary>
-    public static string FieldName(string propertyName)
+    public static string CreateBackingFieldName(PropertyInfo property)
     {
-        return string.Create(propertyName.Length + 1, propertyName, (span, name) =>
+        return string.Create(property.Name.Length + 1, property.Name, (span, name) =>
         {
             span[0] = '_';
             span[1] = char.ToLower(name[0]);

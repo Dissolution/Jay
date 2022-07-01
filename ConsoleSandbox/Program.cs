@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using Jay;
 using Jay.Collections;
 using Jay.Dumping;
+using Jay.Reflection.Building.Backing;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
 
@@ -25,10 +26,7 @@ using Jay.BenchTests.Text;
 #else
 using var text = TextBuilder.Borrow();
 
-
-var type = typeof(Dictionary<string, object?>);
-var def = type.GetDefaultValue();
-
+var backingType = InterfaceImplementer.CreateImplementationType<IDictionary<string, object?>>();
 
 Debugger.Break();
 

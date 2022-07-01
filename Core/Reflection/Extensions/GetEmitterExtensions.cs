@@ -3,7 +3,7 @@ using Jay.Reflection.Building.Emission;
 
 namespace Jay.Reflection.Extensions;
 
-public static  class GetEmitterExtensions
+public static class GetEmitterExtensions
 {
     public static IILGeneratorEmitter GetEmitter(this ILGenerator ilGenerator)
     {
@@ -23,5 +23,31 @@ public static  class GetEmitterExtensions
     public static IILGeneratorEmitter GetEmitter(this ConstructorBuilder constructorBuilder)
     {
         return new ILGeneratorEmitter(constructorBuilder.GetILGenerator());
+    }
+    
+    
+    public static void Emit(this ILGenerator ilGenerator, Action<IILGeneratorEmitter> emit)
+    {
+        var emitter = new ILGeneratorEmitter(ilGenerator);
+        emit(emitter);
+    }
+    
+    public static void Emit(this DynamicMethod dynamicMethod, Action<IILGeneratorEmitter> emit)
+    {
+        var emitter = new ILGeneratorEmitter(dynamicMethod.GetILGenerator());
+        emit(emitter);
+    }
+    
+    public static MethodBuilder Emit(this MethodBuilder methodBuilder, Action<IILGeneratorEmitter> emit)
+    {
+        var emitter = new ILGeneratorEmitter(methodBuilder.GetILGenerator());
+        emit(emitter);
+        return methodBuilder;
+    }
+    
+    public static void Emit(this ConstructorBuilder constructorBuilder, Action<IILGeneratorEmitter> emit)
+    {
+        var emitter = new ILGeneratorEmitter(constructorBuilder.GetILGenerator());
+        emit(emitter);
     }
 }

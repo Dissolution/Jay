@@ -44,11 +44,6 @@ public static class TypeExtensions
         return visibility;
     }
 
-    public static bool IsStatic(this Type type)
-    {
-        return type.IsAbstract && type.IsSealed;
-    }
-
     public static IEnumerable<MemberInfo> Search(this Type? type, MemberMatch memberMatch)
     {
         if (type is null)
