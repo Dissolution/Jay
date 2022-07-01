@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Jay.Reflection;
-using Jay.Reflection.Extensions;
 using Jay.Text;
 
 namespace Jay.Dumping;

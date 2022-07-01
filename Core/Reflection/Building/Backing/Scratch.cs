@@ -5,76 +5,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Jay.Reflection.Building.Backing;
-// public interface IPropertyBacker
-// {
-//     (FieldBuilder Field, PropertyBuilder Property) CreateProperty(TypeBuilder typeBuilder,
-//         PropertyAttributes attributes,
-//         Type propertyType,
-//         string name);
-// }
-//
-//
-// //STATIC PROPERY BUILDERT?
-//
-// public class PropertyBacker : IPropertyBacker
-// {
-//     /// <inheritdoc />
-//     public (FieldBuilder Field, PropertyBuilder Property) CreateProperty(TypeBuilder typeBuilder, 
-//         PropertyAttributes attributes,
-//         Type propertyType, 
-//         string name)
-//     {
-//         string propertyName = MemberNaming.CreateMemberName(name);
-//         FieldAttributes fieldAttributes;
-//         CallingConventions callingConventions;
-//
-//         if (typeBuilder.IsStatic())
-//         {
-//             fieldAttributes = FieldAttributes.Private | FieldAttributes.Static;
-//             callingConventions = CallingConventions.Standard;
-//         }
-//         else
-//         {
-//             fieldAttributes = FieldAttributes.Private;
-//             callingConventions = CallingConventions.HasThis;
-//         }
-//         
-//         var fieldBuilder = typeBuilder.DefineField(
-//             MemberNaming.FieldName(propertyName),
-//             propertyType,
-//             fieldAttributes);
-//         var propertyBuilder = typeBuilder.DefineProperty(
-//             propertyName,
-//             attributes,
-//             callingConventions,
-//             propertyType,
-//             null);
-//
-//         var getMethod = typeBuilder.DefineMethod($"get_{propertyName}",
-//             MethodAttributes.Private,
-//             callingConventions,
-//             propertyType,
-//             Type.EmptyTypes);
-//         var getEmitter = getMethod.GetEmitter()
-//             
-//
-//         return (fieldBuilder, propertyBuilder);
-//     }
-// }
-//
-// public class NotifyPropertyBacker : IPropertyBacker
-// {
-//     private readonly bool _changed;
-//     private readonly bool _changing;
-//
-//     public NotifyPropertyBacker(bool changed = true, bool changing = false)
-//     {
-//         _changed = changed;
-//         _changing = changing;
-//     }
-// }
-
-// StaticPropertyBacker
 
 
 
@@ -100,7 +30,13 @@ public class InterfaceImplementer
     protected HashSet<Type>? _interfaces;
     protected TypeBuilder? _typeBuilder;
     protected IAttributeImplementer? _attributeImplementer;
-    
+
+    protected readonly Dictionary<string, FieldBuilder> _builtFields = new(StringComparer.OrdinalIgnoreCase);
+    protected readonly Dictionary<string, PropertyBuilder> _builtProperties = new(StringComparer.OrdinalIgnoreCase);
+    protected readonly Dictionary<string, EventBuilder> _builtEvents = new(StringComparer.OrdinalIgnoreCase);
+    protected readonly Dictionary<string, ConstructorBuilder> _builtConstructors = new(StringComparer.OrdinalIgnoreCase);
+    protected readonly Dictionary<string, MethodBuilder> _builtMethods = new(StringComparer.OrdinalIgnoreCase);
+
     public Type InterfaceType { get; }
 
     public InterfaceImplementer(Type interfaceType)
@@ -115,8 +51,44 @@ public class InterfaceImplementer
     {
         IBackingFieldImplementer backingFieldImplementer = new BackingFieldImplementer(_typeBuilder!, _attributeImplementer!);
         IPropertyGetMethodImplementer getMethodImplementer = new DefaultInstancePropertyGetMethodImplementer(_typeBuilder!, _attributeImplementer!);
-        ISetMethodImplementer setMethodImplementer;
+        IPropertySetMethodImplementer setMethodImplementer;
+        var notifyPropertyChanging = _interfaces!.Contains(typeof(INotifyPropertyChanging));
+        var notifyPropertyChanged = _interfaces!.Contains(typeof(INotifyPropertyChanged));
+        if (notifyPropertyChanging || notifyPropertyChanged)
+        {
+            setMethodImplementer = new NotifyPropertySetMethodImplementer(_typeBuilder!,
+                _attributeImplementer!,
+                null,
+                null);
+            throw new NotImplementedException();
+        }
+        else
+        {
+            setMethodImplementer = new DefaultInstancePropertySetMethodImplementer(_typeBuilder!, _attributeImplementer!);
+        }
+
+        IPropertyImplementer propertyImplementer = new PropertyImplementer(_typeBuilder!,
+            _attributeImplementer!,
+            backingFieldImplementer,
+            getMethodImplementer,
+            setMethodImplementer);
         
+        var properties = _interfaces.SelectMany(i => i.GetProperties(BindingFlags.Public | BindingFlags.Instance));
+        foreach (var property in properties)
+        {
+            if (_builtProperties.ContainsKey(property.Name)) continue;
+            var pack = propertyImplementer.ImplementProperty(property);
+            _builtFields.Add(pack.BackingField.Name, pack.BackingField);
+            if (pack.GetMethod is not null)
+            {
+                _builtMethods.Add(pack.GetMethod.Name, pack.GetMethod);
+            }
+            if (pack.SetMethod is not null)
+            {
+                _builtMethods.Add(pack.SetMethod.Name, pack.SetMethod);
+            }
+            _builtProperties.Add(pack.Property.Name, pack.Property);
+        }
     }
     
     public Type CreateImplementingType()

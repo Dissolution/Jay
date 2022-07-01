@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Jay.Reflection.Caching;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class MethodInfoExtensions
 {

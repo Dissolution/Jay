@@ -4,7 +4,6 @@ using Jay.Collections;
 using Jay.Dumping;
 using Jay.Reflection.Building;
 using Jay.Reflection.Caching;
-using Jay.Reflection.Extensions;
 using Jay.Reflection.Internal;
 using Jay.Reflection.Search;
 using Jay.Validation;
@@ -409,7 +408,7 @@ public static class Muq
 
         var dm = RuntimeBuilder.CreateDynamicMethod(MethodSig.Of(delType), Dumper.Dump($"{type}_clone"));
             
-        var emitter = dm.GetEmitter();
+        var emitter = dm.GetILEmitter();
 
         // Object we need to extract the value inside
         if (type == typeof(object))

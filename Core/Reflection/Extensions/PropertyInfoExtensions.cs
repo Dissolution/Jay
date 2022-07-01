@@ -5,7 +5,7 @@ using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
 using Jay.Text;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class PropertyInfoExtensions
 {

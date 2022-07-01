@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
+using Jay.Comparision;
 using Jay.Expressions;
 using Jay.Reflection.Exceptions;
 
@@ -78,5 +79,15 @@ public class Reflection<T>
         if (member is not null)
             return member;
         throw new ReflectionException($"Could not find {typeof(T)} {typeof(TMember)} from {memberExpression}");
+    }
+
+    public ConstructorInfo GetConstructor(params Type[] parameterTypes)
+    {
+        var ctor = typeof(T).GetConstructors(Reflect.InstanceFlags)
+            .Where(ctor => MemoryExtensions.SequenceEqual<Type>(ctor.GetParameterTypes(), parameterTypes))
+            .OneOrDefault();
+        if (ctor is not null)
+            return ctor;
+        throw new ReflectionException($"Could not find {typeof(T)} constructor with parameter types: {parameterTypes}");
     }
 }

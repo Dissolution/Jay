@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Comparision;
 using Jay.Reflection.Caching;
-using Jay.Reflection.Extensions;
 
 namespace Jay.Reflection.Building.Fulfilling;
 
@@ -134,7 +133,7 @@ public static class DynamicProxyBuilder
             ConstructorBuilder constructor = typeBuilder.DefineConstructor(MethodAttributes.Public,
                                                                            CallingConventions.Standard,
                                                                            new Type[1] {sourceType});
-            var ctorEmitter = constructor.GetEmitter();
+            var ctorEmitter = constructor.GetILEmitter();
             // Store value in storage
             ctorEmitter.Ldarg(0)    // this
                        .Ldarg(1)    // value
@@ -165,7 +164,7 @@ public static class DynamicProxyBuilder
                                                              mAttr,
                                                              data.ReturnType,
                                                              data.ParameterTypes);
-                var emitter = methodBuilder.GetEmitter();
+                var emitter = methodBuilder.GetILEmitter();
                 emitter.Ldarg(0)                // this
                        .Ldfld(baseField);       // ._base
                 // Load method parameters (i == 0 is `this`)

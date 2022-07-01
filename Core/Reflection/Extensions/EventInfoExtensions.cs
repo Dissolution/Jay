@@ -5,7 +5,7 @@ using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Internal;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class EventInfoExtensions
 {

@@ -1,26 +1,26 @@
 ﻿using System.Reflection.Emit;
 using Jay.Reflection.Building.Emission;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class GetEmitterExtensions
 {
-    public static IILGeneratorEmitter GetEmitter(this ILGenerator ilGenerator)
+    public static IILGeneratorEmitter GetILEmitter(this ILGenerator ilGenerator)
     {
         return new ILGeneratorEmitter(ilGenerator);
     }
 
-    public static IILGeneratorEmitter GetEmitter(this DynamicMethod dynamicMethod)
+    public static IILGeneratorEmitter GetILEmitter(this DynamicMethod dynamicMethod)
     {
         return new ILGeneratorEmitter(dynamicMethod.GetILGenerator());
     }
 
-    public static IILGeneratorEmitter GetEmitter(this MethodBuilder methodBuilder)
+    public static IILGeneratorEmitter GetILEmitter(this MethodBuilder methodBuilder)
     {
         return new ILGeneratorEmitter(methodBuilder.GetILGenerator());
     }
 
-    public static IILGeneratorEmitter GetEmitter(this ConstructorBuilder constructorBuilder)
+    public static IILGeneratorEmitter GetILEmitter(this ConstructorBuilder constructorBuilder)
     {
         return new ILGeneratorEmitter(constructorBuilder.GetILGenerator());
     }

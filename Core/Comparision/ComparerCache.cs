@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using Jay.Collections;
-using Jay.Reflection.Extensions;
+using Jay.Reflection;
 using Jay.Validation;
 
 namespace Jay.Comparision;

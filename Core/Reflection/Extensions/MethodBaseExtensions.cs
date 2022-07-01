@@ -5,7 +5,7 @@ using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class MethodBaseExtensions
 {
@@ -71,5 +71,16 @@ public static class MethodBaseExtensions
                                       TryAdapt<TDelegate>((dm.Member as MethodInfo)!, out var del).ThrowIfFailed();
                                       return del!;
                                   });
+    }
+
+    public static Type[] GetParameterTypes(this MethodBase methodBase)
+    {
+        var parameters = methodBase.GetParameters();
+        var types = new Type[parameters.Length];
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            types[i] = parameters[i].ParameterType;
+        }
+        return types;
     }
 }
