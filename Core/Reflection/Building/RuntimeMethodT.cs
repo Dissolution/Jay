@@ -7,7 +7,7 @@ public class RuntimeMethod<TDelegate> : RuntimeMethod
     where TDelegate : Delegate
 {
     public RuntimeMethod(DynamicMethod dynamicMethod)
-        : base(dynamicMethod, MethodSig.Of<TDelegate>())
+        : base(dynamicMethod, typeof(TDelegate))
     {
     }
 

@@ -34,8 +34,8 @@ var backingInstance = (Activator.CreateInstance(backingType) as IEntity)!;
 var members = backingInstance.GetType().GetMembers(Reflect.AllFlags);
 
 string? origName = backingInstance.Name;
-backingInstance.Name = "BLAH";
-string? newName = backingInstance.Name;
+// backingInstance.Name = "BLAH";
+// string? newName = backingInstance.Name;
 
 Debugger.Break();
 
@@ -51,7 +51,7 @@ namespace ConsoleSandbox
 {
     public interface IEntity
     {
-        string Name { get; set; }
+        string Name { get; }
     }
 
     

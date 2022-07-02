@@ -7,7 +7,7 @@ public static class Hold
 {
     static Hold()
     {
-        Debugger.Break();
+
     }
     
     [DebuggerHidden]
@@ -25,4 +25,7 @@ public static class Hold
         string dump = Dumper.Dump<T>(value);
         Stop();
     }
+    
+    [Conditional("DEBUG")]
+    public static void Debug<T>(T? value){ }
 }

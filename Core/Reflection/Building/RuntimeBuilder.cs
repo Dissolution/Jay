@@ -31,9 +31,9 @@ public static class RuntimeBuilder
             true);
     }
    
-    public static RuntimeMethod CreateRuntimeMethod(MethodSig methodSig, string? name = null)
+    public static RuntimeMethod CreateRuntimeMethod(Type delegateType, string? name = null)
     {
-        return new RuntimeMethod(CreateDynamicMethod(methodSig, name), methodSig);
+        return new RuntimeMethod(CreateDynamicMethod(MethodSig.Of(delegateType), name), delegateType);
     }
 
     public static Delegate CreateDelegate(Type delegateType, Action<RuntimeMethod> buildDelegate)
@@ -45,9 +45,9 @@ public static class RuntimeBuilder
     {
         if (!delegateType.Implements<Delegate>())
             throw new ArgumentException("Must be a delegate", nameof(delegateType));
-        var runtimeMethod = CreateRuntimeMethod(MethodSig.Of(delegateType), name);
+        var runtimeMethod = CreateRuntimeMethod(delegateType, name);
         buildDelegate(runtimeMethod);
-        return runtimeMethod.CreateDelegate(delegateType);
+        return runtimeMethod.CreateDelegate();
     }
 
     public static Delegate CreateDelegate(Type delegateType, Action<IILGeneratorEmitter> emitDelegate)
@@ -59,9 +59,9 @@ public static class RuntimeBuilder
     {
         if (!delegateType.Implements<Delegate>())
             throw new ArgumentException("Must be a delegate", nameof(delegateType));
-        var runtimeMethod = CreateRuntimeMethod(MethodSig.Of(delegateType), name);
+        var runtimeMethod = CreateRuntimeMethod(delegateType, name);
         emitDelegate(runtimeMethod.Emitter);
-        return runtimeMethod.CreateDelegate(delegateType);
+        return runtimeMethod.CreateDelegate();
     }
     
     public static RuntimeMethod<TDelegate> CreateRuntimeMethod<TDelegate>(string? name = null)

@@ -17,6 +17,7 @@ public static partial class Dumper
     {
         _valueDumpCache = new();
         AddDumper<object>(DumpObjectTo);
+        AddDumper<bool>(DumpBoolTo);
         AddDumper<Array>(DumpArrayTo);
         AddDumper<Exception>(DumpExceptionTo);
         AddDumper<Type>(DumpTypeTo);
@@ -24,6 +25,7 @@ public static partial class Dumper
         AddDumper<PropertyInfo>(DumpPropertyTo);
         AddDumper<EventInfo>(DumpEventTo);
         AddDumper<ConstructorInfo>(DumpConstructorTo);
+        AddDumper<MethodBase>(DumpMethodTo);
         AddDumper<MethodInfo>(DumpMethodTo);
         AddDumper<ParameterInfo>(DumpParameterTo);
     }
@@ -31,10 +33,43 @@ public static partial class Dumper
     private static void AddDumper<T>(DumpValueTo<T> valueDumper) => _valueDumpCache.Set<T>(valueDumper);
 
     #region DumpValueTo Implementations
+
+    private static void DumpBoolTo(bool boolean, TextBuilder text)
+    {
+        if (boolean)
+        {
+            text.Write("true");
+        }
+        else
+        {
+            text.Write("false");
+        }
+    }
+    
     private static void DumpEnumTo<TEnum>(TEnum value, TextBuilder text)
         where TEnum : struct, Enum
     {
         value.GetInfo().DumpTo(text);
+    }
+
+    private static void DumpTupleTo<TTuple>(TTuple? tuple, TextBuilder text)
+        where TTuple : ITuple
+    {
+        text.Write('(');
+        if (tuple is not null)
+        {
+            for (var i = 0; i < tuple.Length; i++)
+            {
+                if (i > 0) text.Write(',');
+                DumpObjectTo(tuple[i], text);
+            }
+        }
+        text.Write(')');
+    }
+
+    private static void DumpAsTextTo<T>(T? value, TextBuilder text)
+    {
+        text.Write<T>(value);
     }
     #endregion
 
@@ -49,7 +84,7 @@ public static partial class Dumper
         {
             method = typeof(Dumper).GetMethod(nameof(DumpArrayTo),
                     BindingFlags.NonPublic | BindingFlags.Static)
-                .ThrowIfNull("Could not find Dump_Cache.DumpArrayTo");
+                .ThrowIfNull("Could not find Dumper.DumpArrayTo");
             return Delegate.CreateDelegate(delegateType, method);
         }
         
@@ -58,7 +93,7 @@ public static partial class Dumper
         {
             method = typeof(Dumper).GetMethod(nameof(DumpEnumTo),
                     BindingFlags.NonPublic | BindingFlags.Static)
-                .ThrowIfNull("Could not find Dump_Cache.DumpEnumTo");
+                .ThrowIfNull("Could not find Dumper.DumpEnumTo");
             return Delegate.CreateDelegate(delegateType, method);
         }
         
@@ -77,37 +112,88 @@ public static partial class Dumper
             var itemType = valueType.GenericTypeArguments[0];
             method = typeof(Dumper).GetMethod(nameof(DumpEnumerableTo),
                     BindingFlags.NonPublic | BindingFlags.Static)
-                .ThrowIfNull("Could not find Dump_Cache.DumpEnumerableTo")
+                .ThrowIfNull("Could not find Dumper.DumpEnumerableTo")
                 .MakeGenericMethod(itemType);
             return Delegate.CreateDelegate(delegateType, method);
         }
         
-        // Fallback to using TextBuilder directly
-        method = TextBuilderReflections.GetWriteValue(valueType);
-        return RuntimeBuilder.CreateDelegate(delegateType, runtimeMethod =>
+        // Tuple?
+        if (valueType.Implements<ITuple>())
         {
-            var emitter = runtimeMethod.Emitter;
-            emitter.Ldarg(runtimeMethod.Parameters[1])
-                .Ldarg(runtimeMethod.Parameters[0])
-                .Call(method)
-                .Ret();
-        });
+            method = typeof(Dumper).GetMethod(nameof(DumpTupleTo),
+                    BindingFlags.NonPublic | BindingFlags.Static)
+                .ThrowIfNull("Could not find Dumper.DumpTupleTo")
+                .MakeGenericMethod(valueType)
+                .ThrowIfNull("Invalid Operation");
+            return Delegate.CreateDelegate(delegateType, method);
+        }
+        
+        // Any sort of MemberInfo?
+        if (valueType.Implements<MemberInfo>())
+        {
+            if (valueType.Implements<FieldInfo>())
+            {
+                method = typeof(Dumper).GetMethod(nameof(DumpFieldTo),
+                        BindingFlags.NonPublic | BindingFlags.Static)
+                    .ThrowIfNull("Could not find Dumper.DumpFieldTo");
+            }
+            else if (valueType.Implements<PropertyInfo>())
+            {
+                method = typeof(Dumper).GetMethod(nameof(DumpPropertyTo),
+                        BindingFlags.NonPublic | BindingFlags.Static)
+                    .ThrowIfNull("Could not find Dumper.DumpPropertyTo");
+            }
+            else if (valueType.Implements<EventInfo>())
+            {
+                method = typeof(Dumper).GetMethod(nameof(DumpEventTo),
+                        BindingFlags.NonPublic | BindingFlags.Static)
+                    .ThrowIfNull("Could not find Dumper.DumpEventTo");
+            }
+            else if (valueType.Implements<ConstructorInfo>())
+            {
+                method = typeof(Dumper).GetMethod(nameof(DumpConstructorTo),
+                        BindingFlags.NonPublic | BindingFlags.Static)
+                    .ThrowIfNull("Could not find Dumper.DumpConstructorTo");
+            }
+            else if (valueType.Implements<MethodBase>())
+            {
+                method = typeof(Dumper).GetMethod(nameof(DumpMethodTo),
+                        BindingFlags.NonPublic | BindingFlags.Static)
+                    .ThrowIfNull("Could not find Dumper.DumpMethodTo");
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
+            return Delegate.CreateDelegate(delegateType, method);
+        }
+
+        // Fallback to using TextBuilder directly
+        method = typeof(Dumper).GetMethod(nameof(DumpAsTextTo),
+                BindingFlags.NonPublic | BindingFlags.Static)
+            .ThrowIfNull("Could not find Dumper.DumpAsTextTo")
+            .MakeGenericMethod(valueType);
+        return Delegate.CreateDelegate(delegateType, method);
     }
 
     private static DumpValueTo<T> CreateValueDumpDelegate<T>()
     {
-        return (CreateValueDumpDelegate(typeof(T)) as DumpValueTo<T>)!;
+        var del = CreateValueDumpDelegate(typeof(T));
+        if (del is DumpValueTo<T> dumpValueTo)
+            return dumpValueTo;
+        throw new InvalidOperationException();
     }
     
     private static Delegate GetDumpValueDelegate(Type type)
     {
-        var del = _valueDumpCache.GetOrAdd(type, CreateValueDumpDelegate);
+        var del = _valueDumpCache.GetOrAdd(type, _ => CreateValueDumpDelegate(type));
         return del;
     }
     
     private static DumpValueTo<T> GetDumpValueDelegate<T>()
     {
-        var del = _valueDumpCache.GetOrAdd<T>(CreateValueDumpDelegate);
+        var del = _valueDumpCache.GetOrAdd<T>(_ => CreateValueDumpDelegate<T>());
         if (del is DumpValueTo<T> valueDump)
             return valueDump;
         throw new InvalidOperationException();

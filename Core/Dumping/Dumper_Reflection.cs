@@ -66,10 +66,12 @@ public static partial class Dumper
             .Write(')');
     }
 
-    private static void DumpMethodTo(MethodInfo? method, TextBuilder text)
+    private static void DumpMethodTo(MethodBase? method, TextBuilder text)
     {
         if (TryDumpNull(method, text)) return;
         DumpEnumTo(method.Visibility(), text);
+        text.Write(' ');
+        DumpTypeTo(method.ReturnType(), text);
         text.Write(' ');
         DumpTypeTo(method.OwnerType(), text);
         text.Append('.').Append(method.Name)
