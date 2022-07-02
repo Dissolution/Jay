@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 using Jay.Randomization;
 using Jay.Text;
@@ -130,6 +131,38 @@ public static class MemberNaming
                 span[i + 1] = name[i];
             }
         });
+    }
+
+    public static string CreateInterfaceImplementationName(Type interfaceType)
+    {
+        string interfaceName = interfaceType.Name;
+        Debug.Assert(!string.IsNullOrWhiteSpace(interfaceName));
+        return string.Create(interfaceName.Length + 3,
+            interfaceName,
+            (span, name) =>
+            {
+                int nameIndex;
+                if (name[0] is 'I' or 'i')
+                {
+                    nameIndex = 1;
+                }
+                else
+                {
+                    nameIndex = 0;
+                }
+
+                int spanIndex = 0;
+                span[spanIndex++] = char.ToUpper(name[nameIndex++]);
+                while (nameIndex < name.Length)
+                {
+                    span[spanIndex++] = name[nameIndex++];
+                }
+                Debug.Assert(nameIndex == name.Length);
+                span[spanIndex++] = 'I';
+                span[spanIndex++] = 'm';
+                span[spanIndex++] = 'p';
+                span[spanIndex] = 'l';
+            });
     }
 
 }

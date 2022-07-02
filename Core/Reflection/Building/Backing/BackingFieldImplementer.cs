@@ -5,9 +5,8 @@ namespace Jay.Reflection.Building.Backing;
 
 internal class BackingFieldImplementer : Implementer, IBackingFieldImplementer
 {
-    public BackingFieldImplementer(TypeBuilder typeBuilder, 
-        IAttributeImplementer attributeImplementer) 
-        : base(typeBuilder, attributeImplementer)
+    public BackingFieldImplementer(TypeBuilder typeBuilder) 
+        : base(typeBuilder)
     {
     }
 

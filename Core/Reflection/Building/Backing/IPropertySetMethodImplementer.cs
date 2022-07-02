@@ -13,22 +13,20 @@ public interface IPropertySetMethodImplementer
 internal class DefaultInstancePropertySetMethodImplementer : Implementer, IPropertySetMethodImplementer
 {
     /// <inheritdoc />
-    public DefaultInstancePropertySetMethodImplementer(TypeBuilder typeBuilder,
-        IAttributeImplementer attributeImplementer) : base(typeBuilder, attributeImplementer)
+    public DefaultInstancePropertySetMethodImplementer(TypeBuilder typeBuilder) 
+        : base(typeBuilder)
     {
     }
 
     /// <inheritdoc />
     public MethodBuilder? ImplementSetMethod(FieldBuilder backingField, PropertyBuilder property)
     {
-        if (property.GetIndexParameters().Length > 0)
-            throw new NotImplementedException();
         if (property.IsStatic())
             throw new NotImplementedException();
 
         var setMethod = _typeBuilder.DefineMethod(
                 $"set_{property.Name}",
-                MethodAttributes.Private,
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.Final,
                 GetCallingConventions(property),
                 typeof(void),
                 new Type[1] { property.PropertyType })
@@ -49,10 +47,9 @@ internal class NotifyPropertySetMethodImplementer : Implementer, IPropertySetMet
 
     /// <inheritdoc />
     public NotifyPropertySetMethodImplementer(TypeBuilder typeBuilder,
-        IAttributeImplementer attributeImplementer,
         MethodInfo? onPropertyChanging,
         MethodInfo? onPropertyChanged)
-        : base(typeBuilder, attributeImplementer)
+        : base(typeBuilder)
     {
         if (onPropertyChanging is not null)
         {
@@ -82,14 +79,12 @@ internal class NotifyPropertySetMethodImplementer : Implementer, IPropertySetMet
     /// <inheritdoc />
     public MethodBuilder? ImplementSetMethod(FieldBuilder backingField, PropertyBuilder property)
     {
-        if (property.GetIndexParameters().Length > 0)
-            throw new NotImplementedException();
         if (property.IsStatic())
             throw new NotImplementedException();
 
         var setMethod = _typeBuilder.DefineMethod(
             $"set_{property.Name}",
-            MethodAttributes.Private,
+            MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.Final,
             GetCallingConventions(property),
             typeof(void),
             new Type[1] { property.PropertyType });
@@ -143,22 +138,20 @@ internal class NotifyPropertySetMethodImplementer : Implementer, IPropertySetMet
 internal class DefaultStaticPropertySetMethodImplementer : Implementer, IPropertySetMethodImplementer
 {
     /// <inheritdoc />
-    public DefaultStaticPropertySetMethodImplementer(TypeBuilder typeBuilder,
-        IAttributeImplementer attributeImplementer) : base(typeBuilder, attributeImplementer)
+    public DefaultStaticPropertySetMethodImplementer(TypeBuilder typeBuilder) 
+        : base(typeBuilder)
     {
     }
 
     /// <inheritdoc />
     public MethodBuilder? ImplementSetMethod(FieldBuilder backingField, PropertyBuilder property)
     {
-        if (property.GetIndexParameters().Length > 0)
-            throw new NotImplementedException();
         if (!property.IsStatic())
             throw new NotImplementedException();
 
         var setMethod = _typeBuilder.DefineMethod(
                 $"set_{property.Name}",
-                MethodAttributes.Private | MethodAttributes.Static,
+                MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.Final,
                 GetCallingConventions(property),
                 typeof(void),
                 new Type[1] { property.PropertyType })

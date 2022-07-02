@@ -184,7 +184,7 @@ public static class ArrayExtensions
         }
     }
 
-    public static TOut?[] SelectToArray<TIn, TOut>(this TIn[] array,
+    public static TOut[] SelectToArray<TIn, TOut>(this TIn[] array,
         Func<TIn, TOut> transform)
     {
         var len = array.Length;
@@ -193,7 +193,6 @@ public static class ArrayExtensions
         {
             output[i] = transform(array[i]);
         }
-
         return output;
     }
     

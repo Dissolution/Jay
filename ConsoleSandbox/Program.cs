@@ -7,9 +7,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using ConsoleSandbox;
 using Jay;
 using Jay.Collections;
 using Jay.Dumping;
+using Jay.Reflection;
 using Jay.Reflection.Building.Backing;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Text;
@@ -26,7 +28,14 @@ using Jay.BenchTests.Text;
 #else
 using var text = TextBuilder.Borrow();
 
-var backingType = InterfaceImplementer.CreateImplementationType<IDictionary<string, object?>>();
+var backingType = InterfaceImplementer.CreateImplementationType<IEntity>();
+var backingInstance = (Activator.CreateInstance(backingType) as IEntity)!;
+
+var members = backingInstance.GetType().GetMembers(Reflect.AllFlags);
+
+string? origName = backingInstance.Name;
+backingInstance.Name = "BLAH";
+string? newName = backingInstance.Name;
 
 Debugger.Break();
 
@@ -40,6 +49,13 @@ return 0;
 
 namespace ConsoleSandbox
 {
+    public interface IEntity
+    {
+        string Name { get; set; }
+    }
+
+    
+    
     public static class Sandbox
     {
         public struct TestStruct
@@ -277,21 +293,7 @@ namespace ConsoleSandbox
 
 
 
-    public interface IEntity : INotifyPropertyChanged,
-                               INotifyPropertyChanging
-    {
-        DateTimeOffset TimeStamp { get; set; }
-        string Name { get; set; }
-    }
 
-    public interface IKeyEntity<TKey> : IEntity,
-                                        IEquatable<IKeyEntity<TKey>>
-                                        
-        where TKey : IComparable<TKey>
-    {
-        TKey Key { get; }
-    }
-    
     
     
     public interface IInstance : IFluent<IInstance>

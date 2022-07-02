@@ -10,20 +10,18 @@ public interface IPropertyGetMethodImplementer
 
 internal class DefaultInstancePropertyGetMethodImplementer : Implementer, IPropertyGetMethodImplementer
 {
-    public DefaultInstancePropertyGetMethodImplementer(TypeBuilder typeBuilder, IAttributeImplementer attributeImplementer) : base(typeBuilder, attributeImplementer)
+    public DefaultInstancePropertyGetMethodImplementer(TypeBuilder typeBuilder) : base(typeBuilder)
     {
     }
 
     public MethodBuilder ImplementGetMethod(FieldBuilder backingField, PropertyBuilder property)
     {
-        if (property.GetIndexParameters().Length > 0)
-            throw new NotImplementedException();
         if (property.IsStatic())
             throw new NotImplementedException();
 
         var getMethod = _typeBuilder.DefineMethod(
                 $"get_{property.Name}",
-                MethodAttributes.Private,
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.Final,
                 GetCallingConventions(property),
                 property.PropertyType,
                 Type.EmptyTypes)
@@ -38,20 +36,18 @@ internal class DefaultInstancePropertyGetMethodImplementer : Implementer, IPrope
 
 internal class DefaultStaticPropertyGetMethodImplementer : Implementer, IPropertyGetMethodImplementer
 {
-    public DefaultStaticPropertyGetMethodImplementer(TypeBuilder typeBuilder, IAttributeImplementer attributeImplementer) : base(typeBuilder, attributeImplementer)
+    public DefaultStaticPropertyGetMethodImplementer(TypeBuilder typeBuilder) : base(typeBuilder)
     {
     }
 
     public MethodBuilder ImplementGetMethod(FieldBuilder backingField, PropertyBuilder property)
     {
-        if (property.GetIndexParameters().Length > 0)
-            throw new NotImplementedException();
         if (!property.IsStatic())
             throw new NotImplementedException();
 
         var getMethod = _typeBuilder.DefineMethod(
                 $"get_{property.Name}",
-                MethodAttributes.Private | MethodAttributes.Static,
+                MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.Final,
                 GetCallingConventions(property),
                 property.PropertyType,
                 Type.EmptyTypes)

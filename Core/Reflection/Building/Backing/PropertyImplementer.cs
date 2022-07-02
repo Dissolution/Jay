@@ -9,13 +9,11 @@ public class PropertyImplementer : Implementer, IPropertyImplementer
     protected readonly IPropertyGetMethodImplementer _getMethodImplementer;
     protected readonly IPropertySetMethodImplementer _propertySetMethodImplementer;
 
-    public PropertyImplementer(
-        TypeBuilder typeBuilder,
-        IAttributeImplementer attributeImplementer,
+    public PropertyImplementer(TypeBuilder typeBuilder,
         IBackingFieldImplementer backingFieldImplementer, 
         IPropertyGetMethodImplementer getMethodImplementer, 
         IPropertySetMethodImplementer propertySetMethodImplementer)
-        : base(typeBuilder, attributeImplementer)
+        : base(typeBuilder)
     {
         _backingFieldImplementer = backingFieldImplementer;
         _getMethodImplementer = getMethodImplementer;
@@ -32,7 +30,7 @@ public class PropertyImplementer : Implementer, IPropertyImplementer
             GetCallingConventions(property),
             property.PropertyType,
             parameterTypes);
-        _attributeImplementer.ImplementAttributes(property, propertyBuilder.SetCustomAttribute);
+        AttributeImplementer.ImplementAttributes(property, propertyBuilder.SetCustomAttribute);
         // TODO: Do not implement if property isn't getter/setter?
         var getMethodBuilder = _getMethodImplementer.ImplementGetMethod(fieldBuilder, propertyBuilder);
         var setMethodBuilder = _propertySetMethodImplementer.ImplementSetMethod(fieldBuilder, propertyBuilder);

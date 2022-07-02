@@ -3,10 +3,20 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
+using Jay.Reflection.Exceptions;
 
 namespace Jay.Reflection.Building.Backing;
 
+[AttributeUsage(validOn: AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+public class EqualityAttribute : Attribute
+{
+    public bool PartOfEquality { get; }
 
+    public EqualityAttribute(bool partOfEquality = true)
+    {
+        this.PartOfEquality = partOfEquality;
+    }
+}
 
 public interface IEqualsBacker
 {
@@ -27,9 +37,8 @@ public class InterfaceImplementer
         return new InterfaceImplementer(typeof(TInterface)).CreateImplementingType();
     }
 
-    protected HashSet<Type>? _interfaces;
-    protected TypeBuilder? _typeBuilder;
-    protected IAttributeImplementer? _attributeImplementer;
+    protected readonly HashSet<Type> _interfaces;
+    protected readonly TypeBuilder _typeBuilder;
 
     protected readonly Dictionary<string, FieldBuilder> _builtFields = new(StringComparer.OrdinalIgnoreCase);
     protected readonly Dictionary<string, PropertyBuilder> _builtProperties = new(StringComparer.OrdinalIgnoreCase);
@@ -45,36 +54,48 @@ public class InterfaceImplementer
         if (!interfaceType.IsInterface)
             throw new ArgumentException("InterfaceBacker must be passed an interface type", nameof(interfaceType));
         this.InterfaceType = interfaceType;
+
+        _interfaces = new HashSet<Type>(InterfaceType.GetInterfaces())
+        {
+            interfaceType
+        };
+        _typeBuilder = RuntimeBuilder.DefineType(
+            TypeAttributes.Public | TypeAttributes.Class,
+            MemberNaming.CreateInterfaceImplementationName(InterfaceType));
     }
 
     private void ImplementProperties()
     {
-        IBackingFieldImplementer backingFieldImplementer = new BackingFieldImplementer(_typeBuilder!, _attributeImplementer!);
-        IPropertyGetMethodImplementer getMethodImplementer = new DefaultInstancePropertyGetMethodImplementer(_typeBuilder!, _attributeImplementer!);
+        IBackingFieldImplementer backingFieldImplementer = new BackingFieldImplementer(_typeBuilder);
+        IPropertyGetMethodImplementer getMethodImplementer = new DefaultInstancePropertyGetMethodImplementer(_typeBuilder);
         IPropertySetMethodImplementer setMethodImplementer;
         var notifyPropertyChanging = _interfaces!.Contains(typeof(INotifyPropertyChanging));
         var notifyPropertyChanged = _interfaces!.Contains(typeof(INotifyPropertyChanged));
         if (notifyPropertyChanging || notifyPropertyChanged)
         {
-            setMethodImplementer = new NotifyPropertySetMethodImplementer(_typeBuilder!,
-                _attributeImplementer!,
+            setMethodImplementer = new NotifyPropertySetMethodImplementer(_typeBuilder,
                 null,
                 null);
             throw new NotImplementedException();
         }
         else
         {
-            setMethodImplementer = new DefaultInstancePropertySetMethodImplementer(_typeBuilder!, _attributeImplementer!);
+            setMethodImplementer = new DefaultInstancePropertySetMethodImplementer(_typeBuilder);
         }
 
-        IPropertyImplementer propertyImplementer = new PropertyImplementer(_typeBuilder!,
-            _attributeImplementer!,
+        IPropertyImplementer propertyImplementer = new PropertyImplementer(_typeBuilder,
             backingFieldImplementer,
             getMethodImplementer,
             setMethodImplementer);
+
+        var interfaceProperties = _interfaces
+            .SelectMany(face => face.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            .ToList();
+        var typeProperties = InterfaceType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .ToList();
         
-        var properties = _interfaces.SelectMany(i => i.GetProperties(BindingFlags.Public | BindingFlags.Instance));
-        foreach (var property in properties)
+        
+        foreach (var property in typeProperties)
         {
             if (_builtProperties.ContainsKey(property.Name)) continue;
             var pack = propertyImplementer.ImplementProperty(property);
@@ -90,59 +111,59 @@ public class InterfaceImplementer
             _builtProperties.Add(pack.Property.Name, pack.Property);
         }
     }
+
+    private void ImplementEvents()
+    {
+        
+    }
+
+    private void ImplementMethods()
+    {
+        
+    }
+
+    private void ImplementConstructor()
+    {
+        MethodAttributes attr = MethodAttributes.Public;
+        if (_typeBuilder.IsStatic())
+            attr |= MethodAttributes.Static;
+        _typeBuilder.DefineDefaultConstructor(attr);
+    }
     
     public Type CreateImplementingType()
     {
-        // What all do we need to implement?
-        _interfaces = new HashSet<Type>(InterfaceType.GetInterfaces())
-        {
-            InterfaceType
-        };
-        
-        Debugger.Break();
+        // Implement all attributes
+        AttributeImplementer.ImplementAttributes(InterfaceType, _typeBuilder.SetCustomAttribute);
 
-        _typeBuilder = RuntimeBuilder.DefineType(
-            TypeAttributes.Public | TypeAttributes.Class,
-            $"{InterfaceType.Name}_Impl");
-        _attributeImplementer = 
-        
+        // We inherit from object, as everything should
+        _typeBuilder.SetParent(typeof(object));
+
+        // Events (sets up INotifyPropertyXXX)
+        ImplementEvents();
         
         // Properties
         ImplementProperties();
         
-
-        IPropertyBacker propertyBacker;
-
-        if (interfaces.Contains(typeof(INotifyCollectionChanged)) ||
-            interfaces.Contains(typeof(INotifyPropertyChanging)))
-        {
-            propertyBacker = new NotifyPropertyBacker();
-        }
-        else
-        {
-            propertyBacker = new DefaultInstancePropertyBacker();
-        }
-
-        IEqualsBacker equalsBacker;
-        IToStringBacker toStringBacker;
+        // Methods
+        ImplementMethods();
         
-        if (interfaces.Contains(typeof(IEquatable<>)))
+        // Constructor
+        ImplementConstructor();
+        
+        // Implemented all interfaces
+        _interfaces.Consume(face => _typeBuilder.AddInterfaceImplementation(face));
+
+        // Create our type
+        try
         {
-            equalsBacker = new PropertyEqualsBacker();
-            toStringBacker = new PropertyToStringBacker();
+            var implType = _typeBuilder.CreateType();
+            if (implType is null)
+                throw new ReflectionException($"Unable to create an implementation for {InterfaceType}");
+            return implType;
         }
-        else
+        catch (Exception ex)
         {
-            equalsBacker = new ReferenceEqualsBacker();
-            toStringBacker = new DefaultToStringBacker();
+            throw new ReflectionException($"Unable to create an implementation for {InterfaceType}", ex);
         }
-
-        var properties = InterfaceType.GetProperties(
-            BindingFlags.Public | BindingFlags.Instance);
-        Debugger.Break();
-
-
-
-        throw new NotImplementedException();
     }
 }

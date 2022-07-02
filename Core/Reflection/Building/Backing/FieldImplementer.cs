@@ -6,7 +6,7 @@ namespace Jay.Reflection.Building.Backing;
 internal class FieldImplementer : Implementer, IFieldImplementer
 {
     /// <inheritdoc />
-    public FieldImplementer(TypeBuilder typeBuilder, IAttributeImplementer attributeImplementer) : base(typeBuilder, attributeImplementer)
+    public FieldImplementer(TypeBuilder typeBuilder) : base(typeBuilder)
     {
     }
 
@@ -17,7 +17,7 @@ internal class FieldImplementer : Implementer, IFieldImplementer
             field.Name,
             field.FieldType,
             field.Attributes);
-        _attributeImplementer.ImplementAttributes(field, fieldBuilder.SetCustomAttribute);
+        AttributeImplementer.ImplementAttributes(field, fieldBuilder.SetCustomAttribute);
         return fieldBuilder;
     }
 }

@@ -143,10 +143,14 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             return Ldstr(str);
         if (value is Type type)
             return LoadType(type);
+        if (value is LocalBuilder local)
+            return Ldloc(local);
 
         throw new NotImplementedException();
     }
 
+    TEmitter LoadArg(int index) => Ldarg(index);
+    
     TEmitter LoadType(Type type)
     {
         ArgumentNullException.ThrowIfNull(type);

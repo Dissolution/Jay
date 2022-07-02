@@ -12,12 +12,9 @@ public abstract class Implementer
     }
 
     protected readonly TypeBuilder _typeBuilder;
-    protected readonly IAttributeImplementer _attributeImplementer;
 
-    protected Implementer(TypeBuilder typeBuilder,
-        IAttributeImplementer attributeImplementer)
+    protected Implementer(TypeBuilder typeBuilder)
     {
         _typeBuilder = typeBuilder;
-        _attributeImplementer = attributeImplementer;
     }
 }
