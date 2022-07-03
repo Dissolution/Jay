@@ -93,6 +93,15 @@ public static class MemberSearch
         return FindBestConstructor(type, flags, MemberExactness.Exact, argTypes);
     }
 
+    public static ConstructorInfo? FindConstructor(Type type,
+        BindingFlags flags,
+        params Type[] argTypes)
+    {
+        return type.GetConstructors(flags)
+            .Where(ctor => ctor.HasParameterTypes(argTypes))
+            .OneOrDefault();
+    }
+
     public static ConstructorInfo? FindBestConstructor(Type type,
                                                        BindingFlags flags,
                                                        MemberExactness exactness,

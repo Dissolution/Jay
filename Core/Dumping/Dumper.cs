@@ -131,7 +131,13 @@ public static partial class Dumper
         // Any sort of MemberInfo?
         if (valueType.Implements<MemberInfo>())
         {
-            if (valueType.Implements<FieldInfo>())
+            if (valueType.Implements<Type>())
+            {
+                method = typeof(Dumper).GetMethod(nameof(DumpTypeTo),
+                        BindingFlags.NonPublic | BindingFlags.Static)
+                    .ThrowIfNull("Could not find Dumper.DumpTypeTo");
+            }
+            else if (valueType.Implements<FieldInfo>())
             {
                 method = typeof(Dumper).GetMethod(nameof(DumpFieldTo),
                         BindingFlags.NonPublic | BindingFlags.Static)

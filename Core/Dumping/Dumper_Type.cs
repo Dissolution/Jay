@@ -7,8 +7,8 @@ namespace Jay.Dumping;
 public static partial class Dumper
 {
     private static readonly ConcurrentTypeDictionary<string> _typeDumpCache = new();
-    
-        private static void DumpTypeTo(Type? type, TextBuilder text)
+
+    private static void DumpTypeTo(Type? type, TextBuilder text)
     {
         if (type is null)
         {
@@ -20,11 +20,13 @@ public static partial class Dumper
             {
                 text.Write(str);
             }
-            // This writes + creates
-            str = CreateTypeString(type, text);
-            _typeDumpCache.TryAdd(type, str);
+            else
+            {
+                // This writes + creates
+                str = CreateTypeString(type, text);
+                _typeDumpCache.TryAdd(type, str);
+            }
         }
-        
     }
 
     private static string CreateTypeString(Type type, TextBuilder textBuilder)
@@ -100,7 +102,7 @@ public static partial class Dumper
                 DumpTypeTo(underlyingType, textBuilder);
                 textBuilder.Write("[]");
             }
-            
+
             string name = type.Name;
 
             if (type.IsGenericType)
@@ -114,6 +116,7 @@ public static partial class Dumper
                         textBuilder.Write(" : ");
                         Debugger.Break();
                     }
+
                     Debugger.Break();
                 }
 
@@ -122,8 +125,8 @@ public static partial class Dumper
                 Debug.Assert(i >= 0);
                 textBuilder.Append(name[..i])
                     .Append('<')
-                    .AppendDelimit(",", 
-                        genericTypes, 
+                    .AppendDelimit(",",
+                        genericTypes,
                         (tb, gt) => DumpTypeTo(gt, tb))
                     .Write('>');
             }
@@ -136,6 +139,6 @@ public static partial class Dumper
         var end = textBuilder.Length;
         int length = end - start;
         Debug.Assert(length > 0);
-        return new string(textBuilder.Written.Slice(0, length));
+        return new string(textBuilder.Written.Slice(start, length));
     }
 }

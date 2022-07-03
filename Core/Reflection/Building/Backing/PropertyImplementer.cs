@@ -1,8 +1,5 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Reflection.Emit;
-using Jay.Debugging;
-using Jay.Dumping;
 
 namespace Jay.Reflection.Building.Backing;
 
@@ -34,15 +31,20 @@ public class PropertyImplementer : Implementer, IPropertyImplementer
             property.PropertyType,
             parameterTypes);
         AttributeImplementer.ImplementAttributes(property, propertyBuilder.SetCustomAttribute);
-        var tuple = (property.CanRead, property.GetGetter(), property.CanWrite, property.GetSetter());
-        var dump = Dumper.Dump(tuple);
-        Hold.Debug(dump);
-        Debugger.Break();
+        // Getter?
+        MethodBuilder? getMethodBuilder = null;
+        if (property.CanRead)
+        {
+            getMethodBuilder = _getMethodImplementer.ImplementGetMethod(fieldBuilder, propertyBuilder);
+        }
+        // Setter?
+        MethodBuilder? setMethodBuilder = null;
+        if (property.CanWrite)
+        {
+            setMethodBuilder = _propertySetMethodImplementer.ImplementSetMethod(fieldBuilder, propertyBuilder);
+        }
         
-        
-        // TODO: Do not implement if property isn't getter/setter?
-        var getMethodBuilder = _getMethodImplementer.ImplementGetMethod(fieldBuilder, propertyBuilder);
-        var setMethodBuilder = _propertySetMethodImplementer.ImplementSetMethod(fieldBuilder, propertyBuilder);
+        // Implemented everything backing this Property
         return new PropertyImpl
         (
             fieldBuilder,

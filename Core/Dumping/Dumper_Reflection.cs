@@ -9,8 +9,6 @@ public static partial class Dumper
     private static void DumpFieldTo(FieldInfo? field, TextBuilder text)
     {
         if (TryDumpNull(field, text)) return;
-        DumpEnumTo(field.Visibility(), text);
-        text.Write(' ');
         DumpTypeTo(field.FieldType, text);
         text.Write(' ');
         DumpTypeTo(field.OwnerType(), text);
@@ -47,8 +45,6 @@ public static partial class Dumper
     private static void DumpEventTo(EventInfo? @event, TextBuilder text)
     {
         if (TryDumpNull(@event, text)) return;
-        DumpEnumTo(@event.Visibility(), text);
-        text.Write(' ');
         DumpTypeTo(@event.EventHandlerType, text);
         text.Write(' ');
         DumpTypeTo(@event.OwnerType(), text);
@@ -58,8 +54,6 @@ public static partial class Dumper
     private static void DumpConstructorTo(ConstructorInfo? ctor, TextBuilder text)
     {
         if (TryDumpNull(ctor, text)) return;
-        DumpEnumTo(ctor.Visibility(), text);
-        text.Write(' ');
         DumpTypeTo(ctor.DeclaringType, text);
         text.Append('(')
             .AppendDelimit(", ", ctor.GetParameters(), (tb, param) => DumpParameterTo(param, tb))
@@ -69,8 +63,6 @@ public static partial class Dumper
     private static void DumpMethodTo(MethodBase? method, TextBuilder text)
     {
         if (TryDumpNull(method, text)) return;
-        DumpEnumTo(method.Visibility(), text);
-        text.Write(' ');
         DumpTypeTo(method.ReturnType(), text);
         text.Write(' ');
         DumpTypeTo(method.OwnerType(), text);

@@ -203,4 +203,9 @@ public static class ArrayExtensions
             yield return array[i];
         }
     }
+
+    public static bool SequenceEqual<T>(this T[] array, ReadOnlySpan<T> items)
+    {
+        return MemoryExtensions.SequenceEqual(array, items);
+    }
 }

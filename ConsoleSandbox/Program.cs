@@ -28,14 +28,12 @@ using Jay.BenchTests.Text;
 #else
 using var text = TextBuilder.Borrow();
 
-var backingType = InterfaceImplementer.CreateImplementationType<IEntity>();
-var backingInstance = (Activator.CreateInstance(backingType) as IEntity)!;
+var backingType = InterfaceImplementer.CreateImplementationType<IKeyedEntity<int>>();
+var backingInstance = (Activator.CreateInstance(backingType) as IKeyedEntity<int>)!;
 
 var members = backingInstance.GetType().GetMembers(Reflect.AllFlags);
 
-string? origName = backingInstance.Name;
-// backingInstance.Name = "BLAH";
-// string? newName = backingInstance.Name;
+var str = backingInstance.ToString();
 
 Debugger.Break();
 
@@ -51,7 +49,18 @@ namespace ConsoleSandbox
 {
     public interface IEntity
     {
-        string Name { get; }
+        string? Name { get; set; }
+
+        string ToString() => Name!;
+    }
+
+    public interface IKeyedEntity<T> : IEntity,
+                                       IEquatable<IKeyedEntity<T>>
+    {
+        [Equality]
+        T Key { get; set; }
+
+        string IEntity.ToString() => $"{Key}: \"{Name}\"";
     }
 
     

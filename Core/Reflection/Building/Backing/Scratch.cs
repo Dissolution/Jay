@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
+using Jay.Enums;
 using Jay.Reflection.Exceptions;
 
 namespace Jay.Reflection.Building.Backing;
@@ -119,7 +120,23 @@ public class InterfaceImplementer
 
     private void ImplementMethods()
     {
-        
+        var methods = InterfaceType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .Where(method => !method.Attributes.HasAnyFlags(MethodAttributes.SpecialName))
+            .ToList();
+        foreach (var method in methods)
+        {
+            // No default implementation
+            if (method.Attributes.HasAnyFlags(MethodAttributes.Abstract))
+            {
+                throw new NotImplementedException();
+            }
+            // Has default implementation
+            else
+            {
+                var implr = new InterfaceDefaultMethodImplementer(_typeBuilder);
+                implr.ImplementMethod(method);
+            }
+        }
     }
 
     private void ImplementConstructor()

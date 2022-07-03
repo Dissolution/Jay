@@ -118,7 +118,7 @@ public static class AttributeImplementer
         {
             // N args = N fields?
             var fieldTypes = fields.SelectToArray(f => f.FieldType);
-            ctor = MemberSearch.FindBestConstructor(attributeType, flags, fieldTypes);
+            ctor = MemberSearch.FindConstructor(attributeType, flags, fieldTypes);
             if (ctor is not null)
             {
                 getCtorArgs = getFieldValues;
@@ -129,7 +129,7 @@ public static class AttributeImplementer
             {
                 // N args = N properties?
                 var propertyTypes = properties.SelectToArray(p => p.PropertyType);
-                ctor = MemberSearch.FindBestConstructor(attributeType, flags, propertyTypes);
+                ctor = MemberSearch.FindConstructor(attributeType, flags, propertyTypes);
                 if (ctor is not null)
                 {
                     getCtorArgs = getPropertyValues;
@@ -138,8 +138,6 @@ public static class AttributeImplementer
                 }
                 else
                 {
-                            
-
                     throw new NotImplementedException();
                 }
             }
