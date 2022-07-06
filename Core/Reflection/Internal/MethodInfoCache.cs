@@ -96,7 +96,7 @@ internal static class MethodInfoCache
         _runtimeHelpers_IsReferenceOrContainsReferences_TypeCache = new();
     }
 
-    public static bool IsReferenceOrContainsReferences(Type type)
+    public static bool IsReferenceOrContainsReferences(this Type type)
     {
         return _runtimeHelpers_IsReferenceOrContainsReferences_TypeCache.GetOrAdd(type, 
             t => (bool)_runtimeHelpers_IsReferenceOrContainsReferences_Method.Value

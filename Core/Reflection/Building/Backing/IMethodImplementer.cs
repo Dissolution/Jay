@@ -57,3 +57,60 @@ internal class InterfaceDefaultMethodImplementer : Implementer, IMethodImplement
         return methodBuilder;
     }
 }
+
+public sealed record class EqualsMethodsImpl
+(
+    MethodBuilder EqualsTMethod,
+    MethodBuilder EqualsObjMethod,
+    MethodBuilder GetHashCodeMethod
+);
+
+internal class EqualsMethodsImplementer : Implementer
+{
+    public EqualsMethodsImplementer(TypeBuilder typeBuilder) 
+        : base(typeBuilder)
+    {
+    }
+
+    public EqualsMethodsImpl ImplementEquals(Type instanceType)
+    {
+        var equalsTMethodBuilder = _typeBuilder.DefineMethod(
+            "Equals",
+            MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final,
+            CallingConventions.HasThis,
+            typeof(bool),
+            new Type[1] { instanceType });
+        
+        // Equals<T> is really Ceq/RefEquals by default
+        // We have to use EqualityAttribute in order to specify that we want more advanced behavior
+        
+        
+
+
+        equalsTMethodBuilder.Emit(emitter =>
+        {
+            /* public bool Equals(T? other)
+             * {
+             *   if (other is null) return false;
+             *   if (other._field1 != this._field1) return false;
+             *   ...
+             *   if (other._fieldN != this._fieldN) return false;
+             *   return true;
+             * }
+             */
+            emitter.Ldarg_1()
+                .Brfalse(out var lblRetFalse)
+                
+                
+                
+                
+                
+                
+                .MarkLabel(lblRetFalse)
+                .Ldc_I4_0()
+                .Ret();
+            ;
+        });
+        throw new NotImplementedException();
+    }
+}

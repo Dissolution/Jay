@@ -74,14 +74,14 @@ public static class ArrayExtensions
     {
         if (array is null)
             return @default;
-        if ((uint)index > (uint)array.Length)
+        if ((uint)index >= (uint)array.Length)
             return @default;
         return array[index];
     }
 
     public static bool TryGetItem<T>(this T[]? array, int index, [MaybeNullWhen(false)] out T item)
     {
-        if (array is null || (uint)index > (uint)array.Length)
+        if (array is null || (uint)index >= (uint)array.Length)
         {
             item = default;
             return false;

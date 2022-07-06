@@ -2,7 +2,7 @@
 
 public static class ListExtensions
 {
-    public static bool TryGetValue<T>(this IList<T> list, 
+    public static bool TryGetItem<T>(this IList<T> list, 
         int index, 
         [NotNullWhen(true)] out T? value)
     {

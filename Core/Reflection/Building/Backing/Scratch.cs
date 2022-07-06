@@ -89,14 +89,11 @@ public class InterfaceImplementer
             getMethodImplementer,
             setMethodImplementer);
 
-        var interfaceProperties = _interfaces
+        var properties = _interfaces
             .SelectMany(face => face.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             .ToList();
-        var typeProperties = InterfaceType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .ToList();
-        
-        
-        foreach (var property in typeProperties)
+
+        foreach (var property in properties)
         {
             if (_builtProperties.ContainsKey(property.Name)) continue;
             var pack = propertyImplementer.ImplementProperty(property);
@@ -105,37 +102,47 @@ public class InterfaceImplementer
             {
                 _builtMethods.Add(pack.GetMethod.Name, pack.GetMethod);
             }
+
             if (pack.SetMethod is not null)
             {
                 _builtMethods.Add(pack.SetMethod.Name, pack.SetMethod);
             }
+
             _builtProperties.Add(pack.Property.Name, pack.Property);
         }
     }
 
     private void ImplementEvents()
     {
-        
     }
 
     private void ImplementMethods()
     {
-        var methods = InterfaceType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+        var methods = _interfaces
+            .SelectMany(face => face.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             .Where(method => !method.Attributes.HasAnyFlags(MethodAttributes.SpecialName))
             .ToList();
         foreach (var method in methods)
         {
-            // No default implementation
-            if (method.Attributes.HasAnyFlags(MethodAttributes.Abstract))
-            {
-                throw new NotImplementedException();
-            }
-            // Has default implementation
-            else
+            if (_builtMethods.ContainsKey(method.Name)) continue;
+
+            // Has a default implementation?
+            if (!method.Attributes.HasAnyFlags(MethodAttributes.Abstract))
             {
                 var implr = new InterfaceDefaultMethodImplementer(_typeBuilder);
-                implr.ImplementMethod(method);
+                var methodBuilder = implr.ImplementMethod(method);
+                _builtMethods.Add(method.Name, methodBuilder);
+                continue;
             }
+
+            // Equals<T> ?
+            if (method.Name == "Equals" && method.GetParameterTypes()[0] == InterfaceType)
+            {
+                var implr = new EqualsMethodsImplementer(_typeBuilder);
+                Debugger.Break();
+            }
+
+            throw new NotImplementedException();
         }
     }
 
@@ -146,7 +153,7 @@ public class InterfaceImplementer
             attr |= MethodAttributes.Static;
         _typeBuilder.DefineDefaultConstructor(attr);
     }
-    
+
     public Type CreateImplementingType()
     {
         // Implement all attributes
@@ -157,18 +164,19 @@ public class InterfaceImplementer
 
         // Events (sets up INotifyPropertyXXX)
         ImplementEvents();
-        
+
         // Properties
         ImplementProperties();
-        
+
         // Methods
         ImplementMethods();
-        
+
         // Constructor
         ImplementConstructor();
-        
+
         // Implemented all interfaces
         _interfaces.Consume(face => _typeBuilder.AddInterfaceImplementation(face));
+
 
         // Create our type
         try
