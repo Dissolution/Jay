@@ -76,8 +76,10 @@ public static class MethodBaseExtensions
     public static Type[] GetParameterTypes(this MethodBase methodBase)
     {
         var parameters = methodBase.GetParameters();
-        var types = new Type[parameters.Length];
-        for (var i = 0; i < parameters.Length; i++)
+        var len = parameters.Length;
+        if (len == 0) return Type.EmptyTypes;
+        var types = new Type[len];
+        for (var i = 0; i < len; i++)
         {
             types[i] = parameters[i].ParameterType;
         }

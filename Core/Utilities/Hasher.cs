@@ -414,7 +414,7 @@ public ref partial struct Hasher
                 {
                     hasher.Add(values[i]);
                 }
-                return hasher.ToHashCode();
+                return hasher.CreateHashCode();
             }
         }
     }
@@ -449,7 +449,7 @@ public ref partial struct Hasher
                 {
                     hasher.Add(values[i]);
                 }
-                return hasher.ToHashCode();
+                return hasher.CreateHashCode();
             }
         }
     }
@@ -459,7 +459,7 @@ public ref partial struct Hasher
         if (equalityComparer is null) return Create<T>(value);
         var hasher = new Hasher();
         hasher.Add(value, equalityComparer);
-        return hasher.ToHashCode();
+        return hasher.CreateHashCode();
     }
     
     public static int Create<T>(ReadOnlySpan<T> values, IEqualityComparer<T>? equalityComparer)
@@ -470,7 +470,7 @@ public ref partial struct Hasher
         {
             hasher.Add(values[i], equalityComparer);
         }
-        return hasher.ToHashCode();
+        return hasher.CreateHashCode();
     }
 
     public static int Create<T>(T[]? values, IEqualityComparer<T>? equalityComparer)
@@ -482,7 +482,7 @@ public ref partial struct Hasher
         {
             hasher.Add(values[i], equalityComparer);
         }
-        return hasher.ToHashCode();
+        return hasher.CreateHashCode();
     }
 
     public static int Create(Array? array)
@@ -493,7 +493,7 @@ public ref partial struct Hasher
         {
             hasher.Add(item);
         }
-        return hasher.ToHashCode();
+        return hasher.CreateHashCode();
     }
 
     public static unsafe int Create<T>(T* ptr, int length)
@@ -506,7 +506,7 @@ public ref partial struct Hasher
             hasher.Add<T>(Danger.Read<T>(ptr));
             ptr = Danger.OffsetBy<T>(ptr, 1);
         }
-        return hasher.ToHashCode();
+        return hasher.CreateHashCode();
     }
    
     
@@ -654,7 +654,7 @@ public ref partial struct Hasher
         }
     }
 
-    public int ToHashCode()
+    public int CreateHashCode()
     {
         // Storing the value of _length locally shaves of quite a few bytes
         // in the resulting machine code.

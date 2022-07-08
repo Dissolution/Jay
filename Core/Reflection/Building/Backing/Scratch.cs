@@ -8,17 +8,6 @@ using Jay.Reflection.Exceptions;
 
 namespace Jay.Reflection.Building.Backing;
 
-[AttributeUsage(validOn: AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public class EqualityAttribute : Attribute
-{
-    public bool PartOfEquality { get; }
-
-    public EqualityAttribute(bool partOfEquality = true)
-    {
-        this.PartOfEquality = partOfEquality;
-    }
-}
-
 public interface IEqualsBacker
 {
     (MethodInfo EqualMethod, MethodInfo GetHashCodeMethod) CreateEqualityMethods(

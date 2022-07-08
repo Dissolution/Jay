@@ -461,6 +461,6 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
         {
             hasher.Add(value, _equalityComparer);
         }
-        return hasher.ToHashCode();
+        return hasher.CreateHashCode();
     }
 }

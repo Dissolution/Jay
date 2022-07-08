@@ -98,7 +98,7 @@ public sealed class RefinedTextComparers : TextComparers
                 hasher.AddHash((int)c);
             }
         }
-        return hasher.ToHashCode();
+        return hasher.CreateHashCode();
     }
 
     public override int Compare(ReadOnlySpan<char> xText, ReadOnlySpan<char> yText)
