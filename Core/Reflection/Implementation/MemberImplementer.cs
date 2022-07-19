@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿/*using System.Reflection;
 using System.Reflection.Emit;
 using Jay.Validation;
 
@@ -68,7 +68,7 @@ public class EventImplementer : MemberImplementer<EventInfo>
         var fieldBuilder = _typeBuilder.DefineField(eventName, 
             eventHandlerType, 
             FieldAttributes.Private);
-        _memberBuilders
+        
         // Event
         var eventInfo = _typeBuilder.DefineEvent(eventName,
             EventAttributes.None,
@@ -127,7 +127,7 @@ public class EventImplementer : MemberImplementer<EventInfo>
                      *    if (copy is null) return;
                      *    copy.Invoke(arg0, ..., argN)
                      * }
-                     * */
+                     * #1#
                     emitter.DeclareLocal(eventHandlerType, out var copy)
                         .Ldarg(0)
                         .Ldfld(fieldBuilder)
@@ -150,4 +150,4 @@ public class EventImplementer : MemberImplementer<EventInfo>
                 }
             );
     }
-}
+}*/
