@@ -42,11 +42,17 @@ public static class ObjectExtensions
         if (obj is null)
         {
             value = default;
-            return !typeof(T).IsValueType || typeof(T).Implements(typeof(Nullable<>));
+            return typeof(T).CanContainNull();
+        }
+        else if (obj is T)
+        {
+            value = (T)obj;
+            return true;
         }
         else
         {
-            return obj.Is<T>(out value);
+            value = default;
+            return false;
         }
     }
 }

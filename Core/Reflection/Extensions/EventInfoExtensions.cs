@@ -59,11 +59,20 @@ public static class EventInfoExtensions
     public static FieldInfo? GetBackingField(this EventInfo? eventInfo)
     {
         if (eventInfo is null) return null;
+        
+        BindingFlags flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic;
+        
+        if (eventInfo.IsStatic())
+        {
+            flags |= BindingFlags.Static;
+        }
+        else
+        {
+            flags |= BindingFlags.Instance;
+        }
+
         return eventInfo.DeclaringType!
-                        .GetField(eventInfo.Name,
-                                  BindingFlags.DeclaredOnly |
-                                  BindingFlags.Instance |
-                                  BindingFlags.Public | BindingFlags.NonPublic);
+            .GetField(eventInfo.Name, flags);
 
     }
 

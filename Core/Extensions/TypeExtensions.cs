@@ -77,6 +77,7 @@ public static class TypeExtensions
     public static bool CanContainNull(this Type? type)
     {
         if (type is null) return true;
+        if (type.IsStatic()) return false;
         if (type.IsValueType)
             return type.Implements(typeof(Nullable<>));
         return true;

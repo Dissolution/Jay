@@ -682,7 +682,7 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     /// <summary>
     /// Returns from the current method, pushing a return value (if present) from the callee's evaluation stack onto the caller's evaluation stack.
     /// </summary>
-    void Ret() => Emit(OpCodes.Ret);
+    TEmitter Ret() => Emit(OpCodes.Ret);
     #endregion
     #region True
     /// <summary>
