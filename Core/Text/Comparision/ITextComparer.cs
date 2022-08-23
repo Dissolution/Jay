@@ -12,7 +12,7 @@ public interface ITextComparer : IComparer<string?>,
 
     int IComparer<char[]?>.Compare(char[]? x, char[]? y)
     {
-        return Compare(x.AsSpan(), y.AsSpan());
+        return Compare(new Span<char>(x), new Span<char>(y));
     }
 
     int IComparer<char>.Compare(char x, char y)
@@ -22,7 +22,7 @@ public interface ITextComparer : IComparer<string?>,
     
     int IComparer.Compare(object? x, object? y)
     {
-        return Compare(x.ToText(), y.ToText());
+        return Compare(x.ToSpanText(), y.ToSpanText());
     }
 
     int Compare(ReadOnlySpan<char> x, ReadOnlySpan<char> y);

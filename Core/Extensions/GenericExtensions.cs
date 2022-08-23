@@ -18,11 +18,11 @@ public static class GenericExtensions
         throw Unreachable();
     }
 
-    public static ReadOnlySpan<char> ToText<T>(this T? value)
+    public static ReadOnlySpan<char> ToSpanText<T>(this T? value)
     {
         if (value is null) return default;
         if (value is string str) return str.AsSpan();
-        if (value is char[] chars) return chars.AsSpan();
+        if (value is char[] chars) return new Span<char>(chars);
         if (value is char ch) return ch.AsReadOnlySpan();
         return value.ToString().AsSpan();
     }

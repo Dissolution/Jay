@@ -29,16 +29,28 @@ using Jay.BenchTests.Text;
 #else
 using var text = TextBuilder.Borrow();
 
-var backingType = InterfaceImplementer.CreateImplementationType<IKeyedEntity<int>>();
-var backingInstance = (Activator.CreateInstance(backingType) as IKeyedEntity<int>)!;
+text.Append("Writing").AppendNewLine()
+    .Append("{")
+    .Indent("    ", tb =>
+    {
+        tb.AppendNewLine()
+            .Append("Eat").AppendNewLine()
+            .Append("At").AppendNewLine()
+            .Append("Joes");
+    })
+    .AppendNewLine().Append("}").AppendNewLine();
 
-var members = backingInstance.GetType().GetMembers(Reflect.AllFlags);
+// var backingType = InterfaceImplementer.CreateImplementationType<IKeyedEntity<int>>();
+// var backingInstance = (Activator.CreateInstance(backingType) as IKeyedEntity<int>)!;
+//
+// var members = backingInstance.GetType().GetMembers(Reflect.AllFlags);
+//
+// var str = backingInstance.ToString();
 
-var str = backingInstance.ToString();
 
+var textString = text.ToString();
 Debugger.Break();
-
-Console.WriteLine(text.ToString());
+Console.WriteLine(textString);
 #endif
     
 Console.WriteLine("Press Enter to close this window.");

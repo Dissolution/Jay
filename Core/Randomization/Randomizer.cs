@@ -20,7 +20,7 @@ public class Randomizer
     
     static Randomizer()
     {
-
+        
     }
 
     public static T Generate<T>()

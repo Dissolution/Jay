@@ -839,21 +839,23 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
 
-    public TextBuilder AppendNewLine() => Append(Environment.NewLine);
+    public TextBuilder AppendNewLine()
+    {
+        return Append(_newLine);
+    }
 
     public TextBuilder AppendNewLines(int count)
     {
-        ReadOnlySpan<char> nl = Environment.NewLine;
         for (var i = 0; i < count; i++)
         {
-            Write(nl);
+            Write(_newLine);
         }
         return this;
     }
     
     #region Indenting
 
-    public TextBuilder Indented(ReadOnlySpan<char> indent,
+    public TextBuilder Indent(ReadOnlySpan<char> indent,
         Action<TextBuilder> indentedText)
     {
         var oldIndent = _newLine;

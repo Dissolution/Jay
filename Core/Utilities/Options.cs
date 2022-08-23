@@ -14,10 +14,11 @@ internal static class OptionsCodeGenerator
             .Append('>').ToStringAndClear();
         text.Append("public readonly struct ").Append(typeName).AppendNewLine()
             .Append('{')
-            .Indented("\t", text1 =>
+            .Indent("\t", text1 =>
             {
                 throw new NotImplementedException();
-            });
+            })
+            .Append('}');
         throw new NotImplementedException();
     }
 }

@@ -9,7 +9,7 @@ namespace Jay;
 /// <summary>
 /// A HashCode generator similar to <see cref="System.HashCode"/> with more methods available
 /// </summary>
-public ref partial struct Hasher
+public ref struct Hasher
 {
     // Primes from HashCode
     private const uint Prime1 = 2654435761U;
