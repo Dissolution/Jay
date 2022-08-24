@@ -31,8 +31,8 @@ namespace Jay.BenchTests
         {
             var types = Reflect.AllExportedTypes()
                                         .Where(type => type.IsValueType)
+                                        .Where(type => !type.IsByRef && !type.IsByRefLike)
                                         .Where(type => !type.IsGenericType)
-                                        .Where(type => !type.Name.EqualsAny("HashCode"))
                                         .Shuffled()
                                         .Take(100);
             foreach (var type in types)

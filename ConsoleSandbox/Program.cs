@@ -40,6 +40,8 @@ text.Append("Writing").AppendNewLine()
     })
     .AppendNewLine().Append("}").AppendNewLine();
 
+
+
 // var backingType = InterfaceImplementer.CreateImplementationType<IKeyedEntity<int>>();
 // var backingInstance = (Activator.CreateInstance(backingType) as IKeyedEntity<int>)!;
 //

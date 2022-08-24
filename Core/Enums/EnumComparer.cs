@@ -98,6 +98,14 @@ public sealed class EnumComparer<TEnum> : IEqualityComparer<TEnum>, IEqualityCom
         return Equals(xEnum, yEnum);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong AsULong(TEnum @enum)
+    {
+        Emit.Ldarg_0();
+        Emit.Conv_I8();
+        return Return<ulong>();
+    }
+    
     /// <summary>
     /// Gets a hashcode for an <paramref name="enum"/>
     /// </summary>

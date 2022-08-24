@@ -32,7 +32,7 @@ public abstract class EnumTypeInfo
 
     public Type EnumType { get; }
     public IReadOnlyList<Attribute> Attributes => _attributes;
-    public bool HasFlags => _attributes.OfType<FlagsAttribute>().Any();
+    public bool HasFlags { get; }
     public string Name { get; }
 
     protected EnumTypeInfo(Type enumType)
@@ -42,6 +42,7 @@ public abstract class EnumTypeInfo
             throw new ArgumentException("You must specify a valid enum type", nameof(enumType));
         this.EnumType = enumType;
         _attributes = Attribute.GetCustomAttributes(EnumType, true);
+        this.HasFlags = _attributes.OfType<FlagsAttribute>().Any();
         this.Name = EnumType.Name;
     }
 

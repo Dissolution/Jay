@@ -19,7 +19,7 @@
         <LangVersion>preview</LangVersion>
         <EnablePreviewFeatures>true</EnablePreviewFeatures>
         <WarningLevel>preview</WarningLevel>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     </PropertyGroup>
     
     <ItemGroup>
@@ -40,6 +40,7 @@
         <PackageReference Include="InlineIL.Fody" Version="1.7.1">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
     </ItemGroup>
 
     <ItemGroup>

@@ -38,6 +38,15 @@ public static unsafe class Danger
         Emit.Ldobj<T>();
         return Return<T>();
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T ReadUnaligned<T>(ReadOnlySpan<byte> source)
+    {
+        Emit.Ldarg(nameof(source));
+        Emit.Unaligned(1);
+        Emit.Ldobj<T>();
+        return Return<T>();
+    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -270,6 +279,14 @@ public static unsafe class Danger
 
 #endregion
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Span<TOut> CastSpan<TIn, TOut>(Span<TIn> inSpan)
+        where TIn : struct
+        where TOut : struct
+    {
+        return MemoryMarshal.Cast<TIn, TOut>(inSpan);
+    }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull("obj")]

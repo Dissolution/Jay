@@ -1,13 +1,23 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Net.NetworkInformation;
+using System.Numerics;
 using System.Runtime.InteropServices;
+using Jay.Enums;
 using Jay.Reflection;
+using Jay.Validation;
+using nint = System.IntPtr;
 
 namespace Jay.Randomization;
 
 internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
 {
+    // Multiplier to convert a ulong to a float
     private const float FloatEpsilon = 1.0f / (1U << 24);
+
+    // Multiplier to convert a ulong to a double
     private const double DoubleEpsilon = 1.0d / (1UL << 53);
+
+    public static IRandomizer Instance { get; } = new Xoshiro256StarStarRandomizer();
 
     /// <summary>
     /// SplitMix64 Pseudo-Random Number Generator
@@ -78,50 +88,42 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         _s3 = SplitMixNext(ref seed);
     }
 
-    /// <inheritdoc />
-    public byte Byte()
+    internal static bool ValidateConstraints<T>(T min, T max,
+                                                Func<T> getFullRangeValue,
+                                                out T? trivial,
+                                                [CallerArgumentExpression(nameof(min))]
+                                                string minName = "",
+                                                [CallerArgumentExpression(nameof(max))]
+                                                string maxName = "")
+        where T : IMinMaxValue<T>, IComparable<T>, IEquatable<T>
     {
-        return (byte)(ULong() >> (8 * (sizeof(ulong) - sizeof(byte))));
+        int c = min.CompareTo(max);
+        if (c > 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                maxName,
+                max,
+                $"{maxName} must be greater than or equal to {minName}");
+        }
+
+        if (c == 0)
+        {
+            trivial = min;
+            return true;
+        }
+
+        if (min.Equals(T.MinValue) && max.Equals(T.MaxValue))
+        {
+            trivial = getFullRangeValue();
+            return true;
+        }
+
+        trivial = default;
+        return false;
     }
 
-    /// <inheritdoc />
-    public sbyte SByte()
-    {
-        return (sbyte)(ULong() >> (8 * (sizeof(ulong) - sizeof(sbyte))));
-    }
-
-    /// <inheritdoc />
-    public short Short()
-    {
-        return (short)(ULong() >> (8 * (sizeof(ulong) - sizeof(short))));
-    }
-
-    /// <inheritdoc />
-    public ushort UShort()
-    {
-        return (ushort)(ULong() >> (8 * (sizeof(ulong) - sizeof(ushort))));
-    }
-
-    /// <inheritdoc />
-    public int Int()
-    {
-        return (int)(ULong() >> (8 * (sizeof(ulong) - sizeof(int))));
-    }
-
-    /// <inheritdoc />
-    public uint UInt()
-    {
-        return (uint)(ULong() >> (8 * (sizeof(ulong) - sizeof(uint))));
-    }
-
-    /// <inheritdoc />
-    public long Long()
-    {
-        return (long)(ULong());
-    }
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ulong ULong()
+    private ulong GenerateUInt64()
     {
         // For improved performance the below loop operates on these stack allocated copies of the heap variables.
         // Note. doing this means that these heavily used variables are located near to other local/stack variables,
@@ -136,10 +138,12 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
 
         // Update PRNG state.
         ulong t = s1 << 17;
+
         s2 ^= s0;
         s3 ^= s1;
         s1 ^= s2;
         s0 ^= s3;
+
         s2 ^= t;
         s3 = BitOperations.RotateLeft(s3, 45);
 
@@ -151,142 +155,384 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
 
         return result;
     }
-    
 
-    /// <inheritdoc />
+
+    public byte Byte()
+    {
+        return (byte)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(byte))));
+    }
+
+    public byte Between(byte inclusiveMin, byte inclusiveMax)
+    {
+        if (ValidateConstraints(inclusiveMin, inclusiveMax, Byte, out var value))
+            return value;
+        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
+        return (byte)((int)inclusiveMin + ZeroTo(range));
+    }
+
+    public sbyte SByte()
+    {
+        return (sbyte)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(sbyte))));
+    }
+
+    public sbyte Between(sbyte inclusiveMin, sbyte inclusiveMax)
+    {
+        if (ValidateConstraints(inclusiveMin, inclusiveMax, SByte, out var value))
+            return value;
+        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
+        return (sbyte)((int)inclusiveMin + ZeroTo(range));
+    }
+
+    public short Short()
+    {
+        return (short)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(short))));
+    }
+
+    public short Between(short inclusiveMin, short inclusiveMax)
+    {
+        if (ValidateConstraints(inclusiveMin, inclusiveMax, Short, out var value))
+            return value;
+        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
+        return (short)((int)inclusiveMin + ZeroTo(range));
+    }
+
+    public ushort UShort()
+    {
+        return (ushort)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(ushort))));
+    }
+
+    public ushort Between(ushort inclusiveMin, ushort inclusiveMax)
+    {
+        if (ValidateConstraints(inclusiveMin, inclusiveMax, UShort, out var value))
+            return value;
+        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
+        return (ushort)((int)inclusiveMin + ZeroTo(range));
+    }
+
+    public int Int()
+    {
+        return (int)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(int))));
+    }
+
+    public int Between(int inclusiveMin, int inclusiveMax)
+    {
+        if (ValidateConstraints(inclusiveMin, inclusiveMax, Int, out var value))
+            return value;
+        int range = (inclusiveMax - inclusiveMin) + 1;
+        return inclusiveMax + ZeroTo(range);
+    }
+
+    /// <summary>
+    /// Returns a random positive <see cref="int"/> value [0..int.MaxValue]
+    /// </summary>
+    public int IntPositive()
+    {
+        // Get 31 bits to force positive
+        return (int)(GenerateUInt64() >> 33);
+    }
+
+    public int ZeroTo(int exclusiveMax)
+    {
+        // Handle special case of a single sample value.
+        if (exclusiveMax <= 1)
+        {
+            return 0;
+        }
+
+        /* Generate a double in the interval [0,1) and multiply by exclusiveMaximum.
+         * However the use of floating point arithmetic will introduce bias.
+         * if (!IsHighResolution)
+         * {
+         *   return (int)(DoublePercent() * exclusiveMaximum);
+         * }
+         */
+
+        // Here we sample an integer value within the interval [0, maxValue).
+        // Rejection sampling is used in order to produce unbiased samples. 
+        // The rejection sampling method used here operates as follows:
+        //
+        //  1) Calculate N such that  2^(N-1) < maxValue <= 2^N, i.e. N is the minimum number of bits required
+        //     to represent maxValue states.
+        //  2) Generate an N bit random sample.
+        //  3) Reject samples that are >= maxValue, and goto (2) to resample.
+        //
+        // Repeat until a valid sample is generated.
+
+        // Log2Ceiling(numberOfStates) gives the number of bits required to represent maxValue states.
+        int bitCount = Maths.Log2Ceiling((uint)exclusiveMax);
+
+        // Rejection sampling loop.
+        // Note. The expected number of samples per generated value is approx. 1.3862,
+        // i.e. the number of loops, on average, assuming a random and uniformly distributed maxValue.
+        int x;
+        do
+        {
+            x = (int)(GenerateUInt64() >> (64 - bitCount));
+        } while (x >= exclusiveMax);
+
+        return x;
+    }
+
+
+    public uint ZeroTo(uint exclusiveMaximum)
+    {
+        // Handle special case of a single sample value.
+        if (exclusiveMaximum <= 1U)
+        {
+            return 0U;
+        }
+
+        /* Generate a double in the interval [0,1) and multiply by exclusiveMaximum.
+         * However the use of floating point arithmetic will introduce bias.
+         * if (!IsHighResolution)
+         * {
+         *     return (uint)(DoublePercent() * exclusiveMaximum);
+         * }
+         */
+
+        // Here we sample an integer value within the interval [0, maxValue).
+        // Rejection sampling is used in order to produce unbiased samples. 
+        // The rejection sampling method used here operates as follows:
+        //
+        //  1) Calculate N such that  2^(N-1) < maxValue <= 2^N, i.e. N is the minimum number of bits required
+        //     to represent maxValue states.
+        //  2) Generate an N bit random sample.
+        //  3) Reject samples that are >= maxValue, and goto (2) to resample.
+        //
+        // Repeat until a valid sample is generated.
+
+        // Log2Ceiling(numberOfStates) gives the number of bits required to represent maxValue states.
+        int bitCount = Maths.Log2Ceiling(exclusiveMaximum);
+
+        // Rejection sampling loop.
+        // Note. The expected number of samples per generated value is approx. 1.3862,
+        // i.e. the number of loops, on average, assuming a random and uniformly distributed maxValue.
+        uint x;
+        do
+        {
+            x = (uint)(GenerateUInt64() >> (64 - bitCount));
+        } while (x >= exclusiveMaximum);
+
+        return x;
+    }
+
+
+    public uint UInt()
+    {
+        return (uint)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(uint))));
+    }
+
+    public uint Between(uint inclusiveMin, uint inclusiveMax)
+    {
+        if (ValidateConstraints(inclusiveMin, inclusiveMax, UInt, out var value))
+            return value;
+        long range = ((long)inclusiveMax - (long)inclusiveMin) + 1L;
+        return (uint)((long)inclusiveMax + ZeroTo(range));
+    }
+
+    public long Long()
+    {
+        return (long)GenerateUInt64();
+    }
+
+    public long Between(long inclusiveMin, long inclusiveMax)
+    {
+        if (ValidateConstraints(inclusiveMin, inclusiveMax, Long, out var value))
+            return value;
+        long range = (inclusiveMax - inclusiveMin) + 1L;
+        return inclusiveMax + ZeroTo(range);
+    }
+
+    /// <summary>
+    /// Returns a random positive <see cref="long"/> value [0..long.MaxValue]
+    /// </summary>
+    public long LongPositive()
+    {
+        // Get 63 bits to force positive
+        return (int)(GenerateUInt64() >> 1);
+    }
+
+    public long ZeroTo(long exclusiveMaximum)
+    {
+        // Handle special case of a single sample value.
+        if (exclusiveMaximum <= 1L)
+        {
+            return 0L;
+        }
+
+        /*// Generate a double in the interval [0,1) and multiply by exclusiveMaximum.
+        // However the use of floating point arithmetic will introduce bias.
+        if (!IsHighResolution)
+        {
+            return (long)(DoublePercent() * exclusiveMaximum);
+        }*/
+
+        // Here we sample an integer value within the interval [0, maxValue).
+        // Rejection sampling is used in order to produce unbiased samples. 
+        // The rejection sampling method used here operates as follows:
+        //
+        //  1) Calculate N such that  2^(N-1) < maxValue <= 2^N, i.e. N is the minimum number of bits required
+        //     to represent maxValue states.
+        //  2) Generate an N bit random sample.
+        //  3) Reject samples that are >= maxValue, and goto (2) to resample.
+        //
+        // Repeat until a valid sample is generated.
+
+        // Log2Ceiling(numberOfStates) gives the number of bits required to represent maxValue states.
+        int bitCount = Maths.Log2Ceiling((ulong)exclusiveMaximum);
+
+        // Rejection sampling loop.
+        // Note. The expected number of samples per generated value is approx. 1.3862,
+        // i.e. the number of loops, on average, assuming a random and uniformly distributed maxValue.
+        long x;
+        do
+        {
+            x = (long)(GenerateUInt64() >> (64 - bitCount));
+        } while (x >= exclusiveMaximum);
+
+        return x;
+    }
+
+
+    public ulong ZeroTo(ulong exclusiveMaximum)
+    {
+        // Handle special case of a single sample value.
+        if (exclusiveMaximum <= 1UL)
+        {
+            return 0UL;
+        }
+
+        /*// Generate a double in the interval [0,1) and multiply by exclusiveMaximum.
+        // However the use of floating point arithmetic will introduce bias.
+        if (!IsHighResolution)
+        {
+            return (ulong)(DoublePercent() * exclusiveMaximum);
+        }*/
+
+        // Here we sample an integer value within the interval [0, maxValue).
+        // Rejection sampling is used in order to produce unbiased samples. 
+        // The rejection sampling method used here operates as follows:
+        //
+        //  1) Calculate N such that  2^(N-1) < maxValue <= 2^N, i.e. N is the minimum number of bits required
+        //     to represent maxValue states.
+        //  2) Generate an N bit random sample.
+        //  3) Reject samples that are >= maxValue, and goto (2) to resample.
+        //
+        // Repeat until a valid sample is generated.
+
+        // Log2Ceiling(numberOfStates) gives the number of bits required to represent maxValue states.
+        int bitCount = Maths.Log2Ceiling(exclusiveMaximum);
+
+        // Rejection sampling loop.
+        // Note. The expected number of samples per generated value is approx. 1.3862,
+        // i.e. the number of loops, on average, assuming a random and uniformly distributed maxValue.
+        ulong x;
+        do
+        {
+            x = GenerateUInt64() >> (64 - bitCount);
+        } while (x >= exclusiveMaximum);
+
+        return x;
+    }
+
+    public ulong ULong() => GenerateUInt64();
+
+    public ulong Between(ulong inclusiveMin, ulong inclusiveMax)
+    {
+        if (ValidateConstraints(inclusiveMin, inclusiveMax, ULong, out var value))
+            return value;
+        ulong range = (inclusiveMax - inclusiveMin) + 1UL;
+        return inclusiveMin + ZeroTo(range);
+    }
+
+
+    public nint NInt()
+    {
+        return (nint)Long();
+    }
+
+    public nint Between(nint inclusiveMin, nint inclusiveMax)
+    {
+        if (ValidateConstraints<nint>(inclusiveMin, inclusiveMax, NInt, out var value))
+            return value;
+        long range = ((long)inclusiveMax - (long)inclusiveMin) + 1L;
+        return (nint)((long)inclusiveMin + ZeroTo(range));
+    }
+
+    public nuint NUInt()
+    {
+        return (nuint)GenerateUInt64();
+    }
+
+    public nuint Between(nuint inclusiveMin, nuint inclusiveMax)
+    {
+        if (ValidateConstraints<nuint>(inclusiveMin, inclusiveMax, NUInt, out var value))
+            return value;
+        ulong range = ((ulong)inclusiveMax - (ulong)inclusiveMin) + 1UL;
+        return (nuint)((ulong)inclusiveMin + ZeroTo(range));
+    }
+
     public float Float()
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(float)];
-        Fill(bytes);
-        return Danger.ReadUnaligned<float>(in MemoryMarshal.GetReference(bytes));
-    }
-    /// <inheritdoc />
-    public float Float(float inclusiveMinimum, float inclusiveMaximum)
-    {
-        double range = ((double)inclusiveMaximum - (double)inclusiveMinimum) + (double)float.Epsilon;
-        return (float)((DoublePercent() * range) + (double)inclusiveMinimum);
-    }
-    /// <inheritdoc />
-    public float Float(float inclusiveMinimum, float inclusiveMaximum, int precision)
-    {
-        var incMin = Math.Round(inclusiveMinimum, precision);
-        var incMax = Math.Round(inclusiveMaximum, precision);
-        double range = (incMax - incMin) + (double)float.Epsilon;
-        return (float)Math.Round((DoublePercent() * range) + incMin, precision);
-    }
-
-    /// <inheritdoc />
-    public double Double()
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(double)];
-        Fill(bytes);
-        return Danger.ReadUnaligned<double>(in MemoryMarshal.GetReference(bytes));
-    }
-    /// <inheritdoc />
-    public double Double(double inclusiveMinimum, double inclusiveMaximum)
-    {
-        double range = (inclusiveMaximum - inclusiveMinimum) + double.Epsilon;
-        return (DoublePercent() * range) + inclusiveMinimum;
-    }
-    /// <inheritdoc />
-    public double Double(double inclusiveMinimum, double inclusiveMaximum, int precision)
-    {
-        var incMin = Math.Round(inclusiveMinimum, precision);
-        var incMax = Math.Round(inclusiveMaximum, precision);
-        double range = (incMax - incMin) + double.Epsilon;
-        return Math.Round((DoublePercent() * range) + incMin, precision);
-    }
-    
-    /// <inheritdoc />
-    public decimal Decimal()
     {
         if (!IsHighResolution)
         {
-            ulong r = ULong();
-            int lo = (int)r;
-            bool isNegative = ((r >> sizeof(int)) & 0b1000000000000000_0000000000000000) != 0;
-            r = ULong();
-            int mid = (int)r;
-            int hi = (int)(r >> sizeof(int));
-            return new decimal(lo, mid, hi,
-                               isNegative,
-                               scale: (byte)ZeroTo(29));
+            return (float)(ulong.MaxValue * DoublePercent())
         }
-        else
+
+        /* Best approach, no crazed values,
+         * distributed with respect to the representable intervals on the
+         * floating-point number line
+         * (removed "uniform" as with respect to a continuous number line it is
+         * decidedly non-uniform):
+         * Warning: generates positive infinity as well! Choose exponent of 127 to be on the safe side.
         {
-            throw new NotImplementedException();
+            double mantissa = (DoublePercent() * 2.0d) - 1.0d;
+            // choose -149 instead of -126 to also generate subnormal floats (*)
+            double exponent = Math.Pow(2.0d, (double)Between(-126, 128));
+            return (float)(mantissa * exponent);
+        }
+        */
+
+        /* Another approach which will give you some crazed values
+         * (uniform distribution of bit patterns), 
+         * potentially useful for fuzzing:
+        {
+            Span<byte> buffer = stackalloc byte[sizeof(float)];
+            Fill(buffer);
+            return Danger.ReadUnaligned<float>(buffer);
+        }
+        */
+
+        /* An improvement over the previous version is this one,
+         * which does not create "crazed" values
+         * (neither infinities nor NaN) and is still fast
+         * (also distributed with respect to the representable intervals
+         * on the floating-point number line):
+         */
+        {
+            var sign = ZeroTo(2);
+            var exponent = ZeroTo(0xFF); // do not generate 0xFF (infinities and NaN)
+            var mantissa = ZeroTo(0x800000);
+            var bits = (sign << 31) + (exponent << 23) + mantissa;
+            return Danger.DirectCast<int, float>(bits);
         }
     }
-    /// <inheritdoc />
-    public decimal Decimal(decimal inclusiveMinimum, decimal inclusiveMaximum)
+
+
+    public float Between(float inclusiveMin, float inclusiveMax)
     {
-        throw new NotImplementedException();
-    }
-    /// <inheritdoc />
-    public decimal Decimal(decimal inclusiveMinimum, decimal inclusiveMaximum, int precision)
-    {
-        throw new NotImplementedException();
+        double range = ((double)inclusiveMax - (double)inclusiveMin) + (double)float.Epsilon;
+        return (float)((DoublePercent() * range) + (double)inclusiveMin);
     }
 
-    /// <inheritdoc />
-    public TimeSpan TimeSpan()
+    public float Between(float inclusiveMin, float inclusiveMax, int digits)
     {
-        return new TimeSpan(ticks: (long)ULong());
+        var incMin = Math.Round(inclusiveMin, digits);
+        var incMax = Math.Round(inclusiveMax, digits);
+        double range = (incMax - incMin) + (double)float.Epsilon;
+        return (float)Math.Round((DoublePercent() * range) + incMin, digits);
     }
 
-    /// <inheritdoc />
-    public DateTime DateTime(DateTimeKind kind = DateTimeKind.Unspecified)
-    {
-        return new DateTime(ticks: (long)ULong(), kind: kind);
-    }
-
-    /// <inheritdoc />
-    public DateTimeOffset DateTimeOffset(TimeSpan? offset = null)
-    {
-        return new DateTimeOffset(ticks: (long)ULong(),
-                                  offset: offset ?? new TimeSpan((long)ULong()));
-    }
-
-    /// <inheritdoc />
-    public bool Bool()
-    {
-        // Use a high bit since the low bits are linear-feedback shift registers (LFSRs) with low degree.
-        // This is slower than the approach of generating and caching 64 bits for future calls, but
-        // (A) gives good quality randomness, and (B) is still very fast.
-        return (ULong() & 0b1000000000000000_0000000000000000_0000000000000000_0000000000000000) != 0;
-    }
-
-    /// <inheritdoc />
-    public char Char()
-    {
-        return (char)(ULong() >> (8 * (sizeof(ulong) - sizeof(char))));
-    }
-
-    /// <inheritdoc />
-    public Guid Guid()
-    {
-        // Do not just use Guid.NewGuid(), that doesn't respect our seed
-        Span<byte> bytes = stackalloc byte[16];
-        Fill(bytes);
-        return new Guid(bytes);
-    }
-
-    /// <inheritdoc />
-    public TEnum Enum<TEnum>(bool includeFlags = false) 
-        where TEnum : struct, Enum
-    {
-        throw new NotImplementedException();
-    }
-
-    /// <inheritdoc />
-    public T Unmanaged<T>() where T : unmanaged
-    {
-        Span<byte> bytes = stackalloc byte[Danger.SizeOf<T>()];
-        Fill(bytes);
-        return Danger.ReadUnaligned<T>(in bytes.GetPinnableReference());
-    }
-
-    /// <inheritdoc />
     public float FloatPercent()
     {
         if (!IsHighResolution)
@@ -294,7 +540,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             // Note. Here we generate a random integer between 0 and 2^24-1 (i.e. 24 binary 1s) and multiply
             // by the fractional unit value 1.0 / 2^24, thus the result has a max value of
             // 1.0 - (1.0 / 2^24). Or 0.99999994 in decimal.
-            return (ULong() >> 40) * FloatEpsilon;
+            return (GenerateUInt64() >> 40) * (1.0f / (1U << 24));
         }
         else
         {
@@ -302,7 +548,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         }
     }
 
-    /// <inheritdoc />
+
     public double DoublePercent()
     {
         if (!IsHighResolution)
@@ -317,7 +563,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             // distinct value in the full range (from 0.0 to 1.0 exclusive) can be represented directly by a double precision
             // float, and thus no rounding occurs in the representation of these values, which in turn ensures no bias in the
             // random samples.
-            return (ULong() >> 11) * DoubleEpsilon;
+            return (GenerateUInt64() >> 11) * (1.0d / (1UL << 53));
         }
         else
         {
@@ -355,7 +601,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
 
             // Read zeros into the exponent until we hit a one; the rest
             // will go into the significand.
-            while ((significand = ULong()) == 0UL)
+            while ((significand = GenerateUInt64()) == 0UL)
             {
                 exponent -= 64;
 
@@ -379,7 +625,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             {
                 exponent -= shift;
                 significand <<= shift;
-                significand |= (ULong() >> (64 - shift));
+                significand |= (GenerateUInt64() >> (64 - shift));
             }
 
             // Set the sticky bit, since there is almost surely another 1
@@ -393,305 +639,139 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             // 2^exponent.
             //return (double)significand * Math.Pow(2, exponent);
             // 2 ^ x == 1 << x;
-            return (double)(significand * (1UL << exponent));
+            return (double)(significand * Math.Pow(2.0d, (double)exponent)); //1UL << exponent));
         }
     }
 
-    /// <inheritdoc />
+    public double Double()
+    {
+        if (!IsHighResolution)
+        {
+            Span<byte> bytes = stackalloc byte[sizeof(double)];
+            Fill(bytes);
+            return Danger.ReadUnaligned<double>(bytes);
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public double Between(double inclusiveMin, double inclusiveMax)
+    {
+        double range = (inclusiveMax - inclusiveMin) + double.Epsilon;
+        return (DoublePercent() * range) + inclusiveMin;
+    }
+
+    public double Between(double inclusiveMin, double inclusiveMax, int digits)
+    {
+        var incMin = Math.Round(inclusiveMin, digits);
+        var incMax = Math.Round(inclusiveMax, digits);
+        double range = (incMax - incMin) + double.Epsilon;
+        return Math.Round((DoublePercent() * range) + incMin, digits);
+    }
+
+    /// <summary>
+    /// Returns a decimal scale, from 0&lt;=x&lt;=28 that is distributed by percentage chance that the scale should be chosen.
+    /// </summary>
+    private byte GetDecimalScale()
+    {
+        for (byte scale = 0; scale <= 28; scale++)
+        {
+            if (DoublePercent() >= 0.1d)
+            {
+                return scale;
+            }
+        }
+
+        return 0;
+    }
+
+    public decimal Decimal()
+    {
+        if (!IsHighResolution)
+        {
+            // https://stackoverflow.com/a/609529/2871210
+            // note: this is NOT UNIFORM
+
+            /* If speed counts, this only has to generate two ulongs
+            ulong r = ULong();
+            int lo = (int)r;
+            bool isNegative = ((r >> sizeof(int)) & 0b1000000000000000_0000000000000000) != 0;
+            r = ULong();
+            int mid = (int)r;
+            int hi = (int)(r >> sizeof(int));
+            return new decimal(lo, mid, hi,
+                isNegative,
+                scale: (byte)ZeroTo(29));
+            */
+
+            return new decimal(Int(), Int(), Int(), Bool(), (byte)ZeroTo(29));
+        }
+
+        // https://stackoverflow.com/a/610228/2871210
+        byte scale = GetDecimalScale();
+        int a = (int)(uint.MaxValue * DoublePercent());
+        int b = (int)(uint.MaxValue * DoublePercent());
+        int c = (int)(uint.MaxValue * DoublePercent());
+        bool n = Bool();
+        return new decimal(a, b, c, n, scale);
+    }
+
+    public decimal Between(decimal inclusiveMin, decimal inclusiveMax)
+    {
+        throw new NotImplementedException();
+    }
+
+
     public decimal DecimalPercent()
     {
         ulong r = ULong();
         return new decimal(lo: (int)r,
-                           mid: (int)(r >> sizeof(int)),
-                           hi: ZeroTo(542101087),
-                           isNegative: false,
-                           scale: 28);
+            mid: (int)(r >> sizeof(int)),
+            hi: ZeroTo(542101087),
+            isNegative: false,
+            scale: 28);
     }
 
-
-    public int ZeroTo(int exclusiveMaximum)
+    public bool Bool()
     {
-        // Handle special case of a single sample value.
-        if (exclusiveMaximum <= 1)
+        // Use a high bit since the low bits are linear-feedback shift registers (LFSRs) with low degree.
+        // This is slower than the approach of generating and caching 64 bits for future calls, but
+        // (A) gives good quality randomness, and (B) is still very fast.
+        return (GenerateUInt64() & 0b1000000000000000_0000000000000000_0000000000000000_0000000000000000) != 0;
+    }
+
+    public char Char()
+    {
+        return (char)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(char))));
+    }
+
+    public char Between(char inclusiveMin, char inclusiveMax)
+    {
+        if (ValidateConstraints(inclusiveMin, inclusiveMax, Char, out var ch))
+            return ch;
+        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
+        return (char)((int)inclusiveMin + ZeroTo(range));
+    }
+
+    public TEnum Enum<TEnum>()
+        where TEnum : struct, Enum
+    {
+        EnumTypeInfo<TEnum> info = EnumInfo.For<TEnum>();
+        if (info.HasFlags)
         {
-            return 0;
+            // Have to randomize the bits up to flag.highest
+            throw new NotImplementedException();
         }
-
-        // Generate a double in the interval [0,1) and multiply by exclusiveMaximum.
-        // However the use of floating point arithmetic will introduce bias.
-        if (!IsHighResolution)
+        else
         {
-            return (int)(DoublePercent() * exclusiveMaximum);
+            return Single<TEnum>(info.Members);
         }
-
-        // Here we sample an integer value within the interval [0, maxValue).
-        // Rejection sampling is used in order to produce unbiased samples. 
-        // The rejection sampling method used here operates as follows:
-        //
-        //  1) Calculate N such that  2^(N-1) < maxValue <= 2^N, i.e. N is the minimum number of bits required
-        //     to represent maxValue states.
-        //  2) Generate an N bit random sample.
-        //  3) Reject samples that are >= maxValue, and goto (2) to resample.
-        //
-        // Repeat until a valid sample is generated.
-
-        // Log2Ceiling(numberOfStates) gives the number of bits required to represent maxValue states.
-        int bitCount = Maths.Log2Ceiling((uint)exclusiveMaximum);
-
-        // Rejection sampling loop.
-        // Note. The expected number of samples per generated value is approx. 1.3862,
-        // i.e. the number of loops, on average, assuming a random and uniformly distributed maxValue.
-        int x;
-        do
-        {
-            x = (int)(ULong() >> (64 - bitCount));
-        } while (x >= exclusiveMaximum);
-
-        return x;
     }
 
-    /// <inheritdoc />
-    public uint ZeroTo(uint exclusiveMaximum)
-    {
-        // Handle special case of a single sample value.
-        if (exclusiveMaximum <= 1U)
-        {
-            return 0U;
-        }
 
-        // Generate a double in the interval [0,1) and multiply by exclusiveMaximum.
-        // However the use of floating point arithmetic will introduce bias.
-        if (!IsHighResolution)
-        {
-            return (uint)(DoublePercent() * exclusiveMaximum);
-        }
-
-        // Here we sample an integer value within the interval [0, maxValue).
-        // Rejection sampling is used in order to produce unbiased samples. 
-        // The rejection sampling method used here operates as follows:
-        //
-        //  1) Calculate N such that  2^(N-1) < maxValue <= 2^N, i.e. N is the minimum number of bits required
-        //     to represent maxValue states.
-        //  2) Generate an N bit random sample.
-        //  3) Reject samples that are >= maxValue, and goto (2) to resample.
-        //
-        // Repeat until a valid sample is generated.
-
-        // Log2Ceiling(numberOfStates) gives the number of bits required to represent maxValue states.
-        int bitCount = Maths.Log2Ceiling(exclusiveMaximum);
-
-        // Rejection sampling loop.
-        // Note. The expected number of samples per generated value is approx. 1.3862,
-        // i.e. the number of loops, on average, assuming a random and uniformly distributed maxValue.
-        uint x;
-        do
-        {
-            x = (uint)(ULong() >> (64 - bitCount));
-        } while (x >= exclusiveMaximum);
-
-        return x;
-    }
-
-    public long ZeroTo(long exclusiveMaximum)
-    {
-        // Handle special case of a single sample value.
-        if (exclusiveMaximum <= 1L)
-        {
-            return 0L;
-        }
-
-        // Generate a double in the interval [0,1) and multiply by exclusiveMaximum.
-        // However the use of floating point arithmetic will introduce bias.
-        if (!IsHighResolution)
-        {
-            return (long)(DoublePercent() * exclusiveMaximum);
-        }
-
-        // Here we sample an integer value within the interval [0, maxValue).
-        // Rejection sampling is used in order to produce unbiased samples. 
-        // The rejection sampling method used here operates as follows:
-        //
-        //  1) Calculate N such that  2^(N-1) < maxValue <= 2^N, i.e. N is the minimum number of bits required
-        //     to represent maxValue states.
-        //  2) Generate an N bit random sample.
-        //  3) Reject samples that are >= maxValue, and goto (2) to resample.
-        //
-        // Repeat until a valid sample is generated.
-
-        // Log2Ceiling(numberOfStates) gives the number of bits required to represent maxValue states.
-        int bitCount = Maths.Log2Ceiling((ulong)exclusiveMaximum);
-
-        // Rejection sampling loop.
-        // Note. The expected number of samples per generated value is approx. 1.3862,
-        // i.e. the number of loops, on average, assuming a random and uniformly distributed maxValue.
-        long x;
-        do
-        {
-            x = (long)(ULong() >> (64 - bitCount));
-        } while (x >= exclusiveMaximum);
-
-        return x;
-    }
-
-    /// <inheritdoc />
-    public ulong ZeroTo(ulong exclusiveMaximum)
-    {
-        // Handle special case of a single sample value.
-        if (exclusiveMaximum <= 1UL)
-        {
-            return 0UL;
-        }
-
-        // Generate a double in the interval [0,1) and multiply by exclusiveMaximum.
-        // However the use of floating point arithmetic will introduce bias.
-        if (!IsHighResolution)
-        {
-            return (ulong)(DoublePercent() * exclusiveMaximum);
-        }
-
-        // Here we sample an integer value within the interval [0, maxValue).
-        // Rejection sampling is used in order to produce unbiased samples. 
-        // The rejection sampling method used here operates as follows:
-        //
-        //  1) Calculate N such that  2^(N-1) < maxValue <= 2^N, i.e. N is the minimum number of bits required
-        //     to represent maxValue states.
-        //  2) Generate an N bit random sample.
-        //  3) Reject samples that are >= maxValue, and goto (2) to resample.
-        //
-        // Repeat until a valid sample is generated.
-
-        // Log2Ceiling(numberOfStates) gives the number of bits required to represent maxValue states.
-        int bitCount = Maths.Log2Ceiling(exclusiveMaximum);
-
-        // Rejection sampling loop.
-        // Note. The expected number of samples per generated value is approx. 1.3862,
-        // i.e. the number of loops, on average, assuming a random and uniformly distributed maxValue.
-        ulong x;
-        do
-        {
-            x = ULong() >> (64 - bitCount);
-        } while (x >= exclusiveMaximum);
-
-        return x;
-    }
-
-    /// <inheritdoc />
-    public int PositiveInt()
-    {
-        // Generate 64 random bits and shift right to leave the most significant 31 bits.
-        // Bit 32 is the sign bit so must be zero to avoid negative results.
-        return (int)(ULong() >> 33);
-    }
-
-    /// <inheritdoc />
-    public char Char(char inclusiveMinimum, char inclusiveMaximum)
-    {
-        uint range = (uint)inclusiveMaximum - (uint)inclusiveMinimum;
-        uint r = ZeroTo(range + 1U);
-        return (char)((uint)inclusiveMinimum + r);
-    }
-
-    /// <inheritdoc />
-    public byte Byte(byte inclusiveMinimum, byte inclusiveMaximum)
-    {
-        uint range = (uint)inclusiveMaximum - (uint)inclusiveMinimum;
-        uint r = ZeroTo(range + 1U);
-        return (byte)((uint)inclusiveMinimum + r);
-    }
-
-    /// <inheritdoc />
-    public sbyte SByte(sbyte inclusiveMinimum, sbyte inclusiveMaximum)
-    {
-        int range = (int)inclusiveMaximum - (int)inclusiveMinimum;
-        int r = ZeroTo(range + 1);
-        return (sbyte)((int)inclusiveMinimum + r);
-    }
-
-    /// <inheritdoc />
-    public short Short(short inclusiveMinimum, short inclusiveMaximum)
-    {
-        int range = (int)inclusiveMaximum - (int)inclusiveMinimum;
-        int r = ZeroTo(range + 1);
-        return (short)((int)inclusiveMinimum + r);
-    }
-
-    /// <inheritdoc />
-    public ushort UShort(ushort inclusiveMinimum, ushort inclusiveMaximum)
-    {
-        uint range = (uint)inclusiveMaximum - (uint)inclusiveMinimum;
-        uint r = ZeroTo(range + 1U);
-        return (ushort)((uint)inclusiveMinimum + r);
-    }
-
-    /// <inheritdoc />
-    public int Int(int inclusiveMinimum, int inclusiveMaximum)
-    {
-        long range = (long)inclusiveMaximum - (long)inclusiveMinimum;
-        long r = ZeroTo(range + 1L);
-        return (int)((long)inclusiveMinimum + r);
-    }
-
-    /// <inheritdoc />
-    public uint UInt(uint inclusiveMinimum, uint inclusiveMaximum)
-    {
-        ulong range = (ulong)inclusiveMaximum - (ulong)inclusiveMinimum;
-        ulong r = ZeroTo(range + 1UL);
-        return (uint)((ulong)inclusiveMinimum + r);
-    }
-
-    /// <inheritdoc />
-    public long Long(long inclusiveMinimum, long inclusiveMaximum)
-    {
-        if (inclusiveMinimum == long.MinValue &&
-            inclusiveMaximum == long.MaxValue)
-        {
-            return (long)ULong();
-        }
-
-        ulong range = (ulong)(inclusiveMaximum - inclusiveMinimum);
-        ulong r = ZeroTo(range + 1UL);
-        return (inclusiveMinimum + (long)r);
-    }
-
-    /// <inheritdoc />
-    public ulong ULong(ulong inclusiveMinimum, ulong inclusiveMaximum)
-    {
-        if (inclusiveMinimum == ulong.MinValue &&
-            inclusiveMaximum == ulong.MaxValue)
-        {
-            return ULong();
-        }
-
-        ulong range = (inclusiveMaximum - inclusiveMinimum);
-        ulong r = ZeroTo(range + 1UL);
-        return (inclusiveMinimum + r);
-    }
-
-    
-
-  
-
-    /// <inheritdoc />
-    public TimeSpan TimeSpan(TimeSpan inclusiveMinimum, TimeSpan inclusiveMaximum)
-    {
-        return new TimeSpan(Long(inclusiveMinimum.Ticks, inclusiveMaximum.Ticks));
-    }
-
-    /// <inheritdoc />
-    public DateTime DateTime(DateTime inclusiveMinimum, DateTime inclusiveMaximum)
-    {
-        return new DateTime(Long(inclusiveMinimum.Ticks, inclusiveMaximum.Ticks),
-                            inclusiveMinimum.Kind == inclusiveMaximum.Kind ? inclusiveMinimum.Kind : DateTimeKind.Unspecified);
-    }
-
-    /// <inheritdoc />
-    public DateTimeOffset DateTimeOffset(DateTimeOffset inclusiveMinimum, DateTimeOffset inclusiveMaximum)
-    {
-        return new DateTimeOffset(DateTime(inclusiveMinimum.DateTime, inclusiveMaximum.DateTime),
-                                  TimeSpan(inclusiveMinimum.Offset, inclusiveMaximum.Offset));
-    }
-
-        public void Fill(Span<byte> span)
+    public void Fill(Span<byte> span)
     {
         // For improved performance the below loop operates on these stack allocated copies of the heap variables.
         // Note. doing this means that these heavily used variables are located near to other local/stack variables,
@@ -707,8 +787,9 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         while (span.Length >= sizeof(ulong))
         {
             // Get 64 random bits, and assign to buffer (at the slice it is currently pointing to)
-            Danger.WriteUnaligned(ref MemoryMarshal.GetReference(span),
-                                  BitOperations.RotateLeft(state1 * 5, 7) * 9);
+            Danger.WriteUnaligned(
+                ref Danger.SpanToRef(span),
+                BitOperations.RotateLeft(state1 * 5, 7) * 9);
 
             // Update PRNG state.
             ulong t = state1 << 17;
@@ -754,20 +835,20 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         _s2 = state2;
         _s3 = state3;
     }
-    
-    /// <inheritdoc />
+
+
     public T Single<T>(ReadOnlySpan<T> values)
     {
         return values[ZeroTo(values.Length)];
     }
 
-    /// <inheritdoc />
+
     public T Single<T>(params T[] values)
     {
         return values[ZeroTo(values.Length)];
     }
 
-    /// <inheritdoc />
+
     public T Single<T>(IEnumerable<T> values)
     {
         if (values is IList<T> list)
@@ -816,20 +897,10 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         return value!;
     }
 
-    /// <inheritdoc />
-    public IEnumerable<T> Produce<T>() where T : unmanaged
-    {
-        while (true)
-        {
-            yield return Unmanaged<T>();
-        }
-    }
-
-    /// <inheritdoc />
-    public IEnumerable<byte> ProduceBytes()
+    public IEnumerable<byte> ProduceBytes(CancellationToken token = default)
     {
         ulong r;
-        while (true)
+        while (!token.IsCancellationRequested)
         {
             r = ULong();
             for (var i = 0; i < 8; i++, r >>= 8)
@@ -839,7 +910,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         }
     }
 
-    /// <inheritdoc />
+
     public IEnumerable<ulong> ProduceULongs()
     {
         while (true)
@@ -848,19 +919,6 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         }
     }
 
-    /// <inheritdoc />
-    public IEnumerable<T> ToEnumerable<T>(params T[] values)
-    {
-        throw new NotImplementedException();
-    }
-    
-    
-
-    /// <inheritdoc />
-    public IEnumerable<T> ToEnumerable<T>(IEnumerable<T> values)
-    {
-        throw new NotImplementedException();
-    }
 
     /// <remarks>
     /// To initialize an array a of n elements to a randomly shuffled copy of source, both 0-based:
@@ -871,7 +929,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     /// a[j] ← source[i]
     ///
     /// </remarks>
-    public IReadOnlyList<T> ToList<T>(ReadOnlySpan<T> values)
+    public IReadOnlyList<T> MixToList<T>(ReadOnlySpan<T> values)
     {
         var len = values.Length;
         var array = new T[len];
@@ -890,8 +948,8 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         return array;
     }
 
-    /// <inheritdoc />
-    public IReadOnlyList<T> ToList<T>(params T[] values)
+
+    public IReadOnlyList<T> MixToList<T>(params T[] values)
     {
         var len = values.Length;
         var array = new T[len];
@@ -910,7 +968,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         return array;
     }
 
-    /// <inheritdoc />
+
     /// <remarks>
     /// To initialize an empty array a to a randomly shuffled copy of source whose length is not known:
     /// while source.moreDataAvailable
@@ -921,7 +979,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     ///         a.append(a[j])
     ///         a[j] ← source.next
     /// </remarks>
-    public IReadOnlyList<T> ToList<T>(IEnumerable<T> values)
+    public IReadOnlyList<T> MixToList<T>(IEnumerable<T> values)
     {
         var list = new List<T>();
         using (var e = values.GetEnumerator())
@@ -944,17 +1002,15 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             return list;
         }
     }
-    
-    
 
-    /// <inheritdoc />
+
     /// <remarks>
     /// -- To shuffle an array a of n elements (indices 0..n-1):
     /// for i from n−1 downto 1 do
     /// j ← random integer such that 0 ≤ j ≤ i
     ///     exchange a[j] and a[i]
     /// </remarks>
-    public void Shuffle<T>(Span<T> values)
+    public void Mix<T>(Span<T> values)
     {
         T temp;
         int r;
@@ -967,8 +1023,8 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         }
     }
 
-    /// <inheritdoc />
-    public void Shuffle<T>(IList<T> values)
+
+    public void Mix<T>(IList<T> values)
     {
         T temp;
         int r;
@@ -981,8 +1037,8 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         }
     }
 
-    /// <inheritdoc />
-    public void Shuffle<T>(T[] values)
+
+    public void Mix<T>(T[] values)
     {
         T temp;
         int r;
@@ -993,5 +1049,15 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             values[i] = values[r];
             values[r] = temp;
         }
+    }
+
+    public IEnumerable<T> Mixed<T>(params T[] values)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerable<T> Mixed<T>(IEnumerable<T> values)
+    {
+        throw new NotImplementedException();
     }
 }

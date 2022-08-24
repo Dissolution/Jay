@@ -58,7 +58,8 @@ public sealed class EnumMemberInfo<TEnum> : IEquatable<EnumMemberInfo<TEnum>>,
 
     public bool Equals(EnumMemberInfo<TEnum>? enumInfo)
     {
-        return enumInfo is not null && EnumTypeInfo<TEnum>.Equals(Enum, enumInfo.Enum);
+        return enumInfo is not null && 
+               EnumComparer<TEnum>.Default.Equals(Enum, enumInfo.Enum);
     }
 
     public bool Equals(TEnum @enum)
