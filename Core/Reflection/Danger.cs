@@ -587,8 +587,7 @@ public static unsafe class Danger
     public static Span<char> AsSpan(in string text)
     {
         ref readonly char ch = ref text.GetPinnableReference();
-        return MemoryMarshal.CreateSpan<char>(
-            ref InToRef(in ch), text.Length);
+        return MemoryMarshal.CreateSpan<char>(ref InToRef(in ch), text.Length);
     }
 
 #endregion

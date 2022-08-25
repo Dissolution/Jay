@@ -476,7 +476,8 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     {
         if (!IsHighResolution)
         {
-            return (float)(ulong.MaxValue * DoublePercent())
+            const double range = (double)float.MaxValue - (double)float.MinValue;
+            return (float)((double)float.MinValue + (range * DoublePercent()));
         }
 
         /* Best approach, no crazed values,
@@ -488,7 +489,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         {
             double mantissa = (DoublePercent() * 2.0d) - 1.0d;
             // choose -149 instead of -126 to also generate subnormal floats (*)
-            double exponent = Math.Pow(2.0d, (double)Between(-126, 128));
+            double exponent = 1 << Between(-126, 128));
             return (float)(mantissa * exponent);
         }
         */
@@ -512,7 +513,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         {
             var sign = ZeroTo(2);
             var exponent = ZeroTo(0xFF); // do not generate 0xFF (infinities and NaN)
-            var mantissa = ZeroTo(0x800000);
+            var mantissa = ZeroTo(0x800001);
             var bits = (sign << 31) + (exponent << 23) + mantissa;
             return Danger.DirectCast<int, float>(bits);
         }
@@ -639,7 +640,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             // 2^exponent.
             //return (double)significand * Math.Pow(2, exponent);
             // 2 ^ x == 1 << x;
-            return (double)(significand * Math.Pow(2.0d, (double)exponent)); //1UL << exponent));
+            return (double)(significand * (1UL << exponent));
         }
     }
 
@@ -762,7 +763,9 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         if (info.HasFlags)
         {
             // Have to randomize the bits up to flag.highest
-            throw new NotImplementedException();
+            var highMember = info.Members.Last();
+            EnumMemberInfo<TEnum> memberInfo = EnumInfo.For(highMember);
+            memberInfo.
         }
         else
         {

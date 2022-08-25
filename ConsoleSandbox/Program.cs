@@ -23,7 +23,7 @@ using Jay.Text;
 using Jay.BenchTests;
 using Jay.BenchTests.Text;
 
-    var result = Runner.RunAndOpenHtml<TextBuilderWriteCharBenchTests>();
+    var result = Runner.RunAndOpenHtml<MathTests>();
     Console.WriteLine(result);
 
 #else

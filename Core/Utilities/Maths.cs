@@ -65,4 +65,10 @@ public static class Maths
         }
         return result;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int PowerOfTwo(int exponent)
+    {
+        return 1 << exponent;
+    }
 }

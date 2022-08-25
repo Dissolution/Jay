@@ -1,4 +1,6 @@
 ﻿// ReSharper disable EntityNameCapturedOnly.Global
+
+using System.Runtime.InteropServices;
 using static InlineIL.IL;
 
 namespace Jay;
@@ -16,15 +18,6 @@ public static class GenericExtensions
         Emit.Ldc_I4_1();
         Emit.Ret();
         throw Unreachable();
-    }
-
-    public static ReadOnlySpan<char> ToSpanText<T>(this T? value)
-    {
-        if (value is null) return default;
-        if (value is string str) return str.AsSpan();
-        if (value is char[] chars) return new Span<char>(chars);
-        if (value is char ch) return ch.AsReadOnlySpan();
-        return value.ToString().AsSpan();
     }
 
     /// <summary>

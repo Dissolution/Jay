@@ -14,7 +14,7 @@ public static class CharExtensions
     /// We use `ref` (could also use `in`) so that we can capture a pointer to the char.
     /// If we do not, the below doesn't work.
     /// </remarks>
-    public static ReadOnlySpan<char> AsReadOnlySpan(ref this char ch)
+    public static ReadOnlySpan<char> AsReadOnlySpan(in this char ch)
     {
         // Tested as the fastest way
         unsafe
