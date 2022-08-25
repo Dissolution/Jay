@@ -765,7 +765,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             // Have to randomize the bits up to flag.highest
             var highMember = info.Members.Last();
             EnumMemberInfo<TEnum> memberInfo = EnumInfo.For(highMember);
-            memberInfo.
+            throw new NotImplementedException();
         }
         else
         {

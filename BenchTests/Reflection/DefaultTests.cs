@@ -4,6 +4,7 @@ using InlineIL;
 using Jay.Randomization;
 using Jay.Reflection;
 using Jay.Reflection.Building;
+using Jay.Reflection.Internal;
 using Jay.Validation;
 
 using static InlineIL.IL;

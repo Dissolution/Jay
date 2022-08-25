@@ -80,7 +80,7 @@ namespace Jay.Reflection.Cloning;
         }
 
         // string and true value types are always copied as we move them around
-        if (type == typeof(string) || MethodInfoCache.IsNonReferenced(type))
+        if (type == typeof(string) || MethodCache.IsNonReferenced(type))
         {
             source.LoadValue(emitter);
             return;
@@ -425,7 +425,7 @@ public static class Muq
         }
 
         // String and true Value types are always copied as we ref them
-        if (type == typeof(string) || MethodInfoCache.IsNonReferenced(type))
+        if (type == typeof(string) || TypeCache.IsUnmanaged(type))
         {
             emitter.Ldarg(0).Ret();
         }

@@ -4,12 +4,30 @@ using Jay.Reflection;
 using Jay.Reflection.Building;
 using Jay.Reflection.Exceptions;
 using static InlineIL.IL;
+using TypeCache = Jay.Reflection.Internal.TypeCache;
 
 namespace Jay.Enums.Scratch;
 
+
 public abstract class EnumTypeInfo
 {
-   
+    public Type Type { get; }
+    public Attribute[] Attributes { get; }
+    public bool HasFlags { get; }
+    public int Size { get; }
+
+    protected EnumTypeInfo(Type enumType)
+    {
+        Debug.Assert(enumType != null);
+        Debug.Assert(enumType.IsEnum);
+        Debug.Assert(enumType.IsValueType);
+        Debug.Assert(TypeCache.IsUnmanaged(enumType));
+       
+        this.Type = enumType;
+        this.Attributes = Attribute.GetCustomAttributes(enumType);
+        this.HasFlags = Attributes.OfType<FlagsAttribute>().Any();
+        this.Size = TypeCache.SizeOf(enumType)!.Value;
+    }
 }
 
 public static class EnumExtensions
@@ -44,35 +62,21 @@ public static class EnumExtensions
         TEnum e = @enum;
         foreach (var flag in flags)
         {
-            e = EnumTypeInfo<TEnum>.Or(e, flag);
+            e = e.Or(flag);
         }
         return e;
     }
+
+    public static TEnum Or<TEnum>(this TEnum @enum, TEnum flag)
+        where TEnum : struct, Enum
+    {
+        return EnumIL<TEnum>.Or(@enum, flag);
+    }
 }
 
-public class EnumTypeInfo<TEnum> : EnumTypeInfo, 
-                                   IEqualityComparer<TEnum>,
-                                   IComparer<TEnum> 
+public static class EnumIL<TEnum>
     where TEnum : struct, Enum
 {
-    internal static readonly EnumTypeInfo<TEnum> Instance = new();
-
-    public static Type Type { get; }
-    public static Attribute[] Attributes { get; }
-    public static bool IsFlags { get; }
-    public static int Size { get; }
-
-    public static IEqualityComparer<TEnum> EqualityComparer => Instance;
-    public static IComparer<TEnum> Comparer => Instance;
-    
-    static EnumTypeInfo()
-    {
-        Type = typeof(TEnum);
-        Attributes = Attribute.GetCustomAttributes(Type);
-        IsFlags = Attributes.OfType<FlagsAttribute>().Any();
-        Size = Danger.SizeOf<TEnum>();
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong ToUInt64(TEnum @enum)
     {
@@ -81,26 +85,6 @@ public class EnumTypeInfo<TEnum> : EnumTypeInfo,
         return Return<ulong>();
     }
 
-    private static readonly Lazy<Func<TEnum, ulong>> _getULong =
-        new(() => RuntimeBuilder.CreateDelegate<Func<TEnum, ulong>>(runtimeMethod =>
-        {
-            // Find the private method that does this
-            var method = Type.GetMethod("ToUInt64",
-                BindingFlags.NonPublic | BindingFlags.Instance,
-                Type.EmptyTypes);
-            if (method is null)
-                throw new RuntimeException($"Cannot find {Type}.ToUInt64()");
-            Debug.Assert(method.ReturnType == typeof(ulong));
-            runtimeMethod.Emitter
-                         .Ldarg_0()
-                         .Call(method)
-                         .Ret();
-        }));
-
-    public static ulong GetUInt64(TEnum @enum)
-    {
-        return _getULong.Value(@enum);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TEnum Not(TEnum @enum)
@@ -171,6 +155,49 @@ public class EnumTypeInfo<TEnum> : EnumTypeInfo,
         Emit.Shr_Un();
         return Return<TEnum>();
     }
+}
+
+public class EnumTypeInfo<TEnum> : EnumTypeInfo, 
+                                   IEqualityComparer<TEnum>,
+                                   IComparer<TEnum> 
+    where TEnum : struct, Enum
+{
+    internal static readonly EnumTypeInfo<TEnum> Instance = new();
+
+    
+
+    public static IEqualityComparer<TEnum> EqualityComparer => Instance;
+    public static IComparer<TEnum> Comparer => Instance;
+    
+    public EnumTypeInfo()
+        : base(typeof(TEnum))
+    {
+      
+    }
+
+   
+
+    private static readonly Lazy<Func<TEnum, ulong>> _getULong =
+        new(() => RuntimeBuilder.CreateDelegate<Func<TEnum, ulong>>(runtimeMethod =>
+        {
+            // Find the private method that does this
+            var method = typeof(TEnum).GetMethod("ToUInt64",
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                Type.EmptyTypes);
+            if (method is null)
+                throw new RuntimeException($"Cannot find {typeof(TEnum)}.ToUInt64()");
+            Debug.Assert(method.ReturnType == typeof(ulong));
+            runtimeMethod.Emitter
+                         .Ldarg_0()
+                         .Call(method)
+                         .Ret();
+        }));
+
+    public static ulong GetUInt64(TEnum @enum)
+    {
+        return _getULong.Value(@enum);
+    }
+
 
     public static TEnum Combine(TEnum first)
     {
@@ -179,12 +206,12 @@ public class EnumTypeInfo<TEnum> : EnumTypeInfo,
 
     public static TEnum Combine(TEnum first, TEnum second)
     {
-        return Or(first, second);
+        return first.Or(second);
     }
 
     public static TEnum Combine(TEnum first, TEnum second, TEnum third)
     {
-        return Or(Or(first, second), third);
+        return first.Or(second).Or(third);
     }
 
     public static TEnum Combine(params TEnum[] flags)
@@ -192,7 +219,7 @@ public class EnumTypeInfo<TEnum> : EnumTypeInfo,
         var e = default(TEnum);
         for (var i = 0; i < flags.Length; i++)
         {
-            e = Or(e, flags[i]);
+            e = e.Or(flags[i]);
         }
 
         return e;
@@ -200,10 +227,6 @@ public class EnumTypeInfo<TEnum> : EnumTypeInfo,
 
 
 
-    private EnumTypeInfo()
-    {
-
-    }
 
     bool IEqualityComparer<TEnum>.Equals(TEnum left, TEnum right)
     {
@@ -244,6 +267,6 @@ public class EnumMemberInfo<TEnum>
 
     internal ulong ToULong()
     {
-        return EnumTypeInfo<TEnum>.ToUInt64()
+        return EnumIL<TEnum>.ToUInt64(Member);
     }
 }

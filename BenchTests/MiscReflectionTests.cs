@@ -17,7 +17,7 @@ public class MiscReflectionTests
             try
             {
                 var isUnmanaged = type.IsUnmanaged();
-                var isReference = type.IsReferenceOrContainsReferences();
+                var isReference = TypeCache.IsReferenceOrContainsReferences(type);
                 Assert.Equal(isReference, !isUnmanaged);
             }
             catch

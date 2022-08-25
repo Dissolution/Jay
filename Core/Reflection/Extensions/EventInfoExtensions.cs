@@ -149,7 +149,7 @@ public static class EventInfoExtensions
                  emitter.LoadInstanceFor(backingField, method.Parameters[0], out offset)
                         .Ldfld(backingField)
                         .Cast(backingField.FieldType, typeof(MulticastDelegate))
-                        .Call(MethodInfoCache.MulticastDelegate_GetInvocationList)
+                        .Call(MethodCache.MulticastDelegate_GetInvocationList)
                         .Stloc(delegates)
 
                         // For loop
