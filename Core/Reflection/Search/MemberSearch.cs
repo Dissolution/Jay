@@ -2,28 +2,85 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Jay.Expressions;
+using Jay.Reflection.Exceptions;
 
 namespace Jay.Reflection.Search;
 
 public static class MemberSearch
 {
-    public static Result TryFind<TMember>(Expression memberExpression,
-                                          [NotNullWhen(true)] out TMember? member)
-        where TMember : MemberInfo
+    public static class Static
     {
-        member = memberExpression.ExtractMember<TMember>();
-        if (member is null)
+        public static TMember Find<TMember>(Type staticType, string memberName)
+            where TMember : MemberInfo
         {
-            Debugger.Break();
-            return new MissingMemberException();
+            var members = staticType
+                          .GetMembers(Reflect.StaticFlags)
+                          .OfType<TMember>()
+                          .Where(member => string.Equals(member.Name, memberName, StringComparison.OrdinalIgnoreCase))
+                          .ToList();
+            if (members.Count != 1)
+            {
+                throw new ReflectionException(
+                    $"Could not find {typeof(TMember)} {staticType}.{memberName}");
+            }
+            return members[0];
         }
-        return true;
     }
 
-    public static TMember? Find<TMember>(Expression memberExpression)
+    public static class Instance<TInstance>
+    {
+        public static TMember Find<TMember>(Expression<Action<TInstance>> memberExpression)
+            where TMember : MemberInfo
+        {
+            var member = memberExpression.ExtractMember<TMember>();
+            if (member is null)
+            {
+                Debugger.Break();
+                throw new MissingMemberException();
+            }
+            return member;
+        }
+
+        public static TMember Find<TMember>(string memberName)
+            where TMember : MemberInfo
+        {
+            var members = typeof(TInstance)
+                         .GetMembers(Reflect.InstanceFlags)
+                         .OfType<TMember>()
+                         .Where(member => string.Equals(member.Name, memberName, StringComparison.OrdinalIgnoreCase))
+                         .ToList();
+            if (members.Count != 1)
+            {
+                throw new ReflectionException(
+                    $"Could not find {typeof(TMember)} {typeof(TInstance)}.{memberName}");
+            }
+            return members[0];
+        }
+    }
+
+    public static TMember Find<TMember>(Expression memberExpression)
         where TMember : MemberInfo
     {
-        return memberExpression.ExtractMember<TMember>();
+        var member = memberExpression.ExtractMember<TMember>();
+        if (member is not null) return member;
+        var values = memberExpression.ExtractValues().ToList();
+        if (values.Count == 1)
+        {
+            var value = values[0];
+            var valueType = value?.GetType();
+            if (valueType is not null && valueType.IsEnum)
+            {
+                string? valueName = Enum.GetName(valueType, value);
+                member = valueType
+                         .GetMembers(Reflect.StaticFlags)
+                         .OfType<TMember>()
+                         .FirstOrDefault(m => m.Name == valueName);
+                if (member is not null) return member;
+            }
+        }
+
+        Debugger.Break();
+        throw new MissingMemberException();
     }
 
     public static bool HasDefaultConstructor(this Type type, [NotNullWhen(true)] out ConstructorInfo? ctor)

@@ -1,9 +1,18 @@
-﻿namespace Jay.Reflection.Exceptions;
+﻿using Jay.Dumping;
+
+namespace Jay.Reflection.Exceptions;
 
 public class ReflectionException : SystemException
 {
     public ReflectionException(string? message = null, Exception? innerException = null)
         : base(message, innerException)
+    {
+
+    }
+
+    public ReflectionException(ref InterpolatedDumpHandler message,
+                               Exception? innerException = null)
+        : base(message.ToStringAndDispose(), innerException)
     {
 
     }

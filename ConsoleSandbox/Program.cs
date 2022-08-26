@@ -7,14 +7,17 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using ConsoleSandbox;
 using Jay;
 using Jay.Collections;
 using Jay.Dumping;
+using Jay.Enums.Scratch;
 using Jay.Reflection;
 using Jay.Reflection.Building.Backing;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Implementation;
+using Jay.Reflection.Search;
 using Jay.Text;
 
 //using TextBuilder = Jay.Text.Scratch.TextBuilder;
@@ -29,18 +32,21 @@ using Jay.BenchTests.Text;
 #else
 using var text = TextBuilder.Borrow();
 
-text.Append("Writing").AppendNewLine()
-    .Append("{")
-    .Indent("    ", tb =>
-    {
-        tb.AppendNewLine()
-            .Append("Eat").AppendNewLine()
-            .Append("At").AppendNewLine()
-            .Append("Joes");
-    })
-    .AppendNewLine().Append("}").AppendNewLine();
+var member = MemberSearch.Find<FieldInfo>(() => BindingFlags.Instance);
+
+Debugger.Break();
 
 
+// text.Append("Writing").AppendNewLine()
+//     .Append("{")
+//     .Indent("    ", tb =>
+//     {
+//         tb.AppendNewLine()
+//             .Append("Eat").AppendNewLine()
+//             .Append("At").AppendNewLine()
+//             .Append("Joes");
+//     })
+//     .AppendNewLine().Append("}").AppendNewLine();
 
 // var backingType = InterfaceImplementer.CreateImplementationType<IKeyedEntity<int>>();
 // var backingInstance = (Activator.CreateInstance(backingType) as IKeyedEntity<int>)!;

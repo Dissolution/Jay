@@ -32,6 +32,322 @@ public static class ExpressionExtensions
         return ExtractMembers(expression).OfType<TMember>().FirstOrDefault();
     }
 
+    public static TValue? ExtractValue<TValue>(this Expression expression)
+    {
+        return ExtractValues(expression)
+               .OfType<TValue>()
+               .FirstOrDefault();
+    }
+
+    public static IEnumerable<object?> ExtractValues(this Expression? expression)
+    {
+        switch (expression)
+        {
+            case null:
+            {
+                break;
+            }
+            case BinaryExpression binaryExpression:
+            {
+                foreach (var value in binaryExpression.Left.ExtractValues())
+                {
+                    yield return value;
+                }
+                //
+                // if (binaryExpression.Method is not null)
+                // {
+                //     yield return binaryExpression.Method;
+                // }
+
+                foreach (var value in binaryExpression.Right.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case BlockExpression blockExpression:
+            {
+                foreach (var value in blockExpression.Expressions
+                                                     .SelectMany(expr => expr.ExtractValues()))
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case ConditionalExpression conditionalExpression:
+            {
+                foreach (var value in conditionalExpression.IfTrue.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                foreach (var value in conditionalExpression.IfFalse.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case ConstantExpression constantExpression:
+            {
+                yield return constantExpression.Value;
+
+                break;
+            }
+            // ReSharper disable once UnusedVariable
+            case DebugInfoExpression debugInfoExpression:
+            {
+                break;
+            }
+            // ReSharper disable once UnusedVariable
+            case DefaultExpression defaultExpression:
+            {
+                break;
+            }
+            case DynamicExpression dynamicExpression:
+            {
+                foreach (var value in dynamicExpression.Arguments
+                                                       .SelectMany(expr => expr.ExtractValues()))
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case GotoExpression gotoExpression:
+            {
+                foreach (var value in gotoExpression.Value.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case IndexExpression indexExpression:
+            {
+                foreach (var value in indexExpression.Object.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                foreach (var value in indexExpression.Arguments
+                                                     .SelectMany(expr => expr.ExtractValues()))
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case InvocationExpression invocationExpression:
+            {
+                foreach (var value in invocationExpression.Expression.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                foreach (var value in invocationExpression.Arguments
+                                                          .SelectMany(expr => expr.ExtractValues()))
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case LabelExpression labelExpression:
+            {
+                foreach (var value in labelExpression.DefaultValue.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case LambdaExpression lambdaExpression:
+            {
+                foreach (var value in lambdaExpression.Body.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                foreach (var value in lambdaExpression.Parameters
+                                                      .SelectMany(expr => expr.ExtractValues()))
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case ListInitExpression listInitExpression:
+            {
+                foreach (var value in listInitExpression.NewExpression.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case LoopExpression loopExpression:
+            {
+                foreach (var value in loopExpression.Body.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case MemberExpression memberExpression:
+            {
+                foreach (var value in memberExpression.Expression.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case MemberInitExpression memberInitExpression:
+            {
+                foreach (var value in memberInitExpression.NewExpression.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case MethodCallExpression methodCallExpression:
+            {
+                foreach (var value in methodCallExpression.Object.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                foreach (var value in methodCallExpression.Arguments
+                                                          .SelectMany(expr => expr.ExtractValues()))
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case NewArrayExpression newArrayExpression:
+            {
+                foreach (var value in newArrayExpression.Expressions
+                                                        .SelectMany(expr => expr.ExtractValues()))
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case NewExpression newExpression:
+            {
+                foreach (var value in newExpression.Arguments
+                                                   .SelectMany(expr => expr.ExtractValues()))
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            // ReSharper disable once UnusedVariable
+            case ParameterExpression parameterExpression:
+            {
+                break;
+            }
+            case RuntimeVariablesExpression runtimeVariablesExpression:
+            {
+                foreach (var value in runtimeVariablesExpression.Variables
+                                                                .SelectMany(expr => expr.ExtractValues()))
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case SwitchExpression switchExpression:
+            {
+                foreach (var switchCase in switchExpression.Cases)
+                {
+                    foreach (var value in switchCase.TestValues
+                                                    .SelectMany(expr => expr.ExtractValues()))
+                    {
+                        yield return value;
+                    }
+
+                    foreach (var value in switchCase.Body.ExtractValues())
+                    {
+                        yield return value;
+                    }
+                }
+
+                foreach (var value in switchExpression.DefaultBody.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case TryExpression tryExpression:
+            {
+                foreach (var value in tryExpression.Body.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                foreach (var handler in tryExpression.Handlers)
+                {
+                    foreach (var value in handler.Filter.ExtractValues())
+                    {
+                        yield return value;
+                    }
+
+                    foreach (var value in handler.Variable.ExtractValues())
+                    {
+                        yield return value;
+                    }
+
+                    foreach (var value in handler.Body.ExtractValues())
+                    {
+                        yield return value;
+                    }
+                }
+
+                foreach (var value in tryExpression.Fault.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                foreach (var value in tryExpression.Finally.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case TypeBinaryExpression typeBinaryExpression:
+            {
+                foreach (var value in typeBinaryExpression.Expression.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            case UnaryExpression unaryExpression:
+            {
+                foreach (var value in unaryExpression.Operand.ExtractValues())
+                {
+                    yield return value;
+                }
+
+                break;
+            }
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
     public static IEnumerable<MemberInfo> ExtractMembers(this Expression? expression)
     {
         switch (expression)
@@ -577,7 +893,8 @@ public static class ExpressionExtensions
             case RuntimeVariablesExpression runtimeVariablesExpression:
             {
                 foreach (var expr in runtimeVariablesExpression.Variables
-                                                               .SelectMany(expr => expr.ExtractExpressions<TExpression>()))
+                                                               .SelectMany(expr =>
+                                                                   expr.ExtractExpressions<TExpression>()))
                 {
                     yield return expr;
                 }

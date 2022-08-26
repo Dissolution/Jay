@@ -33,12 +33,14 @@ public static partial class Dumper
                 text.Write(getVis);
             text.Write(" get; ");
         }
+
         if (setVis != Visibility.None)
         {
             if (setVis != highVis)
                 text.Append(setVis);
             text.Write(" set; ");
         }
+
         text.Write('}');
     }
 
@@ -55,7 +57,7 @@ public static partial class Dumper
     {
         if (TryDumpNull(ctor, text)) return;
         DumpTypeTo(ctor.DeclaringType, text);
-        text.Append('(')
+        text.Append("..ctor(")
             .AppendDelimit(", ", ctor.GetParameters(), (tb, param) => DumpParameterTo(param, tb))
             .Write(')');
     }
@@ -66,8 +68,14 @@ public static partial class Dumper
         DumpTypeTo(method.ReturnType(), text);
         text.Write(' ');
         DumpTypeTo(method.OwnerType(), text);
-        text.Append('.').Append(method.Name)
-            .Append('(')
+        text.Append('.').Append(method.Name);
+        if (method.IsGenericMethod)
+        {
+            text.Append('<')
+                .AppendDelimit(",", method.GetGenericArguments(), (tb, type) => DumpTypeTo(type, tb))
+                .Write('>');
+        }
+        text.Append('(')
             .AppendDelimit(", ", method.GetParameters(), (tb, param) => DumpParameterTo(param, tb))
             .Write(')');
     }
