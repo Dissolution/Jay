@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq.Expressions;
+using System.Reflection;
 using Jay.Collections;
 using Jay.Enums;
 using Jay.Reflection;
@@ -28,6 +29,7 @@ public static partial class Dumper
         AddDumper<MethodBase>(DumpMethodTo);
         AddDumper<MethodInfo>(DumpMethodTo);
         AddDumper<ParameterInfo>(DumpParameterTo);
+        AddDumper<Expression>(DumpExpressionTo);
     }
 
     private static void AddDumper<T>(DumpValueTo<T> valueDumper) => _valueDumpCache.Set<T>(valueDumper);
@@ -49,7 +51,9 @@ public static partial class Dumper
     private static void DumpEnumTo<TEnum>(TEnum value, TextBuilder text)
         where TEnum : struct, Enum
     {
-        value.GetInfo().DumpTo(text);
+        //value.GetInfo().DumpTo(text);
+        text.Write<TEnum>(value);
+        
     }
 
     private static void DumpTupleTo<TTuple>(TTuple? tuple, TextBuilder text)
@@ -107,7 +111,7 @@ public static partial class Dumper
         }
         
         // IEnumerable?
-        if (valueType.Implements(typeof(IEnumerable<>)))
+        if (valueType.Implements(typeof(IEnumerable<>)) && valueType != typeof(string))
         {
             var itemType = valueType.GenericTypeArguments[0];
             method = typeof(Dumper).GetMethod(nameof(DumpEnumerableTo),

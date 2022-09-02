@@ -52,4 +52,9 @@ public class ConcurrentTypeDictionary<TValue> : ConcurrentDictionary<Type, TValu
     {
         return base.AddOrUpdate(typeof(T), value, (_, _) => value);
     }
+
+    public TValue Set(Type type, TValue value)
+    {
+        return base.AddOrUpdate(type, value, (_, _) => value);
+    }
 }

@@ -751,13 +751,25 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, ReadOnlySpan<T> values)
     {
-        if (values.Length >= 1)
+        switch (values.Length)
         {
-            Write<T>(values[0]);
-            for (var i = 1; i < values.Length; i++)
+            case 0:
+                break;
+            case 1:
             {
-                Write(delimiter);
-                Write<T>(values[i]);
+                Write<T>(values[0]);
+                break;
+            }
+            default:
+            {
+                Write<T>(values[0]);
+                for (var i = 1; i < values.Length; i++)
+                {
+                    Write(delimiter);
+                    Write<T>(values[i]);
+                }
+
+                break;
             }
         }
         return this;
@@ -765,13 +777,28 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, params T[]? values)
     {
-        if (values is { Length: >= 1 })
+        if (values is not null)
         {
-            Write<T>(values[0]);
-            for (var i = 1; i < values.Length; i++)
+            switch (values.Length)
             {
-                Write(delimiter);
-                Write<T>(values[i]);
+                case 0:
+                    break;
+                case 1:
+                {
+                    Write<T>(values[0]);
+                    break;
+                }
+                default:
+                {
+                    Write<T>(values[0]);
+                    for (var i = 1; i < values.Length; i++)
+                    {
+                        Write(delimiter);
+                        Write<T>(values[i]);
+                    }
+
+                    break;
+                }
             }
         }
         return this;
@@ -796,13 +823,23 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, ReadOnlySpan<T> values, Action<TextBuilder, T> appendValue)
     {
-        if (values.Length >= 1)
+        switch (values.Length)
         {
-            appendValue(this, values[0]);
-            for (var i = 1; i < values.Length; i++)
+            case 0:
+                break;
+            case 1:
+                appendValue(this, values[0]);
+                break;
+            default:
             {
-                Write(delimiter);
-                appendValue(this, values[i]);
+                appendValue(this, values[0]);
+                for (var i = 1; i < values.Length; i++)
+                {
+                    Write(delimiter);
+                    appendValue(this, values[i]);
+                }
+
+                break;
             }
         }
         return this;
@@ -810,13 +847,23 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
     
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, T[] values, Action<TextBuilder, T> appendValue)
     {
-        if (values.Length >= 1)
+        switch (values.Length)
         {
-            appendValue(this, values[0]);
-            for (var i = 1; i < values.Length; i++)
+            case 0:
+                break;
+            case 1:
+                appendValue(this, values[0]);
+                break;
+            default:
             {
-                Write(delimiter);
-                appendValue(this, values[i]);
+                appendValue(this, values[0]);
+                for (var i = 1; i < values.Length; i++)
+                {
+                    Write(delimiter);
+                    appendValue(this, values[i]);
+                }
+
+                break;
             }
         }
         return this;

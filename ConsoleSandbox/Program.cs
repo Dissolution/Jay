@@ -12,6 +12,7 @@ using ConsoleSandbox;
 using Jay;
 using Jay.Collections;
 using Jay.Dumping;
+using Jay.Enums;
 using Jay.Enums.Scratch;
 using Jay.Reflection;
 using Jay.Reflection.Building.Backing;
@@ -19,6 +20,10 @@ using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Implementation;
 using Jay.Reflection.Search;
 using Jay.Text;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Diagnostics.Tracing.Analysis.JIT;
+
+
 
 //using TextBuilder = Jay.Text.Scratch.TextBuilder;
 
@@ -32,8 +37,10 @@ using Jay.BenchTests.Text;
 #else
 using var text = TextBuilder.Borrow();
 
-var member = MemberSearch.Find<FieldInfo>(() => BindingFlags.Instance);
+//var member = MemberSearch.Find<FieldInfo>(() => typeof(MemberInfo).GetField("Blah", Reflect.InstanceFlags));
 
+var thing = EnumCache<BindingFlags>.GetString(BindingFlags.Static | BindingFlags.Public);
+var dump = Dumper.Dump(thing);
 Debugger.Break();
 
 
@@ -68,6 +75,8 @@ return 0;
 
 namespace ConsoleSandbox
 {
+
+
     public interface IEntity
     {
         string? Name { get; set; }

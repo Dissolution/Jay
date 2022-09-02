@@ -1,5 +1,7 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using InlineIL;
+using Jay.Reflection;
 using static InlineIL.IL;
 
 namespace Jay.Enums;
@@ -10,6 +12,118 @@ public static class EnumExtensions
         where TEnum : struct, Enum
     {
         return EnumInfo.For<TEnum>(@enum);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsDefault<TEnum>(this TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldc_I4_0();
+        Emit.Ceq();
+        return Return<bool>();
+    }
+
+
+   
+
+
+    public static TEnum[] GetFlags<TEnum>(this TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        throw new NotImplementedException();
+        /*
+
+        // Values are sorted, so if the incoming value is 0, we can check to see whether
+        // the first entry matches it, in which case we can return its name; otherwise,
+        // we can just return "0".
+        if (@enum.IsDefault())
+        {
+                return values.Length > 0 && values[0] == 0 ?
+                    names[0] :
+                    "0";
+            }
+
+            // With a ulong result value, regardless of the enum's base type, the maximum
+            // possible number of consistent name/values we could have is 64, since every
+            // value is made up of one or more bits, and when we see values and incorporate
+            // their names, we effectively switch off those bits.
+            Span<int> foundItems = stackalloc int[64];
+
+            // Walk from largest to smallest. It's common to have a flags enum with a single
+            // value that matches a single entry, in which case we can just return the existing
+            // name string.
+            int index = values.Length - 1;
+            while (index >= 0)
+            {
+                if (values[index] == resultValue)
+                {
+                    return names[index];
+                }
+
+                if (values[index] < resultValue)
+                {
+                    break;
+                }
+
+                index--;
+            }
+
+            // Now look for multiple matches, storing the indices of the values
+            // into our span.
+            int resultLength = 0, foundItemsCount = 0;
+            while (index >= 0)
+            {
+                ulong currentValue = values[index];
+                if (index == 0 && currentValue == 0)
+                {
+                    break;
+                }
+
+                if ((resultValue & currentValue) == currentValue)
+                {
+                    resultValue -= currentValue;
+                    foundItems[foundItemsCount++] = index;
+                    resultLength = checked(resultLength + names[index].Length);
+                }
+
+                index--;
+            }
+
+            // If we exhausted looking through all the values and we still have
+            // a non-zero result, we couldn't match the result to only named values.
+            // In that case, we return null and let the call site just generate
+            // a string for the integral value.
+            if (resultValue != 0)
+            {
+                return null;
+            }
+
+            // We know what strings to concatenate.  Do so.
+
+            Debug.Assert(foundItemsCount > 0);
+            const int SeparatorStringLength = 2; // ", "
+            string result = string.FastAllocateString(checked(resultLength + (SeparatorStringLength * (foundItemsCount - 1))));
+
+            Span<char> resultSpan = new Span<char>(ref result.GetRawStringData(), result.Length);
+            string name = names[foundItems[--foundItemsCount]];
+            name.CopyTo(resultSpan);
+            resultSpan = resultSpan.Slice(name.Length);
+            while (--foundItemsCount >= 0)
+            {
+                resultSpan[0] = EnumSeparatorChar;
+                resultSpan[1] = ' ';
+                resultSpan = resultSpan.Slice(2);
+
+                name = names[foundItems[foundItemsCount]];
+                name.CopyTo(resultSpan);
+                resultSpan = resultSpan.Slice(name.Length);
+            }
+            Debug.Assert(resultSpan.IsEmpty);
+
+            return result;
+        }
+        */
     }
 
 

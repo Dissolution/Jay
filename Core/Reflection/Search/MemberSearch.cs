@@ -1,8 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
+using Jay.Debugging;
+using Jay.Dumping;
 using Jay.Expressions;
 using Jay.Reflection.Exceptions;
+using Jay.Text;
 
 namespace Jay.Reflection.Search;
 
@@ -58,12 +61,59 @@ public static class MemberSearch
         }
     }
 
-    public static TMember Find<TMember>(Expression memberExpression)
+    public static TMember Find<TMember>(Expression expression)
         where TMember : MemberInfo
     {
-        var member = memberExpression.ExtractMember<TMember>();
+        var member = expression.ExtractMember<TMember>();
         if (member is not null) return member;
-        var values = memberExpression.ExtractValues().ToList();
+       
+        // Build an error
+        using var text = TextBuilder.Borrow();
+        var methodCall = expression.Descendants()
+                                   .OfType<MethodCallExpression>()
+                                   .FirstOrDefault();
+        if (methodCall is not null)
+        {
+            var method = methodCall.Method;
+            // Is this a search of a Type's Members?
+            if (method.DeclaringType == typeof(Type))
+            {
+                if (method.Name.StartsWith("Get"))
+                {
+                    text.Append("Could not find ")
+                        .AppendDump(methodCall.Object)
+                        .Append("'s ")
+                        .Append(method.Name.AsSpan(3))
+                        .Write(" with ");
+
+                    var parameters = method.GetParameters();
+                    var args = methodCall.Arguments;
+                    Debug.Assert(parameters.Length == args.Count);
+                    for (var i = 0; i < parameters.Length; i++)
+                    {
+                        var p = parameters[i];
+                        var a = args[i];
+                        text.Append(p.Name)
+                            .Write(" = ");
+                        if (a is ConstantExpression ce)
+                        {
+                            text.Write(ce.Value);
+                        }
+                        else
+                        {
+                            Debugger.Break();
+                        }
+                        text.Write(" ");
+                    }
+
+                    throw new MissingMemberException(text.ToString());
+                }
+            }
+        }
+
+       
+
+        var values = expression.ExtractValues().ToList();
         if (values.Count == 1)
         {
             var value = values[0];
