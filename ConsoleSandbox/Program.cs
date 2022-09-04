@@ -7,22 +7,12 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
-using ConsoleSandbox;
-using Jay;
 using Jay.Collections;
 using Jay.Dumping;
 using Jay.Enums;
-using Jay.Enums.Scratch;
-using Jay.Reflection;
-using Jay.Reflection.Building.Backing;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Implementation;
-using Jay.Reflection.Search;
 using Jay.Text;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.Diagnostics.Tracing.Analysis.JIT;
-
 
 
 //using TextBuilder = Jay.Text.Scratch.TextBuilder;
@@ -39,9 +29,8 @@ using var text = TextBuilder.Borrow();
 
 //var member = MemberSearch.Find<FieldInfo>(() => typeof(MemberInfo).GetField("Blah", Reflect.InstanceFlags));
 
-var thing = EnumCache<BindingFlags>.GetString(BindingFlags.Static | BindingFlags.Public);
-var dump = Dumper.Dump(thing);
-Debugger.Break();
+var flags = MemberFlags.Public | MemberFlags.Internal;
+
 
 
 // text.Append("Writing").AppendNewLine()

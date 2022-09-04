@@ -759,18 +759,19 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     public TEnum Enum<TEnum>()
         where TEnum : struct, Enum
     {
-        EnumTypeInfo<TEnum> info = EnumInfo.For<TEnum>();
-        if (info.HasFlags)
-        {
-            // Have to randomize the bits up to flag.highest
-            var highMember = info.Members.Last();
-            EnumMemberInfo<TEnum> memberInfo = EnumInfo.For(highMember);
-            throw new NotImplementedException();
-        }
-        else
-        {
-            return Single<TEnum>(info.Members);
-        }
+        // EnumTypeInfo<TEnum> info = EnumInfo.For<TEnum>();
+        // if (info.HasFlags)
+        // {
+        //     // Have to randomize the bits up to flag.highest
+        //     var highMember = info.Members.Last();
+        //     EnumMemberInfo<TEnum> memberInfo = EnumInfo.For(highMember);
+        //     throw new NotImplementedException();
+        // }
+        // else
+        // {
+        //     return Single<TEnum>(info.Members);
+        // }
+        throw new NotImplementedException();
     }
 
 

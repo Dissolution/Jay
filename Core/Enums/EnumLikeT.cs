@@ -1,4 +1,6 @@
-﻿namespace Jay.Enums;
+﻿using System.Reflection;
+
+namespace Jay.Enums;
 
 public abstract class EnumLike<TEnum> : 
     IEquatable<TEnum>,
@@ -6,6 +8,13 @@ public abstract class EnumLike<TEnum> :
     IFormattable
     where TEnum : EnumLike<TEnum>
 {
+    public static bool operator ==(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.Equals(right);
+    public static bool operator !=(EnumLike<TEnum> left, EnumLike<TEnum> right) => !left.Equals(right);
+    public static bool operator <(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.CompareTo((TEnum)right) < 0;
+    public static bool operator <=(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.CompareTo((TEnum)right) <= 0;
+    public static bool operator >(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.CompareTo((TEnum)right) > 0;
+    public static bool operator >=(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.CompareTo((TEnum)right) >= 0;
+
     public static bool operator ==(EnumLike<TEnum> left, TEnum right) => left.Equals(right);
     public static bool operator !=(EnumLike<TEnum> left, TEnum right) => !left.Equals(right);
     public static bool operator <(EnumLike<TEnum> left, TEnum right) => left.CompareTo(right) < 0;
@@ -14,7 +23,7 @@ public abstract class EnumLike<TEnum> :
     public static bool operator >=(EnumLike<TEnum> left, TEnum right) => left.CompareTo(right) >= 0;
 
     protected static readonly List<TEnum> _members;
-    
+
     public static bool HasFlags { get; } = false;
     public static IReadOnlyList<Attribute> Attributes { get; } = Attribute.GetCustomAttributes(typeof(TEnum));
     public static IReadOnlyList<TEnum> Members => _members;
@@ -75,7 +84,8 @@ public abstract class EnumLike<TEnum> :
 
     int IComparable.CompareTo(object? obj)
     {
-        if (obj is TEnum enumLike) return _value.CompareTo(enumLike._value);
+        if (obj is TEnum enumLike) 
+            return _value.CompareTo(enumLike._value);
         return 1;
     }
     
@@ -86,7 +96,8 @@ public abstract class EnumLike<TEnum> :
     
     public override bool Equals(object? obj)
     {
-        if (obj is TEnum enumLike) return _value == enumLike._value;
+        if (obj is TEnum enumLike) 
+            return _value == enumLike._value;
         return false;
     }
 
@@ -139,5 +150,22 @@ public abstract class EnumLike<TEnum> :
     public override string ToString()
     {
         return _name;
+    }
+}
+
+public sealed class MemberFlags : EnumLike<MemberFlags>
+{
+    public static MemberFlags Public { get; } = new(BindingFlags.Public);
+    public static MemberFlags Internal { get; } = new(BindingFlags.NonPublic);
+    public static MemberFlags Protected { get; } = new(BindingFlags.NonPublic);
+    public static MemberFlags Private { get; } = new(BindingFlags.NonPublic);
+
+    public BindingFlags BindingFlags { get; }
+
+    private MemberFlags(BindingFlags bindingFlags,
+        [CallerMemberName] string memberName = "") 
+        : base(memberName)
+    {
+        this.BindingFlags = bindingFlags;
     }
 }

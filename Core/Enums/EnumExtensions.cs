@@ -1,19 +1,16 @@
-﻿using System.Diagnostics;
+﻿using System;
 using System.Numerics;
 using InlineIL;
-using Jay.Reflection;
+
 using static InlineIL.IL;
 
 namespace Jay.Enums;
 
 public static class EnumExtensions
 {
-    public static EnumMemberInfo<TEnum> GetInfo<TEnum>(this TEnum @enum)
-        where TEnum : struct, Enum
-    {
-        return EnumInfo.For<TEnum>(@enum);
-    }
-
+    /// <summary>
+    /// Is this <c>enum</c> the default <typeparamref name="TEnum"/> value?
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsDefault<TEnum>(this TEnum @enum)
         where TEnum : struct, Enum
@@ -24,112 +21,156 @@ public static class EnumExtensions
         return Return<bool>();
     }
 
-
-   
-
-
-    public static TEnum[] GetFlags<TEnum>(this TEnum @enum)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong ToUInt64<TEnum>(this TEnum @enum)
         where TEnum : struct, Enum
     {
-        throw new NotImplementedException();
-        /*
+        Emit.Ldarg(nameof(@enum));
+        Emit.Conv_U8();
+        return Return<ulong>();
+    }
 
-        // Values are sorted, so if the incoming value is 0, we can check to see whether
-        // the first entry matches it, in which case we can return its name; otherwise,
-        // we can just return "0".
-        if (@enum.IsDefault())
-        {
-                return values.Length > 0 && values[0] == 0 ?
-                    names[0] :
-                    "0";
-            }
+    #region Bitwise Operations
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum Not<TEnum>(this TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Not();
+        return Return<TEnum>();
+    }
 
-            // With a ulong result value, regardless of the enum's base type, the maximum
-            // possible number of consistent name/values we could have is 64, since every
-            // value is made up of one or more bits, and when we see values and incorporate
-            // their names, we effectively switch off those bits.
-            Span<int> foundItems = stackalloc int[64];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum Neg<TEnum>(this TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Neg();
+        return Return<TEnum>();
+    }
 
-            // Walk from largest to smallest. It's common to have a flags enum with a single
-            // value that matches a single entry, in which case we can just return the existing
-            // name string.
-            int index = values.Length - 1;
-            while (index >= 0)
-            {
-                if (values[index] == resultValue)
-                {
-                    return names[index];
-                }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum Or<TEnum>(this TEnum left, TEnum right)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(right));
+        Emit.Or();
+        return Return<TEnum>();
+    }
 
-                if (values[index] < resultValue)
-                {
-                    break;
-                }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum And<TEnum>(this TEnum left, TEnum right)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(right));
+        Emit.And();
+        return Return<TEnum>();
+    }
 
-                index--;
-            }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum Xor<TEnum>(this TEnum left, TEnum right)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(right));
+        Emit.Xor();
+        return Return<TEnum>();
+    }
 
-            // Now look for multiple matches, storing the indices of the values
-            // into our span.
-            int resultLength = 0, foundItemsCount = 0;
-            while (index >= 0)
-            {
-                ulong currentValue = values[index];
-                if (index == 0 && currentValue == 0)
-                {
-                    break;
-                }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool Equal<TEnum>(this TEnum left, TEnum right)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(right));
+        Emit.Ceq();
+        return Return<bool>();
+    }
 
-                if ((resultValue & currentValue) == currentValue)
-                {
-                    resultValue -= currentValue;
-                    foundItems[foundItemsCount++] = index;
-                    resultLength = checked(resultLength + names[index].Length);
-                }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool LessThan<TEnum>(this TEnum left, TEnum right)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(right));
+        Emit.Clt();
+        return Return<bool>();
+    }
 
-                index--;
-            }
-
-            // If we exhausted looking through all the values and we still have
-            // a non-zero result, we couldn't match the result to only named values.
-            // In that case, we return null and let the call site just generate
-            // a string for the integral value.
-            if (resultValue != 0)
-            {
-                return null;
-            }
-
-            // We know what strings to concatenate.  Do so.
-
-            Debug.Assert(foundItemsCount > 0);
-            const int SeparatorStringLength = 2; // ", "
-            string result = string.FastAllocateString(checked(resultLength + (SeparatorStringLength * (foundItemsCount - 1))));
-
-            Span<char> resultSpan = new Span<char>(ref result.GetRawStringData(), result.Length);
-            string name = names[foundItems[--foundItemsCount]];
-            name.CopyTo(resultSpan);
-            resultSpan = resultSpan.Slice(name.Length);
-            while (--foundItemsCount >= 0)
-            {
-                resultSpan[0] = EnumSeparatorChar;
-                resultSpan[1] = ' ';
-                resultSpan = resultSpan.Slice(2);
-
-                name = names[foundItems[foundItemsCount]];
-                name.CopyTo(resultSpan);
-                resultSpan = resultSpan.Slice(name.Length);
-            }
-            Debug.Assert(resultSpan.IsEmpty);
-
-            return result;
-        }
-        */
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool LessOrEqual<TEnum>(this TEnum left, TEnum right)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(right));
+        Emit.Cgt();
+        Emit.Ldc_I4_0();
+        Emit.Ceq();
+        return Return<bool>();
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool GreaterThan<TEnum>(this TEnum left, TEnum right)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(right));
+        Emit.Cgt();
+        return Return<bool>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool GreaterOrEqual<TEnum>(this TEnum left, TEnum right)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(right));
+        Emit.Clt();
+        Emit.Ldc_I4_0();
+        Emit.Ceq();
+        return Return<bool>();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum ShiftedLeft<TEnum>(this TEnum @enum, int count)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(count));
+        Emit.Shl();
+        return Return<TEnum>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum ShiftedRight<TEnum>(this TEnum @enum, int count)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(count));
+        Emit.Shr_Un();
+        return Return<TEnum>();
+    }
+    #endregion
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int FlagCount<TEnum>(this TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Conv_U8();
+        Emit.Call(MethodRef.Method(typeof(BitOperations), nameof(BitOperations.PopCount), typeof(ulong)));
+        return Return<int>();
+    }
+
+    /// <summary>
+    /// Does this <paramref name="@enum"/> have the given <paramref name="flag"/> set?
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasFlag<TEnum>(this TEnum @enum, TEnum flag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         // (e & flag) == flag
         Emit.Ldarg(nameof(flag));
@@ -139,77 +180,123 @@ public static class EnumExtensions
         Emit.Ceq();
         return Return<bool>();
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int FlagCount<TEnum>(this TEnum @enum)
-        where TEnum : unmanaged, Enum
-    {
-        Emit.Ldarg(nameof(@enum));
-        Emit.Conv_U8();
-        Emit.Call(MethodRef.Method(typeof(BitOperations), nameof(BitOperations.PopCount), typeof(ulong)));
-        return Return<int>();
-    }
-        
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAnyFlags<TEnum>(this TEnum @enum, TEnum firstFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         return HasFlag(@enum, firstFlag);
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAnyFlags<TEnum>(this TEnum @enum, TEnum firstFlag, TEnum secondFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         return HasFlag(@enum, firstFlag) || HasFlag(@enum, secondFlag);
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAnyFlags<TEnum>(this TEnum @enum, TEnum firstFlag, TEnum secondFlag, TEnum thirdFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         return HasFlag(@enum, firstFlag) || HasFlag(@enum, secondFlag) || HasFlag(@enum, thirdFlag);
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAnyFlags<TEnum>(this TEnum @enum, params TEnum[] flags)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         return flags.Any(flag => HasFlag(@enum, flag));
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAllFlags<TEnum>(this TEnum @enum, TEnum firstFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         return HasFlag(@enum, firstFlag);
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAllFlags<TEnum>(this TEnum @enum, TEnum firstFlag, TEnum secondFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         return HasFlag(@enum, firstFlag) && HasFlag(@enum, secondFlag);
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAllFlags<TEnum>(this TEnum @enum, TEnum firstFlag, TEnum secondFlag, TEnum thirdFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         return HasFlag(@enum, firstFlag) && HasFlag(@enum, secondFlag) && HasFlag(@enum, thirdFlag);
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAllFlags<TEnum>(this TEnum @enum, params TEnum[] flags)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         return flags.All(flag => HasFlag(@enum, flag));
     }
-      
-        
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum WithFlag<TEnum>(this TEnum @enum, TEnum flag)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(flag));
+        Emit.Or();
+        return Return<TEnum>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum WithFlags<TEnum>(this TEnum @enum, TEnum flag)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(flag));
+        Emit.Or();
+        return Return<TEnum>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum WithFlags<TEnum>(this TEnum @enum, TEnum firstFlag, TEnum secondFlag)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(firstFlag));
+        Emit.Or();
+        Emit.Ldarg(nameof(secondFlag));
+        Emit.Or();
+        return Return<TEnum>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum WithFlags<TEnum>(this TEnum @enum, TEnum firstFlag, TEnum secondFlag, TEnum thirdFlag)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(firstFlag));
+        Emit.Or();
+        Emit.Ldarg(nameof(secondFlag));
+        Emit.Or();
+        Emit.Ldarg(nameof(thirdFlag));
+        Emit.Or();
+        return Return<TEnum>();
+    }
+
+    public static TEnum WithFlags<TEnum>(this TEnum @enum, params TEnum[] flags)
+        where TEnum : struct, Enum
+    {
+        TEnum e = @enum;
+        for (var i = 0; i < flags.Length; i++)
+        {
+            e = Or(e, flags[i]);
+        }
+        return e;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddFlag<TEnum>(this ref TEnum @enum, TEnum flag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Ldarg(nameof(@enum));
@@ -221,7 +308,7 @@ public static class EnumExtensions
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddFlags<TEnum>(this ref TEnum @enum, TEnum firstFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Ldarg(nameof(@enum));
@@ -233,7 +320,7 @@ public static class EnumExtensions
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddFlags<TEnum>(this ref TEnum @enum, TEnum firstFlag, TEnum secondFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Ldarg(nameof(@enum));
@@ -247,7 +334,7 @@ public static class EnumExtensions
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddFlags<TEnum>(this ref TEnum @enum, TEnum firstFlag, TEnum secondFlag, TEnum thirdFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Ldarg(nameof(@enum));
@@ -263,17 +350,17 @@ public static class EnumExtensions
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddFlags<TEnum>(this ref TEnum @enum, params TEnum[] flags)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
-        foreach (var flag in flags)
+        for (var i = 0; i < flags.Length; i++)
         {
-            AddFlag(ref @enum, flag);
+            AddFlag(ref @enum, flags[i]);
         }
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RemoveFlag<TEnum>(this ref TEnum @enum, TEnum flag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         // e &= ~flag
         Emit.Ldarg(nameof(@enum));
@@ -287,7 +374,7 @@ public static class EnumExtensions
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RemoveFlags<TEnum>(this ref TEnum @enum, TEnum firstFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Ldarg(nameof(@enum));
@@ -300,7 +387,7 @@ public static class EnumExtensions
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RemoveFlags<TEnum>(this ref TEnum @enum, TEnum firstFlag, TEnum secondFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Ldarg(nameof(@enum));
@@ -316,7 +403,7 @@ public static class EnumExtensions
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RemoveFlags<TEnum>(this ref TEnum @enum, TEnum firstFlag, TEnum secondFlag, TEnum thirdFlag)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Ldarg(nameof(@enum));
@@ -335,7 +422,7 @@ public static class EnumExtensions
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RemoveFlags<TEnum>(this ref TEnum @enum, params TEnum[] flags)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         foreach (var flag in flags)
         {
@@ -345,7 +432,7 @@ public static class EnumExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CompareTo<TEnum>(this TEnum @enum, TEnum other)
-        where TEnum : unmanaged, Enum
+        where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Ldarg(nameof(other));
