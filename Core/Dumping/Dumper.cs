@@ -227,6 +227,11 @@ public static partial class Dumper
     {
         return dumpString.ToStringAndDispose();
     }
+
+    public static ref InterpolatedDumpHandler StartDump(ref InterpolatedDumpHandler dumpString)
+    {
+        return ref dumpString;
+    }
 #endregion
     
     #region Exceptions

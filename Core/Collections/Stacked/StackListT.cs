@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Jay.Validation;
 
-namespace System.Collections.Generic;
+namespace Jay.Collections;
 
 public ref struct StackList<T>
 {
