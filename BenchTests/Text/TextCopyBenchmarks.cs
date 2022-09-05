@@ -38,7 +38,7 @@ public class TextCopyBenchmarks
 
     public TextCopyBenchmarks()
     {
-
+        _charArray = Array.Empty<char>();
     }
 
     [GlobalSetup]

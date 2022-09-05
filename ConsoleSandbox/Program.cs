@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,8 +11,11 @@ using System.Runtime.CompilerServices;
 using Jay.Collections;
 using Jay.Dumping;
 using Jay.Enums;
+using Jay.Reflection;
+using Jay.Reflection.Building;
 using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Implementation;
+using Jay.Reflection.Search;
 using Jay.Text;
 
 
@@ -29,7 +33,7 @@ using var text = TextBuilder.Borrow();
 
 //var member = MemberSearch.Find<FieldInfo>(() => typeof(MemberInfo).GetField("Blah", Reflect.InstanceFlags));
 
-var flags = MemberFlags.Public | MemberFlags.Internal;
+
 
 
 
@@ -64,7 +68,112 @@ return 0;
 
 namespace ConsoleSandbox
 {
+    public abstract class EnumLike<TEnum> : IEquatable<TEnum>, IComparable<TEnum>, IFormattable
+        where TEnum : EnumLike<TEnum>
+    {
+        public static bool operator ==(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.Equals(right);
+        public static bool operator !=(EnumLike<TEnum> left, EnumLike<TEnum> right) => !left.Equals(right);
+        public static bool operator <=(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.CompareTo((TEnum)right) <= 0;
+        public static bool operator <(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.CompareTo((TEnum)right) < 0;
+        public static bool operator >(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.CompareTo((TEnum)right) > 0;
+        public static bool operator >=(EnumLike<TEnum> left, EnumLike<TEnum> right) => left.CompareTo((TEnum)right) >= 0;
 
+        private static readonly Func<string, TEnum> _ctorFunc;
+
+        static EnumLike()
+        {
+            var ctor = MemberSearch.Find<ConstructorInfo>(() =>
+                typeof(TEnum).GetConstructor(
+                    Reflect.InstanceFlags,
+                    new Type[1] { typeof(string) }));
+            _ctorFunc = RuntimeBuilder.CreateDelegate<Func<string, TEnum>>(emitter => 
+                emitter.Ldarg(0).Newobj(ctor).Ret());
+        }
+        protected static List<TEnum> _members = new();
+        protected static TEnum Create([CallerMemberName] string name = "") => _ctorFunc(name);
+
+        public static bool TryParse(ulong value, [NotNullWhen(true)] out TEnum? enumLike)
+        {
+            // All members are in order!
+            foreach (var member in _members)
+            {
+                if (member.Value == value)
+                {
+                    enumLike = member;
+                    return true;
+                }
+
+                if (member.Value > value) break;
+            }
+
+            enumLike = default;
+            return false;
+        }
+
+        public string Name { get; }
+        internal ulong Value { get; }
+
+        protected EnumLike(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException(nameof(name));
+            this.Name = name;
+            this.Value = GetNextValue();
+            _members.Add((TEnum)this);
+        }
+
+        protected virtual ulong GetNextValue()
+        {
+            return (ulong)_members.Count;
+        }
+
+        public int CompareTo(TEnum? enumLike)
+        {
+            if (enumLike is null) return 1; // Null is before me
+            return this.Value.CompareTo(enumLike.Value);
+        }
+
+        public bool Equals(TEnum? enumLike)
+        {
+            return enumLike is not null && enumLike.Value == this.Value;
+        }
+
+        public sealed override bool Equals(object? obj)
+        {
+            return obj is TEnum enumLike && enumLike.Value == this.Value;
+        }
+
+        public sealed override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+
+        public string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return Name;
+            //throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+
+    public abstract class FlagEnumLike<TEnum> : EnumLike<TEnum>
+        where TEnum : FlagEnumLike<TEnum>
+    {
+        protected FlagEnumLike(string name) : base(name)
+        {
+        }
+
+        protected override ulong GetNextValue()
+        {
+            // Each flag is a power of 2
+            // From 1 << 0 to 1 << n
+            return 1UL << _members.Count;
+        }
+    }
 
     public interface IEntity
     {
@@ -198,13 +307,13 @@ namespace ConsoleSandbox
     [InterpolatedStringHandler]
     public ref struct Football //: IDisposable
     {
-        internal char[] _array;
+        internal char[]? _array;
         internal int _length;
 
         internal int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _array.Length;
+            get => _array!.Length;
         }
 
         public int Length => _length;
@@ -224,7 +333,7 @@ namespace ConsoleSandbox
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(char ch)
         {
-            _array[_length++] = ch;
+            _array![_length++] = ch;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -282,7 +391,7 @@ namespace ConsoleSandbox
 
         public override string ToString()
         {
-            return new string(_array, 0, _length);
+            return new string(_array!, 0, _length);
         }
     }
 

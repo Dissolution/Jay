@@ -36,7 +36,7 @@ public class BoxTests
         Assert.True(box == (object?)null);
         Assert.True(box.Equals((object?)null));
         Assert.True(box.CompareTo((object?)null) == 0);
-        Assert.True(box == box);
+        Assert.True(box == default(Box));
         Assert.True(box.Equals(box));
     }
 }

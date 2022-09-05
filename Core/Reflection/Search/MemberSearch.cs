@@ -120,7 +120,7 @@ public static class MemberSearch
             var valueType = value?.GetType();
             if (valueType is not null && valueType.IsEnum)
             {
-                string? valueName = Enum.GetName(valueType, value);
+                string? valueName = Enum.GetName(valueType, value!);
                 member = valueType
                          .GetMembers(Reflect.StaticFlags)
                          .OfType<TMember>()

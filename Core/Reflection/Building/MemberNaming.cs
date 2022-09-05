@@ -113,7 +113,7 @@ public static class MemberNaming
     {
         using var text = TextBuilder.Borrow();
         if (!TryWriteName(suggestedName, text))
-            text.Write(Randomizer.BitString);
+            text.Write(Randomizer.Instance.HexString(16));
         return text.ToString();
     }
 

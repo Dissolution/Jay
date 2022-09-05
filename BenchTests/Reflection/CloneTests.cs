@@ -40,7 +40,7 @@ public class CloneTests
     [Fact]
     public void CloneString()
     {
-        string str = Randomizer.BitString;
+        string str = Randomizer.Instance.HexString(16);
         string clone = Muq.Clone<string>(str);
         Assert.NotNull(clone);
         Assert.True(str == clone);

@@ -1,24 +1,10 @@
-﻿using System;
-using System.Net.NetworkInformation;
-using System.Numerics;
-using System.Runtime.InteropServices;
-using Jay.Enums;
+﻿using System.Numerics;
 using Jay.Reflection;
-using Jay.Validation;
-using nint = System.IntPtr;
 
 namespace Jay.Randomization;
 
-internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
+internal sealed class Xoshiro256StarStarRandomizer : Randomizer
 {
-    // Multiplier to convert a ulong to a float
-    private const float FloatEpsilon = 1.0f / (1U << 24);
-
-    // Multiplier to convert a ulong to a double
-    private const double DoubleEpsilon = 1.0d / (1UL << 53);
-
-    public static IRandomizer Instance { get; } = new Xoshiro256StarStarRandomizer();
-
     /// <summary>
     /// SplitMix64 Pseudo-Random Number Generator
     /// </summary>
@@ -27,9 +13,9 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ulong SplitMixNext(ref ulong state)
     {
-        ulong z = (state += 0x9E3779B97F4A7C15UL);
-        z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9UL;
-        z = (z ^ (z >> 27)) * 0x94D049BB133111EBUL;
+        ulong z = (state += 0x_9E37_79B9_7F4A_7C15UL);
+        z = (z ^ (z >> 30)) * 0x_BF58_476D_1CE4_E5B9UL;
+        z = (z ^ (z >> 27)) * 0x_94D0_49BB_1331_11EBUL;
         return z ^ (z >> 31);
     }
 
@@ -50,22 +36,13 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     /// </summary>
     public ulong Seed { get; }
 
-    public bool IsHighResolution { get; }
+    public override bool IsHighResolution { get; }
 
-    /// <summary>
-    /// Construct a new <see cref="Randomizer"/> with a random seed.
-    /// </summary>
-    /// <param name="mode">The optional <see cref="RandomizerMode"/>.</param>
     public Xoshiro256StarStarRandomizer(bool isHighResolution = false)
-        : this(Randomizer.Generate<ulong>(), isHighResolution)
+        : this(Generate<ulong>(), isHighResolution)
     {
     }
 
-    /// <summary>
-    /// Construct a new <see cref="Randomizer"/> with a given <paramref name="seed"/>.
-    /// </summary>
-    /// <param name="seed">The initial seed for randomization.</param>
-    /// <param name="mode">The optional <see cref="RandomizerMode"/>.</param>
     public Xoshiro256StarStarRandomizer(ulong seed, bool isHighResolution = false)
     {
         this.Seed = seed;
@@ -79,8 +56,6 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
          * It is required that at least one of the state variables be non-zero;
          * use of splitmix64 satisfies this requirement because it is an equi-distributed generator,
          * thus if it outputs a zero it will next produce a zero after a further 2^64 outputs.
-         *
-         * Use the splitmix64 RNG to hash the seed.
          */
         _s0 = SplitMixNext(ref seed);
         _s1 = SplitMixNext(ref seed);
@@ -157,81 +132,33 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     }
 
 
-    public byte Byte()
+    public override byte Byte()
     {
         return (byte)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(byte))));
     }
 
-    public byte Between(byte inclusiveMin, byte inclusiveMax)
-    {
-        if (ValidateConstraints(inclusiveMin, inclusiveMax, Byte, out var value))
-            return value;
-        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
-        return (byte)((int)inclusiveMin + ZeroTo(range));
-    }
-
-    public sbyte SByte()
+    public override sbyte SByte()
     {
         return (sbyte)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(sbyte))));
     }
 
-    public sbyte Between(sbyte inclusiveMin, sbyte inclusiveMax)
-    {
-        if (ValidateConstraints(inclusiveMin, inclusiveMax, SByte, out var value))
-            return value;
-        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
-        return (sbyte)((int)inclusiveMin + ZeroTo(range));
-    }
-
-    public short Short()
+    public override short Short()
     {
         return (short)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(short))));
     }
 
-    public short Between(short inclusiveMin, short inclusiveMax)
-    {
-        if (ValidateConstraints(inclusiveMin, inclusiveMax, Short, out var value))
-            return value;
-        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
-        return (short)((int)inclusiveMin + ZeroTo(range));
-    }
-
-    public ushort UShort()
+    public override ushort UShort()
     {
         return (ushort)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(ushort))));
     }
 
-    public ushort Between(ushort inclusiveMin, ushort inclusiveMax)
-    {
-        if (ValidateConstraints(inclusiveMin, inclusiveMax, UShort, out var value))
-            return value;
-        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
-        return (ushort)((int)inclusiveMin + ZeroTo(range));
-    }
-
-    public int Int()
+    public override int Int()
     {
         return (int)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(int))));
     }
 
-    public int Between(int inclusiveMin, int inclusiveMax)
-    {
-        if (ValidateConstraints(inclusiveMin, inclusiveMax, Int, out var value))
-            return value;
-        int range = (inclusiveMax - inclusiveMin) + 1;
-        return inclusiveMax + ZeroTo(range);
-    }
 
-    /// <summary>
-    /// Returns a random positive <see cref="int"/> value [0..int.MaxValue]
-    /// </summary>
-    public int IntPositive()
-    {
-        // Get 31 bits to force positive
-        return (int)(GenerateUInt64() >> 33);
-    }
-
-    public int ZeroTo(int exclusiveMax)
+    public override int ZeroTo(int exclusiveMax)
     {
         // Handle special case of a single sample value.
         if (exclusiveMax <= 1)
@@ -274,7 +201,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     }
 
 
-    public uint ZeroTo(uint exclusiveMaximum)
+    public override uint ZeroTo(uint exclusiveMaximum)
     {
         // Handle special case of a single sample value.
         if (exclusiveMaximum <= 1U)
@@ -317,39 +244,14 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     }
 
 
-    public uint UInt()
+    public override uint UInt()
     {
         return (uint)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(uint))));
     }
 
-    public uint Between(uint inclusiveMin, uint inclusiveMax)
-    {
-        if (ValidateConstraints(inclusiveMin, inclusiveMax, UInt, out var value))
-            return value;
-        long range = ((long)inclusiveMax - (long)inclusiveMin) + 1L;
-        return (uint)((long)inclusiveMax + ZeroTo(range));
-    }
-
-    public long Long()
+    public override long Long()
     {
         return (long)GenerateUInt64();
-    }
-
-    public long Between(long inclusiveMin, long inclusiveMax)
-    {
-        if (ValidateConstraints(inclusiveMin, inclusiveMax, Long, out var value))
-            return value;
-        long range = (inclusiveMax - inclusiveMin) + 1L;
-        return inclusiveMax + ZeroTo(range);
-    }
-
-    /// <summary>
-    /// Returns a random positive <see cref="long"/> value [0..long.MaxValue]
-    /// </summary>
-    public long LongPositive()
-    {
-        // Get 63 bits to force positive
-        return (int)(GenerateUInt64() >> 1);
     }
 
     public long ZeroTo(long exclusiveMaximum)
@@ -394,7 +296,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     }
 
 
-    public ulong ZeroTo(ulong exclusiveMaximum)
+    public override ulong ZeroTo(ulong exclusiveMaximum)
     {
         // Handle special case of a single sample value.
         if (exclusiveMaximum <= 1UL)
@@ -435,48 +337,13 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         return x;
     }
 
-    public ulong ULong() => GenerateUInt64();
+    public override ulong ULong() => GenerateUInt64();
 
-    public ulong Between(ulong inclusiveMin, ulong inclusiveMax)
-    {
-        if (ValidateConstraints(inclusiveMin, inclusiveMax, ULong, out var value))
-            return value;
-        ulong range = (inclusiveMax - inclusiveMin) + 1UL;
-        return inclusiveMin + ZeroTo(range);
-    }
-
-
-    public nint NInt()
-    {
-        return (nint)Long();
-    }
-
-    public nint Between(nint inclusiveMin, nint inclusiveMax)
-    {
-        if (ValidateConstraints<nint>(inclusiveMin, inclusiveMax, NInt, out var value))
-            return value;
-        long range = ((long)inclusiveMax - (long)inclusiveMin) + 1L;
-        return (nint)((long)inclusiveMin + ZeroTo(range));
-    }
-
-    public nuint NUInt()
-    {
-        return (nuint)GenerateUInt64();
-    }
-
-    public nuint Between(nuint inclusiveMin, nuint inclusiveMax)
-    {
-        if (ValidateConstraints<nuint>(inclusiveMin, inclusiveMax, NUInt, out var value))
-            return value;
-        ulong range = ((ulong)inclusiveMax - (ulong)inclusiveMin) + 1UL;
-        return (nuint)((ulong)inclusiveMin + ZeroTo(range));
-    }
-
-    public float Float()
+    public override float Float()
     {
         if (!IsHighResolution)
         {
-            const double range = (double)float.MaxValue - (double)float.MinValue;
+            const double range = ((double)float.MaxValue - (double)float.MinValue) + (double)float.Epsilon;
             return (float)((double)float.MinValue + (range * DoublePercent()));
         }
 
@@ -515,26 +382,11 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
             var exponent = ZeroTo(0xFF); // do not generate 0xFF (infinities and NaN)
             var mantissa = ZeroTo(0x800001);
             var bits = (sign << 31) + (exponent << 23) + mantissa;
-            return Danger.DirectCast<int, float>(bits);
+            return Danger.DirectCast<long, float>(bits);
         }
     }
 
-
-    public float Between(float inclusiveMin, float inclusiveMax)
-    {
-        double range = ((double)inclusiveMax - (double)inclusiveMin) + (double)float.Epsilon;
-        return (float)((DoublePercent() * range) + (double)inclusiveMin);
-    }
-
-    public float Between(float inclusiveMin, float inclusiveMax, int digits)
-    {
-        var incMin = Math.Round(inclusiveMin, digits);
-        var incMax = Math.Round(inclusiveMax, digits);
-        double range = (incMax - incMin) + (double)float.Epsilon;
-        return (float)Math.Round((DoublePercent() * range) + incMin, digits);
-    }
-
-    public float FloatPercent()
+    public override float FloatPercent()
     {
         if (!IsHighResolution)
         {
@@ -550,7 +402,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     }
 
 
-    public double DoublePercent()
+    public override double DoublePercent()
     {
         if (!IsHighResolution)
         {
@@ -644,7 +496,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         }
     }
 
-    public double Double()
+    public override double Double()
     {
         if (!IsHighResolution)
         {
@@ -656,20 +508,6 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         {
             throw new NotImplementedException();
         }
-    }
-
-    public double Between(double inclusiveMin, double inclusiveMax)
-    {
-        double range = (inclusiveMax - inclusiveMin) + double.Epsilon;
-        return (DoublePercent() * range) + inclusiveMin;
-    }
-
-    public double Between(double inclusiveMin, double inclusiveMax, int digits)
-    {
-        var incMin = Math.Round(inclusiveMin, digits);
-        var incMax = Math.Round(inclusiveMax, digits);
-        double range = (incMax - incMin) + double.Epsilon;
-        return Math.Round((DoublePercent() * range) + incMin, digits);
     }
 
     /// <summary>
@@ -688,7 +526,7 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         return 0;
     }
 
-    public decimal Decimal()
+    public override decimal Decimal()
     {
         if (!IsHighResolution)
         {
@@ -719,23 +557,17 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         return new decimal(a, b, c, n, scale);
     }
 
-    public decimal Between(decimal inclusiveMin, decimal inclusiveMax)
-    {
-        throw new NotImplementedException();
-    }
-
-
-    public decimal DecimalPercent()
+    public override decimal DecimalPercent()
     {
         ulong r = ULong();
         return new decimal(lo: (int)r,
             mid: (int)(r >> sizeof(int)),
-            hi: ZeroTo(542101087),
+            hi: (int)ZeroTo(542101087),
             isNegative: false,
             scale: 28);
     }
 
-    public bool Bool()
+    public override bool Bool()
     {
         // Use a high bit since the low bits are linear-feedback shift registers (LFSRs) with low degree.
         // This is slower than the approach of generating and caching 64 bits for future calls, but
@@ -743,39 +575,12 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
         return (GenerateUInt64() & 0b1000000000000000_0000000000000000_0000000000000000_0000000000000000) != 0;
     }
 
-    public char Char()
+    public override char Char()
     {
         return (char)(GenerateUInt64() >> (8 * (sizeof(ulong) - sizeof(char))));
     }
-
-    public char Between(char inclusiveMin, char inclusiveMax)
-    {
-        if (ValidateConstraints(inclusiveMin, inclusiveMax, Char, out var ch))
-            return ch;
-        int range = ((int)inclusiveMax - (int)inclusiveMin) + 1;
-        return (char)((int)inclusiveMin + ZeroTo(range));
-    }
-
-    public TEnum Enum<TEnum>()
-        where TEnum : struct, Enum
-    {
-        // EnumTypeInfo<TEnum> info = EnumInfo.For<TEnum>();
-        // if (info.HasFlags)
-        // {
-        //     // Have to randomize the bits up to flag.highest
-        //     var highMember = info.Members.Last();
-        //     EnumMemberInfo<TEnum> memberInfo = EnumInfo.For(highMember);
-        //     throw new NotImplementedException();
-        // }
-        // else
-        // {
-        //     return Single<TEnum>(info.Members);
-        // }
-        throw new NotImplementedException();
-    }
-
-
-    public void Fill(Span<byte> span)
+    
+    public override void Fill(Span<byte> span)
     {
         // For improved performance the below loop operates on these stack allocated copies of the heap variables.
         // Note. doing this means that these heavily used variables are located near to other local/stack variables,
@@ -841,227 +646,15 @@ internal sealed class Xoshiro256StarStarRandomizer : IRandomizer
     }
 
 
-    public T Single<T>(ReadOnlySpan<T> values)
-    {
-        return values[ZeroTo(values.Length)];
-    }
-
-
-    public T Single<T>(params T[] values)
-    {
-        return values[ZeroTo(values.Length)];
-    }
-
-
-    public T Single<T>(IEnumerable<T> values)
-    {
-        if (values is IList<T> list)
-        {
-            if (list.Count == 0)
-                throw new ArgumentException("There must be at least one value to return", nameof(values));
-            return list[ZeroTo(list.Count)];
-        }
-
-        if (values is ICollection<T> collection)
-        {
-            if (collection.Count == 0)
-                throw new ArgumentException("There must be at least one value to return", nameof(values));
-            var r = ZeroTo(collection.Count);
-            using (var e = collection.GetEnumerator())
-            {
-                do
-                {
-                    e.MoveNext();
-                    r--;
-                } while (r >= 0);
-
-                return e.Current;
-            }
-        }
-
-        T? value = default;
-        int count = 0;
-        using (var e = values.GetEnumerator())
-        {
-            while (e.MoveNext())
-            {
-                count++;
-                if (ZeroTo(count) == 0)
-                {
-                    value = e.Current;
-                }
-            }
-        }
-
-        if (count == 0)
-        {
-            throw new ArgumentException("There must be at least one value to return", nameof(values));
-        }
-
-        return value!;
-    }
-
     public IEnumerable<byte> ProduceBytes(CancellationToken token = default)
     {
-        ulong r;
         while (!token.IsCancellationRequested)
         {
-            r = ULong();
+            var r = ULong();
             for (var i = 0; i < 8; i++, r >>= 8)
             {
                 yield return (byte)r;
             }
         }
-    }
-
-
-    public IEnumerable<ulong> ProduceULongs()
-    {
-        while (true)
-        {
-            yield return ULong();
-        }
-    }
-
-
-    /// <remarks>
-    /// To initialize an array a of n elements to a randomly shuffled copy of source, both 0-based:
-    /// for i from 0 to n − 1 do
-    /// j ← random integer such that 0 ≤ j ≤ i
-    /// if j ≠ i
-    ///     a[i] ← a[j]
-    /// a[j] ← source[i]
-    ///
-    /// </remarks>
-    public IReadOnlyList<T> MixToList<T>(ReadOnlySpan<T> values)
-    {
-        var len = values.Length;
-        var array = new T[len];
-        int r;
-        for (var i = 0; i < len; i++)
-        {
-            r = ZeroTo(i + 1);
-            if (r != i)
-            {
-                array[i] = array[r];
-            }
-
-            array[r] = values[i];
-        }
-
-        return array;
-    }
-
-
-    public IReadOnlyList<T> MixToList<T>(params T[] values)
-    {
-        var len = values.Length;
-        var array = new T[len];
-        int r;
-        for (var i = 0; i < len; i++)
-        {
-            r = ZeroTo(i + 1);
-            if (r != i)
-            {
-                array[i] = array[r];
-            }
-
-            array[r] = values[i];
-        }
-
-        return array;
-    }
-
-
-    /// <remarks>
-    /// To initialize an empty array a to a randomly shuffled copy of source whose length is not known:
-    /// while source.moreDataAvailable
-    ///     j ← random integer such that 0 ≤ j ≤ a.length
-    ///     if j = a.length
-    ///         a.append(source.next)
-    ///     else
-    ///         a.append(a[j])
-    ///         a[j] ← source.next
-    /// </remarks>
-    public IReadOnlyList<T> MixToList<T>(IEnumerable<T> values)
-    {
-        var list = new List<T>();
-        using (var e = values.GetEnumerator())
-        {
-            int r;
-            while (e.MoveNext())
-            {
-                r = ZeroTo(list.Count);
-                if (r == list.Count)
-                {
-                    list.Add(e.Current);
-                }
-                else
-                {
-                    list.Add(list[r]);
-                    list[r] = e.Current;
-                }
-            }
-
-            return list;
-        }
-    }
-
-
-    /// <remarks>
-    /// -- To shuffle an array a of n elements (indices 0..n-1):
-    /// for i from n−1 downto 1 do
-    /// j ← random integer such that 0 ≤ j ≤ i
-    ///     exchange a[j] and a[i]
-    /// </remarks>
-    public void Mix<T>(Span<T> values)
-    {
-        T temp;
-        int r;
-        for (var i = values.Length - 1; i > 0; i--)
-        {
-            r = ZeroTo(i + 1);
-            temp = values[i];
-            values[i] = values[r];
-            values[r] = temp;
-        }
-    }
-
-
-    public void Mix<T>(IList<T> values)
-    {
-        T temp;
-        int r;
-        for (var i = values.Count - 1; i > 0; i--)
-        {
-            r = ZeroTo(i + 1);
-            temp = values[i];
-            values[i] = values[r];
-            values[r] = temp;
-        }
-    }
-
-
-    public void Mix<T>(T[] values)
-    {
-        T temp;
-        int r;
-        for (var i = values.Length - 1; i > 0; i--)
-        {
-            r = ZeroTo(i + 1);
-            temp = values[i];
-            values[i] = values[r];
-            values[r] = temp;
-        }
-    }
-
-    public IEnumerable<T> Mixed<T>(params T[] values)
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerable<T> Mixed<T>(IEnumerable<T> values)
-    {
-        throw new NotImplementedException();
     }
 }

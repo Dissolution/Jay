@@ -71,9 +71,7 @@ public static class EventInfoExtensions
             flags |= BindingFlags.Instance;
         }
 
-        return eventInfo.DeclaringType!
-            .GetField(eventInfo.Name, flags);
-
+        return eventInfo.DeclaringType?.GetField(eventInfo.Name, flags);
     }
 
     public static EventAdder<TInstance, THandler> CreateAdder<TInstance, THandler>(this EventInfo eventInfo)

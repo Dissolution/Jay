@@ -17,7 +17,7 @@ public class ExpectedBehaviorTests
         MutateBoxedPoint(boxed);
         Assert.True(boxed != null);
         Assert.True(boxed is Point);
-        Point unboxed = (Point) boxed;
+        Point unboxed = (Point) boxed!;
         Assert.True(unboxed.Equals(value));
     }
         
@@ -31,7 +31,7 @@ public class ExpectedBehaviorTests
         MutateBoxedPointAndRebox(boxed);
         Assert.True(boxed != null);
         Assert.True(boxed is Point);
-        Point unboxed = (Point) boxed;
+        Point unboxed = (Point) boxed!;
         Assert.True(unboxed.Equals(value));
     }
         
@@ -45,7 +45,7 @@ public class ExpectedBehaviorTests
         MutateBoxedPointIL(boxed);
         Assert.True(boxed != null);
         Assert.True(boxed is Point);
-        Point unboxed = (Point) boxed;
+        Point unboxed = (Point) boxed!;
         Assert.True(!unboxed.Equals(value));
         Assert.True(unboxed.X == value.X + 1 &&
                     unboxed.Y == value.Y + 1);

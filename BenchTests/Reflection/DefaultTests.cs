@@ -18,7 +18,7 @@ public class DefaultTests
     {
         var types = Reflect.AllExportedTypes()
                            .Where(type => type.IsClass)
-                           .Shuffled()
+                           .MixToList()
                            .Take(100);
         foreach (var type in types)
         {
@@ -34,7 +34,7 @@ public class DefaultTests
                            .Where(type => type.IsValueType)
                            .Where(type => !type.IsByRef && !type.IsByRefLike)
                            .Where(type => !type.IsGenericType)
-                           .Shuffled()
+                           .MixToList()
                            .Take(100);
         foreach (var type in types)
         {
