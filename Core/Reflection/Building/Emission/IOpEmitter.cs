@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
+using Jay.Validation;
 
 // ReSharper disable IdentifierTypo
 // ReSharper disable UnusedMember.Global
@@ -994,16 +995,15 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
         => Unbox(typeof(T));
 
     /// <summary>
-    /// Converts the boxed representation (<see cref="object"/>) of a <see langword="struct"/> to its unboxed value.
+    /// Converts the boxed representation (<see cref="object"/>) of a value to its unboxed value.
     /// </summary>
-    /// <param name="valueType">The value type that is to be unboxed.</param>
-    /// <exception cref="ArgumentNullException">If <paramref name="valueType"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException">If <paramref name="valueType"/> is not a value type.</exception>
+    /// <param name="type">The value type that is to be unboxed.</param>
+    /// <exception cref="ArgumentNullException">If <paramref name="type"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="type"/> is not a value type.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.unbox_any"/>
-    TEmitter Unbox_Any(Type valueType)
+    TEmitter Unbox_Any(Type type)
     {
-        Validation.IsValue(valueType);
-        return Emit(OpCodes.Unbox_Any, valueType);
+        return Emit(OpCodes.Unbox_Any, type);
     }
 
     /// <summary>

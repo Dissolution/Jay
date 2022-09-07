@@ -31,29 +31,4 @@ public static class Types
 
         public override string ToString() => "void";
     }
-
-    static Types()
-    {
-
-    }
-
-    public static TMember FindMember<TMember>(Type type, Expression<Func<Type, TMember?>> memberExpression)
-    {
-        ArgumentNullException.ThrowIfNull(type);
-        var memberFind = memberExpression.Compile();
-        TMember? member;
-        try
-        {
-            member = memberFind(type);
-        }
-        catch (Exception ex)
-        {
-            throw new ReflectionException($"Cannot find {type}.{memberExpression}", ex);
-        }
-        if (member is null)
-        {
-            throw new ReflectionException($"Cannot find {type}.{memberExpression}");
-        }
-        return member;
-    }
 }

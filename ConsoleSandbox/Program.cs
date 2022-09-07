@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using ConsoleSandbox;
 using Jay.Collections;
 using Jay.Dumping;
 using Jay.Enums;
@@ -30,6 +31,32 @@ using Jay.BenchTests.Text;
 
 #else
 using var text = TextBuilder.Borrow();
+
+var testClass = new Sandbox.TestClass
+{
+    Key = 147,
+    Name = "First",
+};
+object boxed = (object)testClass;
+
+var unboxed = ILScratch.UnboxToClass<Sandbox.TestClass>(boxed);
+var cast = ILScratch.CastClass<Sandbox.TestClass>(boxed);
+
+Debugger.Break();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //var member = MemberSearch.Find<FieldInfo>(() => typeof(MemberInfo).GetField("Blah", Reflect.InstanceFlags));
 
@@ -200,9 +227,17 @@ namespace ConsoleSandbox
             
         }
 
-        public class TestClass
+        public class TestClass : IKeyedEntity<int>
         {
-            
+            public string? Name { get; set; }
+           
+            public int Key { get; set; }
+
+            public bool Equals(IKeyedEntity<int>? other)
+            {
+                return other is TestClass otherTestClass &&
+                       otherTestClass.Key == this.Key;
+            }
         }
         
         public static ref TestStruct ToRefStruct(object obj)

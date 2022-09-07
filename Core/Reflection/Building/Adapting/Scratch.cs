@@ -71,7 +71,7 @@ public static class TypeAdapter
             return true;
         }
 
-
+        throw new NotImplementedException();
     }
 }
 
@@ -181,6 +181,8 @@ public static class ParameterAdapter
         {
 
         }
+
+        throw new NotImplementedException();
     }
 }
 
@@ -206,6 +208,7 @@ public static class MethodAdapter
         var emitter = runtimeMethod.Emitter;
 
         // Attempt to load an instance
+        throw new NotImplementedException();
     }
 
     private static Result<int> TryLoadInstanceParam(MethodBase method,
@@ -244,11 +247,12 @@ public static class MethodAdapter
         }
 
         // Instance needed!
-        var instanceType = method.OwnerType().ThrowIfNull();
+        //var instanceType = method.OwnerType().ThrowIfNull();
 
         if (adapter.ParameterCount == 0)
             return new RuntimeException(
                 Dumper.Dump($"{method.OwnerType()} instance parameter is required to invoke {method}"));
-        
+
+        throw new NotImplementedException();
     }
 }
