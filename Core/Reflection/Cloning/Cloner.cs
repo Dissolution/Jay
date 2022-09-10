@@ -1,8 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Reflection;
+using InlineIL;
 using Jay.Collections;
 using Jay.Dumping;
 using Jay.Reflection.Building;
+using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Internal;
 using Jay.Reflection.Search;
@@ -10,35 +13,143 @@ using Jay.Validation;
 
 namespace Jay.Reflection.Cloning;
 
+[return: NotNullIfNotNull(nameof(value))]
+public delegate T? DeepClone<T>(T? value);
+
 /*public static class Cloner
 {
-    public static T[] Clone<T>(in T[] array)
+    private static readonly ConcurrentTypeDictionary<Delegate> _deepCloneDelegateCache = new();
+
+    static Cloner()
+    {
+      
+    }
+
+    private static void EmitDuplicate(IILGeneratorEmitter emitter, Type type)
+    {
+        if (type == typeof(void))
+        {
+            emitter.Ldnull();
+        }
+        else if (!TypeCache.IsReferenceOrContainsReferences(type))
+        {
+            emitter.Dup();
+        }
+        else
+        {
+            
+        }
+    }
+
+    private static Delegate CreateDeepClone(Type type)
+    {
+        // We're going to emit a deep clone method to clone values of this type
+        return RuntimeBuilder.CreateDelegate(typeof(DeepClone<>).MakeGenericType(type),
+            runtimeMethod =>
+            {
+                var emitter = runtimeMethod.Emitter;
+                // ASSUMPTIONS BELOW
+
+                // We can create an uninitialized version of type to not fire any constructor
+                emitter.DeclareLocal(type, out var clone)
+                       .LoadType(type)
+                       .Call(MethodCache.RuntimeHelpers_GetUninitializedObject)
+                       .Unbox_Any(type)
+                       .Stloc(clone);
+
+                // The truly unique information about any instance has to be in a field in some way
+                var fields = type.GetFields(Reflect.InstanceFlags);
+                foreach (var field in fields)
+                {
+                    // We'll load the value from the original
+                    emitter.Ldarg(0)
+                           .Ldfld(field)
+                    // Clone it
+                           .Call(GetDeepClone(field.FieldType))
+                    
+
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+                // TESTING
+                emitter.Ldloc(clone)
+                       .Ret();
+
+                var il = emitter.ToString();
+                Debugger.Break();
+                return;
+
+               
+                
+
+            });
+    }
+
+    internal static DeepClone<T> GetDeepClone<T>()
+    {
+        return (_deepCloneDelegateCache.GetOrAdd<T>(CreateDeepClone) as DeepClone<T>)!;
+    }
+
+    internal static Delegate GetDeepClone(Type type)
+    {
+        return _deepCloneDelegateCache.GetOrAdd(type, CreateDeepClone);
+    }
+
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static object? DeepClone(object? value)
+    {
+        if (value is null) return null;
+        var cloneDel = _deepCloneDelegateCache.GetOrAdd<object>(CreateDeepClone) as DeepClone<object>;
+        return cloneDel!(value);
+    }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static T? DeepClone<T>(T? value)
+    {
+        var cloneDel = _deepCloneDelegateCache.GetOrAdd<T>(CreateDeepClone) as DeepClone<T>;
+        return cloneDel!(value);
+    }
+}*/
+
+public static class Cloner
+{
+    public static T[] CloneArray<T>(T[] array)
     {
         int len = array.Length;
         T[] clone = new T[len];
         for (int i = 0; i < len; i++)
         {
-            clone[i] = Clone<T>(in array[i])!;
+            clone[i] = DeepClone<T>(array[i])!;
         }
 
         return clone;
     }
 
 
-    [return: NotNullIfNotNull("value")]
-    public delegate T CloneDelegate<T>(in T value);
+    private static readonly ConcurrentTypeDictionary<Action<IILGeneratorEmitter>> _cloneILCache;
 
-    private static readonly DelegateMemberCache _cloneDelegateCache;
+    private static readonly ConcurrentTypeDictionary<Delegate> _cloneDelegateCache;
 
     static Cloner()
     {
-        _cloneDelegateCache = new DelegateMemberCache();
+        _cloneDelegateCache = new();
         _cloneILCache = new();
     }
 
-    private static readonly ConcurrentTypeDictionary<Action<IILGeneratorEmitter>> _cloneILCache;
 
-    private static void EmitCloneIL(IILGeneratorEmitter emitter, Type? type)
+    /*
+    internal static void EmitCloneIL(IILGeneratorEmitter emitter, Type? type)
     {
         if (type is null)
         {
@@ -67,7 +178,6 @@ namespace Jay.Reflection.Cloning;
 
     private record Source(Action<IILGeneratorEmitter> LoadValue, Action<IILGeneratorEmitter> LoadValueAddress);
 
-    
 
     // We are either working with Ldarg(a) or Ldfld(a)
     private static void EmitClone(IILGeneratorEmitter emitter, Type? type, Source source)
@@ -80,7 +190,7 @@ namespace Jay.Reflection.Cloning;
         }
 
         // string and true value types are always copied as we move them around
-        if (type == typeof(string) || MethodCache.IsNonReferenced(type))
+        if (type == typeof(string) || TypeCache.IsUnmanaged(type))
         {
             source.LoadValue(emitter);
             return;
@@ -158,11 +268,10 @@ namespace Jay.Reflection.Cloning;
         }
 
         // At this point, we have to construct and set fields
-        return emitter =>
         {
             // First, we have to create clone
             emitter.DeclareLocal(type, out var clone);
-            
+
             if (type.IsValueType)
             {
                 emitter.Ldloca(clone)
@@ -192,39 +301,48 @@ namespace Jay.Reflection.Cloning;
                 {
                     emitter.Ldloc(clone);
                 }
+
                 // Load 
                 emitter.Ldflda(field)
                        // Clone it using Clone<T> so it will cache
-                       .Call(GetCloneMethod(field.FieldType))
+                       .Call(GetDeepCloneMethodForType(field.FieldType))
                        // Set the clone's field value to the cloned value
                        .Stfld(field);
             }
+
             // Done
             emitter.Ret();
         }
-        
     }
-                
+    */
 
-    private static CloneDelegate<T> CreateCloneDelegate<T>(Type type)
+
+    private static Delegate CreateDeepClone(Type type)
     {
-        var dm = RuntimeBuilder.CreateDynamicMethod<CloneDelegate<T>>(Dumper.Dump($"clone_{type}"));
-        var emitter = dm.Emitter;
-        // Start with a blank clone
-        emitter.DeclareLocal<T>(out var clone);
+        var runtimeMethod = RuntimeBuilder.CreateRuntimeMethod(
+            typeof(DeepClone<>).MakeGenericType(type),
+            Dumper.Dump($"clone_{type}"));
+        var emitter = runtimeMethod.Emitter;
 
-        // String is special
-        if (type == typeof(string))
+        // String or an unmanaged type can be duplicated
+        if (type == typeof(string) || TypeCache.IsUnmanaged(type))
         {
-            emitter.Ldarg(0)
-                   .Ldind<string>()
+            emitter
+                //.Ldarg(0)
+                //.Dup()
+                .Ldarga(0)
+                .Ldind(type)
                    .Ret();
+            return runtimeMethod.CreateDelegate();
         }
-        // Special Array handler
-        else if (type.IsArray)
+
+        // Start with a blank clone
+        emitter.DeclareLocal(type, out var clone);
+
+        if (type.IsArray)
         {
             var elementType = type.GetElementType()!;
-            var elementCloneMethod = GetCloneMethod(elementType);
+            var elementCloneMethod = GetDeepCloneMethodForType(elementType);
             var rank = type.GetArrayRank();
             if (rank == 1)
             {
@@ -269,88 +387,74 @@ namespace Jay.Reflection.Cloning;
                        .Clt()
                        .Brtrue(lblStart);
                 // We've loaded them all
+                emitter.Ldloc(clone);
                 emitter.Ret();
+                return runtimeMethod.CreateDelegate();
             }
-            else
-            {
-                throw new NotImplementedException();
-            }
+
+            throw new NotImplementedException();
         }
-        // Non-easy clone?
-        else if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+
+
+        // Non-easy clone
+
+        // If we're a value, we can use initobj
+        if (type.IsValueType)
         {
-            if (type.IsValueType)
-            {
-                emitter.Ldloca(clone)
-                       .Initobj(type);
-
-            }
-            else if (type.HasDefaultConstructor(out var ctor))
-            {
-                emitter.Newobj(ctor)
-                       .Stloc(clone);
-            }
-            else
-            {
-                emitter.LoadUninitialized(type)
-                       .Stloc(clone);
-            }
-
-            // Copy each field in turn
-            var fields = type.GetFields(Reflect.InstanceFlags);
-            foreach (var field in fields)
-            {
-                // Get the clone we'll be setting this field value of
-                if (type.IsValueType)
-                {
-                    emitter.Ldloca(clone);
-                }
-                else
-                {
-                    emitter.Ldloc(clone);
-                }
-                // Load the original value's field's value
-                emitter.LoadInstanceFor(field, dm.Parameters[0], out int offset)
-                       .Assert(() => offset == 1)
-                       .Ldflda(field)
-                       // Clone it using Clone<T> so it will cache
-                       .Call(GetCloneMethod(field.FieldType))
-                       // Set the clone's field value to the cloned value
-                       .Stfld(field);
-            }
-            // Done
-            emitter.Ret();
+            emitter.Ldloca(clone)
+                   .Initobj(type);
         }
+        // Otherwise, we need to make an uninitialized version, as we cannot 'trust' a constructor
         else
         {
-            // Plain value type, will be copied anyways
-            emitter.Ldarg(0)
-                   .Ldind<T>()
-                   .Ret();
+            emitter.LoadType(type)
+                   .Call(MethodCache.RuntimeHelpers_GetUninitializedObject)
+                   .Unbox_Any(type)
+                   .Stloc(clone);
         }
-        return dm.CreateDelegate();
+
+        // Copy each field in turn
+        var fields = type.GetFields(Reflect.InstanceFlags);
+        if (fields.Length == 0)
+        {
+            Debugger.Break();
+        }
+
+        foreach (var field in fields)
+        {
+            // Get the clone we'll be setting this field value of
+            emitter.Ldloc(clone)
+                   // Load the original value's field's value
+                   .Ldarg(0)
+                   .Ldfld(field)
+                   // Clone it using Clone<T> so it will cache
+                   .Call(GetDeepCloneMethodForType(field.FieldType))
+                   // Set the clone's field value to the cloned value
+                   .Stfld(field);
+        }
+
+        // Finished with all fields, return the clone
+        emitter.Ldloc(clone).Ret();
+        string il = emitter.ToString()!;
+        Debugger.Break();
+        return runtimeMethod.CreateDelegate();
     }
 
-    private static MethodInfo GetCloneMethod(Type type)
+    private static MethodInfo GetDeepCloneMethodForType(Type type)
     {
-        return typeof(Cloner).GetMethod(nameof(Clone), BindingFlags.Public | BindingFlags.Static)
+        return typeof(Cloner).GetMethod(nameof(DeepClone), BindingFlags.Public | BindingFlags.Static)
                              .ThrowIfNull()
                              .MakeGenericMethod(type);
     }
 
-
-    public static CloneDelegate<T> CreateCloneDelegate<T>() => CreateCloneDelegate<T>(typeof(T));
-
     [return: NotNullIfNotNull("value")]
-    public static T? Clone<T>(in T? value)
+    public static T? DeepClone<T>(T? value)
     {
         if (value is null) return default;
-        var del = _cloneDelegateCache.GetOrAdd(typeof(T), type => CreateCloneDelegate<T>(type));
-        return del(in value);
+        var deepClone = _cloneDelegateCache.GetOrAdd<T>(type => CreateDeepClone(type)) as DeepClone<T>;
+        return deepClone!(value);
     }
-}*/
-
-
+}
 
 public static class Muq
 {
@@ -407,7 +511,7 @@ public static class Muq
         var delType = typeof(CloneValue<>).MakeGenericType(type);
 
         var dm = RuntimeBuilder.CreateDynamicMethod(MethodSig.Of(delType), Dumper.Dump($"{type}_clone"));
-            
+
         var emitter = dm.GetILEmitter();
 
         // Object we need to extract the value inside
@@ -416,12 +520,11 @@ public static class Muq
             emitter.Ldarg(0)
                    .Ldarg(0)
                    .Call(typeof(object).GetMethod(nameof(object.GetType),
-                                                  Reflect.InstanceFlags,
-                                                  Type.EmptyTypes)!)
+                       Reflect.InstanceFlags,
+                       Type.EmptyTypes)!)
                    .Call(Muq_GetCloneMethod)
                    .Call(Muq_GetCloneMethod);
             throw new NotImplementedException();
-
         }
 
         // String and true Value types are always copied as we ref them
@@ -478,7 +581,7 @@ public static class Muq
                        .Brtrue(lblStart);
                 // We've loaded them all
                 emitter.Ldloc(clone)
-                    .Ret();
+                       .Ret();
             }
             else
             {
@@ -518,14 +621,17 @@ public static class Muq
                 {
                     emitter.Ldloc(clone);
                 }
+
                 emitter.Ldarg(0)
                        .Ldfld(field)
                        .Call(fieldCloneMethod)
                        .Stfld(field);
             }
+
             emitter.Ldloc(clone)
                    .Ret();
         }
+
         return dm.CreateDelegate(delType);
     }
 }

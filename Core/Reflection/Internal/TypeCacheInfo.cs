@@ -39,10 +39,9 @@ internal class TypeCacheInfo
     public TypeCacheInfo(Type type)
     {
         this.Type = type;
-        this.IsReferenceOrContainsReferences =
-            _isReferenceMethod
-                .MakeGenericMethod(type)
-                .Invoke<Types.Static, bool>(ref Types.Static.Instance);
+        this.IsReferenceOrContainsReferences = (bool)_isReferenceMethod
+                                                     .MakeGenericMethod(type)
+                                                     .Invoke(null, null)!;
         if (type.IsClass || type.IsInterface)
         {
             _getDefault = () => null;

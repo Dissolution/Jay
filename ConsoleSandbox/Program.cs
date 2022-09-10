@@ -15,6 +15,7 @@ using Jay.Enums;
 using Jay.Reflection;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Deconstruction;
+using Jay.Reflection.Cloning;
 using Jay.Reflection.Implementation;
 using Jay.Reflection.Search;
 using Jay.Text;
@@ -37,10 +38,9 @@ var testClass = new Sandbox.TestClass
     Key = 147,
     Name = "First",
 };
-object boxed = (object)testClass;
 
-var unboxed = ILScratch.UnboxToClass<Sandbox.TestClass>(boxed);
-var cast = ILScratch.CastClass<Sandbox.TestClass>(boxed);
+var clone = Cloner.DeepClone(testClass);
+var dump = Dumper.Dump(clone);
 
 Debugger.Break();
 
@@ -232,6 +232,13 @@ namespace ConsoleSandbox
             public string? Name { get; set; }
            
             public int Key { get; set; }
+
+            public Guid Unique { get; }
+
+            public TestClass()
+            {
+                Unique = Guid.NewGuid();
+            }
 
             public bool Equals(IKeyedEntity<int>? other)
             {

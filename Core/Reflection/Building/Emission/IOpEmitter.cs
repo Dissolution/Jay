@@ -1012,7 +1012,6 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     /// <typeparam name="T">The value type that is to be unboxed.</typeparam>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.unbox_any"/>
     TEmitter Unbox_Any<T>()
-        where T : struct
         => Unbox_Any(typeof(T));
 
     /// <summary>
