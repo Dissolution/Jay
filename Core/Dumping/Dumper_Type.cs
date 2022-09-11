@@ -102,37 +102,43 @@ public static partial class Dumper
                 DumpTypeTo(underlyingType, textBuilder);
                 textBuilder.Write("[]");
             }
-
-            string name = type.Name;
-
-            if (type.IsGenericType)
+            else
             {
-                if (type.IsGenericParameter)
+
+
+                string name = type.Name;
+
+                if (type.IsGenericType)
                 {
-                    textBuilder.Write(name);
-                    var constraints = type.GetGenericParameterConstraints();
-                    if (constraints.Length > 0)
+                    if (type.IsGenericParameter)
                     {
-                        textBuilder.Write(" : ");
+                        textBuilder.Write(name);
+                        var constraints = type.GetGenericParameterConstraints();
+                        if (constraints.Length > 0)
+                        {
+                            textBuilder.Write(" : ");
+                            Debugger.Break();
+                        }
+
                         Debugger.Break();
                     }
 
-                    Debugger.Break();
+                    var genericTypes = type.GetGenericArguments();
+                    var i = name.IndexOf('`');
+                    if (i >= 0)
+                        textBuilder.Append(name[..i]);
+                    else
+                        textBuilder.Append(name);
+                    textBuilder.Append('<')
+                               .AppendDelimit(",",
+                                   genericTypes,
+                                   (tb, gt) => DumpTypeTo(gt, tb))
+                               .Write('>');
                 }
-
-                var genericTypes = type.GetGenericArguments();
-                var i = name.IndexOf('`');
-                Debug.Assert(i >= 0);
-                textBuilder.Append(name[..i])
-                    .Append('<')
-                    .AppendDelimit(",",
-                        genericTypes,
-                        (tb, gt) => DumpTypeTo(gt, tb))
-                    .Write('>');
-            }
-            else
-            {
-                textBuilder.Write(name);
+                else
+                {
+                    textBuilder.Write(name);
+                }
             }
         }
 

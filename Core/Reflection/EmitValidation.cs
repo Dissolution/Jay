@@ -54,7 +54,7 @@ namespace Jay.Reflection;
     }
 }*/
 
-internal static class Validation
+internal static class EmitValidation
 {
     public static void IsValue([AllowNull, NotNull] Type? valueType,
                                [CallerArgumentExpression("valueType")]

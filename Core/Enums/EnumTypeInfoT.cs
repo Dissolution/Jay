@@ -1,6 +1,7 @@
 ﻿using Jay.Reflection;
 using System.Diagnostics;
 using System.Numerics;
+using System.Reflection;
 using Jay.Text;
 using Jay.Comparision;
 
@@ -15,15 +16,21 @@ public sealed class EnumTypeInfo<TEnum> : EnumTypeInfo
 
     public EnumComparer<TEnum> Comparer { get; } = new EnumComparer<TEnum>();
 
-    private EnumTypeInfo() : base(typeof(TEnum))
+    public EnumTypeInfo() : base(typeof(TEnum))
     {
-        var fields = _enumFields;
-        var members = new TEnum[fields.Length];
-        for (var i = 0; i < fields.Length; i++)
+        _enumFields = _enumType.GetFields(BindingFlags.Public | BindingFlags.Static);
+        _memberCount = _enumFields.Length;
+        _members = new TEnum[_memberCount];
+        _names = new string[_memberCount];
+        _values = new ulong[_memberCount];
+        for (var i = 0; i < _memberCount; i++)
         {
-            members[i] = fields[i].GetStaticValue<TEnum>();
+            var field = _enumFields[i];
+            var member = (TEnum)field.GetValue(null)!;
+            _members[i] = member;
+            _names[i] = field.Name;
+            _values[i] = member.ToUInt64();
         }
-        _members = members;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

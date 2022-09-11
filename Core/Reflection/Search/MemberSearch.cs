@@ -133,6 +133,18 @@ public static class MemberSearch
         throw new MissingMemberException();
     }
 
+    public static TMember Find<TInstance, TMember>(TInstance? instance, Expression<Action<TInstance?>> memberExpression)
+        where TMember : MemberInfo
+    {
+        return Find<TMember>(memberExpression);
+    }
+
+    public static TMember Find<TInstance, TMember>(Expression<Action<TInstance?>> memberExpression)
+        where TMember : MemberInfo
+    {
+        return Find<TMember>(memberExpression);
+    }
+
     public static bool HasDefaultConstructor(this Type type, [NotNullWhen(true)] out ConstructorInfo? ctor)
     {
         ctor = type.GetConstructor(Reflect.InstanceFlags, Type.EmptyTypes);

@@ -1,9 +1,145 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+using Jay.Comparision;
+using Jay.Dumping;
 using Jay.Text;
 
 namespace Jay.Reflection.Building.Emission;
+
+public abstract class Instr : IEquatable<Instr>, IDumpable
+{
+    public int Offset { get; }
+
+    protected Instr(int offset)
+    {
+        this.Offset = offset;
+    }
+
+    protected static void AppendOffset(TextBuilder builder, Instr instr)
+    {
+        builder.Append("IL_").AppendFormat(instr.Offset, "x4");
+    }
+
+    public abstract bool Equals(Instr? instruction);
+
+    public abstract void DumpTo(TextBuilder text);
+}
+
+public sealed class OpInstr : Instr
+{
+    public OpCode OpCode { get; }
+    public object? Value { get; }
+
+    public int Size
+    {
+        get
+        {
+            int size = OpCode.Size;
+
+            switch (OpCode.OperandType)
+            {
+                case OperandType.InlineSwitch:
+                {
+                    if (!(Value is Instruction[] instructions))
+                        throw new InvalidOperationException();
+                    size += (1 + instructions.Length) * 4;
+                    break;
+                }
+                case OperandType.InlineI8:
+                case OperandType.InlineR:
+                    size += 8;
+                    break;
+                case OperandType.InlineBrTarget:
+                case OperandType.InlineField:
+                case OperandType.InlineI:
+                case OperandType.InlineMethod:
+                case OperandType.InlineString:
+                case OperandType.InlineTok:
+                case OperandType.InlineType:
+                case OperandType.ShortInlineR:
+                    size += 4;
+                    break;
+                case OperandType.InlineVar:
+                    size += 2;
+                    break;
+                case OperandType.ShortInlineBrTarget:
+                case OperandType.ShortInlineI:
+                case OperandType.ShortInlineVar:
+                    size += 1;
+                    break;
+            }
+
+            return size;
+        }
+    }
+
+    public OpInstr(int offset, OpCode opCode, object? value = null)
+        : base(offset)
+    {
+        this.OpCode = opCode;
+        this.Value = value;
+    }
+
+    public override bool Equals(Instr? instruction)
+    {
+        return instruction is OpInstr instr &&
+               instr.OpCode == this.OpCode &&
+               ComparerCache.EqualityComparer.Equals(instr.Value, this.Value);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is OpInstr instr && Equals(instr);
+    }
+
+    public override int GetHashCode()
+    {
+        return Hasher.Create(OpCode, Value);
+    }
+
+    public override void DumpTo(TextBuilder text)
+    {
+        AppendOffset(text, this);
+        text.Append(": ").Append(OpCode.Name);
+        if (Value is not null)
+        {
+            text.Append(' ');
+            switch (OpCode.OperandType)
+            {
+                case OperandType.ShortInlineBrTarget:
+                case OperandType.InlineBrTarget:
+                    text.Append((Instr)Value);
+                    break;
+                case OperandType.InlineSwitch:
+                    var labels = (Instr[])Value;
+                    for (int i = 0; i < labels.Length; i++)
+                    {
+                        if (i > 0)
+                        {
+                            text.Append(',');
+                        }
+
+                        AppendOffset(text, labels[i]);
+                    }
+
+                    break;
+                case OperandType.InlineString:
+                    text.Append('\"').Append(Value).Append('\"');
+                    break;
+                default:
+                    text.Append(Value);
+                    break;
+            }
+        }
+    }
+
+    public override string ToString()
+    {
+        return TextBuilder.Build(DumpTo);
+    }
+}
 
 public class Instruction : IEquatable<Instruction>
 {
@@ -235,8 +371,16 @@ public class Instruction : IEquatable<Instruction>
                 }
             }
         }
+        // else if (GenMethod == ILGeneratorMethod.DeclareLocal)
+        // {
+        //     var args = (object[])Arg!;
+        //     var type = (Type)args[0]!;
+        //     text.Append(type)
+        // }
         else
         {
+            
+
             text.Append(GenMethod)
                 .Append('(')
                 // TODO: Break this out

@@ -26,7 +26,7 @@ public static class FieldInfoExtensions
     {
         var result = fieldInfo.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsValue(instanceType, nameof(fieldInfo));
+        EmitValidation.IsValue(instanceType, nameof(fieldInfo));
         return RuntimeBuilder.CreateDelegate<Getter<TInstance, TValue>>($"get_{instanceType}_{fieldInfo.Name}", 
                                                                         method =>
         {
@@ -40,7 +40,7 @@ public static class FieldInfoExtensions
     
     public static StaticGetter<TValue> CreateStaticGetter<TValue>(this FieldInfo fieldInfo)
     {
-        Validation.IsStatic(fieldInfo);
+        EmitValidation.IsStatic(fieldInfo);
         return RuntimeBuilder.CreateDelegate<StaticGetter<TValue>>(
             $"get_{fieldInfo.OwnerType()}.{fieldInfo.Name}", method =>
             {
@@ -56,7 +56,7 @@ public static class FieldInfoExtensions
     {
         var result = fieldInfo.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsValue(instanceType, nameof(fieldInfo));
+        EmitValidation.IsValue(instanceType, nameof(fieldInfo));
         return RuntimeBuilder.CreateDelegate<StructGetter<TStruct, TValue>>(
             $"get_{instanceType}_{fieldInfo.Name}", method =>
             {
@@ -73,7 +73,7 @@ public static class FieldInfoExtensions
     {
         var result = fieldInfo.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsClass(instanceType, nameof(fieldInfo));
+        EmitValidation.IsClass(instanceType, nameof(fieldInfo));
         return RuntimeBuilder.CreateDelegate<ClassGetter<TClass, TValue>>(
             $"get_{instanceType}_{fieldInfo.Name}", method =>
         {
@@ -114,7 +114,7 @@ public static class FieldInfoExtensions
     {
         var result = fieldInfo.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsValue(instanceType, nameof(fieldInfo));
+        EmitValidation.IsValue(instanceType, nameof(fieldInfo));
         return RuntimeBuilder.CreateDelegate<Setter<TInstance, TValue>>(
                                                                             $"get_{instanceType}_{fieldInfo.Name}", method =>
                                                                             {
@@ -128,7 +128,7 @@ public static class FieldInfoExtensions
 
     public static StaticSetter<TValue> CreateStaticSetter<TValue>(this FieldInfo fieldInfo)
     {
-        Validation.IsStatic(fieldInfo);
+        EmitValidation.IsStatic(fieldInfo);
         return RuntimeBuilder.CreateDelegate<StaticSetter<TValue>>(
             $"set_{fieldInfo.OwnerType()}.{fieldInfo.Name}", method =>
             {
@@ -144,7 +144,7 @@ public static class FieldInfoExtensions
     {
         var result = fieldInfo.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsValue(instanceType, nameof(fieldInfo));
+        EmitValidation.IsValue(instanceType, nameof(fieldInfo));
         return RuntimeBuilder.CreateDelegate<StructSetter<TStruct, TValue>>(
             $"get_{instanceType}_{fieldInfo.Name}", method =>
             {
@@ -161,7 +161,7 @@ public static class FieldInfoExtensions
     {
         var result = fieldInfo.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsClass(instanceType, nameof(fieldInfo));
+        EmitValidation.IsClass(instanceType, nameof(fieldInfo));
         return RuntimeBuilder.CreateDelegate<ClassSetter<TClass, TValue>>(
             $"get_{instanceType}_{fieldInfo.Name}", method =>
             {

@@ -10,7 +10,7 @@ public class CloneTests
     public void CloneNull()
     {
         object? obj = null;
-        object? clone = Muq.Clone<object>(obj);
+        object? clone = Cloner.DeepClone<object>(obj);
         Assert.True(clone is null);
         Assert.True(ReferenceEquals(obj, clone));
         Assert.Equal(obj, clone);
@@ -20,7 +20,7 @@ public class CloneTests
     public void CloneStringNull()
     {
         string? str = null;
-        string? clone = Muq.Clone<string>(str);
+        string? clone = Cloner.DeepClone<string>(str);
         Assert.True(clone is null);
         Assert.True(string.Equals(str, clone));
         Assert.True(str == clone);
@@ -31,7 +31,7 @@ public class CloneTests
     public void CloneNullableNull()
     {
         int? value = null;
-        int? clone = Muq.Clone<int?>(value);
+        int? clone = Cloner.DeepClone<int?>(value);
         Assert.True(clone == null);
         Assert.True(!clone.HasValue);
         Assert.Equal(value, clone);
@@ -41,7 +41,7 @@ public class CloneTests
     public void CloneString()
     {
         string str = Randomizer.Instance.HexString(16);
-        string clone = Muq.Clone<string>(str);
+        string clone = Cloner.DeepClone<string>(str);
         Assert.NotNull(clone);
         Assert.True(str == clone);
         Assert.Equal(str, clone);
@@ -51,7 +51,7 @@ public class CloneTests
     public void CloneInt32()
     {
         int value = Randomizer.Generate<int>();
-        int clone = Muq.Clone<int>(value);
+        int clone = Cloner.DeepClone<int>(value);
         Assert.True(value == clone);
         Assert.Equal(value, clone);
     }
@@ -60,7 +60,7 @@ public class CloneTests
     public void CloneGuid()
     {
         Guid value = Randomizer.Generate<Guid>();
-        Guid clone = Muq.Clone<Guid>(value);
+        Guid clone = Cloner.DeepClone<Guid>(value);
         Assert.True(value == clone);
         Assert.Equal(value, clone);
     }
@@ -69,7 +69,7 @@ public class CloneTests
     public void CloneNonRef()
     {
         var value = (DateTime.Now, 147);
-        var clone = Muq.Clone(value);
+        var clone = Cloner.DeepClone(value);
         Assert.True(value == clone);
         Assert.Equal(value, clone);
 
@@ -83,7 +83,7 @@ public class CloneTests
     public void CloneClass()
     {
         var value = new Tuple<int, string>(3, "Three");
-        var clone = Muq.Clone(value);
+        var clone = Cloner.DeepClone(value);
         Assert.False(ReferenceEquals(value, clone));
         Assert.True(value.Item1 == clone.Item1);
         Assert.True(value.Item2 == clone.Item2);
@@ -93,7 +93,7 @@ public class CloneTests
     public void CloneList()
     {
         var list = new List<int> { 1, 2, 3, 4, 5 };
-        var clone = Muq.Clone(list);
+        var clone = Cloner.DeepClone(list);
         Assert.False(ReferenceEquals(list, clone));
         Assert.True(EnumerableEqualityComparer<int>.Default.Equals(list, clone));
 
@@ -116,7 +116,7 @@ public class CloneTests
             { "deeper", new List<int>(Enumerable.Range(1, 10)) },
             { "still", new Exception("TEST") },
         };
-        var clone = Muq.Clone(dict);
+        var clone = Cloner.DeepClone(dict);
         Assert.False(ReferenceEquals(dict, clone));
         Assert.True(dict.Count == clone.Count);
         foreach (var (dictKey, dictValue) in dict)

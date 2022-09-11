@@ -33,14 +33,17 @@ using Jay.BenchTests.Text;
 #else
 using var text = TextBuilder.Borrow();
 
-var testClass = new Sandbox.TestClass
+var enumInfo = EnumInfo.For<BindingFlags>();
+var dict = new Dictionary<BindingFlags, string>();
+for (var i = 0; i < enumInfo.MemberCount; i++)
 {
-    Key = 147,
-    Name = "First",
-};
+    dict[enumInfo.Members[i]] = enumInfo.Names[i];
+}
 
-var clone = Cloner.DeepClone(testClass);
+Dictionary<BindingFlags, string> clone = Cloner.DeepClone(dict);
 var dump = Dumper.Dump(clone);
+
+
 
 Debugger.Break();
 
@@ -286,7 +289,10 @@ namespace ConsoleSandbox
 
     public static class Reflector
     {
-
+        public static object Box<T>(T value)
+        {
+            return (object)value;
+        }
 
         /*public static MemberInfo GetMember<TInstance>(TInstance instance, Expression<Func<TInstance, object?>> selectMemberExpression)
         {

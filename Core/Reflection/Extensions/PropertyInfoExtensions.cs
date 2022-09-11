@@ -119,7 +119,7 @@ public static class PropertyInfoExtensions
     {
         ArgumentNullException.ThrowIfNull(property);
         var getter = GetGetter(property);
-        Validation.IsStatic(getter);
+        EmitValidation.IsStatic(getter);
         return RuntimeBuilder.CreateDelegate<StaticGetter<TValue>>(
             $"get_{property.OwnerType()}.{property.Name}", method =>
             {
@@ -136,9 +136,9 @@ public static class PropertyInfoExtensions
         ArgumentNullException.ThrowIfNull(property);
         var result = property.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsValue(instanceType);
+        EmitValidation.IsValue(instanceType);
         var getter = GetGetter(property);
-        Validation.IsInstance(getter);
+        EmitValidation.IsInstance(getter);
         return RuntimeBuilder.CreateDelegate<StructGetter<TStruct, TValue>>(
             $"get_{instanceType}_{property.Name}", method =>
             {
@@ -156,9 +156,9 @@ public static class PropertyInfoExtensions
         ArgumentNullException.ThrowIfNull(property);
         var result = property.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsClass(instanceType, nameof(property));
+        EmitValidation.IsClass(instanceType, nameof(property));
         var getter = GetGetter(property);
-        Validation.IsInstance(getter);
+        EmitValidation.IsInstance(getter);
         return RuntimeBuilder.CreateDelegate<ClassGetter<TClass, TValue>>(
             $"get_{instanceType}_{property.Name}", method =>
             {
@@ -200,7 +200,7 @@ public static class PropertyInfoExtensions
     {
         ArgumentNullException.ThrowIfNull(property);
         var setter = GetSetter(property);
-        Validation.IsStatic(setter);
+        EmitValidation.IsStatic(setter);
         return RuntimeBuilder.CreateDelegate<StaticSetter<TValue>>(
             $"set_{property.OwnerType()}.{property.Name}", method =>
             {
@@ -217,9 +217,9 @@ public static class PropertyInfoExtensions
         ArgumentNullException.ThrowIfNull(property);
         var result = property.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsValue(instanceType);
+        EmitValidation.IsValue(instanceType);
         var setter = GetSetter(property);
-        Validation.IsInstance(setter);
+        EmitValidation.IsInstance(setter);
         return RuntimeBuilder.CreateDelegate<StructSetter<TStruct, TValue>>(
             $"set_{instanceType}_{property.Name}", method =>
             {
@@ -237,9 +237,9 @@ public static class PropertyInfoExtensions
         ArgumentNullException.ThrowIfNull(property);
         var result = property.TryGetInstanceType(out var instanceType);
         result.ThrowIfFailed();
-        Validation.IsClass(instanceType, nameof(property));
+        EmitValidation.IsClass(instanceType, nameof(property));
         var setter = GetSetter(property);
-        Validation.IsInstance(setter);
+        EmitValidation.IsInstance(setter);
         return RuntimeBuilder.CreateDelegate<ClassSetter<TClass, TValue>>(
             $"set_{instanceType}_{property.Name}", method =>
             {
