@@ -56,7 +56,7 @@ internal class TypeCacheInfo
                    .GetProperty(nameof(TypeCache<int>.Size),
                        BindingFlags.Public | BindingFlags.Static)
                    .ThrowIfNull()
-                   .GetStaticValue<int?>();
+                   .GetValue<Types.Static, int?>(ref Types.Static.Instance);
         }
     }
 

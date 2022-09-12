@@ -150,7 +150,9 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
     }
 
     TEmitter LoadArg(int index) => Ldarg(index);
-    
+
+    TEmitter LoadArg(ParameterInfo parameter) => Ldarg(parameter.Position);
+
     TEmitter LoadType(Type type)
     {
         ArgumentNullException.ThrowIfNull(type);
