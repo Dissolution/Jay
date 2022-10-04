@@ -13,5 +13,5 @@ public interface IDumpable
         return text.ToString();
     }
 
-    string ToString() => Dump();
+    string? ToString() => Dump();
 }
