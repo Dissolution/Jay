@@ -209,7 +209,7 @@ namespace ConsoleSandbox
     {
         string? Name { get; set; }
 
-        string ToString() => Name!;
+        string? ToString() => Name;
     }
 
     public interface IKeyedEntity<T> : IEntity,
@@ -218,7 +218,7 @@ namespace ConsoleSandbox
         [Equality]
         T Key { get; set; }
 
-        string IEntity.ToString() => $"{Key}: \"{Name}\"";
+        string? IEntity.ToString() => $"{Key}: \"{Name}\"";
     }
 
     
