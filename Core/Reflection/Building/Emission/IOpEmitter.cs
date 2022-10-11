@@ -682,7 +682,7 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     /// <summary>
     /// Returns from the current method, pushing a return value (if present) from the callee's evaluation stack onto the caller's evaluation stack.
     /// </summary>
-    void Ret() => Emit(OpCodes.Ret);
+    TEmitter Ret() => Emit(OpCodes.Ret);
     #endregion
     #region True
     /// <summary>
@@ -950,25 +950,21 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
 
     #region Boxing / Unboxing / Casting
     /// <summary>
-    /// Converts a <see langword="struct"/> into an <see cref="object"/> reference.
+    /// Converts a value into an <see cref="object"/> reference.
     /// </summary>
-    /// <param name="valueType">The <see cref="Type"/> of <see langword="struct"/> that is to be boxed.</param>
-    /// <exception cref="ArgumentNullException">If <paramref name="valueType"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException">If <paramref name="valueType"/> is not a value type.</exception>
+    /// <param name="valueType">The <see cref="Type"/> of value that is to be boxed.</param>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.box"/>
     TEmitter Box(Type valueType)
     {
-        Validation.IsValue(valueType);
         return Emit(OpCodes.Box, valueType);
     }
 
     /// <summary>
-    /// Converts a <see langword="struct"/> into an <see cref="object"/> reference.
+    /// Converts a value into an <see cref="object"/> reference.
     /// </summary>
-    /// <typeparam name="T">The <see cref="Type"/> of <see langword="struct"/> that is to be boxed.</typeparam>
+    /// <typeparam name="T">The <see cref="Type"/> of value that is to be boxed.</typeparam>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.box"/>
     TEmitter Box<T>()
-        where T : struct
         => Emit(OpCodes.Box, typeof(T));
 
     /// <summary>
@@ -980,7 +976,7 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.unbox"/>
     TEmitter Unbox(Type valueType)
     {
-        Validation.IsValue(valueType);
+        EmitValidation.IsValue(valueType);
         return Emit(OpCodes.Unbox, valueType);
     }
 
@@ -994,25 +990,21 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
         => Unbox(typeof(T));
 
     /// <summary>
-    /// Converts the boxed representation (<see cref="object"/>) of a <see langword="struct"/> to its unboxed value.
+    /// Converts the boxed representation (<see cref="object"/>) value to its unboxed value.
     /// </summary>
-    /// <param name="valueType">The value type that is to be unboxed.</param>
-    /// <exception cref="ArgumentNullException">If <paramref name="valueType"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException">If <paramref name="valueType"/> is not a value type.</exception>
+    /// <param name="type">The Type of value to unbox/castclass the value to</param>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.unbox_any"/>
-    TEmitter Unbox_Any(Type valueType)
+    TEmitter Unbox_Any(Type type)
     {
-        Validation.IsValue(valueType);
-        return Emit(OpCodes.Unbox_Any, valueType);
+        return Emit(OpCodes.Unbox_Any, type);
     }
 
     /// <summary>
-    /// Converts the boxed representation (<see cref="object"/>) of a <see langword="struct"/> to its unboxed value.
+    /// Converts the boxed representation (<see cref="object"/>) value to its unboxed value.
     /// </summary>
-    /// <typeparam name="T">The value type that is to be unboxed.</typeparam>
+    /// <typeparam name="T">The type that is to be unboxed.</typeparam>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.unbox_any"/>
     TEmitter Unbox_Any<T>()
-        where T : struct
         => Unbox_Any(typeof(T));
 
     /// <summary>
@@ -1024,7 +1016,7 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.castclass"/>
     TEmitter Castclass(Type classType)
     {
-        Validation.IsClass(classType);
+        EmitValidation.IsClass(classType);
         return Emit(OpCodes.Castclass, classType);
     }
 
@@ -1334,7 +1326,7 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.cpobj"/>
     TEmitter Cpobj(Type valueType)
     {
-        Validation.IsValue(valueType);
+        EmitValidation.IsValue(valueType);
         return Emit(OpCodes.Cpobj, valueType);
     }
 
@@ -1364,7 +1356,7 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.initobj"/>
     TEmitter Initobj(Type valueType)
     {
-        Validation.IsValue(valueType);
+        EmitValidation.IsValue(valueType);
         return Emit(OpCodes.Initobj, valueType);
     }
 
@@ -2302,7 +2294,7 @@ public interface IOpEmitter<out TEmitter> : IILGenerator<TEmitter>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.sizeof"/>
     TEmitter Sizeof(Type type)
     {
-        Validation.IsValue(type);
+        EmitValidation.IsValue(type);
         return Emit(OpCodes.Sizeof, type);
     }
 

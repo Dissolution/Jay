@@ -38,7 +38,11 @@ internal static class TextBuilderReflections
             .Where(method => method.ContainsGenericParameters)
             .OneOrDefault();
         if (writeMethod is not null)
+        {
+            // Make generic + cast
             return writeMethod.MakeGenericMethod(valueType);
+        }
+            
 
         throw new InvalidOperationException();
     }

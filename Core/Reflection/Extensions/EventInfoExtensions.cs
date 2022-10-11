@@ -5,7 +5,7 @@ using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Internal;
 
-namespace Jay.Reflection.Extensions;
+namespace Jay.Reflection;
 
 public static class EventInfoExtensions
 {
@@ -59,12 +59,19 @@ public static class EventInfoExtensions
     public static FieldInfo? GetBackingField(this EventInfo? eventInfo)
     {
         if (eventInfo is null) return null;
-        return eventInfo.DeclaringType!
-                        .GetField(eventInfo.Name,
-                                  BindingFlags.DeclaredOnly |
-                                  BindingFlags.Instance |
-                                  BindingFlags.Public | BindingFlags.NonPublic);
+        
+        BindingFlags flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic;
+        
+        if (eventInfo.IsStatic())
+        {
+            flags |= BindingFlags.Static;
+        }
+        else
+        {
+            flags |= BindingFlags.Instance;
+        }
 
+        return eventInfo.DeclaringType?.GetField(eventInfo.Name, flags);
     }
 
     public static EventAdder<TInstance, THandler> CreateAdder<TInstance, THandler>(this EventInfo eventInfo)

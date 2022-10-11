@@ -16,11 +16,11 @@ public static class ComparableExtensions
     public static void Clamp<T>(ref T value, T minimum, T maximum)
         where T : IComparable<T>
     {
-        if (Comparer<T>.Default.Compare(value, minimum) < 0)
+        if (value.CompareTo(minimum) < 0)
         {
             value = minimum;
         }
-        else if (Comparer<T>.Default.Compare(value, maximum) > 0)
+        else if (value.CompareTo(maximum) > 0)
         {
             value = maximum;
         }
@@ -37,10 +37,8 @@ public static class ComparableExtensions
     public static T Clamped<T>(this T value, T minimum, T maximum)
         where T : IComparable<T>
     {
-        if (Comparer<T>.Default.Compare(value, minimum) < 0)
-            return minimum;
-        if (Comparer<T>.Default.Compare(value, maximum) > 0)
-            return maximum;
+        if (value.CompareTo(minimum) < 0) return minimum;
+        if (value.CompareTo(maximum) > 0) return maximum;
         return value;
     }
 
@@ -55,10 +53,8 @@ public static class ComparableExtensions
     public static bool IsBetween<T>(this T value, T minimum, T maximum)
         where T : IComparable<T>
     {
-        if (Comparer<T>.Default.Compare(value, minimum) < 0)
-            return false;
-        if (Comparer<T>.Default.Compare(value, maximum) > 0)
-            return false;
+        if (value.CompareTo(minimum) < 0) return false;
+        if (value.CompareTo(maximum) > 0) return false;
         return true;
     }
 }

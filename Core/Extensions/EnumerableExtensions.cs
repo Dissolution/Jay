@@ -323,4 +323,33 @@ public static class EnumerableExtensions
 			return result;
 		}
 	}
+	
+	[return: NotNullIfNotNull("default")]
+	public static T? OneOrDefault<T>(this IEnumerable<T> source, 
+		Func<T, bool> predicate, 
+		T? @default = default(T))
+	{
+		using var e = source.GetEnumerator();
+		while (e.MoveNext())
+		{
+			T result = e.Current;
+			if (predicate(result))
+			{
+				while (e.MoveNext())
+				{
+					// If there is more than one match, fail
+					if (predicate(e.Current))
+					{
+						return @default;
+					}
+				}
+
+				// Only one match
+				return result;
+			}
+		}
+
+		// No matches
+		return @default;
+	}
 }

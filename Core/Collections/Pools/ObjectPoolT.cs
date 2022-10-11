@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using Jay.Dumping;
-using Jay.Exceptions;
 
 // ReSharper disable MethodOverloadWithOptionalParameter
 

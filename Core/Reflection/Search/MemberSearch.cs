@@ -1,29 +1,148 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
+using Jay.Debugging;
+using Jay.Dumping;
 using Jay.Expressions;
+using Jay.Reflection.Exceptions;
+using Jay.Text;
 
 namespace Jay.Reflection.Search;
 
 public static class MemberSearch
 {
-    public static Result TryFind<TMember>(Expression memberExpression,
-                                          [NotNullWhen(true)] out TMember? member)
-        where TMember : MemberInfo
+    public static class Static
     {
-        member = memberExpression.ExtractMember<TMember>();
-        if (member is null)
+        public static TMember Find<TMember>(Type staticType, string memberName)
+            where TMember : MemberInfo
         {
-            Debugger.Break();
-            return new MissingMemberException();
+            var members = staticType
+                          .GetMembers(Reflect.StaticFlags)
+                          .OfType<TMember>()
+                          .Where(member => string.Equals(member.Name, memberName, StringComparison.OrdinalIgnoreCase))
+                          .ToList();
+            if (members.Count != 1)
+            {
+                throw new ReflectionException(
+                    $"Could not find {typeof(TMember)} {staticType}.{memberName}");
+            }
+            return members[0];
         }
-        return true;
     }
 
-    public static TMember? Find<TMember>(Expression memberExpression)
+    public static class Instance<TInstance>
+    {
+        public static TMember Find<TMember>(Expression<Action<TInstance>> memberExpression)
+            where TMember : MemberInfo
+        {
+            var member = memberExpression.ExtractMember<TMember>();
+            if (member is null)
+            {
+                Debugger.Break();
+                throw new MissingMemberException();
+            }
+            return member;
+        }
+
+        public static TMember Find<TMember>(string memberName)
+            where TMember : MemberInfo
+        {
+            var members = typeof(TInstance)
+                         .GetMembers(Reflect.InstanceFlags)
+                         .OfType<TMember>()
+                         .Where(member => string.Equals(member.Name, memberName, StringComparison.OrdinalIgnoreCase))
+                         .ToList();
+            if (members.Count != 1)
+            {
+                throw new ReflectionException(
+                    $"Could not find {typeof(TMember)} {typeof(TInstance)}.{memberName}");
+            }
+            return members[0];
+        }
+    }
+
+    public static TMember Find<TMember>(Expression expression)
         where TMember : MemberInfo
     {
-        return memberExpression.ExtractMember<TMember>();
+        var member = expression.ExtractMember<TMember>();
+        if (member is not null) return member;
+       
+        // Build an error
+        using var text = TextBuilder.Borrow();
+        var methodCall = expression.Descendants()
+                                   .OfType<MethodCallExpression>()
+                                   .FirstOrDefault();
+        if (methodCall is not null)
+        {
+            var method = methodCall.Method;
+            // Is this a search of a Type's Members?
+            if (method.DeclaringType == typeof(Type))
+            {
+                if (method.Name.StartsWith("Get"))
+                {
+                    text.Append("Could not find ")
+                        .AppendDump(methodCall.Object)
+                        .Append("'s ")
+                        .Append(method.Name.AsSpan(3))
+                        .Write(" with ");
+
+                    var parameters = method.GetParameters();
+                    var args = methodCall.Arguments;
+                    Debug.Assert(parameters.Length == args.Count);
+                    for (var i = 0; i < parameters.Length; i++)
+                    {
+                        var p = parameters[i];
+                        var a = args[i];
+                        text.Append(p.Name)
+                            .Write(" = ");
+                        if (a is ConstantExpression ce)
+                        {
+                            text.Write(ce.Value);
+                        }
+                        else
+                        {
+                            Debugger.Break();
+                        }
+                        text.Write(" ");
+                    }
+
+                    throw new MissingMemberException(text.ToString());
+                }
+            }
+        }
+
+       
+
+        var values = expression.ExtractValues().ToList();
+        if (values.Count == 1)
+        {
+            var value = values[0];
+            var valueType = value?.GetType();
+            if (valueType is not null && valueType.IsEnum)
+            {
+                string? valueName = Enum.GetName(valueType, value!);
+                member = valueType
+                         .GetMembers(Reflect.StaticFlags)
+                         .OfType<TMember>()
+                         .FirstOrDefault(m => m.Name == valueName);
+                if (member is not null) return member;
+            }
+        }
+
+        Debugger.Break();
+        throw new MissingMemberException();
+    }
+
+    public static TMember Find<TInstance, TMember>(TInstance? instance, Expression<Action<TInstance?>> memberExpression)
+        where TMember : MemberInfo
+    {
+        return Find<TMember>(memberExpression);
+    }
+
+    public static TMember Find<TInstance, TMember>(Expression<Action<TInstance?>> memberExpression)
+        where TMember : MemberInfo
+    {
+        return Find<TMember>(memberExpression);
     }
 
     public static bool HasDefaultConstructor(this Type type, [NotNullWhen(true)] out ConstructorInfo? ctor)
@@ -77,7 +196,7 @@ public static class MemberSearch
     {
         if (argType is null)
         {
-            return paramType.CanBeNull();
+            return paramType.CanContainNull();
         }
 
         if (argType == paramType) return true;
@@ -91,6 +210,15 @@ public static class MemberSearch
                                                        params Type?[] argTypes)
     {
         return FindBestConstructor(type, flags, MemberExactness.Exact, argTypes);
+    }
+
+    public static ConstructorInfo? FindConstructor(Type type,
+        BindingFlags flags,
+        params Type[] argTypes)
+    {
+        return type.GetConstructors(flags)
+            .Where(ctor => ctor.HasParameterTypes(argTypes))
+            .OneOrDefault();
     }
 
     public static ConstructorInfo? FindBestConstructor(Type type,

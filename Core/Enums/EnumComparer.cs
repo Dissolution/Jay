@@ -6,10 +6,10 @@ public sealed class EnumComparer<TEnum> : IEqualityComparer<TEnum>, IEqualityCom
                                           IComparer<TEnum>, IComparer
     where TEnum : struct, Enum
 {
-    /// <summary>
-    /// Gets the default <see cref="EnumComparer{TEnum}"/>
-    /// </summary>
-    public static EnumComparer<TEnum> Default { get; } = new EnumComparer<TEnum>();
+    internal EnumComparer()
+    {
+        // We only want to be constructed by EnumTypeInfo<TEnum> and cached there!
+    }
 
     /// <summary>
     /// Compares two <typeparamref name="TEnum"/> values
@@ -59,6 +59,7 @@ public sealed class EnumComparer<TEnum> : IEqualityComparer<TEnum>, IEqualityCom
 
         if (y is not TEnum yEnum)
         {
+            // null sorts first
             return 1;
         }
 
@@ -86,8 +87,7 @@ public sealed class EnumComparer<TEnum> : IEqualityComparer<TEnum>, IEqualityCom
         // All non-TEnums are the same
         if (x is not TEnum xEnum)
         {
-            if (y is not TEnum) return true;
-            return false;
+            return y is not TEnum;
         }
 
         if (y is not TEnum yEnum)
@@ -97,7 +97,7 @@ public sealed class EnumComparer<TEnum> : IEqualityComparer<TEnum>, IEqualityCom
 
         return Equals(xEnum, yEnum);
     }
-
+    
     /// <summary>
     /// Gets a hashcode for an <paramref name="enum"/>
     /// </summary>
@@ -109,19 +109,19 @@ public sealed class EnumComparer<TEnum> : IEqualityComparer<TEnum>, IEqualityCom
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetHashCode(TEnum @enum)
     {
-        // Load the enum (it is a value type)
+        // Load the enum (of unknown size)
         Emit.Ldarg(nameof(@enum));
-        // Convert it to a int64 
-        Emit.Conv_I8();
+        // Convert it to uint64
+        Emit.Conv_U8();
         // Load the int32 value of 32
         Emit.Ldc_I4(32);
-        // Shift the int64 enum value right those 32 places (we want the highest 32 bits)
+        // Shift the uint64 enum value right those 32 places (we want the highest 32 bits)
         Emit.Shr();
         // Load the enum again
         Emit.Ldarg(nameof(@enum));
-        // Convert it to a int32 (which will truncate if the base type is bigger)
-        Emit.Conv_I4();
-        // XOR this int32 (lowest bits) with the previous ones (highest bits)
+        // Convert it to a uint32 (which will truncate if the base type is bigger)
+        Emit.Conv_U4();
+        // XOR these uint32 (lowest bits) with the previous ones (highest bits)
         Emit.Xor();
         // return the int32 on the stack
         return Return<int>();
@@ -129,8 +129,7 @@ public sealed class EnumComparer<TEnum> : IEqualityComparer<TEnum>, IEqualityCom
 
     int IEqualityComparer.GetHashCode(object? obj)
     {
-        if (obj is null) return 0;
-        if (obj is TEnum e) return GetHashCode(e);
-        return obj.GetHashCode();
+        if (obj is not TEnum @enum) return 0;
+        return GetHashCode(@enum);
     }
 }

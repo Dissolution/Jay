@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchTests", "BenchTests\Be
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terminal", "Terminal\Terminal.csproj", "{DBB8D733-BA88-48F1-A095-964C3800549C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geometry", "Geometry\Geometry.csproj", "{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Windows", "Core.Windows\Core.Windows.csproj", "{5D11F8BA-6C27-412C-BD31-E287B1AC8AEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{DBB8D733-BA88-48F1-A095-964C3800549C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBB8D733-BA88-48F1-A095-964C3800549C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBB8D733-BA88-48F1-A095-964C3800549C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC4ED9D3-B058-4955-BDDE-C8BE88DFDD3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D11F8BA-6C27-412C-BD31-E287B1AC8AEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D11F8BA-6C27-412C-BD31-E287B1AC8AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D11F8BA-6C27-412C-BD31-E287B1AC8AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D11F8BA-6C27-412C-BD31-E287B1AC8AEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

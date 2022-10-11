@@ -83,14 +83,14 @@ public readonly struct Box : IEquatable<Box>,
     public bool CanBe<T>()
     {
         if (_obj is T) return true;
-        if (_obj is null) return typeof(T).CanBeNull();
+        if (_obj is null) return typeof(T).CanContainNull();
         return false;
     }
 
     public bool CanBe(Type? type)
     {
         if (type is null) return _obj is null;
-        if (_obj is null) return type.CanBeNull();
+        if (_obj is null) return type.CanContainNull();
         return _objType!.Implements(type);
     }
     

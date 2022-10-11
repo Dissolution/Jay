@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Buffers;
+using System.Globalization;
+using System.Runtime.InteropServices;
 using static InlineIL.IL;
 // ReSharper disable EntityNameCapturedOnly.Global
 
@@ -6,13 +8,18 @@ namespace Jay.Text;
 
 public static class TextHelper
 {
-    private const string _digits = "0123456789";
-    private const string _upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private const string _lowerCase = "abcdefghijklmnopqrstuvwxyz";
+    internal const string DIGITS = "0123456789";
+    internal const string UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    internal const string LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
 
-    public static ReadOnlySpan<char> Digits => _digits;
-    public static ReadOnlySpan<char> UpperCase => _upperCase;
-    public static ReadOnlySpan<char> LowerCase => _lowerCase;
+    /// <summary>
+    /// The offset between an uppercase ascii letter and its lowercase equivalent
+    /// </summary>
+    internal const int UPPERCASE_OFFSET = 'a' - 'A';
+    
+    public static ReadOnlySpan<char> Digits => DIGITS;
+    public static ReadOnlySpan<char> Uppercase => UPPERCASE;
+    public static ReadOnlySpan<char> Lowercase => LOWERCASE;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static unsafe void CopyTo(char* sourcePtr, ref char destPtr, int charCount)
@@ -218,4 +225,98 @@ public static class TextHelper
     }
     #endregion
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsAsciiDigit(char c) => c is <= '9' and >= '0';
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsAsciiLower(char c) => c is <= 'z' and >= 'a';
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsAsciiUpper(char c) => c is <= 'Z' and >= 'A';
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsAscii(char c) => c <= 127 && c >= 0;
+    
+    /// <summary>
+    /// Transforms the specified characters into Uppercase, using char.ToUpper(c)
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    public static string ToUppercase(ReadOnlySpan<char> text)
+    {
+        Span<char> buffer = stackalloc char[text.Length];
+        for (var i = text.Length - 1; i >= 0; i--)
+        {
+            buffer[i] = char.ToUpper(text[i]);
+        }
+        return new string(buffer);
+    }
+
+    /// <summary>
+    /// Transforms the specified characters into Uppercase, using char.ToLower(c)
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    public static string ToLowercase(ReadOnlySpan<char> text)
+    {
+        Span<char> buffer = stackalloc char[text.Length];
+        for (var i = text.Length - 1; i >= 0; i--)
+        {
+            buffer[i] = char.ToLower(text[i]);
+        }
+        return new string(buffer);
+    }
+    
+    public static string ToTitleCase(ReadOnlySpan<char> text)
+    {
+        var str = new string(text);
+        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(str);
+    }
+    
+    [return: NotNullIfNotNull("text")]
+    public static string? ToTitleCase(string? text)
+    {
+        if (text is null) return null;
+        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text);
+    }
+
+    /// <summary>
+    /// Reverses the order of the specified characters.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    public static string ToReverse(ReadOnlySpan<char> text)
+    {
+        int end = text.Length - 1;
+        Span<char> buffer = stackalloc char[text.Length];
+        for (var i = 0; i <= end; i++)
+        {
+            buffer[i] = text[end - i];
+        }
+        return new string(buffer);
+    }
+
+    public static string Refine(string? text) => Refine(text.AsSpan());
+
+    public static string Refine(params char[]? chars) => Refine(chars.AsSpan());
+
+    public static string Refine(ReadOnlySpan<char> text)
+    {
+        Span<char> buffer = stackalloc char[text.Length];
+        int b = 0;
+        char ch;
+        for (var i = 0; i < text.Length; i++)
+        {
+            ch = text[i];
+            if (ch is >= '0' and <= '9' || ch is >= 'A' and <= 'Z')
+            {
+                buffer[b++] = ch;
+            }
+            else if (ch is >= 'a' and <= 'z')
+            {
+                buffer[b++] = (char)(ch - UPPERCASE_OFFSET);
+            }
+        }
+        return new string(buffer.Slice(0, b));
+    }
 }

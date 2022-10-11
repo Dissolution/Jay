@@ -2,6 +2,8 @@
 
 namespace Jay.Dumping;
 
+
+
 public static partial class Dumper
 {
     private static void DumpArrayTo(Array? array, TextBuilder textBuilder)

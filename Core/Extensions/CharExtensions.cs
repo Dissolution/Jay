@@ -10,9 +10,13 @@ public static class CharExtensions
     /// </summary>
     /// <param name="ch"></param>
     /// <returns></returns>
-    public static ReadOnlySpan<char> AsReadOnlySpan(ref this char ch)
+    /// <remarks>
+    /// We use `ref` (could also use `in`) so that we can capture a pointer to the char.
+    /// If we do not, the below doesn't work.
+    /// </remarks>
+    public static ReadOnlySpan<char> AsReadOnlySpan(in this char ch)
     {
-        // Tested fastest
+        // Tested as the fastest way
         unsafe
         {
             return new ReadOnlySpan<char>(Danger.InToVoidPointer(in ch), 1);

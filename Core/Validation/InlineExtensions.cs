@@ -28,13 +28,16 @@ public static class InlineExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNull]
     public static T ThrowIfNull<T>([NotNull] this T? value, 
+        string? message = null,
         [CallerArgumentExpression("value")] string? valueName = null)
     {
         if (value is null)
         {
+            if (string.IsNullOrWhiteSpace(message))
+                message = Dumper.Dump($"{typeof(T)} value is null");
             throw new ArgumentNullException(
                 valueName,
-                Dumper.Dump($"{typeof(T)} value is null"));
+                message);
         }
         return value;
     }

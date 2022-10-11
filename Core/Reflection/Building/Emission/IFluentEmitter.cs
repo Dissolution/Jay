@@ -3,9 +3,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using Jay.Dumping;
-using Jay.Reflection.Caching;
 using Jay.Reflection.Exceptions;
-using Jay.Reflection.Extensions;
 using Jay.Reflection.Internal;
 using Jay.Validation;
 
@@ -145,9 +143,15 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             return Ldstr(str);
         if (value is Type type)
             return LoadType(type);
+        if (value is LocalBuilder local)
+            return Ldloc(local);
 
         throw new NotImplementedException();
     }
+
+    TEmitter LoadArg(int index) => Ldarg(index);
+
+    TEmitter LoadArg(ParameterInfo parameter) => Ldarg(parameter.Position);
 
     TEmitter LoadType(Type type)
     {
@@ -775,6 +779,62 @@ public interface IFluentEmitter<out TEmitter> : IOpEmitter<TEmitter>
             return (TEmitter)this;
         }
         
-        
+        /// <remarks> Does not account for null! </remarks>
+        TEmitter EmitCompareEqual(Type primaryType, Type compareType)
+        {
+            // We can use Emit.Ceq if the two are the same and they are unmanaged
+            if (primaryType.IsUnmanaged() && primaryType == compareType)
+            {
+                return Ceq();
+            }
+
+            // Look for primary.Equals(compare)
+            var equalsMethod = primaryType.GetMethod("Equals",
+                BindingFlags.Public | BindingFlags.Instance,
+                new Type[1] { compareType });
+            if (equalsMethod is not null)
+            {
+                return Call(equalsMethod);
+            }
+
+            // Look for ==
+            equalsMethod = primaryType.GetMethod("op_Equality",
+                BindingFlags.Public | BindingFlags.Static,
+                new Type[2] { primaryType, compareType });
+            if (equalsMethod is not null)
+            {
+                return Call(equalsMethod);
+            }
+            
+            // Do we have any other Equals(?) methods (other than the default Equals(obj?))
+            // that can be fulfilled by a compareType?
+            equalsMethod = primaryType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(method => method.Name == nameof(Equals))
+                .Where(method => method.GetParameters().TryGetItem(0, out var param) &&
+                                 compareType.Implements(param.ParameterType))
+                .OneOrDefault();
+            if (equalsMethod is not null)
+            {
+                return Cast(compareType, equalsMethod.GetParameterTypes()[0])
+                    .Call(equalsMethod);
+            }
+
+            // Fallback to Ceq, which is approx ReferenceEquals
+            return Ceq();
+        }
+
+        TEmitter EmitDefaultEqualityComparerEquals(Type valueType)
+        {
+            var equalityComparer = typeof(EqualityComparer<>).MakeGenericType(valueType);
+            
+            var getDefaultComparerMethod = equalityComparer.GetMethod("get_Default", Reflect.InstanceFlags)
+                .ThrowIfNull();
+            var equalsMethod = equalityComparer.GetMethod("Equals",
+                    BindingFlags.Public | BindingFlags.Instance,
+                    new Type[2] { valueType, valueType })
+                .ThrowIfNull();
+            return Call(getDefaultComparerMethod)
+                .Call(equalsMethod);
+        }
     }
 }

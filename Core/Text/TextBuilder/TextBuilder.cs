@@ -10,14 +10,9 @@ using Jay.Validation;
 
 namespace Jay.Text;
 
-public class TextBuilder : IList<char>, IReadOnlyList<char>,
-                           ICollection<char>, IReadOnlyCollection<char>,
-                           IEnumerable<char>,
-                           IDisposable
+public partial class TextBuilder
 {
     internal const int MinLength = 1024;
-
-    internal static readonly string NewLine = Environment.NewLine;
 
     /// <summary>
     /// Builds a <see cref="string"/> with a <see cref="TextBuilder"/> instance delegate
@@ -47,9 +42,16 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     public static TextBuilder Borrow() => new TextBuilder();
     public static TextBuilder Borrow(int minCapacity) => new TextBuilder(minCapacity);
 
+}
 
+public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
+                           ICollection<char>, IReadOnlyCollection<char>,
+                           IEnumerable<char>,
+                           IDisposable
+{
     protected char[]? _charArray;
     protected int _length;
+    protected string _newLine;
 
     /// <summary>
     /// Gets the <see cref="Span{T}"/> of <see cref="char"/>s that have been written.
@@ -129,12 +131,14 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     {
         _charArray = ArrayPool<char>.Shared.Rent(MinLength);
         _length = 0;
+        _newLine = Environment.NewLine;
     }
 
     private TextBuilder(int minCapacity)
     {
         _charArray = ArrayPool<char>.Shared.Rent(Math.Max(minCapacity, MinLength));
         _length = 0;
+        _newLine = Environment.NewLine;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -347,7 +351,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteLine()
     {
-        ReadOnlySpan<char> newLine = NewLine;
+        ReadOnlySpan<char> newLine = _newLine;
         if (TextHelper.TryCopyTo(newLine, Available))
         {
             _length += newLine.Length;
@@ -747,13 +751,25 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, ReadOnlySpan<T> values)
     {
-        if (values.Length >= 1)
+        switch (values.Length)
         {
-            Write<T>(values[0]);
-            for (var i = 1; i < values.Length; i++)
+            case 0:
+                break;
+            case 1:
             {
-                Write(delimiter);
-                Write<T>(values[i]);
+                Write<T>(values[0]);
+                break;
+            }
+            default:
+            {
+                Write<T>(values[0]);
+                for (var i = 1; i < values.Length; i++)
+                {
+                    Write(delimiter);
+                    Write<T>(values[i]);
+                }
+
+                break;
             }
         }
         return this;
@@ -761,13 +777,28 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, params T[]? values)
     {
-        if (values is { Length: >= 1 })
+        if (values is not null)
         {
-            Write<T>(values[0]);
-            for (var i = 1; i < values.Length; i++)
+            switch (values.Length)
             {
-                Write(delimiter);
-                Write<T>(values[i]);
+                case 0:
+                    break;
+                case 1:
+                {
+                    Write<T>(values[0]);
+                    break;
+                }
+                default:
+                {
+                    Write<T>(values[0]);
+                    for (var i = 1; i < values.Length; i++)
+                    {
+                        Write(delimiter);
+                        Write<T>(values[i]);
+                    }
+
+                    break;
+                }
             }
         }
         return this;
@@ -792,13 +823,23 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, ReadOnlySpan<T> values, Action<TextBuilder, T> appendValue)
     {
-        if (values.Length >= 1)
+        switch (values.Length)
         {
-            appendValue(this, values[0]);
-            for (var i = 1; i < values.Length; i++)
+            case 0:
+                break;
+            case 1:
+                appendValue(this, values[0]);
+                break;
+            default:
             {
-                Write(delimiter);
-                appendValue(this, values[i]);
+                appendValue(this, values[0]);
+                for (var i = 1; i < values.Length; i++)
+                {
+                    Write(delimiter);
+                    appendValue(this, values[i]);
+                }
+
+                break;
             }
         }
         return this;
@@ -806,13 +847,23 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, T[] values, Action<TextBuilder, T> appendValue)
     {
-        if (values.Length >= 1)
+        switch (values.Length)
         {
-            appendValue(this, values[0]);
-            for (var i = 1; i < values.Length; i++)
+            case 0:
+                break;
+            case 1:
+                appendValue(this, values[0]);
+                break;
+            default:
             {
-                Write(delimiter);
-                appendValue(this, values[i]);
+                appendValue(this, values[0]);
+                for (var i = 1; i < values.Length; i++)
+                {
+                    Write(delimiter);
+                    appendValue(this, values[i]);
+                }
+
+                break;
             }
         }
         return this;
@@ -835,17 +886,33 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
 
-    public TextBuilder AppendNewLine() => Append(Environment.NewLine);
+    public TextBuilder AppendNewLine()
+    {
+        return Append(_newLine);
+    }
 
     public TextBuilder AppendNewLines(int count)
     {
-        ReadOnlySpan<char> nl = Environment.NewLine;
         for (var i = 0; i < count; i++)
         {
-            Write(nl);
+            Write(_newLine);
         }
         return this;
     }
+    
+    #region Indenting
+
+    public TextBuilder Indent(ReadOnlySpan<char> indent,
+        Action<TextBuilder> indentedText)
+    {
+        var oldIndent = _newLine;
+        _newLine = $"{_newLine}{indent}";
+        indentedText(this);
+        _newLine = oldIndent;
+        return this;
+    }
+    
+    #endregion
 
     public TextBuilder Insert(int index, char ch)
     {
@@ -1122,7 +1189,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
             for (var i = len - 1; i > 0; i--)
             {
                 index -= measurements[i];
-                Insert(index, NewLine);
+                Insert(index, _newLine);
             }
         }
     }
@@ -1146,7 +1213,7 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
             for (var i = writeLengths.Count - 1; i > 0; i--)
             {
                 index -= writeLengths[i];
-                Insert(index, NewLine);
+                Insert(index, _newLine);
             }
         }
     }
@@ -1263,9 +1330,16 @@ public class TextBuilder : IList<char>, IReadOnlyList<char>,
     {
         return new string(Written[range]);
     }
-
+    
     public override string ToString()
     {
         return new string(_charArray!, 0, _length);
+    }
+
+    public string ToStringAndClear()
+    {
+        int len = _length;
+        _length = 0;
+        return new string(_charArray!, 0, len);
     }
 }

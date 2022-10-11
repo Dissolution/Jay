@@ -21,6 +21,8 @@ public enum Targets
     Binary = 2,
 }
 
+//https://stackoverflow.com/questions/11113259/how-to-call-custom-operator-with-reflection
+
 /// <see cref="https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/"/>
 /// <see cref="https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/operator-overloads"/>
 public sealed class Operator : IEquatable<Operator>, IComparable<Operator>

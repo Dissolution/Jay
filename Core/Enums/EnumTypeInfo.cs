@@ -1,77 +1,34 @@
-﻿using System.Reflection;
-using Jay.Collections;
+﻿using System.Diagnostics;
+using System.Reflection;
 
 namespace Jay.Enums;
 
-public static class EnumInfo
-{
-    private static readonly ConcurrentTypeDictionary<EnumTypeInfo> _cache;
-
-    static EnumInfo()
-    {
-        _cache = new ConcurrentTypeDictionary<EnumTypeInfo>();
-    }
-
-    public static EnumTypeInfo<TEnum> For<TEnum>()
-        where TEnum : struct, Enum
-    {
-        return (_cache.GetOrAdd<TEnum>(_ => new EnumTypeInfo<TEnum>()) as EnumTypeInfo<TEnum>)!;
-    }
-
-    public static EnumMemberInfo<TEnum> For<TEnum>(TEnum @enum)
-        where TEnum : struct, Enum
-    {
-        return For<TEnum>().GetMemberInfo(@enum);
-    }
-}
-
-
 public abstract class EnumTypeInfo
 {
-    private readonly Attribute[] _attributes;
+    protected readonly Type _enumType;
+    protected readonly Attribute[] _attributes;
+    protected readonly bool _hasFlags;
+    protected int _memberCount = 0;
+    protected FieldInfo[] _enumFields = Array.Empty<FieldInfo>();
+    protected string[] _names = Array.Empty<string>();
+    protected ulong[] _values = Array.Empty<ulong>();
 
-    public Type EnumType { get; }
+    public Type EnumType => _enumType;
+    public string Name => _enumType.Name;
     public IReadOnlyList<Attribute> Attributes => _attributes;
-    public string Name { get; }
+    public bool HasFlags => _hasFlags;
+    public int MemberCount => _memberCount;
+    public IReadOnlyList<string> Names => _names;
+
+    internal IReadOnlyList<FieldInfo> EnumFields => _enumFields;
+    internal IReadOnlyList<ulong> Values => _values;
 
     protected EnumTypeInfo(Type enumType)
     {
-        ArgumentNullException.ThrowIfNull(enumType);
-        if (!enumType.IsEnum || !enumType.IsValueType)
-            throw new ArgumentException("You must specify a valid enum type", nameof(enumType));
-        this.EnumType = enumType;
-        _attributes = Attribute.GetCustomAttributes(EnumType, true);
-        this.Name = EnumType.Name;
-    }
-
-    public override string ToString()
-    {
-        return $"typeof({EnumType.Name}";
-    }
-}
-
-public class EnumTypeInfo<TEnum> : EnumTypeInfo
-    where TEnum : struct, Enum
-{
-    private readonly Dictionary<TEnum, EnumMemberInfo<TEnum>> _enumMemberInfos;
-    
-    public IReadOnlyCollection<TEnum> Members => _enumMemberInfos.Keys;
-    
-    protected internal EnumTypeInfo()
-        : base(typeof(TEnum))
-    {
-        var fields = EnumType.GetFields(BindingFlags.Public | BindingFlags.Static);
-        var infos = new Dictionary<TEnum, EnumMemberInfo<TEnum>>(fields.Length, EnumComparer<TEnum>.Default);
-        foreach (var field in fields)
-        {
-            var info = new EnumMemberInfo<TEnum>(field);
-            infos.Add(info.Enum, info);
-        }
-        _enumMemberInfos = infos;
-    }
-
-    public EnumMemberInfo<TEnum> GetMemberInfo(TEnum @enum)
-    {
-        return _enumMemberInfos.GetOrAdd(@enum, e => new EnumMemberInfo<TEnum>(e));
+        Debug.Assert(enumType.IsEnum);
+        Debug.Assert(enumType.IsValueType);
+        _enumType = enumType;
+        _attributes = Attribute.GetCustomAttributes(enumType);
+        _hasFlags = _attributes.OfType<FlagsAttribute>().Any();
     }
 }

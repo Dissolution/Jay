@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using Jay.Collections;
 using Jay.Reflection;
-using Jay.Reflection.Extensions;
 using Jay.Validation;
 
 namespace Jay.Comparision;
@@ -65,7 +64,7 @@ public static class ComparerCache
             .GetProperty(nameof(EqualityComparer<byte>.Default),
                 BindingFlags.Public | BindingFlags.Static)
             .ThrowIfNull($"Cannot find EqualityComparer<{t}>.Default")
-            .GetStaticValue<IEqualityComparer>()
+            .GetValue<Types.Static, IEqualityComparer>(ref Types.Static.Instance)
             .ThrowIfNull($"Cannot cast EqualityComparer<{t}> to IEqualityComparer"));
     }
 
@@ -75,7 +74,7 @@ public static class ComparerCache
             .GetProperty(nameof(Comparer<byte>.Default),
                 BindingFlags.Public | BindingFlags.Static)
             .ThrowIfNull($"Cannot find the Comparer<{t}>.Default property")
-            .GetStaticValue<IComparer>()
+            .GetValue<Types.Static, IComparer>(ref Types.Static.Instance)
             .ThrowIfNull($"Cannot cast Comparer<{t}> to IComparer"));
     }
 

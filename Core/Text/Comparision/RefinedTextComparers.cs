@@ -7,34 +7,6 @@ public sealed class RefinedTextComparers : TextComparers
 {
     public static RefinedTextComparers Instance { get; } = new RefinedTextComparers();
 
-    private const int OFFSET = 'a' - 'A';
-
-    public static string Refine(string? text) => Refine(text.AsSpan());
-
-    public static string Refine(params char[]? chars) => Refine(chars.AsSpan());
-
-    public static string Refine(ReadOnlySpan<char> text)
-    {
-        Span<char> buffer = stackalloc char[text.Length];
-        int b = 0;
-        char ch;
-        for (var i = 0; i < text.Length; i++)
-        {
-            ch = text[i];
-            if ((ch >= '0' && ch <= '9') || 
-                (ch >= 'A' && ch <= 'Z'))
-            {
-                buffer[b++] = ch;
-            }
-            else if (ch >= 'a' && ch <= 'z')
-            {
-                buffer[b++] = (char)(ch - OFFSET);
-            }
-        }
-        return new string(buffer.Slice(0, b));
-    }
-
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryRefine(ref char ch)
     {
@@ -44,7 +16,7 @@ public sealed class RefinedTextComparers : TextComparers
             case >= 'A' and <= 'Z':
                 return true;
             case >= 'a' and <= 'z':
-                ch = (char)(ch - OFFSET);
+                ch = (char)(ch - TextHelper.UPPERCASE_OFFSET);
                 return true;
             default:
                 return false;
@@ -64,7 +36,7 @@ public sealed class RefinedTextComparers : TextComparers
                 case >= 'A' and <= 'Z':
                     return true;
                 case >= 'a' and <= 'z':
-                    refinedChar = (char)(refinedChar - OFFSET);
+                    refinedChar = (char)(refinedChar - TextHelper.UPPERCASE_OFFSET);
                     return true;
             }
         }
@@ -98,7 +70,7 @@ public sealed class RefinedTextComparers : TextComparers
                 hasher.AddHash((int)c);
             }
         }
-        return hasher.ToHashCode();
+        return hasher.CreateHashCode();
     }
 
     public override int Compare(ReadOnlySpan<char> xText, ReadOnlySpan<char> yText)
