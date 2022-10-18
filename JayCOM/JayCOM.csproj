@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <LangVersion>preview</LangVersion>
+        <LangVersion>11</LangVersion>
         <EnablePreviewFeatures>true</EnablePreviewFeatures>
         <WarningLevel>preview</WarningLevel>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

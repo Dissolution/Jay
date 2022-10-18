@@ -10,7 +10,7 @@ public interface IRandomizer
     /// <summary>
     /// Get an instance of this <see cref="IRandomizer"/>
     /// </summary>
-    static abstract IRandomizer Instance { get; }
+    abstract static IRandomizer Instance { get; }
     
     /// <summary>
     /// Does this <see cref="IRandomizer"/> produce high-resolution (more-random) results?

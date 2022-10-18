@@ -1,4 +1,6 @@
-﻿namespace Jay.Geometry;
+﻿using System.Numerics;
+
+namespace Jay.Geometry;
 
 public readonly struct Rectangle<T> : IEquatable<Rectangle<T>>
     where T : INumber<T>, IMinMaxValue<T>

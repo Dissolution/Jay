@@ -32,17 +32,19 @@ using Jay.BenchTests.Text;
 
 #else
 using var text = TextBuilder.Borrow();
+//
+// var enumInfo = EnumInfo.For<BindingFlags>();
+// var dict = new Dictionary<BindingFlags, string>();
+// for (var i = 0; i < enumInfo.MemberCount; i++)
+// {
+//     dict[enumInfo.Members[i]] = enumInfo.Names[i];
+// }
+//
+// Dictionary<BindingFlags, string> clone = Cloner.DeepClone(dict);
+// var dump = Dumper.Dump(clone);
+//
 
-var enumInfo = EnumInfo.For<BindingFlags>();
-var dict = new Dictionary<BindingFlags, string>();
-for (var i = 0; i < enumInfo.MemberCount; i++)
-{
-    dict[enumInfo.Members[i]] = enumInfo.Names[i];
-}
-
-Dictionary<BindingFlags, string> clone = Cloner.DeepClone(dict);
-var dump = Dumper.Dump(clone);
-
+new MontyHall().Test();
 
 
 Debugger.Break();

@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using Jay.Enums;
 using Jay.Reflection;

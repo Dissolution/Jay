@@ -1,5 +1,6 @@
 ﻿using InlineIL;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Jay.Reflection;
 using static InlineIL.IL;
@@ -11,7 +12,7 @@ namespace Jay;
 
 
 public ref struct BitRef<T>
-    where T : unmanaged, INumber<T>, IShiftOperators<T, T>, IBitwiseOperators<T, T, T>
+    where T : unmanaged, INumber<T>, IShiftOperators<T, int, T>, IBitwiseOperators<T, T, T>
 {
     private ref T _value;
 
