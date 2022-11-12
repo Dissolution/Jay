@@ -1,4 +1,4 @@
-using System.Buffers;
+﻿using System.Buffers;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -8,8 +8,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using ConsoleSandbox;
+using Jay;
 using Jay.Collections;
 using Jay.Reflection;
 using Jay.Reflection.Building;
@@ -46,25 +48,30 @@ using var text = TextBuilder.Borrow();
 
 var str = "This is a test of an advanced encoding system";
 
-var bytes = Encoding.ASCII.GetBytes(Dumb.Lorem);
-var output = Dumb.Compress(bytes);
-var encoded = Dumb.Encode(bytes);
-var outputStr = Encoding.UTF8.GetString(output);
+// var cdmstart = "̀";
+// var cdmstartbytes = Encoding.UTF8.GetBytes(cdmstart);
+//
+// var oneway = ((cdmstartbytes[0] << 8) | cdmstartbytes[1]);
+// var theother = ((cdmstartbytes[1] << 8) | cdmstartbytes[0]);
+//
+// var cdmend = "ͯ";
+// var cdmendbytes = Encoding.UTF8.GetBytes(cdmend);
+//
+// var thisway = ((cdmendbytes[0] << 8) | cdmendbytes[1]);
+// var thatway = ((cdmendbytes[1] << 8) | cdmendbytes[0]);
+//
+// Debugger.Break();
+//
+
+
+var bytes = Encoding.ASCII.GetBytes(str);
+var encoded = CDM.Encode(bytes);
 var encodedStr = Encoding.UTF8.GetString(encoded);
 
-Debug.Assert(outputStr == encodedStr);
+var decoded = CDM.Decode(encoded);
+var decodedStr = Encoding.ASCII.GetString(decoded);
 
-var input = Dumb.Decompress(output);
-var inputStr = Encoding.ASCII.GetString(input);
-
-Debug.Assert(inputStr == str);
-
-var cdmText = string.Concat(str.Prepend('E').Select(ch => Dumb.ConvertToCDM(ch)));
-var asciiText = string.Concat(cdmText.Skip(1).Select(ch => Dumb.ConvertToAscii(ch)));
-
-Debug.Assert(asciiText == str);
-
-var eq = outputStr == cdmText;
+Debug.Assert(decodedStr == str);
 
 Debugger.Break();
 
@@ -91,7 +98,7 @@ Debugger.Break();
 // var str = backingInstance.ToString();
 
 
-var textString = str.ToString();
+string? textString = str.ToString();
 Debugger.Break();
 Console.WriteLine(textString);
 #endif
@@ -103,270 +110,151 @@ return 0;
 
 namespace ConsoleSandbox
 {
-    public class Dumb
+    /// <summary>
+    /// Combining Diacritical Marks
+    /// </summary>
+    /// <see href="https://www.reddit.com/r/ProgrammerHumor/comments/yqof9f/the_most_upvoted_comment_picks_the_next_line_of/#ivrd9ur"/>
+    /// <see href="https://unicode-table.com/en/blocks/combining-diacritical-marks/"/>
+    /// <see href="https://github.com/DaCoolOne/DumbIdeas/blob/main/reddit_ph_compressor/compress.py"/>
+    public static class CDM
     {
-        public const string Lorem =
-            @"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et bibendum erat, ut pellentesque velit. Duis pretium blandit velit, a finibus neque venenatis nec. Suspendisse convallis dictum neque at bibendum. Morbi porta ipsum eu enim sodales sagittis. Quisque et nibh blandit, semper velit sed, finibus felis. Suspendisse ut leo consectetur, lacinia magna a, condimentum orci. Curabitur id molestie nisi. Etiam eget nunc sodales, eleifend leo sit amet, dictum nisl. Fusce eleifend ligula libero, nec posuere diam consequat a. Nulla facilisi. Maecenas auctor erat quis arcu molestie, non sodales orci tincidunt.
+        /* ASCII is usually 0-127
+         * But we want to skip all the control characters at the beginning
+         * and the `delete` at the end
+         */
+        private const byte ASCII_START = 0x0020; // space
 
-In maximus rutrum diam at imperdiet. Quisque id lacus vulputate, porta lectus quis, convallis turpis. Proin aliquet rutrum arcu quis auctor. Interdum et malesuada fames ac ante ipsum primis in faucibus. Aenean luctus interdum elit, ut varius nibh feugiat in. Etiam a enim congue, tempor justo sit amet, porta felis. Nulla semper nunc sapien, sed interdum elit lacinia eleifend. Maecenas id semper dolor. Etiam suscipit sem id malesuada tristique. Aenean feugiat ultrices ligula, non elementum nunc feugiat vulputate. Nulla ipsum nulla, iaculis sit amet ornare in, semper finibus orci. Proin urna nibh, iaculis vitae enim in, lacinia auctor est. Vestibulum interdum rutrum urna, nec gravida nulla dictum ac. Etiam ultricies quam eget mi rutrum dictum. Sed eleifend ac orci at maximus.
+        private const byte ASCII_END = 0x007E; // tilde
+        // 95 total possible chars
 
-Nullam rutrum quam enim, ac ullamcorper augue vestibulum sed. Nunc sollicitudin ligula a hendrerit egestas. In scelerisque tellus augue, et condimentum mauris finibus eget. Donec vitae sapien id dolor ultricies tempor dictum id mauris. Integer rutrum est vel velit tempor, vel tempor mi imperdiet. Proin pharetra urna sit amet purus sollicitudin rutrum. Etiam congue sem sed massa pretium dapibus. Maecenas tristique a ex in aliquet. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Curabitur ligula ligula, efficitur sed pulvinar quis, rutrum sed enim.
+        // Combining Diacritical Marks exist in this UTF8 code block:
+        private static readonly ushort CDM_START = 0b_00000011_00000000;
 
-Praesent tristique nibh et tellus volutpat rutrum. Pellentesque rhoncus hendrerit elit ut varius. Morbi hendrerit tortor ut massa scelerisque, pulvinar pharetra metus dictum. Integer gravida hendrerit leo. Phasellus sem erat, fringilla ut eros ut, fringilla rhoncus enim. Nulla maximus bibendum mollis. Donec blandit leo at mollis hendrerit. Donec cursus neque sed eros fringilla maximus. Donec a sem et felis sollicitudin blandit. Aenean dignissim sem a nulla laoreet porttitor.
+        private static readonly ushort CDM_END = 0b_00000011_01101111;
 
-Ut convallis tristique lacus, sed sagittis augue iaculis sed. In congue eleifend rutrum. Aenean sit amet enim lacinia, aliquam metus vel, varius quam. Nunc in dapibus arcu, gravida pharetra sapien. Aenean pellentesque nec ante efficitur mattis. Interdum et malesuada fames ac ante ipsum primis in faucibus. In finibus eros ac mi volutpat commodo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nisl dui, ullamcorper vel elementum quis, tincidunt eget turpis. Sed et turpis gravida, imperdiet magna nec, ultrices arcu. Cras ac odio non felis bibendum facilisis non in dui.";
-        
-        
-        // https://unicode-table.com/en/blocks/combining-diacritical-marks/
-        private const char cdmStart = (char)0b_00000011_00000000;
-        private const char cdmEnd = (char)0b_00000011_01101111;
+        // 112 total possible chars
+        // We also need a seed ASCII char, something all the CDMs attach to
+        private const byte SEED = (byte)'~';
 
-        private static byte[] cdmStartBytes = Encoding.UTF8.GetBytes(new char[1] { cdmStart });
-        private static byte[] cdmEndBytes = Encoding.UTF8.GetBytes(new char[1] { cdmEnd });
 
-        private const char asciiStart = (char)0b00100000;
-        private const char asciiEnd = (char)0b01111110;
+        private static readonly byte[] _specialAsciiChars = { (byte)'\t', (byte)'\n', (byte)'\r' };
 
-        static Dumb()
-        {
-            int len = (cdmEnd - cdmStart) + 1;
-            Debug.Assert(len == 112);
-
-            len = (asciiEnd - asciiStart) + 1;
-            Debug.Assert(len == 95);
-            //
-            // var sStrs = cdmStartBytes.Select(b => Convert.ToString(b, 2)).ToList();
-            // var eStrs = cdmEndBytes.Select(b => Convert.ToString(b, 2)).ToList();
-            //
-            // Debugger.Break();
-        }
+        private static ReadOnlySpan<byte> SpecialAsciiChars => _specialAsciiChars;
 
         public static byte[] Encode(ReadOnlySpan<byte> asciiBytes)
         {
             var count = asciiBytes.Length;
-            
+
+            // Seed, plus two UTF8 bytes per ASCII byte
             byte[] output = new byte[1 + (count * 2)];
-            output[0] = (byte)'E';    // seed char
+            output[0] = SEED;
             int o = 1;
 
             for (var i = 0; i < count; i++)
             {
                 byte ch = asciiBytes[i];
-                
-                // Special handling for certain control chars
-                if (ch == '\t')
+
+                // Outside normal?
+                if (ch < ASCII_START || ch > ASCII_END)
                 {
-                    ch = asciiEnd + 1;
-                }
-                else if (ch == '\n')
-                {
-                    ch = asciiEnd + 2;
-                }
-                else if (ch == '\r')
-                {
-                    ch = asciiEnd + 3;
-                }
-                else if (ch < asciiStart || ch > asciiEnd)
-                {
-                    throw new ArgumentException($"The char '{(char)ch}' is not supported", nameof(asciiBytes));
+                    // Check special handling
+                    int j = SpecialAsciiChars.IndexOf(ch);
+                    // If we found one, add it as an offset to ASCII_END (which will easily fit in CDM's total size)
+                    if (j >= 0)
+                    {
+                        ch = (byte)(ASCII_END + j +
+                            1); // Has to be +1 or the first special char will be at ASCII_END, an overlap
+                    }
+                    else // No special handler, fail
+                    {
+                        throw new ArgumentException($"The char '{(char)ch}' is not supported", nameof(asciiBytes));
+                    }
                 }
 
                 // floor the ascii char to 0-94 (rather than 32-126)
-                ch -= 32;
+                ch -= ASCII_START;
 
                 // first UTF8 byte
                 byte first = (byte)(((ch >> 6) & 0b00000001) | 0b11001100);
                 output[o++] = first;
+
                 // second UTF8 byte
                 byte second = (byte)((ch & 0b00111111) | 0b10000000);
                 output[o++] = second;
-                
-                var lh = Encoding.UTF8.GetString(new byte[2] { first, second });
-                Debug.Assert(lh.Length == 1);
-                Debug.Assert(lh[0] is >= cdmStart and <= cdmEnd);
-
-                //Debugger.Break();
             }
 
             // fin
             Debug.Assert(o == output.Length);
             return output;
         }
-        
-        
-        
-        
-        
-        public static char ConvertToCDM(char asciiChar)
+
+        [DoesNotReturn]
+        private static void ThrowDecodeException(
+            string message,
+            ReadOnlySpan<byte> utf8Bytes,
+            [CallerArgumentExpression(nameof(utf8Bytes))]
+            string? bytesName = null)
         {
-            if (!TryConvertToCDM(asciiChar, out var cdmChar))
-                throw new InvalidOperationException();
-            return cdmChar;
+            string utf8Text = Encoding.UTF8.GetString(utf8Bytes);
+            throw new ArgumentException($"The given UTF8 text \"{utf8Text}\" cannot be decoded: {message}", bytesName);
         }
 
-        // public static byte[] ConvertToCDMBytes(byte asciiChar)
-        // {
-        //     if (asciiChar == '\t') // 0x0009
-        //     {
-        //
-        //
-        //         cdmChar = (char)(asciiEnd + 1 + cdmStart);
-        //     }
-        //     else if (asciiChar == '\n') // 0x000A
-        //     {
-        //         cdmChar = (char)(asciiEnd + 2 + cdmStart);
-        //     }
-        //     else if (asciiChar == '\r') // 0x000D
-        //     {
-        //         cdmChar = (char)(asciiEnd + 3 + cdmStart);
-        //     }
-        //     else if (asciiChar >= asciiStart && asciiChar <= asciiEnd)
-        //     {
-        //         cdmChar = (char)((asciiChar - asciiStart) + cdmStart);
-        //     }
-        //     else
-        //     {
-        //         cdmChar = default;
-        //         return false;
-        //     }
-        //
-        //     return true;
-        // }
-
-        public static bool TryConvertToCDM(char asciiChar, out char cdmChar)
+        public static byte[] Decode(ReadOnlySpan<byte> utf8Bytes)
         {
-            if (asciiChar == '\t') // 0x0009
-            {
-                cdmChar = (char)(asciiEnd + 1 + cdmStart);
-            }
-            else if (asciiChar == '\n') // 0x000A
-            {
-                cdmChar = (char)(asciiEnd + 2 + cdmStart);
-            }
-            else if (asciiChar == '\r') // 0x000D
-            {
-                cdmChar = (char)(asciiEnd + 3 + cdmStart);
-            }
-            else if (asciiChar >= asciiStart && asciiChar <= asciiEnd)
-            {
-                cdmChar = (char)((asciiChar - asciiStart) + cdmStart);
-            }
-            else
-            {
-                cdmChar = default;
-                return false;
-            }
+            int len = utf8Bytes.Length;
+            if (len == 0)
+                ThrowDecodeException("You must pass at least one byte", utf8Bytes);
+            if (utf8Bytes[0] != SEED)
+                ThrowDecodeException($"Bad seed '{utf8Bytes[0]}'", utf8Bytes);
+            int u = 1;
 
-            return true;
-        }
+            // output is len - 1 (for seed), / 2 (two utf8 bytes per ascii byte)
+            int outputLen = len - 1;
+            if (outputLen % 2 != 0)
+                ThrowDecodeException("Incorrect byte pairing", utf8Bytes);
+            outputLen /= 2;
 
-        public static char ConvertToAscii(char cdmChar)
-        {
-            if (!TryConvertToAscii(cdmChar, out var asciiChar))
-                throw new InvalidOperationException();
-            return asciiChar;
-        }
-
-        public static bool TryConvertToAscii(char cdmChar, out char asciiChar)
-        {
-            if (cdmChar >= cdmStart && cdmChar <= cdmEnd)
+            byte[] asciiBytes = new byte[outputLen];
+            int a = 0;
+            while (a < outputLen)
             {
-                asciiChar = (char)((cdmChar - cdmStart) + asciiStart);
-                if (asciiChar >= asciiStart && asciiChar <= asciiEnd)
-                    return true;
-                if (asciiChar == asciiEnd + 1)
+                byte firstUtf8Byte = utf8Bytes[u];
+                byte secondUtf8Byte = utf8Bytes[u + 1];
+
+                byte asciiByte = (byte)(((firstUtf8Byte << 6) & 0b01000000) | (secondUtf8Byte & 0b00111111));
+
+                // Have to get it back to between ASCII_START and ASCII_END
+                asciiByte += ASCII_START;
+
+                // Might be a special char?
+                if (asciiByte > ASCII_END)
                 {
-                    asciiChar = '\t';
-                    return true;
+                    int offset = asciiByte - ASCII_END - 1; // remove the 1-base we added originally
+                    if (offset >= 0 && offset < SpecialAsciiChars.Length)
+                    {
+                        asciiByte = SpecialAsciiChars[offset];
+                    }
+                    else
+                    {
+                        string utf8 = Encoding.UTF8.GetString(new byte[2] { firstUtf8Byte, secondUtf8Byte });
+                        ThrowDecodeException($"Invalid UTF8 char '{utf8}'", utf8Bytes);
+                    }
                 }
-                if (asciiChar == asciiEnd + 2)
-                {
-                    asciiChar = '\n';
-                    return true;
-                }
-                if (asciiChar == asciiEnd + 3)
-                {
-                    asciiChar = '\r';
-                    return true;
-                }
+
+                // We have a valid ascii char
+                asciiBytes[a] = asciiByte;
+
+                a += 1; // Next ascii char (1 byte)
+                u += 2; // Next utf8 char (2 bytes)
             }
 
-            asciiChar = default;
-            return false;
+            // fin
+            Debug.Assert(a == ((len - 1) / 2));
+            Debug.Assert(u == utf8Bytes.Length);
+            return asciiBytes;
         }
 
-
-
-        //https: //github.com/DaCoolOne/DumbIdeas/blob/main/reddit_ph_compressor/compress.py
-        //https://www.reddit.com/r/ProgrammerHumor/comments/yqof9f/the_most_upvoted_comment_picks_the_next_line_of/#ivrd9ur
-
-        /* # Compress algorithm
-    def unicode_compress(bytes):
-        o = b'E'
-        for c in bytes:
-            # Skip carriage returns
-            if c == 13:
-                continue
-            # Check for invalid code points
-            if (c < 20 or c > 126) and c != 10:
-                raise Exception("Cannot encode character with code point " + str(c))
-            # Code point translation
-            v = (c-11)%133-21
-            o += ((v >> 6) & 1 | 0b11001100).to_bytes(1,'big')
-            o += ((v & 63) | 0b10000000).to_bytes(1,'big')
-        return o*/
-        public static byte[] Compress(ReadOnlySpan<byte> asciiBytes)
-        {
-            List<byte> output = new(asciiBytes.Length * 2) { (byte)'E' };
-            foreach (byte c in asciiBytes)
-            {
-                // Special handling
-                if (c == '\t' || c == '\r') continue;
-
-                // Check for invalid code points
-                if (c != 10 && (c < 20 || c > 126))
-                    throw new InvalidOperationException($"Cannot encode character with code point '{c}'");
-                // code point translation
-                int v = ((c - 11) % 133) - 21;
-
-                int h = c - 32;
-                Debug.Assert(v == h);
-
-                byte lower = (byte)(((v >> 6) & 0b00000001) | 0b11001100);
-                output.Add(lower);
-
-                byte higher = (byte)((v & 0b00111111) | 0b10000000);
-                output.Add(higher);
-
-                var lh = Encoding.UTF8.GetString(new byte[2] { lower, higher });
-                Debug.Assert(lh.Length == 1);
-                Debug.Assert(lh[0] is >= cdmStart and <= cdmEnd);
-
-                //Debugger.Break();
-            }
-
-            return output.ToArray();
-        }
-
-/*# Decompress algorithm (Code golfed)
-def unicode_decompress(b):
-    return ''.join([chr(((h<<6&64|c&63)+22)%133+10)for h,c in zip(b[1::2],b[2::2])])
-*/
-        public static byte[] Decompress(IReadOnlyList<byte> bytes)
-        {
-            var output = new List<byte>();
-            var first = bytes.Skip(1).Where((b, i) => i % 2 == 0);
-            var second = bytes.Skip(2).Where((b, i) => i % 2 == 0);
-            foreach (var (h, c) in Enumerable.Zip(first, second))
-            {
-                byte x = (byte)(((((h << 6) & 0b01000000) | (c & 0b00111111)) + 22) % 133 + 10);
-                output.Add(x);
-            }
-
-            return output.ToArray();
-        }
     }
-
 
 
     public abstract class EnumLike<TEnum> : IEquatable<TEnum>, IComparable<TEnum>, IFormattable
