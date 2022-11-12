@@ -14,4 +14,9 @@
       <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Using Include="System.Numerics" />
+      <Using Include="System.Runtime.CompilerServices;" />
+    </ItemGroup>
+
 </Project>

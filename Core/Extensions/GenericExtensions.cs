@@ -1,6 +1,5 @@
 ﻿// ReSharper disable EntityNameCapturedOnly.Global
 
-using System.Runtime.InteropServices;
 using static InlineIL.IL;
 
 namespace Jay;

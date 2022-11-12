@@ -1,7 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
 using Jay.Collections;
-using Jay.Enums;
 using Jay.Reflection;
 using Jay.Reflection.Building;
 using Jay.Reflection.Search;

@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using InlineIL;
-using Jay.Reflection.Internal;
 using static InlineIL.IL;
 
 // ReSharper disable EntityNameCapturedOnly.Global

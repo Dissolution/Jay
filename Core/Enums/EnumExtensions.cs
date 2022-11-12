@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using InlineIL;
 
 using static InlineIL.IL;

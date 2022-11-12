@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Drawing;
+﻿using System.Drawing;
 using static InlineIL.IL;
 using static InlineIL.IL.Emit;
 

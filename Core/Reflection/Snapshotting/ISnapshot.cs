@@ -1,6 +1,4 @@
-﻿using Jay.Collections;
-
-namespace Jay.Reflection.Snapshotting;
+﻿namespace Jay.Reflection.Snapshotting;
 
 public sealed record PropertyChange<T>(T? OldValue, T? NewValue);
 

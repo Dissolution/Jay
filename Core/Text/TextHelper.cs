@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Runtime.InteropServices;
 using static InlineIL.IL;
 // ReSharper disable EntityNameCapturedOnly.Global

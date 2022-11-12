@@ -1,6 +1,4 @@
 ﻿using System.Reflection;
-using Jay.Collections;
-using Jay.Reflection.Exceptions;
 using Jay.Reflection.Search;
 
 // ReSharper disable IdentifierTypo

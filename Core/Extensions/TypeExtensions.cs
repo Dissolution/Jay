@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
-using InlineIL;
 using Jay.Collections;
-using Jay.Comparision;
 using Jay.Expressions;
 using Jay.Reflection;
 using Jay.Validation;
