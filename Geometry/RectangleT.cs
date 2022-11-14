@@ -132,6 +132,7 @@ public readonly struct Rectangle<T> :
         throw new ArgumentException($"Cannot parse \"{text}\" to a Rectangle<{typeof(T)}>", nameof(text));
     }
 
+    public Rectangle<T> Clone() => this;
 
     public bool Contains(Point<T> point)
     {

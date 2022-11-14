@@ -24,7 +24,6 @@ public readonly struct Point<T> :
 
     public static Point<T> Empty { get; } = new Point<T>();
     
-    
     public readonly T X;
     public readonly T Y;
 
@@ -89,7 +88,9 @@ public readonly struct Point<T> :
         if (TryParse(text, provider, out var point)) return point;
         throw new ArgumentException($"Cannot parse \"{text}\" to a Point<{typeof(T)}>", nameof(text));
     }
-  
+
+    public Point<T> Clone() => this;
+
 
     /// <inheritdoc />
     public bool Equals(Point<T> point)

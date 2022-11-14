@@ -90,6 +90,8 @@ public readonly struct Size<T> :
         throw new ArgumentException($"Cannot parse \"{text}\" to a PSint<{typeof(T)}>", nameof(text));
     }
 
+    public Size<T> Clone() => this;
+
     /// <inheritdoc />
     public bool Equals(Size<T> size)
     {
