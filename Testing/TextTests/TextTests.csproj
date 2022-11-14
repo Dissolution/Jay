@@ -1,19 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>net7.0;netstandard2.0</TargetFrameworks>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyName>Jay.$(MSBuildProjectName)</AssemblyName>
-        <RootNamespace>Jay.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-        <ApplicationIcon>jay.ico</ApplicationIcon>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
-
-    <ItemGroup>
-        <Content Include="jay.ico" />
-    </ItemGroup>
 
     <!-- netStandard 2.0 includes -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
@@ -25,26 +18,22 @@
         </PackageReference>
     </ItemGroup>
 
-    <!-- universal includes -->
     <ItemGroup>
-        <PackageReference Include="Fody" Version="6.6.4">
-            <PrivateAssets>all</PrivateAssets>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
+        <PackageReference Include="Shouldly" Version="4.1.0" />
+        <PackageReference Include="xunit" Version="2.4.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="InlineIL.Fody" Version="1.7.3">
+        <PackageReference Include="coverlet.collector" Version="3.2.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="InlineIL.IL">
-            <Static>True</Static>
-        </Using>
-        <Using Include="System.Runtime.CompilerServices" />
-        <Using Include="System.Diagnostics.CodeAnalysis" />
-        <Using Include="Jay.Text.Extensions" />
-        <Using Include="System.Text" />
+        <ProjectReference Include="..\..\Text\Text.csproj" />
     </ItemGroup>
-
 
 </Project>

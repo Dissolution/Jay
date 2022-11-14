@@ -1,8 +1,8 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using System.Linq.Expressions;
+
 // ReSharper disable UnusedParameter.Local
 
 namespace Jay.Text;
@@ -12,14 +12,18 @@ internal static class BuilderHelper
     public const int MinimumCapacity = 1024;
     public const int MaximumCapacity = 0x3FFFFFDF; // == string.MaxLength < Array.MaxLength
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] // becomes a constant when inputs are constant
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetStartingCapacity(int literalLength, int formattedCount)
     {
         return Math.Clamp(MinimumCapacity, literalLength + (formattedCount * 16), MaximumCapacity);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetNextCapacity(int currentCapacity, int addingCharCount)
+    {
+        return (currentCapacity + addingCharCount) * 2;
+    }
 }
-
 
 /// <summary>
 /// A custom minimized implementation of an <c>Interpolated String Handler</c>
@@ -29,8 +33,10 @@ public ref struct CharSpanBuilder
 {
     /// <summary>Array rented from the array pool and used to back <see cref="_chars"/>.</summary>
     private char[]? _charArray;
+
     /// <summary>The span to write into.</summary>
     private Span<char> _chars;
+
     /// <summary>Position at which to write the next character.</summary>
     private int _index;
 
@@ -57,7 +63,11 @@ public ref struct CharSpanBuilder
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _index;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if NETSTANDARD2_0_OR_GREATER
+        set => _index = (value < 0 ? 0 : (value > Capacity ? Capacity : value));
+#else
         set => _index = Math.Clamp(0, value, Capacity);
+#endif
     }
 
     public int Capacity
@@ -82,7 +92,8 @@ public ref struct CharSpanBuilder
     [EditorBrowsable(EditorBrowsableState.Never)]
     public CharSpanBuilder(int literalLength, int formattedCount)
     {
-        _chars = _charArray = ArrayPool<char>.Shared.Rent(BuilderHelper.GetStartingCapacity(literalLength, formattedCount));
+        _chars = _charArray =
+            ArrayPool<char>.Shared.Rent(BuilderHelper.GetStartingCapacity(literalLength, formattedCount));
         _index = 0;
     }
 
@@ -95,8 +106,9 @@ public ref struct CharSpanBuilder
     }
 
     #region Grow
+
     /// <summary>Grow the size of <see cref="_chars"/> to at least the specified <paramref name="minCapacity"/>.</summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] // but reuse this grow logic directly in both of the above grow routines
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void GrowCore(int minCapacity)
     {
         char[] newArray = ArrayPool<char>.Shared.Rent(minCapacity);
@@ -111,53 +123,41 @@ public ref struct CharSpanBuilder
         }
     }
 
-
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void GrowThenCopy(scoped ReadOnlySpan<char> value)
+    private void GrowBy(int addingCharCount)
     {
-        GrowBy(value.Length);
-        value.CopyTo(Available);
-        _index += value.Length;
+        GrowCore(BuilderHelper.GetNextCapacity(Capacity, addingCharCount));
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void GrowBy(int additionalChars)
+    private void GrowThenCopy(ReadOnlySpan<char> text)
     {
-        // This method is called when the remaining space (_chars.Length - _pos) is
-        // insufficient to store a specific number of additional characters.  Thus, we
-        // need to grow to at least that new total. GrowCore will handle growing by more
-        // than that if possible.
-        Debug.Assert(additionalChars > _chars.Length - _index);
-        int newCapacity = Math.Clamp(MINIMUM_CAPACITY,
-            Math.Max(_index + additionalChars, Capacity * 2),
-            MAXIMUM_CAPACITY);
-        GrowCore(newCapacity);
+        int index = _index;
+        int len = text.Length;
+        GrowCore(BuilderHelper.GetNextCapacity(Capacity, len));
+        TextHelper.Unsafe.CopyBlock(
+            in text.GetPinnableReference(),
+            ref Available.GetPinnableReference(),
+            len);
+        _index = index + len;
     }
 
-    /// <summary>Grows the size of <see cref="_chars"/>.</summary>
-    [MethodImpl(MethodImplOptions.NoInlining)] // keep consumers as streamlined as possible
-    private void GrowSome()
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void GrowThenCopy(string text)
     {
-        // This method is called when the remaining space in _chars isn't sufficient to continue
-        // the operation.  Thus, we need at least one character beyond _chars.Length.  GrowCore
-        // will handle growing by more than that if possible.
-        int newCapacity = Math.Clamp(MINIMUM_CAPACITY, Capacity * 2, MAXIMUM_CAPACITY);
-        GrowCore(newCapacity);
+        int index = _index;
+        int len = text.Length;
+        GrowCore(BuilderHelper.GetNextCapacity(Capacity, len));
+        TextHelper.Unsafe.CopyBlock(
+            in text.GetPinnableReference(),
+            ref Available.GetPinnableReference(),
+            len);
+        _index = index + len;
     }
 
-   
     #endregion
 
-    #region Append
-    private void AppendStringDirect(string text)
-    {
-        Debug.Assert(text is not null);
-        if (!text.TryCopyTo(Available))
-        {
-            GrowThenCopy(text);
-        }
-    }
-
+    #region Interpolated String Handler implementations
     /// <summary>Writes the specified string to the handler.</summary>
     /// <param name="text">The string to write.</param>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -177,6 +177,7 @@ public ref struct CharSpanBuilder
             {
                 GrowThenCopy(text);
             }
+
             return;
         }
 
@@ -194,17 +195,86 @@ public ref struct CharSpanBuilder
             {
                 GrowThenCopy(text);
             }
+
             return;
         }
 
-        AppendStringDirect(text);
+        Write(text);
     }
 
     /// <summary>Writes the specified value to the handler.</summary>
     /// <param name="value">The value to write.</param>
     /// <typeparam name="T">The type of the value to write.</typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted<T>(T? value)
+    public void AppendFormatted<T>(T? value) => Write<T>(value);
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void AppendFormatted<T>(T value, string? format) => Write<T>(value, format);
+    
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void AppendFormatted(char ch) => Write(ch);
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void AppendFormatted(ReadOnlySpan<char> value) => Write(value);
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void AppendFormatted(string? value) => Write(value);
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void AppendFormatted(object? obj) => Write<object>(obj);
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void AppendFormatted(object? value, string? format) => Write<object?>(value, format);
+
+    #endregion
+
+    #region Write
+
+    public void Write(char ch)
+    {
+        int pos = _index;
+        Span<char> chars = _chars;
+        if ((uint)pos < (uint)chars.Length)
+        {
+            chars[pos] = ch;
+            _index = pos + 1;
+        }
+        else
+        {
+            GrowThenCopy(ch.AsReadOnlySpan());
+        }
+    }
+
+    public void Write(ReadOnlySpan<char> text)
+    {
+        if (text.TryCopyTo(Available))
+        {
+            _index += text.Length;
+        }
+        else
+        {
+            GrowThenCopy(text);
+        }
+    }
+
+    public void Write(params char[] chars) => Write(chars.AsSpan());
+
+    public void Write(string? text)
+    {
+        if (text is not null)
+        {
+            if (text.TryCopyTo(Available))
+            {
+                _index += text.Length;
+            }
+            else
+            {
+                GrowThenCopy(text);
+            }
+        }
+    }
+
+    public void Write<T>(T? value)
     {
         string? str;
         if (value is IFormattable)
@@ -215,9 +285,9 @@ public ref struct CharSpanBuilder
                 int charsWritten;
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(_chars.Slice(_index),
-                           out charsWritten, default, default))
+                    out charsWritten, default, default))
                 {
-                    GrowSome();
+                    GrowBy(BuilderHelper.MinimumCapacity);
                 }
 
                 _index += charsWritten;
@@ -232,14 +302,10 @@ public ref struct CharSpanBuilder
             str = value?.ToString();
         }
 
-        if (str is not null)
-        {
-            AppendStringDirect(str);
-        }
+        Write(str);
     }
 
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted<T>(T value, string? format)
+    public void Write<T>(T? value, string? format)
     {
         string? str;
         if (value is IFormattable)
@@ -250,11 +316,9 @@ public ref struct CharSpanBuilder
                 int charsWritten;
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(_chars.Slice(_index),
-                           out charsWritten,
-                           format,
-                           default))
+                    out charsWritten, format, default))
                 {
-                    GrowSome();
+                    GrowBy(BuilderHelper.MinimumCapacity);
                 }
 
                 _index += charsWritten;
@@ -269,54 +333,10 @@ public ref struct CharSpanBuilder
             str = value?.ToString();
         }
 
-        if (str is not null)
-        {
-            AppendStringDirect(str);
-        }
+        Write(str);
     }
     #endregion
 
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted(char ch)
-    {
-        int pos = _index;
-        Span<char> chars = _chars;
-        if ((uint)pos < (uint)chars.Length)
-        {
-            chars[pos] = ch;
-            _index = pos + 1;
-        }
-        else
-        {
-            GrowThenCopy(new ReadOnlySpan<char>(in ch));
-        }
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted(ReadOnlySpan<char> value)
-    {
-        // Fast path for when the value fits in the current buffer
-        if (value.TryCopyTo(Available))
-        {
-            _index += value.Length;
-        }
-        else
-        {
-            GrowThenCopy(value);
-        }
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted(string? value)
-    {
-        if (value is not null)
-            AppendLiteral(value);
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted(object? obj) => AppendFormatted<object>(obj);
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public void AppendFormatted(object? value, string? format) => AppendFormatted<object?>(value, format);
 
     /// <summary>Clears the handler, returning any rented array to the pool.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)] // used only on a few hot paths
@@ -338,10 +358,10 @@ public ref struct CharSpanBuilder
 
     public string ToStringAndDispose()
     {
-        string result = new string(Written);
+        string result = Written.AsString();
         Dispose();
         return result;
     }
 
-    public override string ToString() => new string(Written);
+    public override string ToString() => Written.AsString();
 }

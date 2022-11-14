@@ -11,9 +11,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp", "ConsoleApp\ConsoleApp.csproj", "{C22CA328-83FD-411E-88A8-4410F13E021C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "ConsoleApp\ConsoleApp.csproj", "{C22CA328-83FD-411E-88A8-4410F13E021C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Text", "Text\Text.csproj", "{D061E599-2764-4CA2-AFE6-207E53FFB02D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Text", "Text\Text.csproj", "{D061E599-2764-4CA2-AFE6-207E53FFB02D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{472E2095-74E6-45F8-A21B-CE8CF4867187}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextTests", "Testing\TextTests\TextTests.csproj", "{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,9 +33,16 @@ Global
 		{D061E599-2764-4CA2-AFE6-207E53FFB02D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D061E599-2764-4CA2-AFE6-207E53FFB02D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D061E599-2764-4CA2-AFE6-207E53FFB02D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D} = {472E2095-74E6-45F8-A21B-CE8CF4867187}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CA11AB1E-4A41-596A-6179-147BEEB1E147}
