@@ -1,4 +1,6 @@
-﻿namespace Jay.Text.Comparision;
+﻿#if !NETSTANDARD2_0_OR_GREATER
+
+namespace Jay.Text.Comparision;
 
 public abstract class TextComparers : ITextComparer, ITextEqualityComparer
 {
@@ -29,9 +31,9 @@ public abstract class TextComparers : ITextComparer, ITextEqualityComparer
     public static TextComparers OrdinalIgnoreCase { get; } = new TextComparison(StringComparison.OrdinalIgnoreCase);
     public static TextComparers Invariant { get; } = new TextComparison(StringComparison.InvariantCulture);
     public static TextComparers InvariantIgnoreCase { get; } = new TextComparison(StringComparison.InvariantCultureIgnoreCase);
-                  
+
     public static TextComparers Default { get; } = new FastTextComparers();
-    
+
     public abstract int Compare(ReadOnlySpan<char> x, ReadOnlySpan<char> y);
     public abstract bool Equals(ReadOnlySpan<char> x, ReadOnlySpan<char> y);
     public abstract int GetHashCode(ReadOnlySpan<char> span);
@@ -44,16 +46,6 @@ internal sealed class FastTextComparers : TextComparers
         if (x < y) return -1;
         if (x == y) return 0;
         return 1;
-    }
-
-    public int Compare(string? x, string? y)
-    {
-        return string.Compare(x, y, StringComparison.Ordinal);
-    }
-
-    public int Compare(char[]? x, char[]? y)
-    {
-        return MemoryExtensions.SequenceCompareTo<char>(x, y);
     }
 
     public override int Compare(ReadOnlySpan<char> x, ReadOnlySpan<char> y)
@@ -81,6 +73,11 @@ internal sealed class FastTextComparers : TextComparers
         return TextHelper.Equals(x, y);
     }
 
+    public int GetHashCode(char ch)
+    {
+        return (int)ch;
+    }
+
     public int GetHashCode(string? text)
     {
         return string.GetHashCode(text);
@@ -91,3 +88,4 @@ internal sealed class FastTextComparers : TextComparers
         return string.GetHashCode(text);
     }
 }
+#endif

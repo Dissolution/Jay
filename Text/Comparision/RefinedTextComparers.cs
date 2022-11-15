@@ -1,7 +1,8 @@
-﻿namespace Jay.Text.Comparision;
+﻿#if !NETSTANDARD2_0_OR_GREATER
+namespace Jay.Text.Comparision;
 
 /// <summary>
-/// A utility for simplifying <see cref="string"/>s by stripping all non-ASCII characters, non-digits, non-letters, then uppercasing.
+/// A utility for simplifying <see cref="string"/>s by stripping all non-ASCII characters, non-digits, and non-letters, then uppercasing.
 /// </summary>
 public sealed class RefinedTextComparers : TextComparers
 {
@@ -10,17 +11,15 @@ public sealed class RefinedTextComparers : TextComparers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryRefine(ref char ch)
     {
-        switch (ch)
+        if (char.IsDigit(ch) || char.IsAsciiLetterUpper(ch))
+            return true;
+        if (char.IsAsciiLetterLower(ch))
         {
-            case >= '0' and <= '9':
-            case >= 'A' and <= 'Z':
-                return true;
-            case >= 'a' and <= 'z':
-                ch = (char)(ch - TextHelper.UppercaseOffset);
-                return true;
-            default:
-                return false;
+            ch = (char)(ch - TextHelper.UppercaseOffset);
+            return true;
         }
+
+        return false;
     }
 
 
@@ -30,14 +29,14 @@ public sealed class RefinedTextComparers : TextComparers
         while (index < text.Length)
         {
             refinedChar = text[index++];
-            switch (refinedChar)
+
+            if (char.IsDigit(refinedChar) || char.IsAsciiLetterUpper(refinedChar))
+                return true;
+
+            if (char.IsAsciiLetterLower(refinedChar))
             {
-                case >= '0' and <= '9':
-                case >= 'A' and <= 'Z':
-                    return true;
-                case >= 'a' and <= 'z':
-                    refinedChar = (char)(refinedChar - TextHelper.UppercaseOffset);
-                    return true;
+                refinedChar = (char)(refinedChar - TextHelper.UppercaseOffset);
+                return true;
             }
         }
 
@@ -50,7 +49,7 @@ public sealed class RefinedTextComparers : TextComparers
         int x = 0;
         int y = 0;
         while (TryFindNextRefinedChar(xText, ref x, out var xCh) &&
-               TryFindNextRefinedChar(yText, ref y, out var yCh))
+            TryFindNextRefinedChar(yText, ref y, out var yCh))
         {
             if (xCh != yCh) return false;
         }
@@ -59,18 +58,27 @@ public sealed class RefinedTextComparers : TextComparers
         return true;
     }
 
+    public int GetHashCode(char ch)
+    {
+        char c = ch;
+        if (TryRefine(ref c))
+            return (int)c;
+        return 0;
+    }
+
     public override int GetHashCode(ReadOnlySpan<char> text)
     {
-        var hasher = new Hasher();
+        var hasher = new HashCode();
         for (var i = 0; i < text.Length; i++)
         {
             char c = text[i];
             if (TryRefine(ref c))
             {
-                hasher.AddHash((int)c);
+                hasher.Add(c);
             }
         }
-        return hasher.CreateHashCode();
+
+        return hasher.ToHashCode();
     }
 
     public override int Compare(ReadOnlySpan<char> xText, ReadOnlySpan<char> yText)
@@ -78,7 +86,7 @@ public sealed class RefinedTextComparers : TextComparers
         int x = 0;
         int y = 0;
         while (TryFindNextRefinedChar(xText, ref x, out var xCh) &&
-               TryFindNextRefinedChar(yText, ref y, out var yCh))
+            TryFindNextRefinedChar(yText, ref y, out var yCh))
         {
             var c = xCh.CompareTo(yCh);
             if (c != 0)
@@ -89,3 +97,4 @@ public sealed class RefinedTextComparers : TextComparers
         return 0;
     }
 }
+#endif

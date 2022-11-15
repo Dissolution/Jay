@@ -1,6 +1,4 @@
-﻿using Jay.Exceptions;
-
-namespace Jay.Text;
+﻿namespace Jay.Text;
 
 [InterpolatedStringHandler]
 public ref struct InterpolatedTextBuilderHandler

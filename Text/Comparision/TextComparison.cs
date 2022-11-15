@@ -1,4 +1,5 @@
-﻿namespace Jay.Text.Comparision;
+﻿#if !NETSTANDARD2_0_OR_GREATER
+namespace Jay.Text.Comparision;
 
 internal sealed class TextComparison : TextComparers
 {
@@ -40,3 +41,4 @@ internal sealed class TextComparison : TextComparers
         return string.GetHashCode(span, _stringComparison);
     }
 }
+#endif

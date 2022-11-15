@@ -1,4 +1,6 @@
-﻿namespace Jay.Text;
+﻿using System.Collections;
+
+namespace Jay.Text;
 
 public static class NonGenericEnumerableTextBuilderExtensions
 {

@@ -17,7 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Text", "Text\Text.csproj", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{472E2095-74E6-45F8-A21B-CE8CF4867187}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextTests", "Testing\TextTests\TextTests.csproj", "{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TextTests", "Testing\TextTests\TextTests.csproj", "{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{90A8B8CF-3579-4A17-8BEB-FC5341B9F00B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +39,10 @@ Global
 		{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA1C2BBB-DB2A-4BFF-8653-94FE2B04331D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90A8B8CF-3579-4A17-8BEB-FC5341B9F00B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90A8B8CF-3579-4A17-8BEB-FC5341B9F00B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90A8B8CF-3579-4A17-8BEB-FC5341B9F00B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90A8B8CF-3579-4A17-8BEB-FC5341B9F00B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

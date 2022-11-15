@@ -1,7 +1,5 @@
 ﻿using System.Buffers;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq.Expressions;
 
 // ReSharper disable UnusedParameter.Local
 
@@ -15,7 +13,7 @@ internal static class BuilderHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetStartingCapacity(int literalLength, int formattedCount)
     {
-        return Math.Clamp(MinimumCapacity, literalLength + (formattedCount * 16), MaximumCapacity);
+        return (literalLength + (formattedCount * 16)).Clamp(MinimumCapacity, MaximumCapacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -130,6 +128,18 @@ public ref struct CharSpanBuilder
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
+    private void GrowThenCopy(char ch)
+    {
+        int index = _index;
+        GrowCore(BuilderHelper.GetNextCapacity(Capacity, 1));
+        TextHelper.Unsafe.CopyBlock(
+            in ch,
+            ref Available.GetPinnableReference(),
+            1);
+        _index = index + 1;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowThenCopy(ReadOnlySpan<char> text)
     {
         int index = _index;
@@ -158,6 +168,7 @@ public ref struct CharSpanBuilder
     #endregion
 
     #region Interpolated String Handler implementations
+
     /// <summary>Writes the specified string to the handler.</summary>
     /// <param name="text">The string to write.</param>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -210,7 +221,7 @@ public ref struct CharSpanBuilder
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public void AppendFormatted<T>(T value, string? format) => Write<T>(value, format);
-    
+
     [EditorBrowsable(EditorBrowsableState.Never)]
     public void AppendFormatted(char ch) => Write(ch);
 
@@ -241,7 +252,7 @@ public ref struct CharSpanBuilder
         }
         else
         {
-            GrowThenCopy(ch.AsReadOnlySpan());
+            GrowThenCopy(ch);
         }
     }
 
@@ -263,7 +274,7 @@ public ref struct CharSpanBuilder
     {
         if (text is not null)
         {
-            if (text.TryCopyTo(Available))
+            if (TextHelper.TryCopyTo(text, Available))
             {
                 _index += text.Length;
             }
@@ -279,6 +290,7 @@ public ref struct CharSpanBuilder
         string? str;
         if (value is IFormattable)
         {
+#if !NETSTANDARD2_0_OR_GREATER
             // If the value can format itself directly into our buffer, do so.
             if (value is ISpanFormattable)
             {
@@ -293,6 +305,7 @@ public ref struct CharSpanBuilder
                 _index += charsWritten;
                 return;
             }
+#endif
 
             // constrained call avoiding boxing for value types
             str = ((IFormattable)value).ToString(default, default);
@@ -310,6 +323,7 @@ public ref struct CharSpanBuilder
         string? str;
         if (value is IFormattable)
         {
+#if !NETSTANDARD2_0_OR_GREATER
             // If the value can format itself directly into our buffer, do so.
             if (value is ISpanFormattable)
             {
@@ -324,6 +338,7 @@ public ref struct CharSpanBuilder
                 _index += charsWritten;
                 return;
             }
+#endif
 
             // constrained call avoiding boxing for value types
             str = ((IFormattable)value).ToString(format, default);
@@ -335,6 +350,7 @@ public ref struct CharSpanBuilder
 
         Write(str);
     }
+
     #endregion
 
 

@@ -1,4 +1,6 @@
-﻿namespace Jay.Text.Comparision;
+﻿#if !NETSTANDARD2_0_OR_GREATER
+
+namespace Jay.Text.Comparision;
 
 /// <inheritdoc />
 /// <summary>
@@ -142,35 +144,5 @@ public class AlphanumericTextComparer : ITextComparer
             return FrontToBlackCompare(x, y, _stringComparison);
         return BackToFrontCompare(x, y, _stringComparison);
     }
-
-    public int Compare(string? x, string? y)
-    {
-        if (_textOrder == TextOrder.LeftToRight)
-            return FrontToBlackCompare(x, y, _stringComparison);
-        return BackToFrontCompare(x, y, _stringComparison);
-    }
-
-    public int Compare(char[]? x, char[]? y)
-    {
-        if (_textOrder == TextOrder.LeftToRight)
-            return FrontToBlackCompare(x, y, _stringComparison);
-        return BackToFrontCompare(x, y, _stringComparison);
-    }
-
-    int IComparer.Compare(object? x, object? y)
-    {
-        ReadOnlySpan<char> left = x switch
-        {
-            string str => str,
-            char[] chars => chars,
-            _ => x?.ToString()
-        };
-        ReadOnlySpan<char> right = y switch
-        {
-            string str => str,
-            char[] chars => chars,
-            _ => x?.ToString()
-        };
-        return Compare(left, right);
-    }
 }
+#endif
