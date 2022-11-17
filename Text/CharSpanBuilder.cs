@@ -13,7 +13,7 @@ internal static class BuilderHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetStartingCapacity(int literalLength, int formattedCount)
     {
-        return (literalLength + (formattedCount * 16)).Clamp(MinimumCapacity, MaximumCapacity);
+        return Math.Clamp(MinimumCapacity, literalLength + (formattedCount * 16), MaximumCapacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -374,10 +374,10 @@ public ref struct CharSpanBuilder
 
     public string ToStringAndDispose()
     {
-        string result = Written.AsString();
+        string result = new string(Written);
         Dispose();
         return result;
     }
 
-    public override string ToString() => Written.AsString();
+    public override string ToString() => new string(Written);
 }

@@ -13,7 +13,7 @@ public class ExtensionTests
     {
         ReadOnlySpan<char> readOnlySpan = Lorem;
 
-        string? asString = readOnlySpan.AsString();
+        string? asString = new string(readOnlySpan);
         asString.ShouldBe(Lorem);
 
         string? toString = readOnlySpan.ToString();

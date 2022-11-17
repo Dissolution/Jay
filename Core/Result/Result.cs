@@ -1,26 +1,20 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using Jay.Exceptions;
 
 namespace Jay;
 
 /// <summary>
 /// Represents the result of an operation as a Pass or a Failure with <see cref="Exception"/> information.
 /// </summary>
-/// <remarks>
-/// <see cref="Result"/> mimics <see cref="bool"/> exactly.<br/>
-/// <c>default(<see cref="bool"/>) == <see langword="false"/> == default(<see cref="Result"/>)</c><br/>
-/// <see langword="true"/> == <see cref="Result.Pass"/>
-/// </remarks>
 public readonly partial struct Result : IEquatable<Result>
 {
-    /// <summary>
-    /// Whether or not this Result indicates a Pass (true) or Fail (false)
-    /// </summary>
+    // _pass is the field (rather than _fail) because default(Result) should be a failure
+    /* These fields were chosen specifically.
+     * default(Result) should be the same as default(bool), which is false.
+     * Hence, the default values of all fields should the exactly the same as a failure.
+     */
+    
     internal readonly bool _pass;
-    /// <summary>
-    /// If this Result is a Fail (false), this can contain a caught or created <see cref="Exception"/>
-    /// </summary>
     internal readonly Exception? _error;
 
     /// <remarks>
@@ -35,7 +29,7 @@ public readonly partial struct Result : IEquatable<Result>
     /// <summary>
     /// Throws the attached <see cref="Exception"/> if this is a failed <see cref="Result"/>
     /// </summary>
-    /// <exception cref="Exception">The included <see cref="Exception"/></exception>
+    /// <exception cref="Exception">The attached exception.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ThrowIfFailed()
     {
@@ -85,7 +79,7 @@ public readonly partial struct Result : IEquatable<Result>
         return false;
     }
 
-    public override int GetHashCode() => UnsupportedException.ThrowForGetHashCode(this);
+    public override int GetHashCode() => throw new InvalidOperationException();
 
     public override string ToString()
     {

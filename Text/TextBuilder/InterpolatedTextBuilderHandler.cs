@@ -1,4 +1,6 @@
-﻿namespace Jay.Text;
+﻿using Jay.Exceptions;
+
+namespace Jay.Text;
 
 [InterpolatedStringHandler]
 public ref struct InterpolatedTextBuilderHandler
@@ -58,10 +60,10 @@ public ref struct InterpolatedTextBuilderHandler
 
 
     public override bool Equals(object? obj) =>
-        UnsuitableException.ThrowEquals(typeof(InterpolatedTextBuilderHandler));
+        UnsupportedException.ThrowForEquals(typeof(InterpolatedTextBuilderHandler));
 
     public override int GetHashCode() =>
-        UnsuitableException.ThrowGetHashCode(typeof(InterpolatedTextBuilderHandler));
+        UnsupportedException.ThrowForGetHashCode(typeof(InterpolatedTextBuilderHandler));
 
     public override string ToString()
     {

@@ -19,10 +19,13 @@ public static class TextHelper
     /// </summary>
     internal const int UppercaseOffset = 'a' - 'A';
 
-    public static class Unsafe
+    /// <summary>
+    /// Unsafe / Unchecked Methods -- Nothing here has bounds checks!
+    /// </summary>
+    public static unsafe class Unsafe
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static unsafe void CopyBlock(char* sourcePtr, ref char destPtr, int charCount)
+        internal static void CopyBlock(char* sourcePtr, char* destPtr, int charCount)
         {
             Emit.Ldarg(nameof(destPtr));
             Emit.Ldarg(nameof(sourcePtr));
@@ -47,7 +50,8 @@ public static class TextHelper
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void CopyTo(ReadOnlySpan<char> source, Span<char> dest)
         {
-            CopyBlock(in source.GetPinnableReference(),
+            CopyBlock(
+                in source.GetPinnableReference(),
                 ref dest.GetPinnableReference(),
                 source.Length);
         }
@@ -55,7 +59,8 @@ public static class TextHelper
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void CopyTo(ReadOnlySpan<char> source, char[] dest)
         {
-            CopyBlock(in source.GetPinnableReference(),
+            CopyBlock(
+                in source.GetPinnableReference(),
                 ref dest.GetPinnableReference(),
                 source.Length);
         }
@@ -63,7 +68,8 @@ public static class TextHelper
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void CopyTo(char[] source, Span<char> dest)
         {
-            CopyBlock(in source.GetPinnableReference(),
+            CopyBlock(
+                in source.GetPinnableReference(),
                 ref dest.GetPinnableReference(),
                 source.Length);
         }
@@ -75,33 +81,12 @@ public static class TextHelper
                 ref dest.GetPinnableReference(),
                 source.Length);
         }
-#if NETSTANDARD2_0_OR_GREATER
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static unsafe void CopyTo(string source, Span<char> dest)
-        {
-            fixed (char* sourcePtr = source)
-            {
-                CopyBlock(sourcePtr,
-                    ref dest.GetPinnableReference(),
-                    source.Length);
-            }
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static unsafe void CopyTo(string source, char[] dest)
-        {
-            fixed (char* sourcePtr = source)
-            {
-                CopyBlock(sourcePtr,
-                    ref dest.GetPinnableReference(),
-                    source.Length);
-            }
-        }
-#else
-          [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void CopyTo(string source, Span<char> dest)
         {
-            CopyBlock(in source.GetPinnableReference(),
+            CopyBlock(
+                in source.GetPinnableReference(),
                 ref dest.GetPinnableReference(),
                 source.Length);
         }
@@ -109,11 +94,11 @@ public static class TextHelper
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void CopyTo(string source, char[] dest)
         {
-            CopyBlock(in source.GetPinnableReference(),
+            CopyBlock(
+                in source.GetPinnableReference(),
                 ref dest.GetPinnableReference(),
                 source.Length);
         }
-#endif
     }
 
 
@@ -122,38 +107,12 @@ public static class TextHelper
         var len = source.Length;
         if (len == 0) return true;
         if (len > dest.Length) return false;
-        Unsafe.CopyBlock(in source.GetPinnableReference(),
+        Unsafe.CopyBlock(
+            in source.GetPinnableReference(),
             ref dest.GetPinnableReference(),
             len);
         return true;
     }
-
-#if NETSTANDARD2_0_OR_GREATER
-    public static unsafe bool TryCopyTo(string? source, Span<char> dest)
-    {
-        var len = source?.Length ?? 0;
-        if (len == 0) return true;
-        if (len > dest.Length) return false;
-        {
-            fixed (char* sourcePtr = source!)
-            {
-                CopyBlock(sourcePtr, ref dest.GetPinnableReference(), len);
-            }
-        }
-        return true;
-    }
-#else
-    public static bool TryCopyTo(string? source, Span<char> dest)
-    {
-        var len = source?.Length ?? 0;
-        if (len == 0) return true;
-        if (len > dest.Length) return false;
-        Unsafe.CopyBlock(in source!.GetPinnableReference(),
-            ref dest.GetPinnableReference(),
-            len);
-        return true;
-    }
-#endif
 
 
     #region Equals
@@ -269,32 +228,6 @@ public static class TextHelper
 
     #endregion
 
-#if NETSTANDARD2_0_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsAsciiDigit(char c) => c is <= '9' and >= '0';
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsAsciiLower(char c) => c is <= 'z' and >= 'a';
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsAsciiUpper(char c) => c is <= 'Z' and >= 'A';
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsAscii(char c) => c <= 127;
-#else
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsAsciiDigit(char ch) => char.IsAsciiDigit(ch);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsAsciiLetterLower(char ch) => char.IsAsciiLetterLower(ch);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsAsciiLetterUpper(char ch) => char.IsAsciiLetterUpper(ch);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsAscii(char ch) => char.IsAscii(ch);
-#endif
-
 
     /// <summary>
     /// Transforms the specified characters into Uppercase, using char.ToUpper(c)
@@ -309,8 +242,7 @@ public static class TextHelper
             buffer[i] = char.ToUpper(text[i]);
         }
 
-
-        return buffer.AsString();
+        return new string(buffer);
     }
 
     /// <summary>
@@ -326,12 +258,12 @@ public static class TextHelper
             buffer[i] = char.ToLower(text[i]);
         }
 
-        return buffer.AsString();
+        return new string(buffer);
     }
 
     public static string ToTitleCase(ReadOnlySpan<char> text)
     {
-        var str = text.AsString();
+        var str = new string(text);
         return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(str);
     }
 
@@ -356,35 +288,14 @@ public static class TextHelper
             buffer[i] = text[end - i];
         }
 
-        return buffer.AsString();
+        return new string(buffer);
     }
 
     public static string Refine(string? text) => Refine(text.AsSpan());
 
     public static string Refine(params char[]? chars) => Refine(chars.AsSpan());
 
-#if NETSTANDARD2_0_OR_GREATER
     public static string Refine(ReadOnlySpan<char> text)
-    {
-        Span<char> buffer = stackalloc char[text.Length];
-        int b = 0;
-        char ch;
-        for (var i = 0; i < text.Length; i++)
-        {
-            ch = text[i];
-            if ((ch >= 0 && ch <= 9) || (ch >= 'A' && ch <= 'Z'))
-            {
-                buffer[b++] = ch;
-            }
-            else if (ch >= 'a' && ch <= 'z')
-            {
-                buffer[b++] = (char)(ch - UppercaseOffset);
-            }
-        }
-        return buffer.Slice(0, b).AsString();
-    }
-#else
-      public static string Refine(ReadOnlySpan<char> text)
     {
         Span<char> buffer = stackalloc char[text.Length];
         int b = 0;
@@ -404,7 +315,4 @@ public static class TextHelper
 
         return new string(buffer.Slice(0, b));
     }
-#endif
-
-
 }

@@ -1,6 +1,10 @@
 ﻿using System.Buffers;
+using System.Collections;
 using System.Diagnostics;
 using InlineIL;
+using Jay.Enums;
+using Jay.Exceptions;
+using Jay.Validation;
 
 // ReSharper disable MergeCastWithTypeCheck
 // ReSharper disable UnusedMember.Global
@@ -39,13 +43,12 @@ public partial class TextBuilder
 
     public static TextBuilder Borrow() => new TextBuilder();
     public static TextBuilder Borrow(int minCapacity) => new TextBuilder(minCapacity);
-
 }
 
 public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
-                           ICollection<char>, IReadOnlyCollection<char>,
-                           IEnumerable<char>,
-                           IDisposable
+    ICollection<char>, IReadOnlyCollection<char>,
+    IEnumerable<char>,
+    IDisposable
 {
     protected char[]? _charArray;
     protected int _length;
@@ -87,12 +90,14 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
             return ref _charArray![index];
         }
     }
+
     /// <inheritdoc cref="IList{T}"/>
     char IList<char>.this[int index]
     {
         get => this[index];
         set => this[index] = value;
     }
+
     /// <inheritdoc cref="IReadOnlyList{T}"/>
     char IReadOnlyList<char>.this[int index]
     {
@@ -114,8 +119,10 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         get => _length;
         internal set => _length = value;
     }
+
     /// <inheritdoc cref="ICollection{T}"/>
     int ICollection<char>.Count => _length;
+
     /// <inheritdoc cref="IReadOnlyCollection{T}"/>
     int IReadOnlyCollection<char>.Count => _length;
 
@@ -152,7 +159,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
     private void GrowThenCopy(ReadOnlySpan<char> text)
     {
         Grow(text.Length);
-        TextHelper.CopyTo(text, Available);
+        TextHelper.Unsafe.CopyTo(text, Available);
         _length += text.Length;
     }
 
@@ -160,7 +167,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
     private void GrowThenCopy(string text)
     {
         Grow(text.Length);
-        TextHelper.CopyTo(text, Available);
+        TextHelper.Unsafe.CopyTo(text, Available);
         _length += text.Length;
     }
 
@@ -175,12 +182,13 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         GrowCore(_length + additionalChars);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] // but reuse this grow logic directly in both of the above grow routines
+    [MethodImpl(MethodImplOptions
+        .AggressiveInlining)] // but reuse this grow logic directly in both of the above grow routines
     private void GrowCore(int minCapacity)
     {
         // We want the max of how much space we actually required and doubling our capacity (without going beyond the max allowed length).
         // We also want to avoid asking for small arrays to reduce the number of times we need to grow.
-        
+
         // string.MaxLength < array.MaxLength
         const int stringMaxLength = 0x3FFFFFDF;
         // This is larger than stringMaxLength, so the clamp below covers this already
@@ -192,14 +200,14 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         }
         else
         {
-            newCapacity = Math.Clamp(Math.Max(minCapacity, _charArray.Length * 2), 
-                         MinLength,
-                         stringMaxLength);
+            newCapacity = Math.Clamp(Math.Max(minCapacity, _charArray.Length * 2),
+                MinLength,
+                stringMaxLength);
         }
-            
+
         // Get our new array, copy what we have written to it
         char[] newArray = ArrayPool<char>.Shared.Rent(newCapacity);
-        TextHelper.CopyTo(Written, newArray);
+        TextHelper.Unsafe.CopyTo(Written, newArray);
         // Return the array and then point at the new one
         char[]? toReturn = _charArray;
         _charArray = newArray;
@@ -210,10 +218,10 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         }
     }
 
-   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemoveSpan(int index, int length)
     {
-        TextHelper.CopyTo(Written[(index+length)..], this[index..]);
+        TextHelper.Unsafe.CopyTo(Written[(index + length)..], this[index..]);
         _length -= length;
     }
 
@@ -227,10 +235,12 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
             {
                 Grow(length);
             }
-            TextHelper.CopyTo(Written[index..], this[(index + length)..]);
+
+            TextHelper.Unsafe.CopyTo(Written[index..], this[(index + length)..]);
             _length = newLen;
             return _charArray.AsSpan(index, length);
         }
+
         return default;
     }
 
@@ -249,6 +259,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
             _length = newLen;
             return _charArray.AsSpan(curLen, length);
         }
+
         return default;
     }
 
@@ -271,6 +282,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
             GrowThenCopy(ch);
         }
     }
+
     void ICollection<char>.Add(char item) => Write(item);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -506,7 +518,6 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                             {
                                 front = (int)Math.Ceiling(half);
                                 back = (int)Math.Floor(half);
-                                
                             }
                             // Defaults to Left
                             else
@@ -514,6 +525,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                                 front = (int)Math.Floor(half);
                                 back = (int)Math.Ceiling(half);
                             }
+
                             Write(text[front..^back]);
                         }
                     }
@@ -523,7 +535,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                     if (alignment == Alignment.Left)
                     {
                         Write(text);
-                        Allocate(spaces).Fill(fillChar);  
+                        Allocate(spaces).Fill(fillChar);
                     }
                     else if (alignment == Alignment.Right)
                     {
@@ -573,6 +585,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
             Write<T>(value);
             return;
         }
+
         // We don't know how big value will turn out to be once formatted,
         // so we can just let another temp TextBuilder do the work
         // and then we use the great logic above
@@ -613,7 +626,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         if (strValue is not null)
         {
             var span = Allocate(strValue.Length);
-            TextHelper.CopyTo(strValue, span);
+            TextHelper.Unsafe.CopyTo(strValue, span);
             return span;
         }
         else
@@ -667,6 +680,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         Allocate(count).Fill(ch);
         return this;
     }
+
     public TextBuilder AppendRepeat(int count, ReadOnlySpan<char> text)
     {
         var len = text.Length;
@@ -675,10 +689,11 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         var textChar = text.GetPinnableReference();
         for (var i = 0; i < count; i++)
         {
-            TextHelper.CopyBlock(in textChar,
-                              ref buffer[i * len],
-                              len);
+            TextHelper.Unsafe.CopyBlock(in textChar,
+                ref buffer[i * len],
+                len);
         }
+
         return this;
     }
 
@@ -695,20 +710,23 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         ref char textChar = ref this[start];
         for (var i = 0; i < count; i++)
         {
-            TextHelper.CopyBlock(in textChar,
-                              ref buffer[i * len],
-                              len);
+            TextHelper.Unsafe.CopyBlock(in textChar,
+                ref buffer[i * len],
+                len);
         }
+
         return this;
     }
 
-    public TextBuilder AppendFormatRepeat<T>(int count, T? value, string? format = null, IFormatProvider? provider = null)
+    public TextBuilder AppendFormatRepeat<T>(int count, T? value, string? format = null,
+        IFormatProvider? provider = null)
     {
         if (value is null || count <= 1)
         {
             Write<T>(value);
             return this;
         }
+
         int start = _length;
         WriteFormatted<T>(value, format, provider);
         int end = _length;
@@ -719,10 +737,11 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         ref char textChar = ref this[start];
         for (var i = 0; i < count; i++)
         {
-            TextHelper.CopyBlock(in textChar,
-                              ref buffer[i * len],
-                              len);
+            TextHelper.Unsafe.CopyBlock(in textChar,
+                ref buffer[i * len],
+                len);
         }
+
         return this;
     }
 
@@ -735,6 +754,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 Write<T>(values[i]);
             }
         }
+
         return this;
     }
 
@@ -744,6 +764,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             Write<T>(value);
         }
+
         return this;
     }
 
@@ -770,6 +791,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 break;
             }
         }
+
         return this;
     }
 
@@ -799,6 +821,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 }
             }
         }
+
         return this;
     }
 
@@ -816,10 +839,12 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 }
             }
         }
+
         return this;
     }
 
-    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, ReadOnlySpan<T> values, Action<TextBuilder, T> appendValue)
+    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, ReadOnlySpan<T> values,
+        Action<TextBuilder, T> appendValue)
     {
         switch (values.Length)
         {
@@ -840,9 +865,10 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 break;
             }
         }
+
         return this;
     }
-    
+
     public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, T[] values, Action<TextBuilder, T> appendValue)
     {
         switch (values.Length)
@@ -864,10 +890,12 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 break;
             }
         }
+
         return this;
     }
 
-    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T> values, Action<TextBuilder, T> appendValue)
+    public TextBuilder AppendDelimit<T>(ReadOnlySpan<char> delimiter, IEnumerable<T> values,
+        Action<TextBuilder, T> appendValue)
     {
         using (var e = values.GetEnumerator())
         {
@@ -881,6 +909,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 }
             }
         }
+
         return this;
     }
 
@@ -895,9 +924,10 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             Write(_newLine);
         }
+
         return this;
     }
-    
+
     #region Indenting
 
     public TextBuilder Indent(ReadOnlySpan<char> indent,
@@ -909,7 +939,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         _newLine = oldIndent;
         return this;
     }
-    
+
     #endregion
 
     public TextBuilder Insert(int index, char ch)
@@ -920,6 +950,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         AllocateAt(index, 1)[0] = ch;
         return this;
     }
+
     void IList<char>.Insert(int index, char ch) => this.Insert(index, ch);
 
     public TextBuilder Insert(int index, ReadOnlySpan<char> text)
@@ -927,7 +958,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         Validate.Insert(index, _length);
         if (index == _length)
             return Append(text);
-        TextHelper.CopyTo(text, AllocateAt(index, text.Length));
+        TextHelper.Unsafe.CopyTo(text, AllocateAt(index, text.Length));
         return this;
     }
 
@@ -946,7 +977,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
             return Append(temp.Written);
         }
 
-        TextHelper.CopyTo(temp.Written, AllocateAt(index, temp.Length));
+        TextHelper.Unsafe.CopyTo(temp.Written, AllocateAt(index, temp.Length));
         return this;
     }
 
@@ -957,16 +988,20 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             if (chars[i] == ch) return i;
         }
+
         return -1;
     }
+
     int IList<char>.IndexOf(char ch) => FirstIndexOf(ch);
+
     public int LastIndexOf(char ch)
     {
         ReadOnlySpan<char> chars = Written;
-        for (var i = chars.Length-1; i >= 0; i--)
+        for (var i = chars.Length - 1; i >= 0; i--)
         {
             if (chars[i] == ch) return i;
         }
+
         return -1;
     }
 
@@ -974,14 +1009,17 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
     {
         return MemoryExtensions.IndexOf(Written, text);
     }
+
     public int FirstIndexOf(ReadOnlySpan<char> text, StringComparison comparison)
     {
         return MemoryExtensions.IndexOf(Written, text, comparison);
     }
+
     public int LastIndexOf(ReadOnlySpan<char> text)
     {
         return MemoryExtensions.LastIndexOf(Written, text);
     }
+
     public int LastIndexOf(ReadOnlySpan<char> text, StringComparison comparison)
     {
         return MemoryExtensions.LastIndexOf(Written, text, comparison);
@@ -1000,6 +1038,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 ch = newChar;
             }
         }
+
         return this;
     }
 
@@ -1011,9 +1050,9 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         int i;
         while ((i = MemoryExtensions.IndexOf(scan, oldText, comparison)) >= 0)
         {
-            TextHelper.CopyBlock(in refNewTextChar,
-                              ref scan[i],
-                              len);
+            TextHelper.Unsafe.CopyBlock(in refNewTextChar,
+                ref scan[i],
+                len);
             scan = scan.Slice(i + len);
         }
     }
@@ -1027,11 +1066,11 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         int i;
         while ((i = MemoryExtensions.IndexOf(scan, oldText, comparison)) >= 0)
         {
-            TextHelper.CopyBlock(in refNewTextChar,
-                              ref scan[i],
-                              newLen);
+            TextHelper.Unsafe.CopyBlock(in refNewTextChar,
+                ref scan[i],
+                newLen);
             var right = scan.Slice(i + newLen);
-            TextHelper.CopyTo(scan.Slice(i + oldLen), right);
+            TextHelper.Unsafe.CopyTo(scan.Slice(i + oldLen), right);
             scan = right;
         }
     }
@@ -1050,7 +1089,8 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         throw new NotImplementedException();
     }
 
-    public TextBuilder Replace(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText, StringComparison comparison = StringComparison.Ordinal)
+    public TextBuilder Replace(ReadOnlySpan<char> oldText, ReadOnlySpan<char> newText,
+        StringComparison comparison = StringComparison.Ordinal)
     {
         var oldLen = oldText.Length;
         if (oldLen == 0 || oldLen > _length) return this;
@@ -1066,6 +1106,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             ReplaceGrow(oldText, newText, comparison);
         }
+
         return this;
     }
 
@@ -1093,8 +1134,10 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 return i;
             }
         }
+
         return -1;
     }
+
     bool ICollection<char>.Remove(char ch) => RemoveFirst(ch) >= 0;
 
     public int RemoveLast(char ch)
@@ -1108,6 +1151,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
                 return i;
             }
         }
+
         return -1;
     }
 
@@ -1118,8 +1162,10 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             RemoveSpan(i, text.Length);
         }
+
         return i;
     }
+
     public int RemoveFirst(ReadOnlySpan<char> text, StringComparison comparison)
     {
         var i = FirstIndexOf(text, comparison);
@@ -1127,6 +1173,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             RemoveSpan(i, text.Length);
         }
+
         return i;
     }
 
@@ -1137,8 +1184,10 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             RemoveSpan(i, text.Length);
         }
+
         return i;
     }
+
     public int RemoveLast(ReadOnlySpan<char> text, StringComparison comparison)
     {
         var i = LastIndexOf(text, comparison);
@@ -1146,6 +1195,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             RemoveSpan(i, text.Length);
         }
+
         return i;
     }
 
@@ -1155,6 +1205,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         _length = 0;
         return this;
     }
+
     void ICollection<char>.Clear() => this.Clear();
 
     public int Measure(Action<TextBuilder> buildText)
@@ -1163,6 +1214,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         buildText(this);
         return _length - start;
     }
+
     public int[] Measure(params Action<TextBuilder>[] writeTexts)
     {
         int len = writeTexts.Length;
@@ -1171,6 +1223,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         {
             measurements[i] = Measure(writeTexts[i]);
         }
+
         return measurements;
     }
 
@@ -1203,6 +1256,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
             writeValue(this, value);
             writeLengths.Add(_length - start);
         }
+
         var total = writeLengths.Sum();
         if (total > maxLengthBeforeWrap)
         {
@@ -1215,14 +1269,13 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
             }
         }
     }
-    
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CopyTo(char[] array, int arrayIndex = 0) => TextHelper.CopyTo(Written, array.AsSpan(arrayIndex));
+    public void CopyTo(char[] array, int arrayIndex = 0) => TextHelper.Unsafe.CopyTo(Written, array.AsSpan(arrayIndex));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CopyTo(Span<char> destination) => TextHelper.CopyTo(Written, destination);
+    public void CopyTo(Span<char> destination) => TextHelper.Unsafe.CopyTo(Written, destination);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryCopyTo(Span<char> destination) => TextHelper.TryCopyTo(Written, destination);
@@ -1232,6 +1285,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
     {
         /// <summary>The span being enumerated.</summary>
         private readonly Span<char> _span;
+
         /// <summary>The next index to yield.</summary>
         private int _index;
 
@@ -1309,26 +1363,21 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
     {
         return TextHelper.Equals(Written, text);
     }
+
     public bool Equals(ReadOnlySpan<char> text)
     {
         return TextHelper.Equals(Written, text);
     }
 
-    public override bool Equals(object? obj)
-    {
-        return UnsuitableException.ThrowEquals(this);
-    }
+    public override bool Equals(object? obj) => UnsupportedException.ThrowForEquals(this);
 
-    public override int GetHashCode()
-    {
-        return UnsuitableException.ThrowGetHashCode(this);
-    }
+    public override int GetHashCode() => UnsupportedException.ThrowForGetHashCode(this);
 
     public string ToString(Range range)
     {
         return new string(Written[range]);
     }
-    
+
     public override string ToString()
     {
         return new string(_charArray!, 0, _length);
