@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-
-namespace Jay;
+﻿namespace Jay;
 
 public static class Reference
 {

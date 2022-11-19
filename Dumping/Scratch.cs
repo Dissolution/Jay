@@ -22,9 +22,8 @@ public static class DumpHome
     {
         if (type == typeof(object))
             Debugger.Break();
-        if (type.IsValueType)
-
-
+       // ?
+       throw new NotImplementedException();
     }
 
 

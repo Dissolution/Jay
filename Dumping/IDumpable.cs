@@ -40,6 +40,4 @@ public interface IDumpable : ISpanFormattable, IFormattable
         DumpTo(ref dumpHandler, dumpFormat);
         return dumpHandler.ToStringAndDispose();
     }
-
-    string ToString() => Dump(null);
 }

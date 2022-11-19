@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Jay.Utilities;
+﻿namespace Jay.Utilities;
 
 public static class Fast
 {

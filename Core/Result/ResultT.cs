@@ -1,6 +1,6 @@
-﻿using System.Collections;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using Jay.Exceptions;
+
+using System.Collections;
 
 namespace Jay;
 
@@ -58,6 +58,15 @@ public readonly partial struct Result<T> : IEquatable<Result<T>>,
             throw (_error ?? new Exception(Result.DefaultErrorMessage));
         }
         value = _value!;
+    }
+
+    /// <summary>
+    /// Is this a failed <see cref="Result"/>?
+    /// </summary>
+    /// <returns>true if this is a failed result; otherwise, false</returns>
+    public bool IsFailure()
+    {
+        return !_pass;
     }
 
     /// <summary>
@@ -129,7 +138,7 @@ public readonly partial struct Result<T> : IEquatable<Result<T>>,
         return false;
     }
 
-    public override int GetHashCode() => throw new InvalidOperationException();
+    public override int GetHashCode() => UnsupportedException.ThrowForGetHashCode(this);
 
     public override string ToString()
     {

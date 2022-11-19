@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Jay.Dumping.Interpolated;
+﻿using Jay.Dumping.Interpolated;
 
 namespace Jay.Dumping.Dumpers;
 

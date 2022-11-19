@@ -1,6 +1,12 @@
-﻿namespace Jay;
+﻿using System.Numerics;
 
-public readonly partial struct Result<T>
+namespace Jay;
+
+public readonly partial struct Result<T> : 
+    IEqualityOperators<Result<T>, Result<T>, bool>,
+    IEqualityOperators<Result<T>, Result, bool>,
+    IEqualityOperators<Result<T>, bool, bool>
+
 {
     public static implicit operator Result<T>(T? value) => new Result<T>(true, value, null);
     public static implicit operator Result<T>(Exception? exception) => new Result<T>(false, default(T), exception ?? new Exception(Result.DefaultErrorMessage));
@@ -81,6 +87,14 @@ public readonly partial struct Result<T>
         {
             return ex;
         }
+    }
+
+
+
+    public static Result<T> TryInvoke(ResultOutFunc<T> resultOutFunc)
+    {
+        Result result = resultOutFunc(out T value);
+        return result.WithValue<T>(value);
     }
     
     /// <inheritdoc cref="Jay.Result.Result.InvokeOrDefault"/>

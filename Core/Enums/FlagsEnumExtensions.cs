@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using static InlineIL.IL;
+﻿using static InlineIL.IL;
 
 namespace Jay.Enums;
 
@@ -55,6 +54,26 @@ public static class FlagsEnumExtensions
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TEnum Or<TEnum>(this TEnum @enum, TEnum flag)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(flag));
+        Emit.Or();
+        return Return<TEnum>();
+    }
+    
+    /// <summary>
+    /// Returns a bitwise XOR (<c>^</c>) of the <paramref name="enum"/> and the <paramref name="flag"/>
+    /// </summary>
+    /// <typeparam name="TEnum">The <see cref="Type"/> of <see langword="enum"/> being XOR'd</typeparam>
+    /// <param name="enum">The first <typeparamref name="TEnum"/> to XOR</param>
+    /// <param name="flag">The second <typeparamref name="TEnum"/> to XOR</param>
+    /// <returns>The two <see langword="enum"/>s XOR'd together</returns>
+    /// <remarks>
+    /// <c>return (<paramref name="enum"/> ^ <paramref name="flag"/>);</c>
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum Xor<TEnum>(this TEnum @enum, TEnum flag)
         where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
@@ -173,31 +192,4 @@ public static class FlagsEnumExtensions
 
         return @enum.And(flag).Equal(flag);
     }
-}
-
-public static class EnumExtensions
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equal<TEnum>(this TEnum left, TEnum right)
-        where TEnum : struct, Enum
-    {
-        Emit.Ldarg(nameof(left));
-        Emit.Ldarg(nameof(right));
-        Emit.Ceq();
-        return Return<bool>();
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NotEqual<TEnum>(this TEnum left, TEnum right)
-        where TEnum : struct, Enum
-    {
-        Emit.Ldarg(nameof(left));
-        Emit.Ldarg(nameof(right));
-        Emit.Ceq();
-        Emit.Ldc_I4_0();
-        Emit.Ceq();
-        return Return<bool>();
-    }
-
-  
 }

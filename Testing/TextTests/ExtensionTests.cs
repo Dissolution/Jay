@@ -1,4 +1,3 @@
-using Jay.Text.Extensions;
 using Shouldly;
 
 namespace TextTests;

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Numerics;
 
 namespace Jay;
 
@@ -12,7 +12,9 @@ namespace Jay;
 /// We want the end user to use Result almost exactly as if it was bool.
 /// </remarks>
 /// 
-public readonly partial struct Result
+public readonly partial struct Result : 
+    IEqualityOperators<Result, Result, bool>,
+    IEqualityOperators<Result, bool, bool>
 {
     internal const string DefaultErrorMessage = "Operation Failed";
     
@@ -111,25 +113,8 @@ public readonly partial struct Result
     public static Result<T> TryInvoke<T>(Func<T>? func) => Result<T>.TryInvoke(func);
 
     
-    /*public static T? InvokeOrDefault<T>(Func<T> func)
-    {
-        try
-        {
-            return func();
-        }
-        catch
-        {
-            return default;
-        }
-    }*/
 
-    public delegate Result OutResult<T>(out T value);
-
-    public static T Invoke<T>(OutResult<T> outResult)
-    {
-        outResult(out T value).ThrowIfFailed();
-        return value;
-    }
+    public static Result<T> Invoke<T>(ResultOutFunc<T> outResult) => Result<T>.TryInvoke(outResult);
     
     /// <summary>
     /// Invokes the <paramref name="func"/> and returns its result.

@@ -1,7 +1,4 @@
-﻿using System.Numerics;
-using System.Runtime.CompilerServices;
-
-namespace Jay.Dumping;
+﻿namespace Jay.Dumping;
 
 public readonly ref struct DumpFormat
 {
@@ -34,6 +31,8 @@ public readonly ref struct DumpFormat
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new DumpFormat("V");
     }
+    
+   // public static DumpFormat Code ???
    
 
     private static int GetCompareValue(DumpFormat format)

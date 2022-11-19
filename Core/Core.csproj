@@ -1,21 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AssemblyName>Jay</AssemblyName>
-    <RootNamespace>Jay</RootNamespace>
-    <ApplicationIcon>jay.ico</ApplicationIcon>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>Jay</AssemblyName>
+        <RootNamespace>Jay</RootNamespace>
+        <ApplicationIcon>jay.ico</ApplicationIcon>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="jay.ico" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="jay.ico"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Collections\" />
-  </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Collections\"/>
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Fody" Version="6.6.4">
@@ -27,4 +28,9 @@
         </PackageReference>
     </ItemGroup>
 
+
+    <ItemGroup>
+        <Using Include="System.Diagnostics.CodeAnalysis"/>
+        <Using Include="System.Runtime.CompilerServices"/>
+    </ItemGroup>
 </Project>

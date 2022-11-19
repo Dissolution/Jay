@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Jay.Collections;
+﻿namespace Jay.Collections;
 
 /// <summary>
 /// A <see cref="Dictionary{TKey,TValue}"/> of <see cref="Type"/> and <typeparamref name="TValue"/>

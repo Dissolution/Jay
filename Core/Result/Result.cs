@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-
-namespace Jay;
+﻿namespace Jay;
 
 /// <summary>
 /// Represents the result of an operation as a Pass or a Failure with <see cref="Exception"/> information.
@@ -42,7 +39,16 @@ public readonly partial struct Result : IEquatable<Result>
     /// <summary>
     /// Is this a failed <see cref="Result"/>?
     /// </summary>
-    /// <param name="error">If this is a failed <see cref="Result"/>, the attached <see cref="Exception"/>; otherwise <see langword="null"/></param>
+    /// <returns>true if this is a failed result; otherwise, false</returns>
+    public bool IsFailure()
+    {
+        return !_pass;
+    }
+
+    /// <summary>
+    /// Is this a failed <see cref="Result"/>?
+    /// </summary>
+    /// <param name="error">If this is a failed <see cref="Result"/>, the attached (or a new) <see cref="Exception"/>; otherwise <see langword="null"/></param>
     /// <returns>true if this is a failed result; otherwise, false</returns>
     public bool IsFailure([NotNullWhen(true)] out Exception? error)
     {
@@ -57,7 +63,7 @@ public readonly partial struct Result : IEquatable<Result>
     }
 
     /// <summary>
-    /// Returns a <see cref="Result{T}"/> that is this <see cref="Result"/> with a <paramref name="value"/>
+    /// Returns a <see cref="Result{T}"/> that is the same pass/fail as this <see cref="Result"/> with a <paramref name="value"/>
     /// </summary>
     public Result<T> WithValue<T>(T? value)
     {

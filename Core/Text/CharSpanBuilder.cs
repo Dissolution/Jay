@@ -3,13 +3,9 @@
 
 using System.Buffers;
 using System.Diagnostics;
-using System.Globalization;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
+
 using Jay.Exceptions;
 using Jay.Validation;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Jay.Text;
 
