@@ -1,24 +1,27 @@
-﻿namespace Jay;
+﻿using System.Runtime.CompilerServices;
 
-public static class Reference
+namespace Jay
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T? CompareExchange<T>(ref T? location, T? value, T? comparand)
-        where T : class
+    public static class Reference
     {
-        var original = location;
-        if (ReferenceEquals(location, comparand))
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T? CompareExchange<T>(ref T? location, T? value, T? comparand)
+            where T : class
         {
-            location = value;
+            var original = location;
+            if (ReferenceEquals(location, comparand))
+            {
+                location = value;
+            }
+            return original;
         }
-        return original;
-    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T? Exchange<T>(ref T? location, T? value)
-    {
-        T? original = location;
-        location = value;
-        return original;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T? Exchange<T>(ref T? location, T? value)
+        {
+            T? original = location;
+            location = value;
+            return original;
+        }
     }
 }

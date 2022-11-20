@@ -21,9 +21,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TextTests", "Testing\TextTe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{90A8B8CF-3579-4A17-8BEB-FC5341B9F00B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reflection", "Reflection\Reflection.csproj", "{D90B09AE-F8AC-494A-B329-DB5FD5D1648A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reflection", "Reflection\Reflection.csproj", "{D90B09AE-F8AC-494A-B329-DB5FD5D1648A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dumping", "Dumping\Dumping.csproj", "{AECCDA96-14B9-48F5-B833-CD6DCA6F8945}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dumping", "Dumping\Dumping.csproj", "{AECCDA96-14B9-48F5-B833-CD6DCA6F8945}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Geometry", "Geometry\Geometry.csproj", "{5C7FA563-69E1-46B0-918B-14D5BCA9FD6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +57,10 @@ Global
 		{AECCDA96-14B9-48F5-B833-CD6DCA6F8945}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AECCDA96-14B9-48F5-B833-CD6DCA6F8945}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AECCDA96-14B9-48F5-B833-CD6DCA6F8945}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C7FA563-69E1-46B0-918B-14D5BCA9FD6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C7FA563-69E1-46B0-918B-14D5BCA9FD6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C7FA563-69E1-46B0-918B-14D5BCA9FD6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C7FA563-69E1-46B0-918B-14D5BCA9FD6C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

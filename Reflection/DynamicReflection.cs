@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Dynamic;
 
-using Jay.Comparison;
 using Jay.Dumping.Extensions;
 using Jay.Extensions;
 using Jay.Reflection.Building.Adaption;
+using Jay.Reflection.Comparison;
 using Jay.Reflection.Extensions;
 using Jay.Reflection.Searching;
 

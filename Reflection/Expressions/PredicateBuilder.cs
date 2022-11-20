@@ -1,19 +1,30 @@
-﻿namespace Jay.Reflection.Expressions;
+﻿using System.Linq.Expressions;
+
+namespace Jay.Reflection.Expressions;
 
 public static class PredicateBuilder
 {
-    /// <summary>
-    /// Creates a <see cref="Predicate{T}"/> <see cref="Expression"/> that evaluates to <c>true</c>
-    /// </summary>
-    public static Expression<Func<T, bool>> True<T>() => PredicateBuilder<T>.True;
+
+
+
+
 
     /// <summary>
-    /// Creates a <see cref="Predicate{T}"/> <see cref="Expression"/> that evaluates to <c>false</c>
+    /// Creates a predicate that evaluates to true.
     /// </summary>
-    public static Expression<Func<T, bool>> False<T>() => PredicateBuilder<T>.False;
+    public static Expression<Func<T, bool>> True<T>() => Predicate<T>.True;
 
     /// <summary>
-    /// Creates a <see cref="Predicate{T}"/> <see cref="Expression"/> evaluating the given <paramref name="predicate"/>
+    /// Creates a predicate that evaluates to false.
     /// </summary>
-    public static Expression<Func<T, bool>> Create<T>(Func<T, bool> predicate) => (t => predicate(t));
+    public static Expression<Func<T, bool>> False<T>() => Predicate<T>.False;
+
+    /// <summary>
+    /// Creates a predicate expression from the specified lambda expression.
+    /// </summary>
+    public static Expression<Func<T, bool>> Create<T>(Expression<Func<T, bool>> predicate) => predicate;
+
+    public static Expression<Func<T, bool>> Create<T>(Func<T, bool> predicate) => t => predicate(t);
+
+
 }

@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
-
-using Jay.Collections.Pooling;
+using Jay.Text;
 
 namespace Jay.Enums;
 
@@ -60,7 +59,7 @@ public abstract class FlagsEnumLike<TSelf> : EnumLike<TSelf>,
         if (_members.TryGetValue(value, out var existing))
             return existing;
         // Create combination
-        var sb = StringBuilderPool.Shared.Borrow();
+        var sb = StringBuilderPool.Shared.Rent();
         var flagNames = _members
             .Where(pair => BitOperations.IsPow2(pair.Key))
             .Where(pair => ((value & pair.Value.Value) != 0))

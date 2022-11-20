@@ -1,4 +1,4 @@
-﻿namespace Jay.Comparison;
+﻿namespace Jay.Comparision;
 
 public sealed class FuncComparer<T> : Comparer<T>
 {
@@ -8,6 +8,10 @@ public sealed class FuncComparer<T> : Comparer<T>
     {
         _compare = compare;
     }
-    
-    public override int Compare(T? x, T? y) => _compare(x, y);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override int Compare(T? x, T? y)
+    {
+        return _compare(x, y);
+    }
 }

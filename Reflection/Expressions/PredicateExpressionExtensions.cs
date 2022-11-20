@@ -1,4 +1,5 @@
-﻿namespace Jay.Reflection.Expressions;
+﻿
+namespace Jay.Reflection.Expressions;
 
 public static class PredicateExpressionExtensions
 {
@@ -18,10 +19,10 @@ public static class PredicateExpressionExtensions
         Expression<Func<T, bool>> right)
     {
         if (Equals(left, right)) return left;
-        if (Equals(left, PredicateBuilder<T>.True)) return right;
-        if (Equals(right, PredicateBuilder<T>.True)) return left;
-        if (Equals(left, PredicateBuilder<T>.False) || Equals(right, PredicateBuilder<T>.False))
-            return PredicateBuilder<T>.False;
+        if (Equals(left, Predicate<T>.True)) return right;
+        if (Equals(right, Predicate<T>.True)) return left;
+        if (Equals(left, Predicate<T>.False) || Equals(right, Predicate<T>.False))
+            return Predicate<T>.False;
 
         var body = Expression.AndAlso(left.Body,
             right.Body.ReplaceParameter(right.Parameters[0], left.Parameters[0]));
@@ -31,10 +32,10 @@ public static class PredicateExpressionExtensions
     public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
     {
         if (Equals(left, right)) return left;
-        if (Equals(left, PredicateBuilder<T>.False)) return right;
-        if (Equals(right, PredicateBuilder<T>.False)) return left;
-        if (Equals(left, PredicateBuilder<T>.True) || Equals(right, PredicateBuilder<T>.True))
-            return PredicateBuilder<T>.True;
+        if (Equals(left, Predicate<T>.False)) return right;
+        if (Equals(right, Predicate<T>.False)) return left;
+        if (Equals(left, Predicate<T>.True) || Equals(right, Predicate<T>.True))
+            return Predicate<T>.True;
 
         var body = Expression.OrElse(left.Body,
             right.Body.ReplaceParameter(right.Parameters[0], left.Parameters[0]));

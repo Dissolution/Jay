@@ -1,6 +1,6 @@
-﻿using Jay.Comparison;
-using Jay.Dumping.Interpolated;
+﻿using Jay.Dumping.Interpolated;
 using Jay.Reflection.Building;
+using Jay.Reflection.Comparison;
 
 namespace Jay.Reflection.Exceptions;
 

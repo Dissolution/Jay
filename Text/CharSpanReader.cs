@@ -1,4 +1,6 @@
-﻿namespace Jay.Text;
+﻿using Jay.Extensions;
+
+namespace Jay.Text;
 
 public ref struct CharSpanReader
 {

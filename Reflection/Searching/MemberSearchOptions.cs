@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
+
 using Jay.Enums;
 using Jay.Reflection.Building.Adaption;
+using Jay.Reflection.Enums;
 using Jay.Reflection.Extensions;
 
 namespace Jay.Reflection.Searching;

@@ -1,9 +1,9 @@
-﻿namespace Jay.Conversion;
+﻿namespace Jay.Reflection.Conversion;
 
 public sealed record class ConvertOptions
 {
     public required IFormatProvider? FormatProvider { get; init; }
-    
+
 }
 
 public class Converter

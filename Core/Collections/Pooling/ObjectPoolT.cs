@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Jay.Extensions;
 
 // ReSharper disable MethodOverloadWithOptionalParameter
 
@@ -129,7 +130,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     }
 
     /// <summary>
-    /// When we cannot find an available item quickly with <see cref="Borrow()"/>, we take this slower path
+    /// When we cannot find an available item quickly with <see cref="Rent()"/>, we take this slower path
     /// </summary>
     private T RentSlow()
     {
@@ -187,7 +188,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// Note that Rent will try to store recycled objects close to the start
     /// thus statistically reducing how far we will typically search.
     /// </remarks>
-    public T Borrow()
+    public T Rent()
     {
         // Always check if we've been disposed
         CheckDisposed();
@@ -253,9 +254,9 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <remarks>
     /// <paramref name="instance"/> must not be used after this is disposed.
     /// </remarks>
-    public IPoolInstance<T> Borrow(out T instance)
+    public IPoolInstance<T> Rent(out T instance)
     {
-        instance = Borrow();
+        instance = Rent();
         return new PoolInstance<T>(this, instance);
     }
         

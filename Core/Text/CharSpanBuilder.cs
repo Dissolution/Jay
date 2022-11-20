@@ -296,6 +296,8 @@ public ref struct CharSpanWriter
 
     #endregion
 
+    public void WriteLine() => Write(Environment.NewLine);
+
 
     /// <summary>Clears the handler, returning any rented array to the pool.</summary>
     public void Dispose()

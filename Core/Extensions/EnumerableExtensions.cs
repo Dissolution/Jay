@@ -1,10 +1,24 @@
-﻿namespace Jay.Extensions;
+﻿using Jay.Collections;
+using Jay.Comparision;
 
-
-public delegate bool SelectWhere<in TIn, TOut>(TIn input, out TOut output);
+namespace Jay.Extensions;
 
 public static class EnumerableExtensions
 {
+    public delegate bool SelectWherePredicate<in TIn, TOut>(TIn input, out TOut output);
+
+    public static IEnumerable<TOut> SelectWhere<TIn, TOut>(this IEnumerable<TIn> source, SelectWherePredicate<TIn, TOut> selectWherePredicate)
+    {
+        foreach (TIn input in source)
+        {
+            if (selectWherePredicate(input, out var output))
+            {
+                yield return output;
+            }
+        }
+    }
+
+    [return: NotNullIfNotNull(nameof(defaultValue))]
     public static T? OneOrDefault<T>(this IEnumerable<T> source, T? defaultValue = default)
     {
         using var e = source.GetEnumerator();
@@ -12,6 +26,34 @@ public static class EnumerableExtensions
         T value = e.Current;
         if (e.MoveNext()) return defaultValue;
         return value;
+    }
+
+    [return: NotNullIfNotNull(nameof(defaultValue))]
+    public static T? OneOrDefault<T>(this IEnumerable<T> source,
+        Func<T, bool> predicate, T? defaultValue = default)
+    {
+        using var e = source.GetEnumerator();
+        while (e.MoveNext())
+        {
+            T result = e.Current;
+            if (predicate(result))
+            {
+                while (e.MoveNext())
+                {
+                    // If there is more than one match, fail
+                    if (predicate(e.Current))
+                    {
+                        return defaultValue;
+                    }
+                }
+
+                // Only one match
+                return result;
+            }
+        }
+
+        // No matches
+        return defaultValue;
     }
 
     public static IEnumerable<T> Double<T>(this IEnumerable<T> source)
@@ -73,21 +115,146 @@ public static class EnumerableExtensions
             yield return current;
         }
     }
-
-
-    public static IEnumerable<TOut> SelectWhere<TIn, TOut>(this IEnumerable<TIn> source, SelectWhere<TIn, TOut> selectWherePredicate)
+      
+    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source)
     {
-        foreach (TIn input in source)
+        return source.Where(value => value is not null)!;
+    }
+
+    public static IEnumerable<EnumeratorItem<T>> Indexed<T>(this IEnumerable<T>? enumerable)
+    {
+        if (enumerable is null)
         {
-            if (selectWherePredicate(input, out var output))
+            yield break;
+        }
+        //IList<T>
+        else if (enumerable is IList<T> list)
+        {
+            var count = list.Count;
+            //No items, exit immediately
+            if (count == 0)
+                yield break;
+            //For each item, yield the entry
+            for (var i = 0; i < list.Count; i++)
             {
-                yield return output;
+                yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, list[i]);
+            }
+        }
+        //ICollection<T>
+        else if (enumerable is ICollection<T> collection)
+        {
+            var count = collection.Count;
+            if (count == 0)
+                yield break;
+            int last = count - 1;
+            using var e = collection.GetEnumerator();
+            var i = 0;
+            while (e.MoveNext())
+            {
+                yield return new EnumeratorItem<T>(index: i,
+                                                   sourceLength:
+                                                   count,
+                                                   isFirst: i == 0,
+                                                   isLast: i == last,
+                                                   value: e.Current);
+                i++;
+            }
+        }
+        //IReadOnlyList<T>
+        else if (enumerable is IReadOnlyList<T> roList)
+        {
+            var count = roList.Count;
+            //No items, exit immediately
+            if (count == 0)
+                yield break;
+            //For each item, yield the entry
+            for (var i = 0; i < roList.Count; i++)
+            {
+                yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, roList[i]);
+            }
+        }
+        //IReadOnlyCollection<T>
+        else if (enumerable is IReadOnlyCollection<T> roCollection)
+        {
+            var count = roCollection.Count;
+            if (count == 0)
+                yield break;
+            using (var e = roCollection.GetEnumerator())
+            {
+                var i = 0;
+                while (e.MoveNext())
+                {
+                    yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, e.Current);
+                    i++;
+                }
+            }
+        }
+        //Have to enumerate
+        else
+        {
+            using (var e = enumerable.GetEnumerator())
+            {
+                //If we cannot move, we are done
+                if (!e.MoveNext())
+                    yield break;
+
+                //Defaults to first, not last, with index 0
+                var last = false;
+                var i = 0;
+                while (!last)
+                {
+                    //Get the current value
+                    var current = e.Current;
+                    //Move next now to check for last
+                    last = !e.MoveNext();
+                    //Return our entry
+                    yield return new EnumeratorItem<T>(i, null, i == 0, last, current);
+                    //increment index
+                    i++;
+                }
             }
         }
     }
 
-    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source)
+    public static IEnumerable<T> OrderBy<T, TSub>(this IEnumerable<T> enumerable,
+                                              Func<T, TSub> selectSub,
+                                              params TSub[] order)
+        where TSub : IEquatable<TSub>
     {
-        return source.Where(value => value is not null)!;
+
+        int getIndex(TSub value)
+        {
+            for (var i = 0; i < order.Length; i++)
+            {
+                if (order[i].Equals(value)) return i;
+            }
+            return order.Length;
+        }
+
+        return enumerable.OrderBy(selectSub,
+                                  new FuncComparer<TSub>((x, y) =>
+                                  {
+                                      if (x == null) return y == null ? 0 : -1;
+                                      if (y == null) return 1;
+                                      return getIndex(x).CompareTo(getIndex(y));
+                                  }));
+    }
+
+    public static void Consume<T>(this IEnumerable<T> enumerable, Action<T> perItem)
+    {
+        if (enumerable is IList<T> list)
+        {
+            for (var i = 0; i < list.Count; i++)
+            {
+                perItem(list[i]);
+            }
+        }
+        else
+        {
+            foreach (var item in enumerable)
+            {
+                perItem(item);
+            }
+        }
     }
 }

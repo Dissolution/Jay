@@ -1,5 +1,7 @@
 ﻿using System.Numerics;
+
 using Jay.Enums;
+using Jay.Reflection.Enums;
 using Jay.Reflection.Extensions;
 // ReSharper disable InvokeAsExtensionMethod
 

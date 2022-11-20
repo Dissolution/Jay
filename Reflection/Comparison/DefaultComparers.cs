@@ -5,11 +5,11 @@ using Jay.Collections;
 using Jay.Extensions;
 using Jay.Validation;
 
-namespace Jay.Comparison;
+namespace Jay.Reflection.Comparison;
 
 
 
-public sealed class DefaultComparers : IEqualityComparer<object?>, IEqualityComparer, 
+public sealed class DefaultComparers : IEqualityComparer<object?>, IEqualityComparer,
                                        IComparer<object?>, IComparer
 {
     private static readonly ConcurrentTypeDictionary<IEqualityComparer> _equalityComparerCache = new();
@@ -27,12 +27,12 @@ public sealed class DefaultComparers : IEqualityComparer<object?>, IEqualityComp
     {
         ArgumentNullException.ThrowIfNull(type);
         equalityComparer ??= FindEqualityComparer(type);
-        _equalityComparerCache.AddOrUpdate(type, equalityComparer, (_,_) => equalityComparer);
+        _equalityComparerCache.AddOrUpdate(type, equalityComparer, (_, _) => equalityComparer);
     }
-    
+
     public static IEqualityComparer<T> Equality<T>()
     {
-        return _equalityComparerCache.GetOrAdd<T>(_ => 
+        return _equalityComparerCache.GetOrAdd<T>(_ =>
                 FindEqualityComparer<T>().ValidateInstanceOf<IEqualityComparer>())
             .ValidateInstanceOf<IEqualityComparer<T>>();
     }
@@ -66,7 +66,7 @@ public sealed class DefaultComparers : IEqualityComparer<object?>, IEqualityComp
             return _equalityComparerCache.GetOrAdd(typeof(T), FindEqualityComparer)
                 .ValidateInstanceOf<IEqualityComparer<T>>();
         }
-        
+
         return EqualityComparer<T>.Default;
     }
 
@@ -90,9 +90,9 @@ public sealed class DefaultComparers : IEqualityComparer<object?>, IEqualityComp
             .ValidateInstanceOf<IEqualityComparer>();
     }
 
-    
-    
-    
+
+
+
     public static IComparer<T> Comparision<T>()
     {
 
@@ -113,7 +113,7 @@ public sealed class DefaultComparers : IEqualityComparer<object?>, IEqualityComp
     {
         return Equality<T>().Equals(left, right);
     }
-    
+
     public new bool Equals(object? left, object? right)
     {
         if (left is null) return right is null;
@@ -121,15 +121,15 @@ public sealed class DefaultComparers : IEqualityComparer<object?>, IEqualityComp
         return Equality(leftType).Equals(left, right);
     }
 
-    bool IEqualityComparer<object?>.Equals(object? left, object? right) => this.Equals(left, right);
-    bool IEqualityComparer.Equals(object? left, object? right) => this.Equals(left, right);
+    bool IEqualityComparer<object?>.Equals(object? left, object? right) => Equals(left, right);
+    bool IEqualityComparer.Equals(object? left, object? right) => Equals(left, right);
 
     public int GetHashCode<T>(T? value)
     {
         if (value is null) return 0;
         return Equality<T>().GetHashCode(value);
     }
-    
+
     public int GetHashCode(object? obj)
     {
         if (obj is null) return 0;
@@ -141,7 +141,7 @@ public sealed class DefaultComparers : IEqualityComparer<object?>, IEqualityComp
     {
         return Comparision<T>().Compare(left, right);
     }
-    
+
     public int Compare(object? left, object? right)
     {
         if (left is null)
@@ -151,5 +151,5 @@ public sealed class DefaultComparers : IEqualityComparer<object?>, IEqualityComp
         }
         return Comparision(left.GetType()).Compare(left, right);
     }
-    int IComparer.Compare(object? left, object? right) => this.Compare(left, right);
+    int IComparer.Compare(object? left, object? right) => Compare(left, right);
 }
