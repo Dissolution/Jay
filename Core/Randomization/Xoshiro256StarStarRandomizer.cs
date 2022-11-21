@@ -1,10 +1,21 @@
 ﻿using System.Numerics;
+using System.Runtime.InteropServices;
+
 using Jay.Utilities;
+
+using static InlineIL.IL;
 
 namespace Jay.Randomization;
 
 internal sealed class Xoshiro256StarStarRandomizer : Randomizer
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TOut DirectCast<TIn, TOut>(TIn input)
+    {
+        Emit.Ldarg(nameof(input));
+        return Return<TOut>();
+    }
+
     /// <summary>
     /// SplitMix64 Pseudo-Random Number Generator
     /// </summary>
@@ -382,7 +393,7 @@ internal sealed class Xoshiro256StarStarRandomizer : Randomizer
             var exponent = ZeroTo(0xFF); // do not generate 0xFF (infinities and NaN)
             var mantissa = ZeroTo(0x800001);
             var bits = (sign << 31) + (exponent << 23) + mantissa;
-            return Danger.DirectCast<long, float>(bits);
+            return DirectCast<long, float>(bits);
         }
     }
 
@@ -502,7 +513,7 @@ internal sealed class Xoshiro256StarStarRandomizer : Randomizer
         {
             Span<byte> bytes = stackalloc byte[sizeof(double)];
             Fill(bytes);
-            return Danger.ReadUnaligned<double>(bytes);
+            return Unsafe.ReadUnaligned<double>(ref bytes.GetPinnableReference());
         }
         else
         {
@@ -596,8 +607,8 @@ internal sealed class Xoshiro256StarStarRandomizer : Randomizer
         while (span.Length >= sizeof(ulong))
         {
             // Get 64 random bits, and assign to buffer (at the slice it is currently pointing to)
-            Danger.WriteUnaligned(
-                ref Danger.SpanToRef(span),
+            Unsafe.WriteUnaligned(
+                ref MemoryMarshal.AsRef<byte>(span),
                 BitOperations.RotateLeft(state1 * 5, 7) * 9);
 
             // Update PRNG state.

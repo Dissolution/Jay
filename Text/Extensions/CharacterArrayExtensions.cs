@@ -5,10 +5,9 @@ namespace Jay.Text.Extensions;
 public static class CharacterArrayExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Contains<T>(this T[] array, T item)
-        where T : IEquatable<T>
+    public static bool Contains(this char[] charArray, char ch)
     {
-        return MemoryExtensions.Contains<T>(array, item);
+        return MemoryExtensions.Contains<char>(charArray, ch);
     }
 
 

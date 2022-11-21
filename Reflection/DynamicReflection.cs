@@ -7,6 +7,7 @@ using Jay.Reflection.Building.Adaption;
 using Jay.Reflection.Comparison;
 using Jay.Reflection.Extensions;
 using Jay.Reflection.Searching;
+using Jay.Utilities;
 
 namespace Jay.Reflection;
 
@@ -590,7 +591,7 @@ public sealed class DynamicReflection : DynamicObject
 
     public override int GetHashCode()
     {
-        return Hasher.GetHashCode(_target, _targetType);
+        return Hasher.Combine(_target, _targetType);
     }
 
     public override string ToString()

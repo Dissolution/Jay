@@ -78,7 +78,7 @@ public static class ComparerCache
             .GetProperty(nameof(Comparer<byte>.Default),
                 BindingFlags.Public | BindingFlags.Static)
             .ThrowIfNull($"Cannot find the Comparer<{t}>.Default property")
-            .GetValue<Types.Static, IComparer>(ref Types.Static.Instance)
+            .GetValue<NoInstance, IComparer>(ref NoInstance.Ref)
             .ThrowIfNull($"Cannot cast Comparer<{t}> to IComparer"));
     }
 

@@ -8,6 +8,7 @@
         <AssemblyName>Jay</AssemblyName>
         <RootNamespace>Jay</RootNamespace>
         <ApplicationIcon>jay.ico</ApplicationIcon>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>

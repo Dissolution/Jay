@@ -39,7 +39,7 @@ public ref struct FormatterStringHandler
     private void Grow()
     {
         var newArray = ArrayPool<char>.Shared.Rent(_chars.Length * 2);
-        TextHelper.CopyTo(Written, newArray);
+        Written.CopyTo(newArray);
         ArrayPool<char>.Shared.Return(_chars);
         _chars = newArray;
     }
@@ -53,7 +53,7 @@ public ref struct FormatterStringHandler
 
     public void AppendLiteral(ReadOnlySpan<char> text)
     {
-        while (!TextHelper.TryCopyTo(text, Available))
+        while (!text.TryCopyTo(Available))
         {
             Grow();
         }
@@ -64,7 +64,7 @@ public ref struct FormatterStringHandler
     {
         if (text is not null)
         {
-            while (!TextHelper.TryCopyTo(text, Available))
+            while (!text.TryCopyTo(Available))
             {
                 Grow();
             }
@@ -74,7 +74,7 @@ public ref struct FormatterStringHandler
 
     public void AppendFormatted(ReadOnlySpan<char> text)
     {
-        while (!TextHelper.TryCopyTo(text, Available))
+        while (!text.TryCopyTo(Available))
         {
             Grow();
         }
@@ -118,12 +118,12 @@ public ref struct FormatterStringHandler
 
     public override bool Equals(object? obj)
     {
-        return UnsuitableException.ThrowEquals(typeof(FormatterStringHandler));
+        return UnsupportedException.ThrowForEquals(typeof(FormatterStringHandler));
     }
 
     public override int GetHashCode()
     {
-        return UnsuitableException.ThrowGetHashCode(typeof(FormatterStringHandler));
+        return UnsupportedException.ThrowForGetHashCode(typeof(FormatterStringHandler));
     }
 
     public override string ToString()

@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Reflection;
 using Jay.Text;
 using Jay.Comparision;
+using Jay.Enums;
 
 namespace Jay.Reflection.Enums;
 
@@ -166,11 +167,14 @@ public sealed class EnumTypeInfo<TEnum> : EnumTypeInfo
             return _names[index];
         }
 
-        return TextBuilder.Build(value,
-            (text, enumValue)
-                => text.AppendDelimit(" | ",
-                    GetFlagIndices(enumValue),
-                    (tb, flagIndex) => tb.Write(_names[flagIndex])));
+        var writer = new CharSpanWriter();
+        var indices = GetFlagIndices(value);
+        for (var i = 0; i < indices.Length; i++)
+        {
+            if (i > 0) writer.Write(" | ");
+            writer.Write(_names[indices[i]]);
+        }
+        return writer.ToStringAndDispose();
     }
 
     public bool TryParse(string? text, out TEnum @enum)

@@ -28,68 +28,68 @@ public readonly record struct ParseOptions
         return false;
     }
 
-    public override string ToString()
-    {
-        using var text = TextBuilder.Borrow();
-        text.Write('(');
-        if (!ExactFormats.IsNullOrEmpty())
-        {
-            if (ExactFormats.Length == 1)
-            {
-                text.Append("format:\"")
-                    .Append(ExactFormats[0])
-                    .Write("\",");
-            }
-            else
-            {
-                text.Append("formats:[")
-                    .AppendDelimit(",", ExactFormats, (tb, format) => tb.Append('"').Append(format).Append('"'))
-                    .Write("],");
-            }
-        }
+    //public override string ToString()
+    //{
+    //    using var text = TextBuilder.Borrow();
+    //    text.Write('(');
+    //    if (!ExactFormats.IsNullOrEmpty())
+    //    {
+    //        if (ExactFormats.Length == 1)
+    //        {
+    //            text.Append("format:\"")
+    //                .Append(ExactFormats[0])
+    //                .Write("\",");
+    //        }
+    //        else
+    //        {
+    //            text.Append("formats:[")
+    //                .AppendDelimit(",", ExactFormats, (tb, format) => tb.Append('"').Append(format).Append('"'))
+    //                .Write("],");
+    //        }
+    //    }
 
-        if (FormatProvider is not null)
-        {
-            text.Append("provider:")
-                .Append(FormatProvider)
-                .Write(',');
-        }
+    //    if (FormatProvider is not null)
+    //    {
+    //        text.Append("provider:")
+    //            .Append(FormatProvider)
+    //            .Write(',');
+    //    }
 
-        if (Comparison != default)
-        {
-            text.Append("comparison:")
-                .Append(Comparison)
-                .Write(',');
-        }
+    //    if (Comparison != default)
+    //    {
+    //        text.Append("comparison:")
+    //            .Append(Comparison)
+    //            .Write(',');
+    //    }
 
-        if (NumberStyles != NumberStyles.Any)
-        {
-            text.Append("NumberStyle:")
-                .Append(NumberStyles)
-                .Write(',');
-        }
+    //    if (NumberStyles != NumberStyles.Any)
+    //    {
+    //        text.Append("NumberStyle:")
+    //            .Append(NumberStyles)
+    //            .Write(',');
+    //    }
 
-        if (DateTimeStyles != DateTimeStyles.None)
-        {
-            text.Append("DateTimeStyle:")
-                .Append(DateTimeStyles)
-                .Write(',');
-        }
+    //    if (DateTimeStyles != DateTimeStyles.None)
+    //    {
+    //        text.Append("DateTimeStyle:")
+    //            .Append(DateTimeStyles)
+    //            .Write(',');
+    //    }
 
-        if (TimeSpanStyles != TimeSpanStyles.None)
-        {
-            text.Append("TimeSpanStyle:")
-                .Append(TimeSpanStyles)
-                .Write(',');
-        }
+    //    if (TimeSpanStyles != TimeSpanStyles.None)
+    //    {
+    //        text.Append("TimeSpanStyle:")
+    //            .Append(TimeSpanStyles)
+    //            .Write(',');
+    //    }
 
-        if (UseFirstChar)
-        {
-            text.Write("FirstChar,");
-        }
+    //    if (UseFirstChar)
+    //    {
+    //        text.Write("FirstChar,");
+    //    }
 
-        text.RemoveLast(',');
-        text.Write(')');
-        return text.ToString();
-    }
+    //    text.RemoveLast(',');
+    //    text.Write(')');
+    //    return text.ToString();
+    //}
 }

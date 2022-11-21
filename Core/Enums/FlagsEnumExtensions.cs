@@ -1,4 +1,7 @@
-﻿using static InlineIL.IL;
+﻿using InlineIL;
+using System.Numerics;
+
+using static InlineIL.IL;
 
 namespace Jay.Enums;
 
@@ -82,7 +85,35 @@ public static class FlagsEnumExtensions
         return Return<TEnum>();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum ShiftedLeft<TEnum>(this TEnum @enum, int count)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(count));
+        Emit.Shl();
+        return Return<TEnum>();
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum ShiftedRight<TEnum>(this TEnum @enum, int count)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(count));
+        Emit.Shr_Un();  // 99%+ of enums are unsigned
+        return Return<TEnum>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int FlagCount<TEnum>(this TEnum @enum)
+       where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Conv_U8();
+        Emit.Call(MethodRef.Method(typeof(BitOperations), nameof(BitOperations.PopCount), typeof(ulong)));
+        return Return<int>();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddFlag<TEnum>(this ref TEnum @enum, TEnum flag)

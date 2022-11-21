@@ -27,6 +27,11 @@ public static class TypeExtensions
         return false;
     }
 
+    public static bool IsStatic(this Type? type)
+    {
+        return type is null || (type.IsAbstract && type.IsSealed);
+    }
+
     public static bool CanContainNull(this Type? type)
     {
         if (type is null) return true;

@@ -1,4 +1,6 @@
-﻿namespace Jay.Reflection.Conversion;
+﻿using Jay.Reflection.Conversion.Exceptions;
+
+namespace Jay.Reflection.Conversion;
 
 public interface ICaster<TIn, TOut> : ICaster
 {

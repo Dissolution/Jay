@@ -61,11 +61,11 @@ public sealed class FormatterCache : IFormatter
                                                    return Type.EmptyTypes;
                                                }
                                            })
-                                           .SelectWhere((Type type, [NotNullWhen(true)] out IFormatter? formatter) =>
+                                           .SelectWhere((Type type, out IFormatter? formatter) =>
                                            {
                                                if (type.Implements<IFormatter>() &&
                                                    type.IsClass && !type.IsAbstract && !type.IsInterface && !type.IsNested &&
-                                                   type.HasDefaultConstructor())
+                                                   type.GetConstructor(Type.EmptyTypes) != null)
                                                {
                                                    try
                                                    {
