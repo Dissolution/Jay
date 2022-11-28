@@ -61,11 +61,7 @@ public ref struct CharSpanBuilder
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _index;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if NETSTANDARD2_0_OR_GREATER
-        set => _index = (value < 0 ? 0 : (value > Capacity ? Capacity : value));
-#else
         set => _index = Math.Clamp(0, value, Capacity);
-#endif
     }
 
     public int Capacity

@@ -5,8 +5,9 @@ public readonly struct Size<T> :
     IAdditionOperators<Size<T>, Size<T>, Size<T>>,
     ISubtractionOperators<Size<T>, Size<T>, Size<T>>,
     IEquatable<Size<T>>,
-    ISpanParsable<Size<T>>,
-    ISpanFormattable
+    ISpanParsable<Size<T>>, IParsable<Size<T>>,
+    ISpanFormattable, IFormattable,
+    ICloneable<Size<T>>
     where T : INumber<T>, IMinMaxValue<T>, ISpanParsable<T>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -22,7 +23,7 @@ public readonly struct Size<T> :
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Size<T> operator -(Size<T> point) => new Size<T>(-point.Width, -point.Height);
 
-    public static Size<T> Empty { get; } = new Size<T>();
+    public static readonly Size<T> Empty;
     
     
     public readonly T Width;
@@ -41,6 +42,8 @@ public readonly struct Size<T> :
         width = this.Width;
         height = this.Height;
     }
+
+
 
     public static bool TryParse(string? text, IFormatProvider? provider, out Size<T> size)
     {
@@ -91,6 +94,8 @@ public readonly struct Size<T> :
     }
 
     public Size<T> Clone() => this;
+
+    public Size<T> DeepClone() => this;
 
     /// <inheritdoc />
     public bool Equals(Size<T> size)

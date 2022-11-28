@@ -1,6 +1,4 @@
-﻿#if !NETSTANDARD2_0_OR_GREATER
-
-using System.Collections;
+﻿using System.Collections;
 
 namespace Jay.Text.Comparision;
 
@@ -38,4 +36,3 @@ public interface ITextComparer :
 
     int Compare(ReadOnlySpan<char> x, ReadOnlySpan<char> y);
 }
-#endif

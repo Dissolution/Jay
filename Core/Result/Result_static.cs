@@ -114,8 +114,15 @@ public readonly partial struct Result :
 
     
 
-    public static Result<T> Invoke<T>(ResultOutFunc<T> outResult) => Result<T>.TryInvoke(outResult);
+    public static Result<T> AsResult<T>(ResultOutFunc<T> outResult) => Result<T>.TryInvoke(outResult);
     
+    public static T InvokeThrow<T>(ResultOutFunc<T> outResult)
+    {
+        Result result = outResult(out T value);
+        result.ThrowIfFailed();
+        return value;
+    }
+
     /// <summary>
     /// Invokes the <paramref name="func"/> and returns its result.
     /// If the <paramref name="func"/> throws an <see cref="Exception"/>, <paramref name="fallback"/> is returned instead.

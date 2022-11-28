@@ -21,6 +21,16 @@ public static class Validate
             $"{indexName} {index} must be between 0 and {available - 1}");
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Range(int available, Range range,
+        [CallerArgumentExpression(nameof(range))] string? rangeName = null)
+    {
+        (int offset, int length) = range.GetOffsetAndLength(available);
+        if ((uint)offset + (uint)length <= (uint)available) return;
+        throw new ArgumentOutOfRangeException(rangeName, range,
+            $"{rangeName} {range} must be between 0 and {available - 1}");
+    }
+
 
     public static void Insert(int available, int index, 
         [CallerArgumentExpression(nameof(index))] string? indexName = null)

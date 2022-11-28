@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD2_0_OR_GREATER
+﻿
 namespace Jay.Text.Comparision;
 
 /// <summary>
@@ -97,4 +97,3 @@ public sealed class RefinedTextComparers : TextComparers
         return 0;
     }
 }
-#endif

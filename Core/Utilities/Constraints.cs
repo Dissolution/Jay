@@ -1,4 +1,6 @@
 ﻿// ReSharper disable UnusedTypeParameter
+using System.Numerics;
+
 namespace Jay.Utilities;
 
 public static class Constraints
@@ -14,4 +16,6 @@ public static class Constraints
     public readonly struct IsUnmanaged<T> where T : unmanaged { }
 
     public readonly struct IsNewDisposable<T> where T : IDisposable, new() { }
+
+    public readonly struct IsNumberBase<T> where T : INumberBase<T> { }
 }

@@ -1,5 +1,4 @@
-﻿#if !NETSTANDARD2_0_OR_GREATER
-using System.Collections;
+﻿using System.Collections;
 
 namespace Jay.Text.Comparision;
 
@@ -57,4 +56,3 @@ public interface ITextEqualityComparer :
 
     int GetHashCode(ReadOnlySpan<char> span);
 }
-#endif

@@ -1,6 +1,4 @@
-﻿#if !NETSTANDARD2_0_OR_GREATER
-
-namespace Jay.Text.Comparision;
+﻿namespace Jay.Text.Comparision;
 
 /// <inheritdoc />
 /// <summary>
@@ -145,4 +143,3 @@ public class AlphanumericTextComparer : ITextComparer
         return BackToFrontCompare(x, y, _stringComparison);
     }
 }
-#endif

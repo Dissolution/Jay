@@ -1,6 +1,4 @@
-﻿#if !NETSTANDARD2_0_OR_GREATER
-
-namespace Jay.Text.Comparision;
+﻿namespace Jay.Text.Comparision;
 
 public abstract class TextComparers : ITextComparer, ITextEqualityComparer
 {
@@ -88,4 +86,3 @@ internal sealed class FastTextComparers : TextComparers
         return string.GetHashCode(text);
     }
 }
-#endif
