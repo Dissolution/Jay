@@ -1,5 +1,4 @@
 ﻿using Jay.Dumping.Interpolated;
-using Jay.Extensions;
 
 namespace Jay.Dumping.Dumpers;
 

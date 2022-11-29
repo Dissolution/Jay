@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using Jay.Dumping.Scratch;
+using Jay.Reflection.Conversion.Parsing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -22,13 +23,13 @@ var logger = host.Services.GetRequiredService<ILogger<Program>>();
 #endregion
 // WORK
 
-var arg = 147;
 
-string str = DumpHome.DumpToString(arg);
+string text = Guid.NewGuid().ToString();
+
+bool aResult = Guid.TryParse(text, out Guid aValue);
+bool bResult = Parser.TryParse(text, default, out Guid bValue);
 
 Debugger.Break();
-
-
 
 
 

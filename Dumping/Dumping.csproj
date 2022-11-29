@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Text\Text.csproj" />
   </ItemGroup>
 
   <ItemGroup>

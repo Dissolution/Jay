@@ -1,19 +1,24 @@
-﻿namespace Jay.Geometry;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using Jay.Parsing;
 
-public readonly struct Rectangle<T> : 
+namespace Jay.Geometry;
+
+public readonly struct Rectangle<T> :
     IEqualityOperators<Rectangle<T>, Rectangle<T>, bool>,
     IEquatable<Rectangle<T>>,
-    ISpanParsable<Rectangle<T>>,
-    ISpanFormattable
+    INumberParsable<Rectangle<T>>, ISpanParsable<Rectangle<T>>, IParsable<Rectangle<T>>,
+    ISpanFormattable, IFormattable
     where T : INumber<T>, IMinMaxValue<T>, ISpanParsable<T>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator ==(Rectangle<T> first, Rectangle<T> second) => first.Equals(second);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator !=(Rectangle<T> first, Rectangle<T> second) => !first.Equals(second);
-    
+
     public static Rectangle<T> Empty { get; } = new Rectangle<T>();
-        
+
     public static Rectangle<T> FromLTRB(T left, T top, T right, T bottom)
     {
         return new Rectangle<T>(left, top, left + right, top + bottom);
@@ -29,7 +34,7 @@ public readonly struct Rectangle<T> :
         return new Rectangle<T>(location.X, location.Y, size.Width, size.Height);
     }
 
-    public static Rectangle<T> FromPoints(params Point<T>[] points) => FromPoints((IEnumerable<Point<T>>) points);
+    public static Rectangle<T> FromPoints(params Point<T>[] points) => FromPoints((IEnumerable<Point<T>>)points);
 
     public static Rectangle<T> FromPoints(IEnumerable<Point<T>> points)
     {
@@ -44,9 +49,13 @@ public readonly struct Rectangle<T> :
             if (y < top) top = y;
             if (y > bottom) bottom = y;
         }
+
         return FromLTRB(left, top, right, bottom);
     }
-    public static Rectangle<T> FromRectangles(params Rectangle<T>[] rectangles) => FromRectangles((IEnumerable<Rectangle<T>>) rectangles);
+
+    public static Rectangle<T> FromRectangles(params Rectangle<T>[] rectangles) =>
+        FromRectangles((IEnumerable<Rectangle<T>>)rectangles);
+
     public static Rectangle<T> FromRectangles(IEnumerable<Rectangle<T>> rectangles)
     {
         var left = T.MinValue;
@@ -60,6 +69,7 @@ public readonly struct Rectangle<T> :
             if (rect.Right > right) right = rect.Right;
             if (rect.Bottom > bottom) bottom = rect.Bottom;
         }
+
         return FromLTRB(left, top, right, bottom);
     }
 
@@ -75,7 +85,7 @@ public readonly struct Rectangle<T> :
 
     public Point<T> Location => new Point<T>(Left, Top);
     public Size<T> Size => new Size<T>(Width, Height);
-        
+
     private Rectangle(T left, T top, T width, T height)
     {
         this.X = left;
@@ -92,15 +102,25 @@ public readonly struct Rectangle<T> :
         height = Height;
     }
 
+    public static Rectangle<T> Parse(string? text, IFormatProvider? provider = null)
+        => Parse((ReadOnlySpan<char>)text, provider);
+
+    public static Rectangle<T> Parse(ReadOnlySpan<char> text, IFormatProvider? provider = null)
+    {
+        if (TryParse(text, provider, out var point)) return point;
+        throw new ArgumentException($"Cannot parse \"{text}\" to a Rectangle<{typeof(T)}>", nameof(text));
+    }
+
+
     public static bool TryParse(string? text, IFormatProvider? provider, out Rectangle<T> rectangle)
     {
         return TryParse((ReadOnlySpan<char>)text, provider, out rectangle);
     }
-    
+
 
     public static bool TryParse(ReadOnlySpan<char> text, IFormatProvider? provider, out Rectangle<T> rectangle)
     {
-        rectangle = default;    // fast return
+        rectangle = default; // fast return
 
         // Find the '/'
         int i = text.IndexOf('/');
@@ -123,32 +143,51 @@ public readonly struct Rectangle<T> :
         return true;
     }
 
-    public static Rectangle<T> Parse(string? text, IFormatProvider? provider = null)
-        => Parse((ReadOnlySpan<char>)text, provider);
 
-    public static Rectangle<T> Parse(ReadOnlySpan<char> text, IFormatProvider? provider = null)
+    public static bool TryParse(ReadOnlySpan<char> text, NumberStyles numberStyle, IFormatProvider? provider, out Rectangle<T> rectangle)
     {
-        if (TryParse(text, provider, out var point)) return point;
-        throw new ArgumentException($"Cannot parse \"{text}\" to a Rectangle<{typeof(T)}>", nameof(text));
+        rectangle = default; // fast return
+
+        // Find the '/'
+        int i = text.IndexOf('/');
+        if (i < 0) return false;
+
+        // Get the Location
+        var locationText = text[..i].Trim();
+        // Must parse
+        if (!Point<T>.TryParse(locationText, numberStyle, provider, out var location))
+            return false;
+
+        // Get the Size
+        var sizeText = text[i..].Trim();
+        // Must parse
+        if (!Size<T>.TryParse(sizeText, numberStyle, provider, out var size))
+            return false;
+
+        // We can build
+        rectangle = FromLocationSize(location, size);
+        return true;
     }
+
+    public static bool TryParse([NotNullWhen(true)] string? text, NumberStyles numberStyle, IFormatProvider? provider,
+        out Rectangle<T> rectangle)
+        => TryParse(text.AsSpan(), numberStyle, provider, out rectangle);
+
 
     public Rectangle<T> Clone() => this;
 
     public bool Contains(Point<T> point)
     {
         (T x, T y) = point;
-        return x.CompareTo(Left) >= 0 &&
-               x.CompareTo(Right) <= 0 &&
-               y.CompareTo(Top) >= 0 &&
-               y.CompareTo(Bottom) <= 0;
+        return x >= Left && x <= Right && y >= Top && y <= Bottom;
     }
-        
+
     public bool Equals(Rectangle<T> rectangle)
     {
         return rectangle.Left == Left &&
-               rectangle.Top == Top &&
-               rectangle.Right == Right &&
-               rectangle.Bottom == Bottom;
+            rectangle.Top == Top &&
+            rectangle.Right == Right &&
+            rectangle.Bottom == Bottom;
     }
 
     public override bool Equals(object? obj)

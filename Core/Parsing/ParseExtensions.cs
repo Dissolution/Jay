@@ -1,235 +1,281 @@
-﻿using Jay.Utilities;
+﻿using Jay.Parsing;
+using Jay.Utilities;
+
+using System.Data;
 using System.Globalization;
 using System.Numerics;
 
 namespace Jay;
 
-public class NumberParseException : ParseException
-{
-    protected static string GetMessage(Type destinationType, ReadOnlySpan<char> inputText, NumberStyles numberStyle, IFormatProvider? provider, string? customMessage)
-    {
-        var builder = new DefaultInterpolatedStringHandler();
-        builder.AppendLiteral("Cannot parse \"");
-        builder.AppendFormatted(inputText);
-        builder.AppendLiteral("\" to a ");
-        builder.AppendFormatted<Type>(destinationType);
-        {
-            builder.AppendLiteral(" with ");
-            builder.AppendFormatted<NumberStyles>(numberStyle);
-        }
-        if (provider is not null)
-        {
-            builder.AppendLiteral(" with custom provider '");
-            builder.AppendFormatted<IFormatProvider>(provider);
-            builder.AppendLiteral("'");
-        }
-        if (!string.IsNullOrWhiteSpace(customMessage))
-        {
-            builder.AppendLiteral(": ");
-            builder.AppendLiteral(customMessage);
-        }
-        return builder.ToStringAndClear();
-    }
-
-    public static NumberParseException Create<T>(ReadOnlySpan<char> inputText,
-        NumberStyles numberStyle,
-       IFormatProvider? provider = null,
-       string? message = null,
-       Exception? innerException = null)
-    {
-        return new NumberParseException(typeof(T), inputText, numberStyle, provider, message, innerException);
-    }
-
-    public NumberStyles NumberStyle { get; protected set;} = default;
-
-    public NumberParseException(Type destinationType,
-       ReadOnlySpan<char> inputText,
-       NumberStyles numberStyle,
-       IFormatProvider? formatProvider,
-       string? message = null,
-      Exception? innerException = null)
-      : base(GetMessage(destinationType, inputText, numberStyle, formatProvider, message), innerException)
-    {
-        this.DestinationType = destinationType;
-        this.InputText = new string(inputText);
-        this.NumberStyle = numberStyle;
-        this.FormatProvider = formatProvider;
-    }
-
-    public NumberParseException(Type destinationType,
-        string? inputText,
-        NumberStyles numberStyle,
-        IFormatProvider? formatProvider,
-        string? message = null,
-       Exception? innerException = null)
-       : base(GetMessage(destinationType, inputText, numberStyle, formatProvider, message), innerException)
-    {
-        this.DestinationType = destinationType;
-        this.InputText = inputText;
-        this.NumberStyle = numberStyle;
-        this.FormatProvider = formatProvider;
-    }
-}
-
-public class ParseException : Exception
-{
-    protected static string GetMessage(Type destinationType, ReadOnlySpan<char> inputText, IFormatProvider? provider, string? customMessage)
-    {
-        var builder = new DefaultInterpolatedStringHandler();
-        builder.AppendLiteral("Cannot parse \"");
-        builder.AppendFormatted(inputText);
-        builder.AppendLiteral("\" to a ");
-        builder.AppendFormatted<Type>(destinationType);
-        if (provider is not null)
-        {
-            builder.AppendLiteral(" with custom provider '");
-            builder.AppendFormatted<IFormatProvider>(provider);
-            builder.AppendLiteral("'");
-        }
-        if (!string.IsNullOrWhiteSpace(customMessage))
-        {
-            builder.AppendLiteral(": ");
-            builder.AppendLiteral(customMessage);
-        }
-        return builder.ToStringAndClear();
-    }
-
-    public static ParseException Create<T>(ReadOnlySpan<char> inputText,
-        IFormatProvider? provider = null,
-        string? message = null,
-        Exception? innerException = null)
-    {
-        return new ParseException(typeof(T), inputText, provider, message, innerException);
-    }
-
-    public string? InputText { get; protected set;} = null;
-    public IFormatProvider? FormatProvider { get; protected set;} = null;
-    public Type DestinationType { get; protected set;} = null!;
-
-    protected ParseException(string message, Exception? innerException)
-        : base(message, innerException)
-    {
-
-    }
-
-    public ParseException(Type destinationType,
-       ReadOnlySpan<char> inputText,
-       IFormatProvider? formatProvider,
-       string? message = null,
-      Exception? innerException = null)
-      : this(GetMessage(destinationType, inputText, formatProvider, message), innerException)
-    {
-        this.DestinationType = destinationType;
-        this.InputText = new string(inputText);
-        this.FormatProvider = formatProvider;
-    }
-
-    public ParseException(Type destinationType,
-        string? inputText,
-        IFormatProvider? formatProvider,
-        string? message = null,
-       Exception? innerException = null)
-       : this(GetMessage(destinationType, inputText, formatProvider, message), innerException)
-    {
-        this.DestinationType = destinationType;
-        this.InputText = inputText;
-        this.FormatProvider = formatProvider;
-    }
-}
-
 public static class ParseExtensions
 {
-    public static T Parse<T>(this ReadOnlySpan<char> text,
-        IFormatProvider? provider)
-                where T : ISpanParsable<T>
+    public const NumberStyles DefaultNumberStyle = NumberStyles.None;
+    public const DateTimeStyles DefaultDateTimeStyle = DateTimeStyles.None;
+    public const TimeSpanStyles DefaultTimeSpanStyle = TimeSpanStyles.None;
+    
+
+    #region IParsable
+
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, [MaybeNullWhen(false)] out T value)
+        where T : IParsable<T> 
+        => T.TryParse(text, null, out value);
+
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
+        where T : IParsable<T> 
+        => T.TryParse(text, formatProvider, out value);
+
+    public static T Parse<T>([NotNullWhen(true)] this string? text, IFormatProvider? formatProvider = null)
+          where T : IParsable<T>
     {
-        if (T.TryParse(text, provider, out var value))
-            return value;
-        throw ParseException.Create<T>(text, provider);
+        if (!T.TryParse(text, formatProvider, out var value))
+            throw ParseException.Create<T>(text, formatProvider);
+        return value;
     }
 
-    public static bool TryParse<T>(this ReadOnlySpan<char> text, 
-        [MaybeNullWhen(false)] out T value)
+    #endregion
+
+    #region ISpanParsable
+
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, [MaybeNullWhen(false)] out T value)
+       where T : ISpanParsable<T>
+       => T.TryParse(text, null, out value);
+
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
         where T : ISpanParsable<T>
+        => T.TryParse(text, formatProvider, out value);
+
+    public static T Parse<T>(this ReadOnlySpan<char> text, IFormatProvider? formatProvider = null)
+         where T : ISpanParsable<T>
     {
-        return T.TryParse(text, null, out value);
+        if (!T.TryParse(text, formatProvider, out var value))
+            throw ParseException.Create<T>(text, formatProvider);
+        return value;
     }
 
-    public static bool TryParse<T>(this ReadOnlySpan<char> text, 
-        IFormatProvider? provider,
-        [MaybeNullWhen(false)] out T value)
-        where T : ISpanParsable<T>
-    {
-        return T.TryParse(text, provider, out value);
-    }
+    #endregion
 
-    public static bool TryParse<T>(this ReadOnlySpan<char> text, 
-        [MaybeNullWhen(false)] out T number, 
+    #region INumberBase
+
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, [MaybeNullWhen(false)] out T number, 
         Constraints.IsNumberBase<T> _ = default)
-       where T : INumberBase<T>
-    {
-        return T.TryParse(text, NumberStyles.Any, null, out number);
-    }
+        where T : INumberBase<T> 
+        => T.TryParse(text, DefaultNumberStyle, null, out number);
 
-    public static bool TryParse<T>(this ReadOnlySpan<char> text,
-        NumberStyles numberStyle,
-        [MaybeNullWhen(false)] out T value,
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T number,
+       Constraints.IsNumberBase<T> _ = default)
+       where T : INumberBase<T>
+       => T.TryParse(text, DefaultNumberStyle, formatProvider, out number);
+
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, NumberStyles numberStyle, [MaybeNullWhen(false)] out T value,
+        Constraints.IsNumberBase<T> _ = default)
+        where T : INumberBase<T> 
+        => T.TryParse(text, numberStyle, null, out value);
+
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, NumberStyles numberStyle, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value,
+        Constraints.IsNumberBase<T> _ = default)
+        where T : INumberBase<T> 
+        => T.TryParse(text, numberStyle, formatProvider, out value);
+
+
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, [MaybeNullWhen(false)] out T number,
         Constraints.IsNumberBase<T> _ = default)
         where T : INumberBase<T>
-    {
-        return T.TryParse(text, numberStyle, null, out value);
-    }
+        => T.TryParse(text, DefaultNumberStyle, null, out number);
 
-    public static bool TryParse<T>(this ReadOnlySpan<char> text,
-      NumberStyles numberStyle,
-      IFormatProvider? provider,
-      [MaybeNullWhen(false)] out T value,
-      Constraints.IsNumberBase<T> _ = default)
-      where T : INumberBase<T>
-    {
-        return T.TryParse(text, numberStyle, provider, out value);
-    }
-
-
-    public static bool TryParse<T>([NotNullWhen(true)] this string? text,
-      [MaybeNullWhen(false)] out T value)
-      where T : IParsable<T>
-    {
-        return T.TryParse(text, null, out value);
-    }
-
-    public static bool TryParse<T>([NotNullWhen(true)] this string? text,
-        IFormatProvider? provider,
-        [MaybeNullWhen(false)] out T value)
-        where T : IParsable<T>
-    {
-        return T.TryParse(text, provider, out value);
-    }
-
-    public static bool TryParse<T>([NotNullWhen(true)] this string? text,
-        [MaybeNullWhen(false)] out T number,
-        Constraints.IsNumberBase<T> _ = default)
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T number,
+       Constraints.IsNumberBase<T> _ = default)
        where T : INumberBase<T>
-    {
-        return T.TryParse(text, NumberStyles.Any, null, out number);
-    }
+       => T.TryParse(text, DefaultNumberStyle, formatProvider, out number);
 
-    public static bool TryParse<T>([NotNullWhen(true)] this string? text,
-        NumberStyles numberStyle,
-        [MaybeNullWhen(false)] out T value,
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, NumberStyles numberStyle, [MaybeNullWhen(false)] out T value,
         Constraints.IsNumberBase<T> _ = default)
         where T : INumberBase<T>
+        => T.TryParse(text, numberStyle, null, out value);
+
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, NumberStyles numberStyle, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value,
+        Constraints.IsNumberBase<T> _ = default)
+        where T : INumberBase<T>
+        => T.TryParse(text, numberStyle, formatProvider, out value);
+
+    public static T Parse<T>(this ReadOnlySpan<char> text, NumberStyles numberStyle = DefaultNumberStyle, IFormatProvider? formatProvider = null)
+        where T : INumberBase<T>
     {
-        return T.TryParse(text, numberStyle, null, out value);
+        if (!T.TryParse(text, numberStyle, formatProvider, out var value))
+            throw ParseException.Create<T>(text, formatProvider);
+        return value;
     }
 
-    public static bool TryParse<T>([NotNullWhen(true)] this string? text,
-      NumberStyles numberStyle,
-      IFormatProvider? provider,
-      [MaybeNullWhen(false)] out T value,
-      Constraints.IsNumberBase<T> _ = default)
-      where T : INumberBase<T>
+    public static T Parse<T>([NotNullWhen(true)] this string? text, NumberStyles numberStyle = DefaultNumberStyle, IFormatProvider? formatProvider = null)
+        where T : INumberBase<T>
     {
-        return T.TryParse(text, numberStyle, provider, out value);
+        if (!T.TryParse(text, numberStyle, formatProvider, out var value))
+            throw ParseException.Create<T>(text, formatProvider);
+        return value;
     }
+
+    #endregion
+
+    #region INumberParsable
+
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, [MaybeNullWhen(false)] out T number,
+       Constraints.IsNumberParsable<T> _ = default)
+       where T : INumberParsable<T>
+       => T.TryParse(text, DefaultNumberStyle, null, out number);
+
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T number,
+       Constraints.IsNumberParsable<T> _ = default)
+       where T : INumberParsable<T>
+       => T.TryParse(text, DefaultNumberStyle, formatProvider, out number);
+
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, NumberStyles numberStyle, [MaybeNullWhen(false)] out T value,
+        Constraints.IsNumberParsable<T> _ = default)
+        where T : INumberParsable<T>
+        => T.TryParse(text, numberStyle, null, out value);
+
+    public static bool TryParse<T>(this ReadOnlySpan<char> text, NumberStyles numberStyle, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value,
+        Constraints.IsNumberParsable<T> _ = default)
+        where T : INumberParsable<T>
+        => T.TryParse(text, numberStyle, formatProvider, out value);
+
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, [MaybeNullWhen(false)] out T number,
+      Constraints.IsNumberParsable<T> _ = default)
+      where T : INumberParsable<T>
+      => T.TryParse(text, DefaultNumberStyle, null, out number);
+
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T number,
+       Constraints.IsNumberParsable<T> _ = default)
+       where T : INumberParsable<T>
+       => T.TryParse(text, DefaultNumberStyle, formatProvider, out number);
+
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, NumberStyles numberStyle, [MaybeNullWhen(false)] out T value,
+        Constraints.IsNumberParsable<T> _ = default)
+        where T : INumberParsable<T>
+        => T.TryParse(text, numberStyle, null, out value);
+
+    public static bool TryParse<T>([NotNullWhen(true)] this string? text, NumberStyles numberStyle, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value,
+        Constraints.IsNumberParsable<T> _ = default)
+        where T : INumberParsable<T>
+        => T.TryParse(text, numberStyle, formatProvider, out value);
+
+    public static T Parse<T>(this ReadOnlySpan<char> text, NumberStyles numberStyle = DefaultNumberStyle, IFormatProvider? formatProvider = null,
+           Constraints.IsNumberParsable<T> _ = default)
+      where T : INumberParsable<T>
+    {
+        if (!T.TryParse(text, numberStyle, formatProvider, out var value))
+            throw ParseException.Create<T>(text, formatProvider);
+        return value;
+    }
+
+    public static T Parse<T>([NotNullWhen(true)] this string? text, NumberStyles numberStyle = DefaultNumberStyle, IFormatProvider? formatProvider = null,
+           Constraints.IsNumberParsable<T> _ = default)
+        where T : INumberParsable<T>
+    {
+        if (!T.TryParse(text, numberStyle, formatProvider, out var value))
+            throw ParseException.Create<T>(text, formatProvider);
+        return value;
+    }
+
+    #endregion
+
+    #region DateTime
+
+    public static bool TryParse(this ReadOnlySpan<char> text, out DateTime dateTime)
+        => DateTime.TryParse(text, null, DefaultDateTimeStyle, out dateTime);
+    public static bool TryParse(this ReadOnlySpan<char> text, DateTimeStyles dateTimeStyle, out DateTime dateTime)
+        => DateTime.TryParse(text, null, dateTimeStyle, out dateTime);
+    public static bool TryParse(this ReadOnlySpan<char> text, IFormatProvider? formatProvider, out DateTime dateTime)
+        => DateTime.TryParse(text, formatProvider, DefaultDateTimeStyle, out dateTime);
+    public static bool TryParse(this ReadOnlySpan<char> text, DateTimeStyles dateTimeStyle, IFormatProvider? formatProvider, out DateTime dateTime) 
+        => DateTime.TryParse(text, formatProvider, dateTimeStyle, out dateTime);
+
+    public static bool TryParse([NotNullWhen(true)] this string? text, out DateTime dateTime)
+       => DateTime.TryParse(text, null, DefaultDateTimeStyle, out dateTime);
+    public static bool TryParse([NotNullWhen(true)] this string? text, DateTimeStyles dateTimeStyle, out DateTime dateTime)
+        => DateTime.TryParse(text, null, dateTimeStyle, out dateTime);
+    public static bool TryParse([NotNullWhen(true)] this string? text, IFormatProvider? formatProvider, out DateTime dateTime)
+        => DateTime.TryParse(text, formatProvider, DefaultDateTimeStyle, out dateTime);
+    public static bool TryParse([NotNullWhen(true)] this string? text, DateTimeStyles dateTimeStyle, IFormatProvider? formatProvider, out DateTime dateTime)
+        => DateTime.TryParse(text, formatProvider, dateTimeStyle, out dateTime);
+    #endregion
+
+    #region DateTimeOffset
+
+    public static bool TryParse(this ReadOnlySpan<char> text, out DateTimeOffset dateTimeOffset)
+       => DateTimeOffset.TryParse(text, null, DefaultDateTimeStyle, out dateTimeOffset);
+    public static bool TryParse(this ReadOnlySpan<char> text, DateTimeStyles dateTimeStyle, out DateTimeOffset dateTimeOffset)
+        => DateTimeOffset.TryParse(text, null, dateTimeStyle, out dateTimeOffset);
+    public static bool TryParse(this ReadOnlySpan<char> text, IFormatProvider? formatProvider, out DateTimeOffset dateTimeOffset)
+        => DateTimeOffset.TryParse(text, formatProvider, DefaultDateTimeStyle, out dateTimeOffset);
+    public static bool TryParse(this ReadOnlySpan<char> text, DateTimeStyles dateTimeStyle, IFormatProvider? formatProvider, out DateTimeOffset dateTimeOffset)
+        => DateTimeOffset.TryParse(text, formatProvider, dateTimeStyle, out dateTimeOffset);
+
+    public static bool TryParse([NotNullWhen(true)] this string? text, out DateTimeOffset dateTimeOffset)
+      => DateTimeOffset.TryParse(text, null, DefaultDateTimeStyle, out dateTimeOffset);
+    public static bool TryParse([NotNullWhen(true)] this string? text, DateTimeStyles dateTimeStyle, out DateTimeOffset dateTimeOffset)
+        => DateTimeOffset.TryParse(text, null, dateTimeStyle, out dateTimeOffset);
+    public static bool TryParse([NotNullWhen(true)] this string? text, IFormatProvider? formatProvider, out DateTimeOffset dateTimeOffset)
+        => DateTimeOffset.TryParse(text, formatProvider, DefaultDateTimeStyle, out dateTimeOffset);
+    public static bool TryParse([NotNullWhen(true)] this string? text, DateTimeStyles dateTimeStyle, IFormatProvider? formatProvider, out DateTimeOffset dateTimeOffset)
+        => DateTimeOffset.TryParse(text, formatProvider, dateTimeStyle, out dateTimeOffset);
+
+    #endregion
+
+    #region TimeSpan
+
+    public static bool TryParse(this ReadOnlySpan<char> text, out TimeSpan timeSpan)
+     => TimeSpan.TryParse(text, null, out timeSpan);
+    public static bool TryParse(this ReadOnlySpan<char> text, IFormatProvider? formatProvider, out TimeSpan timeSpan)
+     => TimeSpan.TryParse(text, formatProvider, out timeSpan);
+
+    public static bool TryParse([NotNullWhen(true)] this string? text, out TimeSpan timeSpan)
+     => TimeSpan.TryParse(text, null, out timeSpan);
+    public static bool TryParse([NotNullWhen(true)] this string? text, IFormatProvider? formatProvider, out TimeSpan timeSpan)
+     => TimeSpan.TryParse(text, formatProvider, out timeSpan);
+
+    #endregion
+
+    #region TimeOnly
+
+    public static bool TryParse(this ReadOnlySpan<char> text, out TimeOnly timeOnly)
+        => TimeOnly.TryParse(text, null, DefaultDateTimeStyle, out timeOnly);
+    public static bool TryParse(this ReadOnlySpan<char> text, DateTimeStyles dateTimeStyle, out TimeOnly timeOnly)
+        => TimeOnly.TryParse(text, null, dateTimeStyle, out timeOnly);
+    public static bool TryParse(this ReadOnlySpan<char> text, IFormatProvider? formatProvider, out TimeOnly timeOnly)
+        => TimeOnly.TryParse(text, formatProvider, DefaultDateTimeStyle, out timeOnly);
+    public static bool TryParse(this ReadOnlySpan<char> text, DateTimeStyles dateTimeStyle, IFormatProvider? formatProvider, out TimeOnly timeOnly)
+        => TimeOnly.TryParse(text, formatProvider, dateTimeStyle, out timeOnly);
+
+
+    public static bool TryParse([NotNullWhen(true)] this string? text, out TimeOnly timeOnly)
+       => TimeOnly.TryParse(text, null, DefaultDateTimeStyle, out timeOnly);
+    public static bool TryParse([NotNullWhen(true)] this string? text, DateTimeStyles dateTimeStyle, out TimeOnly timeOnly)
+        => TimeOnly.TryParse(text, null, dateTimeStyle, out timeOnly);
+    public static bool TryParse([NotNullWhen(true)] this string? text, IFormatProvider? formatProvider, out TimeOnly timeOnly)
+        => TimeOnly.TryParse(text, formatProvider, DefaultDateTimeStyle, out timeOnly);
+    public static bool TryParse([NotNullWhen(true)] this string? text, DateTimeStyles dateTimeStyle, IFormatProvider? formatProvider, out TimeOnly timeOnly)
+        => TimeOnly.TryParse(text, formatProvider, dateTimeStyle, out timeOnly);
+
+    #endregion
+
+    #region DateOnly
+
+    public static bool TryParse(this ReadOnlySpan<char> text, out DateOnly dateOnly)
+        => DateOnly.TryParse(text, null, DefaultDateTimeStyle, out dateOnly);
+    public static bool TryParse(this ReadOnlySpan<char> text, DateTimeStyles dateTimeStyle, out DateOnly dateOnly)
+        => DateOnly.TryParse(text, null, dateTimeStyle, out dateOnly);
+    public static bool TryParse(this ReadOnlySpan<char> text, IFormatProvider? formatProvider, out DateOnly dateOnly)
+        => DateOnly.TryParse(text, formatProvider, DefaultDateTimeStyle, out dateOnly);
+    public static bool TryParse(this ReadOnlySpan<char> text, DateTimeStyles dateTimeStyle, IFormatProvider? formatProvider, out DateOnly dateOnly)
+        => DateOnly.TryParse(text, formatProvider, dateTimeStyle, out dateOnly);
+
+    public static bool TryParse([NotNullWhen(true)] this string? text, out DateOnly dateOnly)
+       => DateOnly.TryParse(text, null, DefaultDateTimeStyle, out dateOnly);
+    public static bool TryParse([NotNullWhen(true)] this string? text, DateTimeStyles dateTimeStyle, out DateOnly dateOnly)
+        => DateOnly.TryParse(text, null, dateTimeStyle, out dateOnly);
+    public static bool TryParse([NotNullWhen(true)] this string? text, IFormatProvider? formatProvider, out DateOnly dateOnly)
+        => DateOnly.TryParse(text, formatProvider, DefaultDateTimeStyle, out dateOnly);
+    public static bool TryParse([NotNullWhen(true)] this string? text, DateTimeStyles dateTimeStyle, IFormatProvider? formatProvider, out DateOnly dateOnly)
+        => DateOnly.TryParse(text, formatProvider, dateTimeStyle, out dateOnly);
+
+    #endregion
 }

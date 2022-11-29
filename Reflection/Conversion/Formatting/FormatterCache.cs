@@ -1,7 +1,7 @@
 ﻿using Jay.Collections;
 using Jay.Extensions;
 
-namespace Jay.Reflection.Conversion;
+namespace Jay.Reflection.Conversion.Formatting;
 
 public sealed class FormatterCache : IFormatter
 {

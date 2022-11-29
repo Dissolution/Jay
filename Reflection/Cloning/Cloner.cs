@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 
 using Jay.Collections;
-using Jay.Extensions;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;

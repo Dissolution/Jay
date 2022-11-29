@@ -2,7 +2,6 @@
 
 using Jay.Enums;
 using Jay.Reflection.Building.Adaption;
-using Jay.Reflection.Enums;
 using Jay.Reflection.Extensions;
 
 namespace Jay.Reflection.Searching;
@@ -146,7 +145,7 @@ public sealed record class MemberSearchOptions
     {
         // We always know visibility matches, as we passed it to get this member
         var f = Visibility.HasAllFlags(member.GetVisibility());
-        Debugger.Break();
+        Debug.Assert(f);
 
         if (!MatchesName(member.Name)) return false;
 

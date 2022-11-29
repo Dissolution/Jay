@@ -1,6 +1,9 @@
-﻿namespace Jay.Reflection.Conversion.Exceptions;
+﻿using Jay.Reflection.Conversion.Formatting;
+using Jay.Reflection.Conversion.Parsing;
 
-public class ParseException : ConversionException
+namespace Jay.Reflection.Conversion.Exceptions;
+
+public class ParsingException : ConversionException
 {
     private static string GetMessage<TOut>(ReadOnlySpan<char> text,
                                            ParseOptions options,
@@ -25,18 +28,18 @@ public class ParseException : ConversionException
         return msg.ToStringAndClear();
     }
 
-    public static ParseException Create<TOut>(ReadOnlySpan<char> text,
+    public static ParsingException Create<TOut>(ReadOnlySpan<char> text,
                                             ParseOptions options,
                                             string? message = null,
                                             Exception? innerException = null)
     {
-        return new ParseException(typeof(ReadOnlySpan<char>),
+        return new ParsingException(typeof(ReadOnlySpan<char>),
                                   typeof(TOut),
                                   GetMessage<TOut>(text, options, message),
                                   innerException);
     }
 
-    public ParseException(Type? inputType, Type? outputType, string? message = null, Exception? innerException = null)
+    public ParsingException(Type? inputType, Type? outputType, string? message = null, Exception? innerException = null)
         : base(inputType, outputType, message, innerException)
     {
     }

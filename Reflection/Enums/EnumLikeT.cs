@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Jay.Reflection.Enums;
+﻿namespace Jay.Reflection.Enums;
 
 public abstract class EnumLike<TEnum> :
     IEquatable<TEnum>,

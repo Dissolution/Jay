@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 
-using InlineIL;
-
 using Jay.Collections;
 
 namespace Jay.Reflection.Enums;

@@ -1,7 +1,4 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
-
-namespace Jay.Reflection.Expressions;
+﻿namespace Jay.Reflection.Expressions;
 
 public abstract class ExpressionVisitorBase : ExpressionVisitor
 {

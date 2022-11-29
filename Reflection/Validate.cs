@@ -1,7 +1,4 @@
-﻿using Jay.Extensions;
-using Jay.Reflection.Extensions;
-
-namespace Jay.Reflection;
+﻿namespace Jay.Reflection;
 
 internal static class Validate
 {

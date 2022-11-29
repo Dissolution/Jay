@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-namespace Jay.Reflection.Expressions;
+﻿namespace Jay.Reflection.Expressions;
 
 public sealed class ExpressionReplacer : ExpressionVisitor
 {

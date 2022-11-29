@@ -1,36 +1,45 @@
-﻿namespace Jay.Geometry;
+﻿using System.Globalization;
+using Jay.Parsing;
+
+namespace Jay.Geometry;
 
 public readonly struct Size<T> :
     IEqualityOperators<Size<T>, Size<T>, bool>,
     IAdditionOperators<Size<T>, Size<T>, Size<T>>,
     ISubtractionOperators<Size<T>, Size<T>, Size<T>>,
     IEquatable<Size<T>>,
-    ISpanParsable<Size<T>>, IParsable<Size<T>>,
+    INumberParsable<Size<T>>, ISpanParsable<Size<T>>, IParsable<Size<T>>,
     ISpanFormattable, IFormattable,
     ICloneable<Size<T>>
     where T : INumber<T>, IMinMaxValue<T>, ISpanParsable<T>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(Size<T> first, Size<T> second) => first.Width == second.Width && first.Height == second.Height;
+    public static bool operator ==(Size<T> first, Size<T> second) =>
+        first.Width == second.Width && first.Height == second.Height;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(Size<T> first, Size<T> second) => first.Width != second.Width || first.Height != second.Height;
-    
+    public static bool operator !=(Size<T> first, Size<T> second) =>
+        first.Width != second.Width || first.Height != second.Height;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Size<T> operator +(Size<T> first, Size<T> second) => new Size<T>(first.Width + second.Width, first.Height + second.Height);
+    public static Size<T> operator +(Size<T> first, Size<T> second) =>
+        new Size<T>(first.Width + second.Width, first.Height + second.Height);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Size<T> operator -(Size<T> first, Size<T> second) => new Size<T>(first.Width - second.Width, first.Height - second.Height);
+    public static Size<T> operator -(Size<T> first, Size<T> second) =>
+        new Size<T>(first.Width - second.Width, first.Height - second.Height);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Size<T> operator -(Size<T> point) => new Size<T>(-point.Width, -point.Height);
 
     public static readonly Size<T> Empty;
-    
-    
+
+
     public readonly T Width;
     public readonly T Height;
 
     public bool HasArea => Width > T.Zero && Height > T.Zero;
-    
+
     public Size(T width, T height)
     {
         this.Width = width;
@@ -43,16 +52,28 @@ public readonly struct Size<T> :
         height = this.Height;
     }
 
+    public static Size<T> Parse(string? text, IFormatProvider? formatProvider = null)
+        => Parse(text.AsSpan(), formatProvider);
 
-
-    public static bool TryParse(string? text, IFormatProvider? provider, out Size<T> size)
+    public static Size<T> Parse(ReadOnlySpan<char> text, IFormatProvider? formatProvider = null)
     {
-        return TryParse((ReadOnlySpan<char>)text, provider, out size);
+        if (!TryParse(text, formatProvider, out var size)) 
+            throw ParseException.Create<Size<T>>(text, formatProvider);
+        return size;
     }
+    
+    public static bool TryParse(string? text, IFormatProvider? formatProvider, out Size<T> size) 
+        => TryParse(text.AsSpan(), default, formatProvider, out size);
 
-    public static bool TryParse(ReadOnlySpan<char> text, IFormatProvider? provider, out Size<T> size)
+    public static bool TryParse(ReadOnlySpan<char> text, IFormatProvider? formatProvider, out Size<T> size)
+        => TryParse(text, default, formatProvider, out size);
+    
+    public static bool TryParse(string? text, NumberStyles numberStyle, IFormatProvider? formatProvider, out Size<T> size)
+        => TryParse(text.AsSpan(), numberStyle, formatProvider, out size);
+
+    public static bool TryParse(ReadOnlySpan<char> text, NumberStyles numberStyle, IFormatProvider? formatProvider, out Size<T> size)
     {
-        size = default;    // fast return
+        size = default; // fast return
 
         // Find the starting '['
         int s = text.IndexOf('[');
@@ -65,7 +86,7 @@ public readonly struct Size<T> :
         // Get the Width
         var widthText = text[s..i].Trim();
         // Must parse
-        if (!T.TryParse(widthText, provider, out var width))
+        if (!T.TryParse(widthText, numberStyle, formatProvider, out var width))
             return false;
 
         // Find the ending ']'
@@ -75,22 +96,12 @@ public readonly struct Size<T> :
         // Get the Height
         var heightText = text[i..e].Trim();
         // Must parse
-        if (!T.TryParse(heightText, provider, out var height))
+        if (!T.TryParse(heightText, numberStyle, formatProvider, out var height))
             return false;
 
         // We can build
         size = new Size<T>(width, height);
         return true;
-
-    }
-
-    public static Size<T> Parse(string? text, IFormatProvider? provider = null) 
-        => Parse((ReadOnlySpan<char>)text, provider);
-
-    public static Size<T> Parse(ReadOnlySpan<char> text, IFormatProvider? provider = null)
-    {
-        if (TryParse(text, provider, out var size)) return size;
-        throw new ArgumentException($"Cannot parse \"{text}\" to a PSint<{typeof(T)}>", nameof(text));
     }
 
     public Size<T> Clone() => this;

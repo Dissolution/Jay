@@ -1,6 +1,6 @@
 ﻿using Jay.Reflection.Conversion.Exceptions;
 
-namespace Jay.Reflection.Conversion;
+namespace Jay.Reflection.Conversion.Converting;
 
 public interface ICaster<TIn, TOut> : ICaster
 {

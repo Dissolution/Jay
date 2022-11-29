@@ -1,6 +1,4 @@
-﻿using static InlineIL.IL;
-
-namespace Jay.Reflection.Enums;
+﻿namespace Jay.Reflection.Enums;
 
 public sealed class EnumComparer<TEnum> : IEqualityComparer<TEnum>, IEqualityComparer,
                                           IComparer<TEnum>, IComparer

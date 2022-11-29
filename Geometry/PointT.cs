@@ -1,5 +1,5 @@
-﻿using Jay.Text;
-
+﻿using Jay.Parsing;
+using Jay.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -47,37 +47,30 @@ public readonly struct Point<T> :
         y = this.Y;
     }
 
-    public static bool TryParse([NotNullWhen(true)] string? text, out Point<T> point)
-        => NumberParsable.TryParse(text.AsSpan(), out point);
 
-    public static bool TryParse([NotNullWhen(true)] string? text, 
-        NumberStyles numberStyle,
-        out Point<T> point)
-       => TryParse(text.AsSpan(), numberStyle, null, out point);
-    public static bool TryParse([NotNullWhen(true)] string? text,
-      IFormatProvider? provider,
-      out Point<T> point)
-     => TryParse(text.AsSpan(), NumberStyles.Any, provider, out point);
-    public static bool TryParse([NotNullWhen(true)] string? text,
-       NumberStyles numberStyle,
-       IFormatProvider? provider,
-       out Point<T> point)
-      => TryParse(text.AsSpan(), numberStyle, provider, out point);
+    public static Point<T> Parse(string text, IFormatProvider? provider = null)
+    {
+        if (!TryParse(text, provider, out var point))
+            throw ParseException.Create<Point<T>>(text, provider);
+        return point;
+    }
 
-    public static bool TryParse(ReadOnlySpan<char> text, out Point<T> point)
-       => TryParse(text, NumberStyles.Any, null, out point);
-    public static bool TryParse(ReadOnlySpan<char> text,
-        NumberStyles numberStyle,
-        out Point<T> point)
-       => TryParse(text, numberStyle, null, out point);
-    public static bool TryParse(ReadOnlySpan<char> text,
-      IFormatProvider? provider,
-      out Point<T> point)
-     => TryParse(text, NumberStyles.Any, provider, out point);
-    public static bool TryParse(ReadOnlySpan<char> text,
-       NumberStyles numberStyle,
-       IFormatProvider? provider,
-       out Point<T> point)
+    public static Point<T> Parse(ReadOnlySpan<char> text, IFormatProvider? provider = null)
+    {
+        if (!TryParse(text, provider, out var point))
+            throw ParseException.Create<Point<T>>(text, provider);
+        return point;
+    }
+
+
+    public static bool TryParse([NotNullWhen(true)] string? text, IFormatProvider? provider, [MaybeNullWhen(false)] out Point<T> point)
+    => TryParse(text.AsSpan(), default, provider, out point);
+
+
+    public static bool TryParse(ReadOnlySpan<char> text, IFormatProvider? provider, [MaybeNullWhen(false)] out Point<T> point)
+         => TryParse(text, default, provider, out point);
+
+    public static bool TryParse(ReadOnlySpan<char> text, NumberStyles numberStyle, IFormatProvider? provider, out Point<T> point)
     {
         point = default;    // fast return
 
@@ -111,27 +104,9 @@ public readonly struct Point<T> :
 
     }
 
+    public static bool TryParse([NotNullWhen(true)] string? text, NumberStyles numberStyle, IFormatProvider? formatProvider, out Point<T> point)
+         => TryParse(text.AsSpan(), numberStyle, formatProvider, out point);
 
-    public static Point<T> Parse([NotNullWhen(true)] string? text,
-        IFormatProvider? provider = null)
-        => Parse(text.AsSpan(), NumberStyles.Any, provider);
-
-    public static Point<T> Parse([NotNullWhen(true)] string? text, 
-        NumberStyles numberStyle = NumberStyles.Any,
-        IFormatProvider? provider = null)
-        => Parse(text.AsSpan(), numberStyle, provider);
-
-    public static Point<T> Parse(ReadOnlySpan<char> text,
-       IFormatProvider? provider = null)
-       => Parse(text, NumberStyles.Any, provider);
-
-    public static Point<T> Parse(ReadOnlySpan<char> text,
-        NumberStyles numberStyle = NumberStyles.Any, 
-        IFormatProvider? provider = null)
-    {
-        if (TryParse(text, numberStyle, provider, out var point)) return point;
-        throw new ArgumentException($"Cannot parse \"{text}\" to a Point<{typeof(T)}>", nameof(text));
-    }
 
     public Point<T> Clone() => this;
 

@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace Jay
+﻿namespace Jay
 {
     public interface ICloneable<TSelf> : ICloneable
         where TSelf : ICloneable<TSelf>

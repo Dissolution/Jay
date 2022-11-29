@@ -1,5 +1,4 @@
-﻿using Jay.Extensions;
-using Jay.Reflection.Caching;
+﻿using Jay.Reflection.Caching;
 
 // ReSharper disable IdentifierTypo
 

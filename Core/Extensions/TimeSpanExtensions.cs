@@ -1,8 +1,4 @@
-﻿using System.Diagnostics;
-using Jay.Extensions;
-using Jay.Text;
-
-namespace Jay.Extensions;
+﻿namespace Jay.Extensions;
 
 /// <summary>
 /// Extensions for <see cref="TimeSpan"/>

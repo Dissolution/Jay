@@ -55,17 +55,17 @@ public sealed class EnumeratorItem<T> : IEquatable<T>
 
     public override string ToString()
     {
-        var text = new CharSpanWriter();
+        var text = new DefaultInterpolatedStringHandler();
         // Index
-        text.Write('[');
-        text.Write(Index);
-        text.Write('/');
+        text.AppendFormatted('[');
+        text.AppendFormatted(Index);
+        text.AppendFormatted('/');
         if (SourceLength.HasValue)
-            text.Write(SourceLength.Value);
+            text.AppendFormatted(SourceLength.Value);
         else
-            text.Write('?');
-        text.Write("] ");
-        text.Write(Value);
-        return text.ToStringAndDispose();
+            text.AppendFormatted('?');
+        text.AppendFormatted("] ");
+        text.AppendFormatted(Value);
+        return text.ToStringAndClear();
     }
 }

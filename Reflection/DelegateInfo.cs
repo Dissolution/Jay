@@ -35,6 +35,8 @@ public sealed class DelegateInfo : IEquatable<DelegateInfo>
 
     public string Name => _invokeMethod.Name;
 
+    public MethodBase Method => _invokeMethod;
+
     public ParameterInfo[] Parameters { get; }
 
     private DelegateInfo(Type delegateType)

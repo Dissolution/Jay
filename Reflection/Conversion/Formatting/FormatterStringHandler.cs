@@ -1,9 +1,8 @@
 ﻿using System.Buffers;
 
 using Jay.Exceptions;
-using Jay.Text;
 
-namespace Jay.Reflection.Conversion;
+namespace Jay.Reflection.Conversion.Formatting;
 
 [InterpolatedStringHandler]
 public ref struct FormatterStringHandler

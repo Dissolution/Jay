@@ -1,5 +1,4 @@
 ﻿using System.Dynamic;
-using Jay.Comparision;
 using System.Collections;
 using Jay.Text;
 using Jay.Extensions;
@@ -44,39 +43,39 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
         return _hasValue;
     }
 
-    private void ToString(ref CharSpanWriter text, int indent)
+    private void ToString(ref DefaultInterpolatedStringHandler stringHandler, int indent)
     {
         if (_hasValue)
         {
-            text.Write(_value);
-            text.WriteLine();
+            stringHandler.AppendFormatted(_value);
+            stringHandler.AppendLiteral(Environment.NewLine);
         }
 
         foreach (var item in _branches.Indexed())
         {
             item.Deconstruct(out KeyValuePair<object, DynamicTree> branch);
             for (var i = 0; i < indent; i++)
-                text.Write("  ");
+                stringHandler.AppendLiteral("  ");
             if (item.IsLast)
             {
-                text.Write('└');
+                stringHandler.AppendLiteral("└");
             }
             else
             {
-                text.Write('├');
+                stringHandler.AppendLiteral("├");
             }
-            text.Write('[');
-            text.Write(branch.Key);
-            text.Write(']');
+            stringHandler.AppendLiteral("[");
+            stringHandler.AppendFormatted(branch.Key);
+            stringHandler.AppendLiteral("]");
             if (branch.Value._hasValue)
             {
-                text.Write(": ");
+                stringHandler.AppendLiteral(": ");
             }
             else
             {
-                text.WriteLine();
+                stringHandler.AppendLiteral(Environment.NewLine);
             }
-            branch.Value.ToString(ref text, indent + 1);
+            branch.Value.ToString(ref stringHandler, indent + 1);
         }
     }
         
@@ -150,8 +149,8 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
     
     public override string ToString()
     {
-        var charSpanWriter = new CharSpanWriter();
-        ToString(ref charSpanWriter, 0);
-        return charSpanWriter.ToStringAndDispose();
+        var stringHandler = new DefaultInterpolatedStringHandler();
+        ToString(ref stringHandler, 0);
+        return stringHandler.ToStringAndClear();
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Jay.Reflection.Conversion.Exceptions;
+﻿using Jay.Reflection.Conversion.Formatting;
+
+namespace Jay.Reflection.Conversion.Exceptions;
 
 public abstract class ConversionException : Exception
 {

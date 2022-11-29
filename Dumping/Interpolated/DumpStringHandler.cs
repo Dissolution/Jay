@@ -10,35 +10,35 @@ namespace Jay.Dumping.Interpolated;
 [InterpolatedStringHandler]
 public ref struct DumpStringHandler
 {
-    private CharSpanWriter _textWriter;
+    private CharSpanBuilder _textBuilder;
 
-    public int Length => _textWriter.Index;
+    public int Length => _textBuilder.Length;
 
     public DumpStringHandler()
     {
-        _textWriter = new();
+        _textBuilder = new();
     }
 
     public DumpStringHandler(Span<char> initialBuffer)
     {
-        _textWriter = new(initialBuffer);
+        _textBuilder = new(initialBuffer);
     }
     
     public DumpStringHandler(int literalLength, int formatCount)
     {
-        _textWriter = new();
+        _textBuilder = new();
     }
 
     public DumpStringHandler(int literalLength, int formatCount, Span<char> initialBuffer)
     {
-        _textWriter = new(initialBuffer);
+        _textBuilder = new(initialBuffer);
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AppendLiteral(string? text)
     {
-        _textWriter.Write(text);
+        _textBuilder.Write(text);
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -59,44 +59,44 @@ public ref struct DumpStringHandler
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AppendFormatted(string? text)
     {
-        _textWriter.Write(text);
+        _textBuilder.Write(text);
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AppendFormatted(ReadOnlySpan<char> text)
     {
-        _textWriter.Write(text);
+        _textBuilder.Write(text);
     }
 
     public void Write(char ch)
     {
-        _textWriter.Write(ch);
+        _textBuilder.Write(ch);
     }
 
     public void Write(string? text)
     {
-        _textWriter.Write(text);
+        _textBuilder.Write(text);
     }
 
     public void Write(ReadOnlySpan<char> text)
     {
-        _textWriter.Write(text);
+        _textBuilder.Write(text);
     }
 
     public void Write<T>(T? value)
     {
-        _textWriter.Write<T>(value);
+        _textBuilder.Write<T>(value);
     }
 
     public void Write<T>(T? value, string? format)
     {
-        _textWriter.Write<T>(value, format);
+        _textBuilder.Write<T>(value, format);
     }
 
     public void WriteLine()
     {
-        _textWriter.Write(Environment.NewLine);
+        _textBuilder.Write(Environment.NewLine);
     }
 
     public void Dump<T>(T? value, DumpFormat dumpFormat = default)
@@ -162,16 +162,16 @@ public ref struct DumpStringHandler
 
     public void Dispose()
     {
-        _textWriter.Dispose();
+        _textBuilder.Dispose();
     }
     
     public string ToStringAndDispose()
     {
-        return _textWriter.ToStringAndDispose();
+        return _textBuilder.ToStringAndDispose();
     }
 
     public override string ToString()
     {
-        return _textWriter.ToString();
+        return _textBuilder.ToString();
     }
 }

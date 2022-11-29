@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
-using System.Reflection;
 using Jay.Text;
 using Jay.Comparision;
 using Jay.Enums;
@@ -167,7 +166,7 @@ public sealed class EnumTypeInfo<TEnum> : EnumTypeInfo
             return _names[index];
         }
 
-        var writer = new CharSpanWriter();
+        var writer = new CharSpanBuilder();
         var indices = GetFlagIndices(value);
         for (var i = 0; i < indices.Length; i++)
         {
