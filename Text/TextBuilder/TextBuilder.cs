@@ -132,14 +132,14 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
     /// <summary>
     /// Construct a new <see cref="TextBuilder"/>.
     /// </summary>
-    private TextBuilder()
+    public TextBuilder()
     {
         _charArray = ArrayPool<char>.Shared.Rent(MinLength);
         _length = 0;
         _newLine = Environment.NewLine;
     }
 
-    private TextBuilder(int minCapacity)
+    public TextBuilder(int minCapacity)
     {
         _charArray = ArrayPool<char>.Shared.Rent(Math.Max(minCapacity, MinLength));
         _length = 0;

@@ -8,6 +8,8 @@ public class RuntimeDelegateBuilder
     protected readonly DelegateInfo _delegateSig;
     private IFluentILEmitter? _emitter;
 
+    public DynamicMethod DynamicMethod => _dynamicMethod;
+
     public string Name => _dynamicMethod.Name;
     public MethodAttributes Attributes => _dynamicMethod.Attributes;
     public CallingConventions CallingConventions => _dynamicMethod.CallingConvention;

@@ -1,42 +1,19 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using Jay;
 using Jay.Collections;
 using Jay.Comparision;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
+using Jay.Reflection.Parsing;
 
+namespace Jay.Reflection.Parsing;
 
-namespace Jay.Reflection.Conversion.Parsing;
+public delegate bool TryParse<T>(ReadOnlySpan<char> text, ParseOptions? options, [MaybeNullWhen(false)] out T value);
 
 public static class Parser
 {
-    private abstract class ParseDelegates
-    {
-        public Delegate TryParse { get; }
-        public Delegate ObjectParse { get; }
-
-        protected ParseDelegates(Delegate tryParse, Delegate objectParse)
-        {
-            this.TryParse = tryParse;
-            this.ObjectParse = objectParse;
-        }
-    }
-
-    private sealed class ParseDelegates<T> : ParseDelegates
-    {
-        public new TryParseDelegate<T> TryParse => (base.TryParse as TryParseDelegate<T>)!;
-        public new TryParseDelegate<object> ObjectParse => (base.ObjectParse as TryParseDelegate<object>)!;
-
-        public ParseDelegates(TryParseDelegate<T> tryParse, TryParseDelegate<object> objectParse)
-            : base(tryParse, objectParse)
-        {
-        }
-    }
-
-    private delegate bool TryParseDelegate<T>(ReadOnlySpan<char> text, ParseOptions? options,
-        [MaybeNullWhen(false)] out T value);
-
-    private static readonly ConcurrentTypeDictionary<ParseDelegates> _tryParseCache = new();
+    private static readonly ConcurrentTypeDictionary<Delegate> _tryParseCache = new();
     private static readonly IReadOnlyDictionary<Type, FieldInfo> _parseOptionsFields;
 
     static Parser()
@@ -44,8 +21,6 @@ public static class Parser
         var parseOptionFields = new Dictionary<Type, FieldInfo>();
         foreach (var field in typeof(ParseOptions).GetFields(Reflect.Flags.Instance))
         {
-            if (field.FieldType == typeof(string) ||
-                field.FieldType == typeof(string[])) continue;
             Debug.Assert(!parseOptionFields.ContainsKey(field.FieldType));
             parseOptionFields[field.FieldType] = field;
         }
@@ -53,62 +28,44 @@ public static class Parser
         _parseOptionsFields = parseOptionFields;
     }
 
-    private static bool CanFillParameter(ParameterInfo parameter)
+    private static bool TryLoadParameter(IFluentILEmitter? emitter, ParameterInfo parameter)
     {
-        var name = parameter.Name;
-
-        // IParsable
-        if (parameter.ParameterType == typeof(string) ||
-            parameter.ParameterType == typeof(ReadOnlySpan<char>))
-        {
-            // if (string.Equals(name, "s", StringComparison.OrdinalIgnoreCase) ||
-            //     string.Equals(name, "text", StringComparison.OrdinalIgnoreCase) ||
-            //     string.Equals(name, "input", StringComparison.OrdinalIgnoreCase))
-            // {
-            //     return true; 
-            //
-            // }
-        }
-        // IFormatProvider
-        else if (parameter.ParameterType == typeof(IFormatProvider))
-        {
-            return true;
-        }
-        // NumberStyles
-        else if (parameter.ParameterType == typeof(NumberStyles))
-        {
-            return true;
-        }
-
-
-        Debugger.Break();
-
-
-        throw new NotImplementedException();
-    }
-
-
-    private static void EmitLoadParameter(IFluentILEmitter emitter, ParameterInfo parameter)
-    {
-        // Our text?
+        // `ReadOnlySpan<char> text`
         if (parameter.ParameterType == typeof(ReadOnlySpan<char>))
         {
-            emitter.Ldarg_0();
-            return;
+            emitter?.Ldarg_0();
+            return true;
         }
 
-        // Parse Options?
+        // `bool ignoreCase` and `bool throwOnFailure`   (from Enum)
+        if (parameter.ParameterType == typeof(bool))
+        {
+            if (string.Equals(parameter.Name, "ignoreCase", StringComparison.OrdinalIgnoreCase))
+            {
+                emitter?.Ldc_I4_1(); // true
+                return true;
+            }
+
+            if (string.Equals(parameter.Name, "throwOnFailure"))
+            {
+                emitter?.Ldc_I4_0(); // false
+                return true;
+            }
+
+            return false;
+        }
+
+        // Check if we can fulfill with a Property on ParseOptions
         if (_parseOptionsFields.TryGetValue(parameter.ParameterType, out var parseOptionsField))
         {
-            emitter.Ldarg_1()
-                .Ldfld(parseOptionsField);
-            return;
+            emitter?.Ldarg_1().Ldfld(parseOptionsField);
+            return true;
         }
 
         Debugger.Break();
-
-        throw new NotImplementedException();
+        return false;
     }
+
 
     private static IComparer<MethodInfo> TryParseMethodSorter { get; } = new FuncComparer<MethodInfo>(
         (firstMethod, secondMethod) =>
@@ -139,13 +96,62 @@ public static class Parser
             return 0;
         });
 
-    private static ParseDelegates<T> CreateTryParseDelegate<T>(Type type)
+
+    private static bool IsValidTryParseMethod(MethodInfo method)
+    {
+        if (method.Name != "TryParse") return false;
+        if (method.ReturnType != typeof(bool)) return false;
+        var methodParams = method.GetParameters();
+        if (methodParams.Length < 2) return false;
+        var firstParam = methodParams[0];
+        if (firstParam.ParameterType != typeof(string) &&
+            firstParam.ParameterType != typeof(ReadOnlySpan<char>)) return false;
+        var lastParam = methodParams[^1];
+        if (!lastParam.IsOut) return false;
+        var lastParamType = lastParam.ParameterType.GetElementType()!;
+        var type = method.ReflectedType;
+        if (lastParamType != method.ReflectedType)
+        {
+            if (lastParamType.IsGenericParameter)
+            {
+                var constraints = lastParamType.GetGenericParameterConstraints();
+                var len = constraints.Length;
+                if (len > 0)
+                {
+                    for (var i = 0; i < len; i++)
+                    {
+                        var constraint = constraints[i];
+                        if (!method.ReflectedType.Implements(constraint))
+                            return false;
+                    }
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static RuntimeDelegateBuilder<TryParse<T>> CreateTryParseDelegate<T>(Type type)
     {
         Debug.Assert(type == typeof(T));
-        // Find all type.TryParse(?) static methods
-        var tryParseMethods = type
-            .GetMethods(Reflect.Flags.Static)
-            .Where(method =>
+
+        // TryParse methods to examine
+        List<MethodInfo> tryParseMethods;
+
+        if (type.IsEnum)
+        {
+            tryParseMethods = typeof(Enum).GetMethods(Reflect.Flags.Static).ToList();
+        }
+        else
+        {
+            tryParseMethods = type.GetMethods(Reflect.Flags.Static).ToList();
+        }
+
+        // Filter
+        tryParseMethods = tryParseMethods.Where(method =>
             {
                 // Has to be named 'TryParse'
                 if (method.Name != "TryParse") return false;
@@ -165,14 +171,29 @@ public static class Parser
 
                 // Last one has to be 'out T'
                 var last = parameters[^1];
-                if (!last.IsOut || last.ParameterType.GetElementType() != type)
-                    return false;
+                if (!last.IsOut) return false;
+                var lastParameterType = last.ParameterType.GetElementType()!;
+                if (lastParameterType != type)
+                {
+                    if (type.IsEnum && lastParameterType.IsGenericParameter)
+                    {
+                        var constraints = lastParameterType.GetGenericParameterConstraints();
+                        if (!constraints.Contains(typeof(ValueType)))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
 
                 // All the rest have to be ones we can fill
                 for (var i = len - 2; i >= 1; i--)
                 {
                     var param = parameters[i];
-                    if (!CanFillParameter(param)) return false;
+                    if (!TryLoadParameter(null, param)) return false;
                 }
 
                 return true;
@@ -184,37 +205,59 @@ public static class Parser
         // None?
         if (tryParseMethods.Count == 0)
         {
+            var parseMethods = typeof(Enum).GetMethods(Reflect.Flags.Static)
+                .Where(method => method.Name.Contains("Parse", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
             throw new InvalidOperationException();
         }
 
         // Fill the best
-        DelegateInfo tryParseDelegateInfo = DelegateInfo.For(tryParseMethods[0]);
+        var bestMethod = tryParseMethods[0];
+        if (bestMethod.IsGenericMethod)
+        {
+            bestMethod = bestMethod.MakeGenericMethod(type);
+        }
 
-        var tryParseDelegate = RuntimeBuilder.CreateDelegate<TryParseDelegate<T>>($"TryParse_{type}",
-            emitter =>
-            {
-                // The first parameter is the text
-                var textParam = tryParseDelegateInfo.Parameters[0];
+        DelegateInfo tryParseDelegateInfo = DelegateInfo.For(bestMethod);
 
-                // Load each method parameter from Arg 1 (Options) except the last (which will be 'out T')
-                int count = tryParseDelegateInfo.ParameterCount - 1;
-                for (var i = 0; i < count; i++)
-                {
-                    var param = tryParseDelegateInfo.Parameters[i];
-                    EmitLoadParameter(emitter, param);
-                }
+        var builder = RuntimeBuilder.CreateRuntimeDelegateBuilder<TryParseDelegate<T>>($"TryParse_{type}");
+        var emitter = builder.Emitter;
 
-                // Arg 2 is the out param
-                emitter.Ldarg_2()
-                    // Call the method
-                    .Call(tryParseDelegateInfo.Method)
-                    // the bool is on the stack, so we're done
-                    .Ret();
+        // Load each method parameter except the last (which will be 'out T')
+        int count = tryParseDelegateInfo.ParameterCount - 1;
+        for (var i = 0; i < count; i++)
+        {
+            var param = tryParseDelegateInfo.Parameters[i];
+            var loaded = TryLoadParameter(emitter, param);
+            Debug.Assert(loaded);
+        }
 
-                var il = emitter.ToString();
-            });
+        // Arg 2 is the out param
+        emitter.Ldarg_2()
+            // Call the method
+            .Call(tryParseDelegateInfo.Method)
+            // the bool is on the stack, so we're done
+            .Ret();
 
-        var objectParseDelegate = RuntimeBuilder.CreateDelegate<TryParseDelegate<object>>($"TryParse_object_{type.Name}",
+        var il = emitter.ToString();
+
+        return builder;
+    }
+
+    private static bool TryParseObject(ReadOnlySpan<char> text,
+        ParseOptions? options,
+        [MaybeNullWhen(false)] out object? obj)
+    {
+
+    }
+
+    private static ParseDelegates<T> CreateDelegates<T>(Type type)
+    {
+        var tryParseBuilder = CreateTryParseDelegate<T>(type);
+
+        var objectParseDelegate = RuntimeBuilder.CreateDelegate<TryParseDelegate<object>>(
+            $"TryParse_object_{type.Name}",
             emitter =>
             {
                 // Load text
@@ -226,7 +269,7 @@ public static class Parser
                     // Get the address
                     .Ldloca(value)
                     // Call the generic method
-                    .Call(tryParseDelegate.Method)
+                    .Call(tryParseBuilder.DynamicMethod)
                     // store the return
                     .DeclareLocal<bool>(out var ret)
                     .Stloc(ret)
@@ -240,20 +283,18 @@ public static class Parser
                     .Ret();
 
                 var il = emitter.ToString();
-
-                Debugger.Break();
             });
 
-        return new ParseDelegates<T>(tryParseDelegate, objectParseDelegate);
+        return new ParseDelegates<T>(tryParseBuilder.CreateDelegate(), objectParseDelegate);
     }
 
     private static TryParseDelegate<T> GetTryParseDelegate<T>()
     {
         var parseDelegates =
-            _tryParseCache.GetOrAdd<T>(static type => CreateTryParseDelegate<T>(type)) as ParseDelegates<T>;
+            _tryParseCache.GetOrAdd<T>(static type => CreateDelegates<T>(type)) as ParseDelegates<T>;
         return parseDelegates!.TryParse;
     }
-    
+
 
     public static bool TryParse<T>(this ReadOnlySpan<char> text, ParseOptions? options,
         [MaybeNullWhen(false)] out T value)

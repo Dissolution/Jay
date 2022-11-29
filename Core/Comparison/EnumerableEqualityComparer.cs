@@ -442,21 +442,21 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
 
     public int GetHashCode(T? value)
     {
-        return Hasher.Combine(value, _equalityComparer);
+        return Hasher.Generate(value, _equalityComparer);
     }
 
     public int GetHashCode(ReadOnlySpan<T> values)
     {
-        return Hasher.Combine<T>(values, _equalityComparer);
+        return Hasher.Generate<T>(values, _equalityComparer);
     }
 
     public int GetHashCode(T[]? values)
     {
-        return Hasher.Combine<T>(values, _equalityComparer);
+        return Hasher.Generate<T>(values, _equalityComparer);
     }
 
     public int GetHashCode(IEnumerable<T>? values)
     {
-        return Hasher.Combine<T>(values, _equalityComparer);
+        return Hasher.Generate<T>(values, _equalityComparer);
     }
 }

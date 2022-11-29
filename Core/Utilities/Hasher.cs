@@ -6,55 +6,55 @@ namespace Jay.Utilities;
 
 public static class Hasher
 {
-    public static int Combine<T>(
+    public static int Generate<T>(
         T? value)
     {
         return HashCode.Combine<T>(value);
     }
 
-    public static int Combine<T1, T2>(
+    public static int Generate<T1, T2>(
         T1? value1, T2? value2)
     {
         return HashCode.Combine<T1, T2>(value1, value2);
     }
 
-    public static int Combine<T1, T2, T3>(
+    public static int Generate<T1, T2, T3>(
         T1? value1, T2? value2, T3? value3)
     {
         return HashCode.Combine<T1, T2, T3>(value1, value2, value3);
     }
 
-    public static int Combine<T1, T2, T3, T4>(
+    public static int Generate<T1, T2, T3, T4>(
         T1? value1, T2? value2, T3? value3, T4? value4)
     {
         return HashCode.Combine<T1, T2, T3, T4>(value1, value2, value3, value4);
     }
 
-    public static int Combine<T1, T2, T3, T4, T5>(
+    public static int Generate<T1, T2, T3, T4, T5>(
         T1? value1, T2? value2, T3? value3, T4? value4, T5? value5)
     {
         return HashCode.Combine<T1, T2, T3, T4, T5>(value1, value2, value3, value4, value5);
     }
 
-    public static int Combine<T1, T2, T3, T4, T5, T6>(
+    public static int Generate<T1, T2, T3, T4, T5, T6>(
         T1? value1, T2? value2, T3? value3, T4? value4, T5? value5, T6? value6)
     {
         return HashCode.Combine<T1, T2, T3, T4, T5, T6>(value1, value2, value3, value4, value5, value6);
     }
 
-    public static int Combine<T1, T2, T3, T4, T5, T6, T7>(
+    public static int Generate<T1, T2, T3, T4, T5, T6, T7>(
         T1? value1, T2? value2, T3? value3, T4? value4, T5? value5, T6? value6, T7? value7)
     {
         return HashCode.Combine<T1, T2, T3, T4, T5, T6, T7>(value1, value2, value3, value4, value5, value6, value7);
     }
 
-    public static int Combine<T1, T2, T3, T4, T5, T6, T7, T8>(
+    public static int Generate<T1, T2, T3, T4, T5, T6, T7, T8>(
         T1? value1, T2? value2, T3? value3, T4? value4, T5? value5, T6? value6, T7? value7, T8? value8)
     {
         return HashCode.Combine<T1, T2, T3, T4, T5, T6, T7, T8>(value1, value2, value3, value4, value5, value6, value7, value8);
     }
 
-    public static int Combine<T>(ReadOnlySpan<T> span)
+    public static int Generate<T>(ReadOnlySpan<T> span)
     {
         switch (span.Length)
         {
@@ -79,7 +79,7 @@ public static class Hasher
         }
     }
 
-    public static int Combine<T>(ReadOnlySpan<T> span, IEqualityComparer<T>? comparer)
+    public static int Generate<T>(ReadOnlySpan<T> span, IEqualityComparer<T>? comparer)
     {
         var hasher = new HashCode();
         for (var i = 0; i < span.Length; i++)
@@ -89,7 +89,7 @@ public static class Hasher
         return hasher.ToHashCode();
     }
 
-    public static int Combine<T>(params T[]? array)
+    public static int Generate<T>(params T[]? array)
     {
         if (array is null) return 0;
         switch (array.Length)
@@ -115,7 +115,7 @@ public static class Hasher
         }
     }
 
-    public static int Combine<T>(T[]? array, IEqualityComparer<T>? comparer)
+    public static int Generate<T>(T[]? array, IEqualityComparer<T>? comparer)
     {
         if (array is null) return 0;
         var hasher = new HashCode();
@@ -126,7 +126,7 @@ public static class Hasher
         return hasher.ToHashCode();
     }
 
-    public static int Combine<T>(IEnumerable<T>? enumerable)
+    public static int Generate<T>(IEnumerable<T>? enumerable)
     {
         if (enumerable is null) return 0;
         var hasher = new HashCode();
@@ -137,7 +137,7 @@ public static class Hasher
         return hasher.ToHashCode();
     }
 
-    public static int Combine<T>(IEnumerable<T>? enumerable, IEqualityComparer<T>? comparer)
+    public static int Generate<T>(IEnumerable<T>? enumerable, IEqualityComparer<T>? comparer)
     {
         if (enumerable is null) return 0;
         var hasher = new HashCode();
@@ -148,7 +148,7 @@ public static class Hasher
         return hasher.ToHashCode();
     }
 
-    public static int Combine(params object?[]? objects)
+    public static int Generate(params object?[]? objects)
     {
         if (objects is null) return 0;
         switch (objects.Length)
@@ -174,7 +174,7 @@ public static class Hasher
         }
     }
 
-    public static int Combine(object?[]? objects, IEqualityComparer<object>? comparer)
+    public static int Generate(object?[]? objects, IEqualityComparer<object>? comparer)
     {
         if (objects is null) return 0;
         var hasher = new HashCode();

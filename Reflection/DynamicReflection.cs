@@ -591,7 +591,7 @@ public sealed class DynamicReflection : DynamicObject
 
     public override int GetHashCode()
     {
-        return Hasher.Combine(_target, _targetType);
+        return Hasher.Generate(_target, _targetType);
     }
 
     public override string ToString()
