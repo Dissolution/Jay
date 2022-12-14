@@ -9,6 +9,11 @@
         <RootNamespace>Jay.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
         <ApplicationIcon>jay.ico</ApplicationIcon>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+        <Title>Jay.Text - A nifty collection of utilities for dealing with text</Title>
+        <Authors>Dissolution</Authors>
+        <Company />
+        <Description>A bunch of utilities for working with text.</Description>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,9 +21,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Core\Core.csproj">
-            <PrivateAssets>all</PrivateAssets>
-        </ProjectReference>
         <PackageReference Include="Fody" Version="6.6.4">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
