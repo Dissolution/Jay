@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0-windows</TargetFramework>
+        <TargetFramework>net7.0-windows</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AssemblyName>Jay.Core.Windows</AssemblyName>
@@ -9,10 +9,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <LangVersion>11</LangVersion>
-        <EnablePreviewFeatures>true</EnablePreviewFeatures>
-        <WarningLevel>preview</WarningLevel>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
     
     <ItemGroup>

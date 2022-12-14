@@ -17,7 +17,7 @@
 
     <PropertyGroup>
         <LangVersion>latest</LangVersion>
-        <EnablePreviewFeatures>true</EnablePreviewFeatures>
+        <EnablePreviewFeatures>false</EnablePreviewFeatures>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     </PropertyGroup>
     

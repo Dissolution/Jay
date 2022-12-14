@@ -20,9 +20,9 @@ public readonly struct Size<T> :
     public static Size<T> operator -(Size<T> first, Size<T> second) => new Size<T>(first.Width - second.Width, first.Height - second.Height);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Size<T> operator -(Size<T> point) => new Size<T>(-point.Width, -point.Height);
+    public static Size<T> operator -(Size<T> size) => new Size<T>(-size.Width, -size.Height);
 
-    public static Size<T> Empty { get; } = new Size<T>();
+    public static readonly Size<T> Empty;
     
     
     public readonly T Width;

@@ -12,7 +12,7 @@ public readonly struct Rectangle<T> :
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator !=(Rectangle<T> first, Rectangle<T> second) => !first.Equals(second);
     
-    public static Rectangle<T> Empty { get; } = new Rectangle<T>();
+    public static readonly Rectangle<T> Empty;
         
     public static Rectangle<T> FromLTRB(T left, T top, T right, T bottom)
     {
