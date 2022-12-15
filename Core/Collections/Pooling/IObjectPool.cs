@@ -37,11 +37,7 @@ public interface IObjectPool<T> : IDisposable
     /// <remarks>
     /// <paramref name="instance"/> must not be used after this is disposed.
     /// </remarks>
-    IDisposable Rent(out T instance)
-    {
-        instance = Rent();
-        return new PoolInstance<T>(this, instance);
-    }
+    IDisposable Rent(out T instance);
 
     /// <summary>
     /// Borrows a <typeparamref name="T"/> instance, performs <paramref name="instanceAction"/> on it, and returns it to this pool
@@ -49,35 +45,13 @@ public interface IObjectPool<T> : IDisposable
     /// <param name="instanceAction">
     /// The <see cref="Action{T}"/> to perform on a temporary <typeparamref name="T"/> instance
     /// </param>
-    void Rent(Action<T> instanceAction)
-    {
-        var instance = Rent();
-        try
-        {
-            instanceAction(instance);
-        }
-        finally
-        {
-            Return(instance);
-        }
-    }
+    void Rent(Action<T> instanceAction);
 
     /// <summary>
     /// Executes the given <paramref name="instanceFunc"/> on a borrowed <typeparamref name="T"/> instance and returns its <typeparamref name="TResult"/>
     /// </summary>
-    /// <typeparam name="TReturn">The type of value returned from <paramref name="instanceFunc"/></typeparam>
+    /// <typeparam name="TResult">The type of value returned from <paramref name="instanceFunc"/></typeparam>
     /// <param name="instanceFunc">The function to execute on a <typeparamref name="T"/> instance</param>
     /// <returns>The return value from <paramref name="instanceFunc"/></returns>
-    TReturn Rent<TReturn>(Func<T, TReturn> instanceFunc)
-    {
-        var instance = Rent();
-        try
-        {
-            return instanceFunc(instance);
-        }
-        finally
-        {
-            Return(instance);
-        }
-    }
+    TResult Rent<TResult>(Func<T, TResult> instanceFunc);
 }

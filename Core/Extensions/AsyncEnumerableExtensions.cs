@@ -1,4 +1,6 @@
-﻿namespace Jay.Extensions;
+﻿#if NET7_0_OR_GREATER
+
+namespace Jay.Extensions;
 
 public static class AsyncEnumerableExtensions
 {
@@ -13,3 +15,5 @@ public static class AsyncEnumerableExtensions
         return list;
     }
 }
+
+#endif

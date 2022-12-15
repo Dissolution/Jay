@@ -1,12 +1,24 @@
 ﻿namespace Jay.Validation;
 
+/// <summary>
+/// A utility class for all sort of Validation
+/// </summary>
 public static class Validate
 {
+    /// <summary>
+    /// Validates that the <paramref name="index"/> fits in <paramref name="available"/>
+    /// </summary>
+    /// <param name="available">The number of items available to be indexed into</param>
+    /// <param name="index">The index attempting to be referenced</param>
+    /// <param name="indexName">The name of the index parameter</param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown if <paramref name="index"/> <c>is</c> &lt; 0 <c>or</c> &gt;= <paramref name="available"/>
+    /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Index(int available, int index, 
         [CallerArgumentExpression(nameof(index))] string? indexName = null)
     {
-        if ((uint)index < available) return;
+        if ((uint)index < (uint)available) return;
         throw new ArgumentOutOfRangeException(indexName, index,
             $"{indexName} {index} must be between 0 and {available - 1}");
     }

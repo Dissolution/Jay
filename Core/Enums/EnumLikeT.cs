@@ -30,8 +30,10 @@ public sealed class EnumLikeComparers<TEnum> : IEqualityComparer<TEnum>,
 
 
 
-public abstract class FlagsEnumLike<TSelf> : EnumLike<TSelf>,
-                                             IBitwiseOperators<FlagsEnumLike<TSelf>, TSelf, TSelf>  
+public abstract class FlagsEnumLike<TSelf> : EnumLike<TSelf>
+#if NET7_0_OR_GREATER
+                                             ,IBitwiseOperators<FlagsEnumLike<TSelf>, TSelf, TSelf>  
+#endif
                                              where TSelf : FlagsEnumLike<TSelf>
 {
     public static TSelf None { get; } = Create("None", 0UL);

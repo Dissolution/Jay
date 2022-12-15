@@ -43,6 +43,7 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
         return _hasValue;
     }
 
+    #if NET7_0_OR_GREATER
     private void ToString(ref DefaultInterpolatedStringHandler stringHandler, int indent)
     {
         if (_hasValue)
@@ -78,6 +79,7 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
             branch.Value.ToString(ref stringHandler, indent + 1);
         }
     }
+    #endif
         
     public override bool TryGetIndex(GetIndexBinder binder, object?[] indexes, out object? result)
     {

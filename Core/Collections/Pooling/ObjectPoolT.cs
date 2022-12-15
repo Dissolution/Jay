@@ -254,12 +254,27 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <remarks>
     /// <paramref name="instance"/> must not be used after this is disposed.
     /// </remarks>
-    public IPoolInstance<T> Rent(out T instance)
+    public IDisposable Rent(out T instance)
     {
         instance = Rent();
         return new PoolInstance<T>(this, instance);
     }
-        
+
+    public void Rent(Action<T> instanceAction)
+    {
+        T instance = Rent();
+        instanceAction.Invoke(instance);
+        Return(instance);
+    }
+
+    public TResult Rent<TResult>(Func<T, TResult> instanceFunc)
+    {
+        T instance = Rent();
+        TResult result = instanceFunc.Invoke(instance);
+        Return(instance);
+        return result;
+    }
+
     /// <summary>
     /// Frees all stored <typeparamref name="T"/> instances.
     /// </summary>
