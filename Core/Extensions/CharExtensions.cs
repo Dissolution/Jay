@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace Jay.Extensions;
+namespace Jay;
 
 public static class CharExtensions
 {

@@ -1,4 +1,4 @@
-﻿namespace Jay.Extensions;
+﻿namespace Jay;
 
 /// <summary>
 /// Extensions on all <see langword="class"/>es.

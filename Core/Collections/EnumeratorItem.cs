@@ -1,6 +1,4 @@
-﻿using Jay.Text;
-
-namespace Jay.Collections;
+﻿namespace Jay.Collections;
 
 public sealed class EnumeratorItem<T> : IEquatable<T>
 {

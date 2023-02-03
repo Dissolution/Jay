@@ -1,6 +1,4 @@
-﻿using Jay.Extensions;
-
-namespace Jay.Reflection.Extensions;
+﻿namespace Jay.Reflection.Extensions;
 
 public static class ExpressionExtensions
 {

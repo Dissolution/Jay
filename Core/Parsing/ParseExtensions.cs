@@ -1,11 +1,8 @@
-﻿using Jay.Parsing;
+﻿using System.Globalization;
+using System.Numerics;
 using Jay.Utilities;
 
-using System.Data;
-using System.Globalization;
-using System.Numerics;
-
-namespace Jay;
+namespace Jay.Parsing;
 
 public static class ParseExtensions
 {

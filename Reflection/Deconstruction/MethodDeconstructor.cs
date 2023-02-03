@@ -1,5 +1,4 @@
-﻿using Jay.Extensions;
-using Jay.Reflection.Building.Emission.Instructions;
+﻿using Jay.Reflection.Building.Emission.Instructions;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Extensions;
 

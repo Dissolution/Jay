@@ -5,7 +5,7 @@
 /// </summary>
 public static class UnicodeTransformer
 {
-    public static TextBuilder AppendTransformed(this TextBuilder textBuilder,
+    public static TextBuilder.TextBuilder AppendTransformed(this TextBuilder.TextBuilder textBuilder,
         ReadOnlySpan<char> text,
         UnicodeTransformation transformation)
     {
@@ -70,92 +70,92 @@ public static class UnicodeTransformer
         }
     }
 
-    private static void Transform(TextBuilder builder, ReadOnlySpan<char> text, int uppercaseAOffset, int lowercaseAOffset, int zeroOffset)
+    private static void Transform(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text, int uppercaseAOffset, int lowercaseAOffset, int zeroOffset)
     {
         var span = builder.Allocate(text.Length);
         TextHelper.Unsafe.CopyTo(text, span);
         CommonAsciiTransform(span, uppercaseAOffset, lowercaseAOffset, zeroOffset);
     }
 
-    private static TextBuilder UnicodeBold(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeBold(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D400, 0x1D41A, 0x1D7CE);
         return builder;
     }
 
-    private static TextBuilder UnicodeItalic(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeItalic(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D434, 0x1D44E, '0');
         return builder;
     }
 
-    private static TextBuilder UnicodeBoldItalic(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeBoldItalic(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D468, 0x1D482, '0');
         return builder;
     }
 
-    private static TextBuilder UnicodeScript(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeScript(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D49C, 0x1D4B6, '0');
         return builder;
     }
 
-    private static TextBuilder UnicodeBoldScript(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeBoldScript(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D4D0, 0x1D4EA, '0');
         return builder;
     }
 
-    private static TextBuilder UnicodeFraktur(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeFraktur(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D504, 0x1D51E, '0');
         return builder;
     }
 
-    private static TextBuilder UnicodeDoubleStruck(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeDoubleStruck(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D538, 0x1D552, 0x1D7D8);
         return builder;
     }
 
-    private static TextBuilder UnicodeBoldFraktur(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeBoldFraktur(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D56C, 0x1D586, '0');
         return builder;
     }
 
-    private static TextBuilder UnicodeSansSerif(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeSansSerif(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D5A0, 0x1D5BA, 0x1D7E2);
         return builder;
     }
 
-    private static TextBuilder UnicodeSansSerifBold(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeSansSerifBold(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D5D4, 0x1D5EE, 0x1D7EC);
         return builder;
     }
 
-    private static TextBuilder UnicodeSansSerifItalic(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeSansSerifItalic(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D608, 0x1D622, '0');
         return builder;
     }
 
-    private static TextBuilder UnicodeSansSerifBoldItalic(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeSansSerifBoldItalic(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D63C, 0x1D656, '0');
         return builder;
     }
 
-    private static TextBuilder UnicodeMonospace(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeMonospace(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         Transform(builder, text, 0x1D670, 0x1D68A, 0x1D7F6);
         return builder;
     }
 
-    private static TextBuilder UnicodeUnderline(TextBuilder builder, ReadOnlySpan<char> text)
+    private static TextBuilder.TextBuilder UnicodeUnderline(TextBuilder.TextBuilder builder, ReadOnlySpan<char> text)
     {
         // Our underline is just a special character that we append after every normal character
         const char underline = '\u0332';
@@ -251,7 +251,7 @@ public static class UnicodeTransformer
         //Kick back original string if we can't do anything with it
         if (string.IsNullOrEmpty(str)) return str;
         //Process
-        using var text = TextBuilder.Borrow();
+        using var text = TextBuilder.TextBuilder.Borrow();
         foreach (var c in str)
         {
             //Is this character present in the fullwidth set?

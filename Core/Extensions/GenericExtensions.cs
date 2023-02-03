@@ -1,6 +1,6 @@
 ﻿using static InlineIL.IL;
 
-namespace Jay.Extensions;
+namespace Jay;
 
 public static class GenericExtensions
 {

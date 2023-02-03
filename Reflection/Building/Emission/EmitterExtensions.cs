@@ -66,7 +66,6 @@ public static class EmitterExtensions
         }
 
         // Everything will be loaded!
-        var il = emitter.ToString();
         return emitter;
     }
 }

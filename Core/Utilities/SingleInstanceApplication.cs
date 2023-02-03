@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Jay;
+namespace Jay.Utilities;
 
 /// <summary>
 /// A helper class to ensure that only one instance of an application is run at a time.

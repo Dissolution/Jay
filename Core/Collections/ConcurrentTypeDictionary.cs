@@ -33,7 +33,7 @@ public class ConcurrentTypeDictionary<TValue> : ConcurrentDictionary<Type, TValu
 
     public TValue AddOrUpdate<T>(TValue addValue, Func<TValue, TValue> updateValue)
     {
-        return base.AddOrUpdate(typeof(T), addValue, (type, existing) => updateValue(existing));
+        return base.AddOrUpdate(typeof(T), addValue, (_, existing) => updateValue(existing));
     }
     public TValue AddOrUpdate<T>(TValue addValue, Func<Type, TValue, TValue> updateValue)
     {
@@ -41,7 +41,7 @@ public class ConcurrentTypeDictionary<TValue> : ConcurrentDictionary<Type, TValu
     }
     public TValue AddOrUpdate<T>(Func<Type, TValue> addValue, Func<TValue, TValue> updateValue)
     {
-        return base.AddOrUpdate(typeof(T), addValue, (type, existing) => updateValue(existing));
+        return base.AddOrUpdate(typeof(T), addValue, (_, existing) => updateValue(existing));
     }
     public TValue AddOrUpdate<T>(Func<Type, TValue> addValue, Func<Type, TValue, TValue> updateValue)
     {

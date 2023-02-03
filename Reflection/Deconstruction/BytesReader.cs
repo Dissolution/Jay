@@ -56,7 +56,7 @@ public ref struct BytesReader
     }
     
     
-    public Result TryRead<T>(out T value)
+    public Result.Result TryRead<T>(out T value)
         where T : unmanaged
     {
         var size = Danger.SizeOf<T>();
@@ -76,7 +76,7 @@ public ref struct BytesReader
         return value;
     }
     
-    public Result TryRead(out byte b)
+    public Result.Result TryRead(out byte b)
     {
         if (AvailableByteCount > 0)
         {
@@ -93,7 +93,7 @@ public ref struct BytesReader
         return b;
     }
     
-    public Result TryRead(Span<byte> buffer)
+    public Result.Result TryRead(Span<byte> buffer)
     {
         if (AvailableBytes.TryCopyTo(buffer))
         {

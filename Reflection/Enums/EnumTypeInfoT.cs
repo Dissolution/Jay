@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
+using Jay.Comparison;
 using Jay.Text;
-using Jay.Comparision;
 using Jay.Enums;
 
 namespace Jay.Reflection.Enums;

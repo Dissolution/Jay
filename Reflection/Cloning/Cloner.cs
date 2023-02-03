@@ -308,7 +308,7 @@ public static class Cloner
     private static DeepClone<object> CreateObjectClone(Type type)
     {
         if (type == typeof(object)) // prevent recursion
-            return FastClone<object>!;
+            return FastClone<object>;
         
         return RuntimeBuilder.CreateDelegate<DeepClone<object>>(
             Dump($"clone_object_{type}"),

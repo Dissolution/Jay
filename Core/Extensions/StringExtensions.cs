@@ -1,4 +1,4 @@
-﻿namespace Jay.Extensions;
+﻿namespace Jay;
 
 public static class StringExtensions
 {
@@ -39,13 +39,13 @@ public static class StringExtensions
     }
 
     [return: NotNullIfNotNull("ifInvalid")]
-    public static string? IfNull(this string? str, string ifInvalid)
+    public static string? IfNull(this string? str, string? ifInvalid)
     {
         return str ?? ifInvalid;
     }
 
     [return: NotNullIfNotNull("ifInvalid")]
-    public static string? IfNullOrEmpty(this string? str, string ifInvalid)
+    public static string? IfNullOrEmpty(this string? str, string? ifInvalid)
     {
         if (string.IsNullOrEmpty(str))
             return ifInvalid;
@@ -53,7 +53,7 @@ public static class StringExtensions
     }
 
     [return: NotNullIfNotNull("ifInvalid")]
-    public static string? IfNullOrWhiteSpace(this string? str, string ifInvalid)
+    public static string? IfNullOrWhiteSpace(this string? str, string? ifInvalid)
     {
         if (string.IsNullOrWhiteSpace(str))
             return ifInvalid;

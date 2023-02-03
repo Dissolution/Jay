@@ -1,4 +1,6 @@
-﻿namespace Jay.Concurrency;
+﻿using Jay.Utilities;
+
+namespace Jay.Concurrency;
 
 /// <summary>
 /// Extensions on <see cref="ReaderWriterLockSlim"/>

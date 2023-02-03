@@ -2,7 +2,6 @@
 using System.Dynamic;
 
 using Jay.Dumping.Extensions;
-using Jay.Extensions;
 using Jay.Reflection.Building.Adaption;
 using Jay.Reflection.Comparison;
 using Jay.Reflection.Extensions;
@@ -155,12 +154,12 @@ public sealed class DynamicReflection : DynamicObject
                     return false;
 
                 // Has to have a compat return type
-                if (!((Arg)meth.ReturnType).CanLoadAs(key.ReturnType, out int e))
+                if (!((Arg)meth.ReturnType).CanLoadAs((Arg)key.ReturnType!, out int e))
                     return false;
                 exactness += e;
 
                 // Has to have a compat parameter sig
-                if (!RuntimeMethodAdapter.CanAdaptTypes(key.ParameterTypes, meth.GetParameterTypes(), out e))
+                if (!RuntimeMethodAdapter.CanAdaptTypes(key.ParameterTypes!, meth.GetParameterTypes(), out e))
                     return false;
                 exactness += e;
 
@@ -414,7 +413,7 @@ public sealed class DynamicReflection : DynamicObject
         Debugger.Break();
 
         if (TryGetObjectInvoke(key,
-                k => _targetType.GetMethod(k.Name, flags),
+                k => _targetType.GetMethod(k.Name!, flags),
                 out var objectInvoke))
         {
             result = objectInvoke(_target, arg);
@@ -440,7 +439,7 @@ public sealed class DynamicReflection : DynamicObject
         Debugger.Break();
 
         if (TryGetObjectInvoke(key,
-                k => _targetType.GetMethod(k.Name, flags),
+                k => _targetType.GetMethod(k.Name!, flags),
                 out var objectInvoke))
         {
             result = objectInvoke(_target);

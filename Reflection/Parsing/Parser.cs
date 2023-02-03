@@ -1,15 +1,15 @@
-﻿using System.Diagnostics;
+﻿/*using System.Diagnostics;
 using System.Globalization;
 using Jay;
 using Jay.Collections;
-using Jay.Comparision;
+using Jay.Comparison;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Parsing;
 
 namespace Jay.Reflection.Parsing;
 
-public delegate bool TryParse<T>(ReadOnlySpan<char> text, ParseOptions? options, [MaybeNullWhen(false)] out T value);
+public delegate bool TryParseDelegate<T>(ReadOnlySpan<char> text, ParseOptions? options, [MaybeNullWhen(false)] out T value);
 
 public static class Parser
 {
@@ -134,7 +134,7 @@ public static class Parser
         return true;
     }
 
-    private static RuntimeDelegateBuilder<TryParse<T>> CreateTryParseDelegate<T>(Type type)
+    private static RuntimeDelegateBuilder<TryParseDelegate<T>> CreateTryParseDelegate<T>(Type type)
     {
         Debug.Assert(type == typeof(T));
 
@@ -588,4 +588,4 @@ public partial class Parser
         return true;
     }
 }
-*/
+#1#*/

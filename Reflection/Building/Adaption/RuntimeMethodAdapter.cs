@@ -52,7 +52,7 @@ public class RuntimeMethodAdapter
     }
     
     
-    private Result HasInstanceParam(out int offset)
+    private Result.Result HasInstanceParam(out int offset)
     {
         // The instance will be the first parameter
         var instanceParameter = this.DelegateSig.Parameters.FirstOrDefault();
@@ -83,7 +83,7 @@ public class RuntimeMethodAdapter
             return false;
     }
 
-    private Result TryLoadParams(int delegateParamOffset, int methodParamOffset = 0)
+    private Result.Result TryLoadParams(int delegateParamOffset, int methodParamOffset = 0)
     {
         if (DelegateSig.ParameterCount - delegateParamOffset != 1)
             return GetAdaptEx($"No params available as the only/last parameter");
@@ -94,14 +94,14 @@ public class RuntimeMethodAdapter
         return true;
     }
 
-    private Result TryLoadArgs(int delegateParamOffset, int methodParamOffset = 0)
+    private Result.Result TryLoadArgs(int delegateParamOffset, int methodParamOffset = 0)
     {
         var lastInstructionNode = Emitter.Instructions.Last;
         var delParams = this.DelegateSig.Parameters;
         var methParams = this.MethodSig.Parameters;
         if (delParams.Length - delegateParamOffset != methParams.Length - methodParamOffset)
             return GetAdaptEx($"Incorrect number of parameters available");
-        Result result;
+        Result.Result result;
         int m = methodParamOffset;
         int d = delegateParamOffset;
         while (m < methParams.Length && d < delParams.Length)
@@ -120,9 +120,9 @@ public class RuntimeMethodAdapter
         return true;
     }
 
-    private Result TryLoadInstanceArgs()
+    private Result.Result TryLoadInstanceArgs()
     {
-        Result result;
+        Result.Result result;
         
         // Static Method
         if (Method.IsStatic)
@@ -208,7 +208,7 @@ public class RuntimeMethodAdapter
         return result;
     }
 
-    public static Result TryAdapt(MethodBase method, DelegateInfo delegateSig, [NotNullWhen(true)] out Delegate? adapterDelegate)
+    public static Result.Result TryAdapt(MethodBase method, DelegateInfo delegateSig, [NotNullWhen(true)] out Delegate? adapterDelegate)
     {
         // faster return
         adapterDelegate = default;
@@ -225,12 +225,11 @@ public class RuntimeMethodAdapter
         result = methodReturn.TryLoadAs(adapter.Emitter, delReturn);
         if (!result) return result;
         adapter.Emitter.Ret();
-        var il = adapter.Emitter.ToString();
         adapterDelegate = adapter.RuntimeDelegateBuilder.CreateDelegate();
         return true;
     }
 
-    public static Result TryAdapt<TDelegate>(MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate)
+    public static Result.Result TryAdapt<TDelegate>(MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate)
         where TDelegate : Delegate
     {
         var result = TryAdapt(method, DelegateInfo.For<TDelegate>(), out var del);

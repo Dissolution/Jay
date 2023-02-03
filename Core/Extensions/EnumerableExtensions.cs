@@ -1,7 +1,7 @@
 ﻿using Jay.Collections;
-using Jay.Comparision;
+using Jay.Comparison;
 
-namespace Jay.Extensions;
+namespace Jay;
 
 public static class EnumerableExtensions
 {
@@ -123,95 +123,101 @@ public static class EnumerableExtensions
 
     public static IEnumerable<EnumeratorItem<T>> Indexed<T>(this IEnumerable<T>? enumerable)
     {
-        if (enumerable is null)
+        switch (enumerable)
         {
-            yield break;
-        }
-        //IList<T>
-        else if (enumerable is IList<T> list)
-        {
-            var count = list.Count;
-            //No items, exit immediately
-            if (count == 0)
-                yield break;
-            //For each item, yield the entry
-            for (var i = 0; i < list.Count; i++)
+            case null:
+                break;
+            //IList<T>
+            case IList<T> list:
             {
-                yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, list[i]);
+                var count = list.Count;
+                //No items, exit immediately
+                if (count == 0)
+                    yield break;
+                //For each item, yield the entry
+                for (var i = 0; i < list.Count; i++)
+                {
+                    yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, list[i]);
+                }
+                break;
             }
-        }
-        //ICollection<T>
-        else if (enumerable is ICollection<T> collection)
-        {
-            var count = collection.Count;
-            if (count == 0)
-                yield break;
-            int last = count - 1;
-            using var e = collection.GetEnumerator();
-            var i = 0;
-            while (e.MoveNext())
+            //ICollection<T>
+            case ICollection<T> collection:
             {
-                yield return new EnumeratorItem<T>(index: i,
-                                                   sourceLength:
-                                                   count,
-                                                   isFirst: i == 0,
-                                                   isLast: i == last,
-                                                   value: e.Current);
-                i++;
-            }
-        }
-        //IReadOnlyList<T>
-        else if (enumerable is IReadOnlyList<T> roList)
-        {
-            var count = roList.Count;
-            //No items, exit immediately
-            if (count == 0)
-                yield break;
-            //For each item, yield the entry
-            for (var i = 0; i < roList.Count; i++)
-            {
-                yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, roList[i]);
-            }
-        }
-        //IReadOnlyCollection<T>
-        else if (enumerable is IReadOnlyCollection<T> roCollection)
-        {
-            var count = roCollection.Count;
-            if (count == 0)
-                yield break;
-            using (var e = roCollection.GetEnumerator())
-            {
+                var count = collection.Count;
+                if (count == 0)
+                    yield break;
+                int last = count - 1;
+                using var e = collection.GetEnumerator();
                 var i = 0;
                 while (e.MoveNext())
                 {
-                    yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, e.Current);
+                    yield return new EnumeratorItem<T>(index: i,
+                        sourceLength:
+                        count,
+                        isFirst: i == 0,
+                        isLast: i == last,
+                        value: e.Current);
                     i++;
                 }
+                break;
             }
-        }
-        //Have to enumerate
-        else
-        {
-            using (var e = enumerable.GetEnumerator())
+            //IReadOnlyList<T>
+            case IReadOnlyList<T> roList:
             {
-                //If we cannot move, we are done
-                if (!e.MoveNext())
+                var count = roList.Count;
+                //No items, exit immediately
+                if (count == 0)
                     yield break;
-
-                //Defaults to first, not last, with index 0
-                var last = false;
-                var i = 0;
-                while (!last)
+                //For each item, yield the entry
+                for (var i = 0; i < roList.Count; i++)
                 {
-                    //Get the current value
-                    var current = e.Current;
-                    //Move next now to check for last
-                    last = !e.MoveNext();
-                    //Return our entry
-                    yield return new EnumeratorItem<T>(i, null, i == 0, last, current);
-                    //increment index
-                    i++;
+                    yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, roList[i]);
                 }
+                break;
+            }
+            //IReadOnlyCollection<T>
+            case IReadOnlyCollection<T> roCollection:
+            {
+                var count = roCollection.Count;
+                if (count == 0)
+                    yield break;
+                using (var e = roCollection.GetEnumerator())
+                {
+                    var i = 0;
+                    while (e.MoveNext())
+                    {
+                        yield return new EnumeratorItem<T>(i, count, i == 0, i == count - 1, e.Current);
+                        i++;
+                    }
+                }
+                break;
+            }
+            //Have to enumerate
+            default:
+            {
+                using (var e = enumerable.GetEnumerator())
+                {
+                    //If we cannot move, we are done
+                    if (!e.MoveNext())
+                        yield break;
+
+                    //Defaults to first, not last, with index 0
+                    var last = false;
+                    var i = 0;
+                    while (!last)
+                    {
+                        //Get the current value
+                        var current = e.Current;
+                        //Move next now to check for last
+                        last = !e.MoveNext();
+                        //Return our entry
+                        yield return new EnumeratorItem<T>(i, null, i == 0, last, current);
+                        //increment index
+                        i++;
+                    }
+                }
+                break;
             }
         }
     }

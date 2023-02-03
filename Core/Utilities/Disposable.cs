@@ -1,11 +1,11 @@
-﻿namespace Jay;
+﻿namespace Jay.Utilities;
 
 public static class Disposable
 {
     /// <summary>
     /// An <see cref="IDisposable"/> / <see cref="IAsyncDisposable"/> that doesn't do anything.
     /// </summary>
-    private sealed class NoDisposable : IDisposable, IAsyncDisposable
+    private sealed class UnDisposable : IDisposable, IAsyncDisposable
     {
         public void Dispose() { }
 
@@ -41,6 +41,24 @@ public static class Disposable
             if (_task is not null)
             {
                 await _task;
+            }
+        }
+    }
+    
+    private sealed class FuncTaskDisposable : IAsyncDisposable
+    {
+        private readonly Func<Task>? _taskFunc;
+
+        public FuncTaskDisposable(Func<Task>? taskFunc)
+        {
+            _taskFunc = taskFunc;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_taskFunc is not null)
+            {
+                await (_taskFunc.Invoke());
             }
         }
     }
@@ -95,6 +113,15 @@ public static class Disposable
         }
     }
 
+    
+    private static readonly UnDisposable _unDisposable = new UnDisposable();
+
+    /// <summary>
+    /// An <see cref="IDisposable"/> that does nothing when <see cref="M:IDisposable.Dispose"/> is called.
+    /// </summary>
+    public static IDisposable None => _unDisposable;
+
+    public static IAsyncDisposable NoneAsync => _unDisposable;
 
     public static IDisposable Action(Action? action)
     {
@@ -105,41 +132,37 @@ public static class Disposable
     {
         return new TaskDisposable(task);
     }
-
-    private static readonly NoDisposable _noDisposable = new NoDisposable();
-
-    /// <summary>
-    /// An <see cref="IDisposable"/> that does nothing when <see cref="M:IDisposable.Dispose"/> is called.
-    /// </summary>
-    public static IDisposable None => _noDisposable;
-
-    public static IAsyncDisposable NoneAsync => _noDisposable;
-
+    
+    public static IAsyncDisposable Task(Func<Task>? asyncAction)
+    {
+        return new FuncTaskDisposable(asyncAction);
+    }
+    
     public static IDisposable Combine(params IDisposable?[]? disposables)
     {
         if (disposables is null)
-            return _noDisposable;
+            return _unDisposable;
         return new CombinedDisposable(disposables);
     }
 
     public static IDisposable Combine(IEnumerable<IDisposable?>? disposables)
     {
         if (disposables is null)
-            return _noDisposable;
+            return _unDisposable;
         return new CombinedDisposable(disposables);
     }
 
     public static IAsyncDisposable Combine(params IAsyncDisposable?[]? disposables)
     {
         if (disposables is null)
-            return _noDisposable;
+            return _unDisposable;
         return new CombinedAsyncDisposable(disposables);
     }
 
     public static IAsyncDisposable Combine(IEnumerable<IAsyncDisposable?>? disposables)
     {
         if (disposables is null)
-            return _noDisposable;
+            return _unDisposable;
         return new CombinedAsyncDisposable(disposables);
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace Jay.Text;
+namespace Jay.Text.TextBuilder;
 
 public static class NonGenericEnumerableTextBuilderExtensions
 {
@@ -38,7 +38,7 @@ public static class NonGenericEnumerableTextBuilderExtensions
             }
             finally
             {
-                Result.Dispose(e);
+                Result.Result.Dispose(e);
             }
         }
 

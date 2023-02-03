@@ -1,4 +1,4 @@
-﻿namespace Jay.Extensions;
+﻿namespace Jay;
 
 /// <summary>
 /// Extensions for <see cref="IComparable{T}"/> and <see cref="IComparable"/> values.

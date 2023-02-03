@@ -33,7 +33,7 @@ public class TypeDictionary<TValue> : Dictionary<Type, TValue>
 
     public TValue AddOrUpdate<T>(TValue addValue, Func<TValue, TValue> updateValue)
     {
-        return this.AddOrUpdate<Type, TValue>(typeof(T), addValue, (type, existing) => updateValue(existing));
+        return this.AddOrUpdate<Type, TValue>(typeof(T), addValue, (_, existing) => updateValue(existing));
     }
     public TValue AddOrUpdate<T>(TValue addValue, Func<Type, TValue, TValue> updateValue)
     {
@@ -41,7 +41,7 @@ public class TypeDictionary<TValue> : Dictionary<Type, TValue>
     }
     public TValue AddOrUpdate<T>(Func<Type, TValue> addValue, Func<TValue, TValue> updateValue)
     {
-        return this.AddOrUpdate(typeof(T), addValue, (type, existing) => updateValue(existing));
+        return this.AddOrUpdate(typeof(T), addValue, (_, existing) => updateValue(existing));
     }
     public TValue AddOrUpdate<T>(Func<Type, TValue> addValue, Func<Type, TValue, TValue> updateValue)
     {

@@ -2,7 +2,7 @@
 using Jay.Collections;
 using Jay.Dumping.Interpolated;
 
-namespace Jay.Dumping.Scratch;
+namespace Jay.Dumping;
 
 public static class DumpHome
 {

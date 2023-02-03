@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Jay;
+namespace Jay.Result;
 
 public readonly partial struct Result<T> : 
     IEqualityOperators<Result<T>, Result<T>, bool>,

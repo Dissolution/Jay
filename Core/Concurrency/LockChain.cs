@@ -1,4 +1,6 @@
-﻿namespace Jay.Concurrency;
+﻿using Jay.Utilities;
+
+namespace Jay.Concurrency;
 
 public sealed class LockChain : IDisposable
 {

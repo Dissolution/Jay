@@ -1,13 +1,8 @@
-﻿
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
-using System.Reflection.Metadata;
+using Jay.Text.TextBuilder;
 
-using Jay.Dumping;
-using Jay.Dumping.Interpolated;
-using Jay.Text;
-
-namespace Jay.ToCode;
+namespace Jay.Dumping.Code;
 
 
 internal static class TypeFormatter

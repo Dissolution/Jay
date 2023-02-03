@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Jay;
+namespace Jay.Result;
 
 /// <remarks>
 /// This is the <see langword="const"/> and <see langword="static"/> part of <see cref="Result"/>
@@ -49,7 +49,7 @@ public readonly partial struct Result :
     /// </summary>
     /// <param name="exception"></param>
     /// <returns></returns>
-    public static Result Fail(Exception? exception = default)
+    public static Result Fail(Exception? exception)
     {
         exception ??= new Exception(DefaultErrorMessage);
         return new Result(false, exception);
@@ -63,7 +63,7 @@ public readonly partial struct Result :
     /// A successful <see cref="Result"/> if the <paramref name="action"/> invokes without throwing an <see cref="Exception"/>.
     /// A failed <see cref="Result"/> with the caught <see cref="Exception"/> attached if not.
     /// </returns>
-    public static Result TryInvoke(Action? action)
+    public static Result TryInvoke([AllowNull, NotNullWhen(true)] Action? action)
     {
         if (action is null)
         {
@@ -90,7 +90,7 @@ public readonly partial struct Result :
     /// A successful <see cref="Result"/> if the <paramref name="func"/> invokes without throwing an <see cref="Exception"/>.
     /// A failed <see cref="Result"/> with the caught <see cref="Exception"/> attached if not.
     /// </returns>
-    public static Result TryInvoke<T>(Func<T>? func, [MaybeNullWhen(false)] out T output)
+    public static Result TryInvoke<T>([AllowNull, NotNullWhen(true)] Func<T>? func, [MaybeNullWhen(false)] out T output)
     {
         if (func is null)
         {
@@ -110,9 +110,7 @@ public readonly partial struct Result :
     }
     
     /// <inheritdoc cref="Result{T}"/>
-    public static Result<T> TryInvoke<T>(Func<T>? func) => Result<T>.TryInvoke(func);
-
-    
+    public static Result<T> TryInvoke<T>([AllowNull, NotNullWhen(true)] Func<T>? func) => Result<T>.TryInvoke(func);
 
     public static Result<T> AsResult<T>(ResultOutFunc<T> outResult) => Result<T>.TryInvoke(outResult);
     
@@ -164,7 +162,7 @@ public readonly partial struct Result :
             }
             catch // (Exception ex)
             {
-                /* POKEMON */
+                // Ignore all exceptions
             }
         }
     }
@@ -179,7 +177,7 @@ public readonly partial struct Result :
             }
             catch // (Exception ex)
             {
-                /* POKEMON */
+                // Ignore all exceptions
             }
         }
         // Avoids boxing for disposable structs
@@ -191,9 +189,8 @@ public readonly partial struct Result :
             }
             catch // (Exception ex)
             {
-                /* POKEMON */
+                // Ignore all exceptions
             }
         }
     }
-
 }

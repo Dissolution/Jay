@@ -3,7 +3,6 @@ using System.Reflection;
 using Jay.Collections;
 using Jay.Dumping.Dumpers;
 using Jay.Dumping.Extensions;
-using Jay.Extensions;
 
 namespace Jay.Dumping;
 

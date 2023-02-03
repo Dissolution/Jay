@@ -28,7 +28,7 @@ public readonly struct Point<T> :
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Point<T> operator -(Point<T> point) => new Point<T>(-point.X, -point.Y);
 
-    public static readonly Point<T> Empty;
+    public static readonly Point<T> Empty = default;
     
     public readonly T X;
     public readonly T Y;

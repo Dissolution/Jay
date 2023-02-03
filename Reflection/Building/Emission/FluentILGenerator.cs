@@ -69,7 +69,7 @@ public sealed class FluentILGenerator : IFluentILEmitter
 
     public ITryCatchFinallyBuilder<IFluentILEmitter> Try(Action<IFluentILEmitter> tryBlock)
     {
-        return new TCFBuilder<IFluentILEmitter>(this).Try(tryBlock);
+        return new TryCatchFinallyBuilder<IFluentILEmitter>(this).Try(tryBlock);
     }
 
     public IFluentILEmitter BeginCatchBlock(Type exceptionType)

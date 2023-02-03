@@ -41,7 +41,7 @@ public interface ITryCatchFinallyBuilder<out TEmitter>
     TEmitter Finally(Action<TEmitter>? finallyBlock);
 }
 
-public class TCFBuilder<TEmitter> : ITryCatchFinallyBuilder<TEmitter>
+public class TryCatchFinallyBuilder<TEmitter> : ITryCatchFinallyBuilder<TEmitter>
     where TEmitter : IFluentILEmitter<TEmitter>
 {
     private readonly TEmitter _emitter;
@@ -49,7 +49,7 @@ public class TCFBuilder<TEmitter> : ITryCatchFinallyBuilder<TEmitter>
 
     public EmitterLabel? EndTryLabel => _endTryLabel;
     
-    public TCFBuilder(TEmitter emitter)
+    public TryCatchFinallyBuilder(TEmitter emitter)
     {
         _emitter = emitter;
     }

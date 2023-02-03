@@ -1,5 +1,4 @@
 ﻿using Jay.Exceptions;
-using Jay.Extensions;
 using Jay.Validation;
 
 namespace Jay.Text;
@@ -79,7 +78,7 @@ public ref struct CharSpanReader
         throw new InvalidOperationException($"There are no characters left to read");
     }
 
-    public Result TryPeek(out char ch)
+    public Result.Result TryPeek(out char ch)
     {
         if (_index < Length)
         {
@@ -96,7 +95,7 @@ public ref struct CharSpanReader
         return text;
     }
 
-    public Result TryPeek(int count, out ReadOnlySpan<char> text)
+    public Result.Result TryPeek(int count, out ReadOnlySpan<char> text)
     {
         if (_index + (uint)count <= Length)
         {
@@ -113,7 +112,7 @@ public ref struct CharSpanReader
         return ch;
     }
 
-    public Result TryTake(out char ch)
+    public Result.Result TryTake(out char ch)
     {
         var result = TryPeek(out ch);
         if (result)
@@ -127,7 +126,7 @@ public ref struct CharSpanReader
         return text;
     }
 
-    public Result TryTake(int count, out ReadOnlySpan<char> text)
+    public Result.Result TryTake(int count, out ReadOnlySpan<char> text)
     {
         var result = TryPeek(count, out text);
         if (result)
@@ -140,7 +139,7 @@ public ref struct CharSpanReader
         TrySkip().ThrowIfFailed();
     }
 
-    public Result TrySkip()
+    public Result.Result TrySkip()
     {
         var result = TryPeek(out _);
         if (result)
@@ -153,7 +152,7 @@ public ref struct CharSpanReader
         TrySkip(count).ThrowIfFailed();
     }
 
-    public Result TrySkip(int count)
+    public Result.Result TrySkip(int count)
     {
         var result = TryPeek(count, out _);
         if (result)

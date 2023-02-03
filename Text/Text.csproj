@@ -40,6 +40,11 @@
         <Using Include="Jay.Text.Extensions" />
         <Using Include="System.Text" />
     </ItemGroup>
+   
+
+    <ItemGroup>
+      <ProjectReference Include="..\Core\Core.csproj" />
+    </ItemGroup>
 
 
 </Project>

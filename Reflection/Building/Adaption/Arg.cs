@@ -49,7 +49,7 @@ public abstract class Arg : IEquatable<Arg>
     
     protected abstract void LoadAddress(IFluentILEmitter emitter);
 
-    public Result CanLoadAs(Arg destArg, out int exactness)
+    public Result.Result CanLoadAs(Arg destArg, out int exactness)
     {
         JayflectException GetNotImplementedEx() => new JayflectException
         {
@@ -147,7 +147,7 @@ public abstract class Arg : IEquatable<Arg>
 
     }
 
-    public virtual Result TryLoadAs(
+    public virtual Result.Result TryLoadAs(
         IFluentILEmitter emitter,
         Arg destArg,
         bool emitTypeChecks = false)

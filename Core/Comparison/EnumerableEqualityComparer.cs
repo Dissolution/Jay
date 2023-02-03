@@ -1,6 +1,6 @@
 ﻿using Jay.Utilities;
 
-namespace Jay.Comparision;
+namespace Jay.Comparison;
 
 public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
                                                     IEqualityComparer<T[]>,
@@ -302,7 +302,7 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
                     // Can avoid right.GetEnumerator()?
                     if (right is IList<T> rightList)
                     {
-                        for (var i = 0; i < leftCount; i++)
+                        for (var i = 0; i < rightCount; i++)
                         {
                             if (!equals(leftList[i], rightList[i])) return false;
                         }
@@ -350,7 +350,7 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
                     // Can avoid right.GetEnumerator()?
                     if (right is IList<T> rightList)
                     {
-                        for (var i = 0; i < leftCount; i++)
+                        for (var i = 0; i < rightCount; i++)
                         {
                             leftEnumerator.MoveNext();
                             if (!equals(leftEnumerator.Current, rightList[i])) return false;
@@ -398,7 +398,7 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
                 // Can avoid right.GetEnumerator()?
                 if (right is IList<T> rightList)
                 {
-                    for (var i = 0; i < leftCount; i++)
+                    for (var i = 0; i < rightCount; i++)
                     {
                         if (!leftEnumerator.MoveNext()) return false;
                         if (!equals(leftEnumerator.Current, rightList[i])) return false;

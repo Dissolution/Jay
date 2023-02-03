@@ -32,7 +32,7 @@ public readonly struct Size<T> :
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Size<T> operator -(Size<T> point) => new Size<T>(-point.Width, -point.Height);
 
-    public static readonly Size<T> Empty;
+    public static readonly Size<T> Empty = default;
 
 
     public readonly T Width;

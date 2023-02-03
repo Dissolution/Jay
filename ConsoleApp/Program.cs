@@ -1,23 +1,21 @@
 ﻿#region SETUP
-
+using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Reflection;
 using Jay;
-using Jay.Comparision;
+using Jay.Comparison;
 using Jay.Dumping.Extensions;
-using Jay.Dumping.Scratch;
-using Jay.Extensions;
 using Jay.Reflection;
-using Jay.Reflection.Parsing;
-using Jay.Text;
+using Jay.Text.TextBuilder;
 using Jay.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using var host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices((context, services) => { })
+    .ConfigureServices((_, _) => { })
     .ConfigureLogging(logging => logging.AddConsole())
     .Build();
 
@@ -26,10 +24,78 @@ await host.StartAsync();
 var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
 var token = lifetime.ApplicationStopping;
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
-
 #endregion
 
 // WORK
+
+var exprType = typeof(Expression);
+var exprPropNames = exprType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+    .Select(prop => prop.Name)
+    .ToHashSet();
+
+var expressionTypes = Reflect.AllExportedTypes
+    .Where(type => type != exprType)
+    .Where(type => type.Implements(exprType))
+    .Where(type => type.BaseType == exprType)
+    .OrderBy(type => type.Name)
+    .ToList();
+
+using var text = new TextBuilder();
+foreach (var expressionType in expressionTypes)
+{
+    var properties = expressionType
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(prop => prop.PropertyType != typeof(bool))
+        .ToList();
+    var excessProperties = properties.ExceptBy(exprPropNames, prop => prop.Name);
+    //Debugger.Break();
+    var varName = expressionType.Name
+        .Select<char, char>((c, i) => i == 0 ? c.ToLower() : c)
+        .ToArray()
+        .AsSpan()
+        .ToString();
+    text.Append($"case {expressionType.Name} {varName}:").NewLine()
+        .Append("{").NewLine();
+    foreach (var excessProperty in excessProperties)
+    {
+        text.Append("    ");
+        var epType = excessProperty.PropertyType;
+        var epName = $"{varName}.{excessProperty.Name}";
+        if (epType.Implements<Expression>())
+        {
+            text.Append($"ParseExpression(data, {epName});").NewLine();
+        }
+        else if (epType.Implements<IEnumerable<Expression>>())
+        {
+            text.Append($"ParseExpressions(data, {epName});").NewLine();
+        }
+        else if (epType.Implements(typeof(IEnumerable)) && epType != typeof(string))
+        {
+            var valueType = epType.GetGenericArguments()[0];
+            if (valueType.IsClass)
+            {
+                text.Append($"// {valueType}").NewLine()
+                    .Append("    ");
+            }
+
+            text.Append($"ParseEnumerable(data, {epName});").NewLine();
+        }
+        else
+        {
+            text.Append($"ParseValue(data, {epName});").NewLine();
+        }
+    }
+    text.Append("    return;").NewLine();
+    text.Append("}").NewLine();
+}
+   
+string code = text.ToString();
+
+Debugger.Break();
+
+
+/*
+
 
 var parseTypes = Reflect.AllExportedTypes
     .Where(type => Enumerable.Any(type.GetMethods(Reflect.Flags.Static), method => method.Name == "TryParse"))
@@ -47,7 +113,7 @@ var uniqueParameters = new HashSet<ParameterInfo[]>(new EnumerableEqualityCompar
 /* Notes:
  * If we want to support TryParse(Type,..., out object obj), we can look for TryParse methods that have a Type as the first param
  *  
- */
+ 
 
 foreach (var type in parseTypes)
 {
@@ -61,7 +127,7 @@ foreach (var type in parseTypes)
             if (methodParams.Length < 2) return false;
             /*var firstParam = methodParams[0];
             if (firstParam.ParameterType != typeof(string) &&
-                firstParam.ParameterType != typeof(ReadOnlySpan<char>)) return false;*/
+                firstParam.ParameterType != typeof(ReadOnlySpan<char>)) return false;* /
             var lastParam = methodParams[^1];
             if (!lastParam.IsOut) return false;
             var lastParamType = lastParam.ParameterType.GetElementType()!;
@@ -108,16 +174,11 @@ Debugger.Break();
 
 string text = BindingFlags.Static.ToString();
 
-bool aResult = Enum.TryParse(text, out BindingFlags aValue);
-bool bResult = Parser.TryParse(text, default, out BindingFlags bValue);
-
 Debugger.Break();
 
-
+*/
 #region TEARDOWN
-
 lifetime.StopApplication();
 await host.WaitForShutdownAsync();
 return 0; // OK
-
 #endregion

@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace Jay.Extensions;
+namespace Jay;
 
 
 public static class ArrayExtensions
@@ -120,7 +120,7 @@ public static class ArrayExtensions
 
         public void Dispose()
         {
-            Result.Dispose(_arrayEnumerator);
+            Result.Result.Dispose(_arrayEnumerator);
         }
     }
 

@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
-using Jay.Parsing;
 
-namespace Jay;
+namespace Jay.Parsing;
 
 public class NumberParseException : ParseException
 {

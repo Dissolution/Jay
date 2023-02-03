@@ -75,7 +75,7 @@ public static class WaitHandleExtensions
 			//WaitObject
 			waitHandle,
 			//WaitOrTimerCallback
-			(state, timedOut) =>
+			(_, timedOut) =>
 			{
 				try
 				{

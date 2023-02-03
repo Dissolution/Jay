@@ -1,4 +1,4 @@
-﻿namespace Jay.Comparision;
+﻿namespace Jay.Comparison;
 
 public sealed class FuncComparer<T> : Comparer<T>
 {

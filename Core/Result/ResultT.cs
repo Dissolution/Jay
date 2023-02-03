@@ -1,8 +1,7 @@
-﻿using Jay.Exceptions;
+﻿using System.Collections;
+using Jay.Exceptions;
 
-using System.Collections;
-
-namespace Jay;
+namespace Jay.Result;
 
 /// <summary>
 ///

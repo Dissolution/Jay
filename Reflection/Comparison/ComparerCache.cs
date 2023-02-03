@@ -1,5 +1,5 @@
 ﻿using Jay.Collections;
-using Jay.Comparision;
+using Jay.Comparison;
 using Jay.Reflection.Building;
 using Jay.Validation;
 

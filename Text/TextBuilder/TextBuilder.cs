@@ -10,7 +10,7 @@ using Jay.Validation;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InvokeAsExtensionMethod
 
-namespace Jay.Text;
+namespace Jay.Text.TextBuilder;
 
 public partial class TextBuilder
 {
@@ -913,7 +913,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
 
-    public TextBuilder AppendNewLine()
+    public TextBuilder NewLine()
     {
         return Append(_newLine);
     }

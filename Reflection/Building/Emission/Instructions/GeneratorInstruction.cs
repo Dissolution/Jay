@@ -140,7 +140,8 @@ public sealed class GeneratorInstruction : Instruction
             case ILGeneratorMethod.BeginExceptionBlock:
             {
                 var endOfBlock = Argument.ValidateInstanceOf<EmitterLabel>();
-                dumpHandler.Write("try");
+                dumpHandler.Write("try -> ");
+                dumpHandler.Dump(endOfBlock);
                 return;
             }
             case ILGeneratorMethod.EndExceptionBlock:
