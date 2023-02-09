@@ -13,5 +13,3 @@ public static class AsyncEnumerableExtensions
         return list;
     }
 }
-
-#endif
