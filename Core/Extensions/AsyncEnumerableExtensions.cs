@@ -1,4 +1,4 @@
-﻿namespace Jay;
+namespace Jay.Extensions;
 
 public static class AsyncEnumerableExtensions
 {
@@ -13,3 +13,5 @@ public static class AsyncEnumerableExtensions
         return list;
     }
 }
+
+#endif

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFrameworks>net7.0;netStandard2.0;netStandard2.1</TargetFrameworks>
         <LangVersion>preview</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -9,22 +9,56 @@
         <RootNamespace>Jay</RootNamespace>
         <ApplicationIcon>jay.ico</ApplicationIcon>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netStandard2.0|AnyCPU'">
+        <WarningLevel>7</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netStandard2.0|AnyCPU'">
+        <WarningLevel>7</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netStandard2.1|AnyCPU'">
+        <WarningLevel>7</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netStandard2.1|AnyCPU'">
+        <WarningLevel>7</WarningLevel>
     </PropertyGroup>
 
     <ItemGroup>
         <Content Include="jay.ico" />
     </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Fody" Version="6.6.4">
+    <ItemGroup Condition="'$(TargetFramework)'=='netStandard2.0'">
+        <PackageReference Include="System.Buffers" Version="4.5.1" PrivateAssets="all" />
+
+        <PackageReference Include="System.Memory" Version="4.5.5" PrivateAssets="all" />
+
+        <PackageReference Include="Nullable" Version="1.3.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="InlineIL.Fody" Version="1.7.3">
+
+        <PackageReference Include="IndexRange" Version="1.0.2" PrivateAssets="all" />
+
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" PrivateAssets="all" />
+
+        <PackageReference Include="IsExternalInit" Version="1.0.3">
             <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
 
+    <ItemGroup Condition="'$(TargetFramework)'=='netStandard2.1'">
+        <PackageReference Include="IsExternalInit" Version="1.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+   
 
     <ItemGroup>
         <Using Include="System.Diagnostics.CodeAnalysis" />
