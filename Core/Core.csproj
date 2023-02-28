@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Jay</AssemblyName>
@@ -12,6 +12,7 @@
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Authors>Timothy Jay</Authors>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
