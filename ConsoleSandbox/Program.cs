@@ -19,6 +19,7 @@ using Jay.Reflection.Building.Deconstruction;
 using Jay.Reflection.Implementation;
 using Jay.Reflection.Search;
 using Jay.Text;
+using Jay.Utilities;
 
 
 //using TextBuilder = Jay.Text.Scratch.TextBuilder;
@@ -32,6 +33,25 @@ using Jay.BenchTests.Text;
 
 #else
 using var text = TextBuilder.Borrow();
+
+Radix.RadixData spotifyId = new("6rqhFgbbKwnb9MLmUQDhG6", 62);
+
+var converted = Radix.TryConvert(spotifyId, 174, out var outputChars);
+
+Debugger.Break();
+
+
+
+
+
+
+
+
+
+
+
+
+
 //
 // var enumInfo = EnumInfo.For<BindingFlags>();
 // var dict = new Dictionary<BindingFlags, string>();
@@ -46,7 +66,7 @@ using var text = TextBuilder.Borrow();
 
 //new MontyHall().Test();
 
-var str = "This is a test of an advanced encoding system";
+//var str = "This is a test of an advanced encoding system";
 
 // var cdmstart = "̀";
 // var cdmstartbytes = Encoding.UTF8.GetBytes(cdmstart);
@@ -63,7 +83,7 @@ var str = "This is a test of an advanced encoding system";
 // Debugger.Break();
 //
 
-
+/*
 var bytes = Encoding.ASCII.GetBytes(str);
 var encoded = CDM.Encode(bytes);
 var encodedStr = Encoding.UTF8.GetString(encoded);
@@ -74,7 +94,7 @@ var decodedStr = Encoding.ASCII.GetString(decoded);
 Debug.Assert(decodedStr == str);
 
 Debugger.Break();
-
+*/
 
 //var member = MemberSearch.Find<FieldInfo>(() => typeof(MemberInfo).GetField("Blah", Reflect.InstanceFlags));
 
@@ -96,13 +116,15 @@ Debugger.Break();
 // var members = backingInstance.GetType().GetMembers(Reflect.AllFlags);
 //
 // var str = backingInstance.ToString();
-
+/*
 
 string? textString = str.ToString();
 Debugger.Break();
 Console.WriteLine(textString);
-#endif
+*/
 
+
+#endif
 Console.WriteLine("Press Enter to close this window.");
 Console.ReadLine();
 return 0;
