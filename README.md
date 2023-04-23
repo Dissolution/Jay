@@ -1,3 +1,2 @@
-####### Jay.Core Libraries
-
-*2022/11/13*
+# Jay Core Libraries
+*2023-04-16*

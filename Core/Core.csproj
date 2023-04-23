@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>
+            <!-- .Net -->
+            net7.0;<!--net6.0;-->
+<!--            &lt;!&ndash; .Net Core &ndash;&gt;-->
+<!--            netcoreapp3.1;-->
+<!--            &lt;!&ndash; .Net Standard &ndash;&gt;-->
+<!--            netstandard2.1;netstandard2.0;-->
+<!--            &lt;!&ndash; .Net Framework &ndash;&gt;-->
+<!--            net48;-->
+        </TargetFrameworks>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        
+        <AssemblyName>Jay</AssemblyName>
+        <RootNamespace>Jay</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+</Project>
