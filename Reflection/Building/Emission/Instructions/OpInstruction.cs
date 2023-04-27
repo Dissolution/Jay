@@ -55,15 +55,15 @@ public sealed class OpInstruction : Instruction
 
     public OpInstruction(OpCode opCode, object? value = null)
     {
-        this.OpCode = opCode;
-        this.Value = value;
+        OpCode = opCode;
+        Value = value;
     }
 
     public override bool Equals(Instruction? instruction)
     {
         return instruction is OpInstruction opInstruction &&
-               opInstruction.OpCode == this.OpCode &&
-               DefaultComparers.Instance.Equals(opInstruction.Value, this.Value);
+               opInstruction.OpCode == OpCode &&
+               DefaultComparers.Instance.Equals(opInstruction.Value, Value);
     }
 
     public override void DumpTo(ref DumpStringHandler dumpHandler, DumpFormat dumpFormat = default)

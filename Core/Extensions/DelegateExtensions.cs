@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Jay;
+namespace Jay.Extensions;
 
 public static class DelegateExtensions
 {

@@ -30,7 +30,7 @@ public abstract class Arg : IEquatable<Arg>
     
     protected Arg(Type type, bool isOnStack, bool preferNonRef)
     {
-        this.Type = type;
+        Type = type;
         if (type.IsByRef)
         {
             IsByRef = true;
@@ -41,8 +41,8 @@ public abstract class Arg : IEquatable<Arg>
             IsByRef = false;
             UnderType = type;
         }
-        this.IsOnStack = isOnStack;
-        this.PreferNonRef = preferNonRef;
+        IsOnStack = isOnStack;
+        PreferNonRef = preferNonRef;
     }
   
     protected abstract void Load(IFluentILEmitter emitter);
@@ -112,7 +112,7 @@ public abstract class Arg : IEquatable<Arg>
         /* ?object -> ?
          * Unboxing
          */
-        if (this.UnderType == typeof(object))
+        if (UnderType == typeof(object))
         {
             // Unboxing is fine
             exactness = 5;
@@ -120,7 +120,7 @@ public abstract class Arg : IEquatable<Arg>
         }
 
         // ?T -> ?T
-        if (this.UnderType == destArg.UnderType)
+        if (UnderType == destArg.UnderType)
         {
             // Exact is great
             exactness = 0;
@@ -131,10 +131,10 @@ public abstract class Arg : IEquatable<Arg>
          * Tests for implements, so we can autocast
          * This also takes care of interfaces
          */
-        if (this.UnderType.Implements(destArg.UnderType))
+        if (UnderType.Implements(destArg.UnderType))
         {
             // T:U -> U
-            if (this.IsByRef || destArg.IsByRef)
+            if (IsByRef || destArg.IsByRef)
                 return GetNotImplementedEx();
 
             // Pretty exact
@@ -223,16 +223,16 @@ public abstract class Arg : IEquatable<Arg>
             Load(emitter);
 
             // ref T -> object
-            if (this.IsByRef)
+            if (IsByRef)
             {
                 // get the T
-                emitter.Ldind(this.UnderType);
+                emitter.Ldind(UnderType);
             }
 
             // If we're not already typeof(object), box us
-            if (this.UnderType != typeof(object))
+            if (UnderType != typeof(object))
             {
-                emitter.Box(this.UnderType);
+                emitter.Box(UnderType);
             }
 
             return true;
@@ -241,7 +241,7 @@ public abstract class Arg : IEquatable<Arg>
         /* ?object -> ?
          * Unboxing
          */
-        if (this.UnderType == typeof(object))
+        if (UnderType == typeof(object))
         {
             // We need to unbox a value
 
@@ -254,9 +254,9 @@ public abstract class Arg : IEquatable<Arg>
             Load(emitter);
 
             // ref object -> object
-            if (this.IsByRef)
+            if (IsByRef)
             {
-                emitter.Ldind(this.UnderType);
+                emitter.Ldind(UnderType);
             }
 
             // object -> T
@@ -296,10 +296,10 @@ public abstract class Arg : IEquatable<Arg>
         }
 
         // ?T -> ?T
-        if (this.UnderType == destArg.UnderType)
+        if (UnderType == destArg.UnderType)
         {
             // T -> ?T
-            if (!this.IsByRef)
+            if (!IsByRef)
             {
                 // T -> T
                 if (!destArg.IsByRef)
@@ -317,7 +317,7 @@ public abstract class Arg : IEquatable<Arg>
                     }
                     else
                     {
-                        emitter.DeclareLocal(this.UnderType, out var localSource)
+                        emitter.DeclareLocal(UnderType, out var localSource)
                             .Stloc(localSource)
                             .Ldloca(localSource);
                     }
@@ -332,7 +332,7 @@ public abstract class Arg : IEquatable<Arg>
                     // Ensure value is on stack
                     Load(emitter);
 
-                    emitter.Ldind(this.UnderType);
+                    emitter.Ldind(UnderType);
                 }
                 // ref T -> ref T
                 else
@@ -350,14 +350,14 @@ public abstract class Arg : IEquatable<Arg>
          * Tests for implements, so we can autocast
          * This also takes care of interfaces
          */
-        if (this.UnderType.Implements(destArg.UnderType))
+        if (UnderType.Implements(destArg.UnderType))
         {
             // T:U -> U
-            if (this.IsByRef || destArg.IsByRef)
+            if (IsByRef || destArg.IsByRef)
                 return GetNotImplementedEx();
 
             // struct T:U -> U
-            if (this.UnderType.IsValueType)
+            if (UnderType.IsValueType)
             {
                 // We have to be converting to an interface
                 if (!destArg.UnderType.IsInterface)

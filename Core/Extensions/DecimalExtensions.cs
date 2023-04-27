@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Jay;
+namespace Jay.Extensions;
 
 /// <summary>
 /// Extensions for <see cref="decimal"/>

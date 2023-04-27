@@ -33,7 +33,7 @@ public static class MemberCache
 
         public static MethodInfo Object_GetType { get; } =
             Searching.MemberSearch.FindMethod<object>(new(
-                    nameof(object.GetType),
+                    nameof(GetType),
                     Visibility.Public | Visibility.Instance,
                     typeof(Type)));
     }

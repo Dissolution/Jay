@@ -42,7 +42,7 @@ public sealed class SingleInstanceApplication : IDisposable
     /// <inheritdoc />
     ~SingleInstanceApplication()
     {
-        this.Dispose();
+        Dispose();
     }
 
     /// <summary>

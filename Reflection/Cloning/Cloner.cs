@@ -1,154 +1,46 @@
 ﻿using System.Diagnostics;
-
 using Jay.Collections;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Extensions;
-using Jay.Utilities;
 
 namespace Jay.Reflection.Cloning;
 
-/// <summary>
-/// Deep-clones the given <paramref name="value"/>
-/// </summary>
-/// <typeparam name="T">The <see cref="Type"/> of value to deep clone</typeparam>
-[return: NotNullIfNotNull(nameof(value))]
-public delegate T DeepClone<T>(T value);
-
-    public class ArrayWrapper : IEnumerable
-    {
-        private readonly Array _array;
-        
-        public int Rank { get; }
-        public int[] LowerBounds { get; }
-        public int[] UpperBounds { get; }
-
-        public Type ElementType => _array.GetType().GetElementType()!;
-        
-        public int[] GetLengths()
-        {
-            var lengths = new int[Rank];
-            for (var r = 0; r < Rank; r++)
-            {
-                lengths[r] = UpperBounds[r] - LowerBounds[r];
-            }
-            return lengths;
-        }
-        
-        public object? GetValue(int[] indices)
-        {
-            return _array.GetValue(indices);
-        }
-        public void SetValue(int[] indices, object? value)
-        {
-            _array.SetValue(value, indices);
-        }
-        
-        public ArrayWrapper(Array array)
-        {
-            _array = array;
-            this.Rank = array.Rank;
-            this.LowerBounds = new int[Rank];
-            this.UpperBounds = new int[Rank];
-            for (var r = 0; r < Rank; r++)
-            {
-                this.LowerBounds[r] = array.GetLowerBound(r);
-                this.UpperBounds[r] = array.GetUpperBound(r);
-            }
-        }
-
-        public ArrayEnumerator GetEnumerator()
-        {
-            return new ArrayEnumerator(this);
-        }
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    }
-    
-    public sealed class ArrayEnumerator : IEnumerator
-    {
-        private readonly ArrayWrapper _arrayEnumerable;
-        private int[]? _indices;
-        private object? _current;
-
-        public int[] Indices => _indices ?? throw new InvalidOperationException();
-
-        public object? Current => _current;
-
-        public ArrayEnumerator(ArrayWrapper arrayEnumerable)
-        {
-            _arrayEnumerable = arrayEnumerable;
-        }
-
-        private bool TryIncrementIndex(int rank)
-        {
-            // Are we trying to imcrement a non-existent rank? can't!
-            if (rank > _arrayEnumerable.Rank) return false;
-            
-            int nextIndex = _indices![rank] + 1;
-            // Will we go over upper bound?
-            if (nextIndex > _arrayEnumerable.UpperBounds[rank])
-            {
-                // Increment the next rank
-                if (!TryIncrementIndex(rank + 1)) 
-                    return false;
-                
-                // Reset my rank back to its lowest bound
-                _indices[rank] = _arrayEnumerable.LowerBounds[rank];
-            }
-            else
-            {
-                // Increment my index
-                _indices[rank] = nextIndex;
-            }
-            return true;
-        }
-        
-        public bool MoveNext()
-        {
-            if (_indices is null)
-            {
-                _indices = new int[_arrayEnumerable.Rank];
-                Fast.Copy<int>(_arrayEnumerable.LowerBounds, _indices);
-            }
-
-            if (TryIncrementIndex(0))
-            {
-                _current = _arrayEnumerable.GetValue(_indices);
-                return true;
-            }
-            
-            _current = null;
-            return false;
-        }
-        
-        public void Reset()
-        {
-            _indices = null;
-            _current = null;
-        }
-
-        public override string ToString()
-        {
-            if (_indices is null)
-                return "Enumeration has not started";
-            return Dump($"{_indices}: {_current:V}");
-        }
-    }
-
 public static class Cloner
 {
-    private static readonly ConcurrentTypeDictionary<Delegate> _deepCloneCache = new();
-    private static readonly ConcurrentTypeDictionary<DeepClone<object>> _objectCloneCache = new();
-
+    private static readonly ConcurrentTypeDictionary<Delegate> _valueCloneCache;
+    private static readonly ConcurrentTypeDictionary<DeepClone<object?>> _objectCloneCache;
+    
     static Cloner()
     {
-        _deepCloneCache[typeof(string)] = FastClone<string>;
-        _deepCloneCache[typeof(object)] = ObjectDeepClone;
+        _valueCloneCache = new()
+        {
+            [typeof(string)] = (DeepClone<string>)FastClone,
+        };
+        _objectCloneCache = new()
+        {
+            [typeof(object)] = (DeepClone<object?>)ObjectClone,
+        };
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static T FastClone<T>(T value) => value;
+
+    [return: NotNullIfNotNull(nameof(obj))]
+    private static object? ObjectClone(object? obj)
+    {
+        if (obj is null) return null;
+        var type = obj.GetType();
+        return GetObjectDeepClone(type).Invoke(obj);
+    }
+    
+   
+    internal static DeepClone<T> GetDeepClone<T>()
+    {
+        return (_deepCloneCache.GetOrAdd<T>(CreateDeepClone) as DeepClone<T>)!;
+    }
+    
 
     public static T[] DeepClone1DArray<T>(T[] array)
     {
@@ -165,7 +57,7 @@ public static class Cloner
     {
         int arrayLen0 = array.GetLength(0);
         int arrayLen1 = array.GetLength(1);
-        T[,] clone = new T[arrayLen0,arrayLen1];
+        T[,] clone = new T[arrayLen0, arrayLen1];
         var deepClone = GetDeepClone<T>();
         for (var x = 0; x < array.GetLength(0); x++)
         {
@@ -176,15 +68,16 @@ public static class Cloner
         }
         return clone;
     }
-    
+
     [return: NotNullIfNotNull(nameof(array))]
-    public static Array DeepCloneArray(Array array)
+    public static Array? DeepCloneArray(Array? array)
     {
+        if (array is null) return null;
         var arrayWrapper = new ArrayWrapper(array);
-        Array clone = Array.CreateInstance(arrayWrapper.ElementType, arrayWrapper.GetLengths(), arrayWrapper.LowerBounds);
+        Array clone = Array.CreateInstance(arrayWrapper.ElementType, arrayWrapper.RankLengths, arrayWrapper.LowerBounds);
         var cloner = GetObjectDeepClone(arrayWrapper.ElementType);
         var cloneWrapper = new ArrayWrapper(clone);
-        var e = arrayWrapper.GetEnumerator();
+        using var e = arrayWrapper.GetEnumerator();
         while (e.MoveNext())
         {
             int[] index = e.Indices;
@@ -193,8 +86,8 @@ public static class Cloner
         return clone;
     }
 
-    
-    
+
+
     private static Delegate CreateDeepClone(Type type)
     {
         var builder = RuntimeBuilder.CreateRuntimeDelegateBuilder(
@@ -225,7 +118,8 @@ public static class Cloner
         {
             emitter.Ldarg(0)
                 .EmitCast(type, typeof(Array))
-                .Call(Searching.MemberSearch.FindMethod(typeof(Cloner), new(nameof(DeepCloneArray), Visibility.Public | Visibility.Static, typeof(Array), typeof(Array))))
+                .Call(Searching.MemberSearch.FindMethod(typeof(Cloner),
+                    new(nameof(DeepCloneArray), Visibility.Public | Visibility.Static, typeof(Array), typeof(Array))))
                 .EmitCast(typeof(Array), type)
                 .Ret();
         }
@@ -286,10 +180,7 @@ public static class Cloner
     }
 
 
-    internal static DeepClone<T> GetDeepClone<T>()
-    {
-        return (_deepCloneCache.GetOrAdd<T>(CreateDeepClone) as DeepClone<T>)!;
-    }
+  
 
     [return: NotNullIfNotNull(nameof(value))]
     public static T DeepClone<T>(this T value)
@@ -297,19 +188,21 @@ public static class Cloner
         if (value is null) return default!;
         return GetDeepClone<T>().Invoke(value);
     }
-    
+
     private static MethodInfo GetDeepCloneMethod(Type type)
     {
-        return Searching.MemberSearch.FindMethod(typeof(Cloner), new(
-            nameof(DeepClone), Visibility.Public | Visibility.Static))
+        return Searching.MemberSearch.FindMethod(typeof(Cloner),
+                new(
+                    nameof(DeepClone),
+                    Visibility.Public | Visibility.Static))
             .MakeGenericMethod(type);
     }
-        
+
     private static DeepClone<object> CreateObjectClone(Type type)
     {
         if (type == typeof(object)) // prevent recursion
             return FastClone<object>;
-        
+
         return RuntimeBuilder.CreateDelegate<DeepClone<object>>(
             Dump($"clone_object_{type}"),
             emitter => emitter
@@ -324,12 +217,6 @@ public static class Cloner
     {
         return _objectCloneCache.GetOrAdd(objectType, CreateObjectClone);
     }
-    
-    [return: NotNullIfNotNull(nameof(obj))]
-    public static object? ObjectDeepClone(this object? obj)
-    {
-        if (obj is null) return null;
-        var type = obj.GetType();
-        return GetObjectDeepClone(type).Invoke(obj);
-    }
+
+   
 }

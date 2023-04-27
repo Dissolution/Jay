@@ -32,10 +32,10 @@ public class RuntimeMethodAdapter
 
     public RuntimeMethodAdapter(MethodBase method, DelegateInfo delegateSig)
     {
-        this.Method = method;
-        this.MethodSig = DelegateInfo.For(method);
-        this.DelegateSig = delegateSig;
-        this.RuntimeDelegateBuilder = RuntimeBuilder.CreateRuntimeDelegateBuilder(delegateSig);
+        Method = method;
+        MethodSig = DelegateInfo.For(method);
+        DelegateSig = delegateSig;
+        RuntimeDelegateBuilder = RuntimeBuilder.CreateRuntimeDelegateBuilder(delegateSig);
     }
 
     private JayflectException GetAdaptEx(ref DumpStringHandler message,
@@ -55,7 +55,7 @@ public class RuntimeMethodAdapter
     private Result.Result HasInstanceParam(out int offset)
     {
         // The instance will be the first parameter
-        var instanceParameter = this.DelegateSig.Parameters.FirstOrDefault();
+        var instanceParameter = DelegateSig.Parameters.FirstOrDefault();
 
             // We do not have to have an instance
             if (instanceParameter is null)
@@ -97,8 +97,8 @@ public class RuntimeMethodAdapter
     private Result.Result TryLoadArgs(int delegateParamOffset, int methodParamOffset = 0)
     {
         var lastInstructionNode = Emitter.Instructions.Last;
-        var delParams = this.DelegateSig.Parameters;
-        var methParams = this.MethodSig.Parameters;
+        var delParams = DelegateSig.Parameters;
+        var methParams = MethodSig.Parameters;
         if (delParams.Length - delegateParamOffset != methParams.Length - methodParamOffset)
             return GetAdaptEx($"Incorrect number of parameters available");
         Result.Result result;
@@ -194,7 +194,7 @@ public class RuntimeMethodAdapter
         if (!Method.TryGetInstanceType(out var instanceType))
             return GetAdaptEx($"Could not find Instance Type for Method");
         Arg instanceArg = DelegateSig.Parameters[0];
-        result = instanceArg.TryLoadAs(this.Emitter, instanceType);
+        result = instanceArg.TryLoadAs(Emitter, instanceType);
         if (!result) return result;
         
         // Check for Params

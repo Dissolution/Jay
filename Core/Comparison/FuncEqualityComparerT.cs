@@ -8,7 +8,7 @@ public sealed class FuncEqualityComparer<T> : EqualityComparer<T>
     public FuncEqualityComparer(Func<T?, T?, bool> equals, 
                                 Func<T?, int> getHashCode)
     {
-        _equals = equals;
+        _equals = equals; 
         _getHashCode = getHashCode;
     }
 

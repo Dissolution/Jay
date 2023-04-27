@@ -1,12 +1,12 @@
 ﻿namespace Jay.Collections.Pooling;
 
-internal class PoolInstance<T> : IPoolInstance<T>
+internal sealed class PoolInstance<T> : IPoolInstance<T>
     where T : class
 {
-    protected readonly IObjectPool<T> _pool;
-    protected T? _instance;
+    private readonly IObjectPool<T> _pool;
+    private T? _instance;
 
-    public T Instance => _instance ?? throw new ObjectDisposedException(GetType().Name);
+    public T Instance => _instance ?? throw new ObjectDisposedException(nameof(Instance));
 
     public PoolInstance(IObjectPool<T> pool, T instance)
     {
@@ -20,9 +20,14 @@ internal class PoolInstance<T> : IPoolInstance<T>
         _pool.Return(instance);
     }
 
-    public override bool Equals(object? obj) => throw new InvalidOperationException();
+    public override bool Equals(object? _) => throw new NotSupportedException();
 
-    public override int GetHashCode() => throw new InvalidOperationException();
+    public override int GetHashCode() => throw new NotSupportedException();
 
-    public override string ToString() => $"Returns {_instance} back to its origin ObjectPool";
+    public override string ToString()
+    {
+        if (_instance is null)
+            return "Disposed";
+        return $"Instance of {typeof(T).Name} '{_instance}'";
+    }
 }

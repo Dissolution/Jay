@@ -42,14 +42,14 @@ public readonly struct Size<T> :
 
     public Size(T width, T height)
     {
-        this.Width = width;
-        this.Height = height;
+        Width = width;
+        Height = height;
     }
 
     public void Deconstruct(out T width, out T height)
     {
-        width = this.Width;
-        height = this.Height;
+        width = Width;
+        height = Height;
     }
 
     public static Size<T> Parse(string? text, IFormatProvider? formatProvider = null)
@@ -111,7 +111,7 @@ public readonly struct Size<T> :
     /// <inheritdoc />
     public bool Equals(Size<T> size)
     {
-        return this.Width == size.Width && this.Height == size.Height;
+        return Width == size.Width && Height == size.Height;
     }
 
     /// <inheritdoc />

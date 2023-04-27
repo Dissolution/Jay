@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace Jay;
+namespace Jay.Extensions;
 
 public static class CharExtensions
 {
@@ -15,7 +15,17 @@ public static class CharExtensions
     /// </remarks>
     public static ReadOnlySpan<char> AsSpan(in this char ch)
     {
+#if NET7_0_OR_GREATER
         return new ReadOnlySpan<char>(in ch);
+#else
+        unsafe
+        {
+            fixed (char* ptr = &ch)
+            {
+                return new ReadOnlySpan<char>((void*)ptr, 1);
+            }
+        }
+#endif
     }
 
     /// <summary>
@@ -60,4 +70,3 @@ public static class CharExtensions
     /// <returns></returns>
     public static char ToLower(this char c, CultureInfo culture) => char.ToLower(c, culture);
 }
-

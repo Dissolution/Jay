@@ -15,22 +15,22 @@ public sealed class EnumeratorItem<T> : IEquatable<T>
 
     public EnumeratorItem(int index, int? sourceLength, bool isFirst, bool isLast, T? value)
     {
-        this.Index = index;
-        this.SourceLength = sourceLength;
-        this.IsFirst = isFirst;
-        this.IsLast = isLast;
-        this.Value = value;
+        Index = index;
+        SourceLength = sourceLength;
+        IsFirst = isFirst;
+        IsLast = isLast;
+        Value = value;
     }
 
     public void Deconstruct(out T? value)
     {
-        value = this.Value;
+        value = Value;
     }
 
     public void Deconstruct(out int index, out T? value)
     {
-        index = this.Index;
-        value = this.Value;
+        index = Index;
+        value = Value;
     }
 
     public bool Equals(T? value)

@@ -20,7 +20,7 @@ public sealed class FluentILGenerator : IFluentILEmitter
         _ilGenerator = ilGenerator;
         _labels = new(0);
         _locals = new(0);
-        this.Instructions = new();
+        Instructions = new();
     }
 
     [return: NotNullIfNotNull(nameof(name))]
@@ -62,8 +62,8 @@ public sealed class FluentILGenerator : IFluentILEmitter
 
     private void AddInstruction(Instruction instruction)
     {
-        var line = new InstructionLine(this.ILOffset, instruction);
-        this.Instructions.AddLast(line);
+        var line = new InstructionLine(ILOffset, instruction);
+        Instructions.AddLast(line);
     }
 
 

@@ -1,4 +1,4 @@
-﻿namespace Jay;
+﻿namespace Jay.Extensions;
 
 /// <summary>
 /// Extensions for <see cref="TimeSpan"/>

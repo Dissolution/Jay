@@ -19,7 +19,7 @@ public class ComplexPart : Part
 
     public ComplexPart(IEnumerable<MemberPart> children)
     {
-        this.Members = children as List<MemberPart> ?? children.ToList();
+        Members = children as List<MemberPart> ?? children.ToList();
     }
 
     public override void DumpTo(ref DumpStringHandler dumpHandler, DumpFormat format = default)
@@ -28,7 +28,7 @@ public class ComplexPart : Part
         //dumpHandler.Write(" Members {");
         dumpHandler.Write("{");
         dumpHandler.WriteLine();
-        foreach (var member in this.Members)
+        foreach (var member in Members)
         {
             member.DumpTo(ref dumpHandler, format);
             dumpHandler.WriteLine();

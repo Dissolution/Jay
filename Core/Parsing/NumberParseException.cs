@@ -48,10 +48,10 @@ public class NumberParseException : ParseException
       Exception? innerException = null)
       : base(GetMessage(destinationType, inputText, numberStyle, formatProvider, message), innerException)
     {
-        this.DestinationType = destinationType;
-        this.InputText = new string(inputText);
-        this.NumberStyle = numberStyle;
-        this.FormatProvider = formatProvider;
+        DestinationType = destinationType;
+        InputText = new string(inputText);
+        NumberStyle = numberStyle;
+        FormatProvider = formatProvider;
     }
 
     public NumberParseException(Type destinationType,
@@ -62,9 +62,9 @@ public class NumberParseException : ParseException
        Exception? innerException = null)
        : base(GetMessage(destinationType, inputText, numberStyle, formatProvider, message), innerException)
     {
-        this.DestinationType = destinationType;
-        this.InputText = inputText;
-        this.NumberStyle = numberStyle;
-        this.FormatProvider = formatProvider;
+        DestinationType = destinationType;
+        InputText = inputText;
+        NumberStyle = numberStyle;
+        FormatProvider = formatProvider;
     }
 }

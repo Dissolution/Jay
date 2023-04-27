@@ -60,9 +60,9 @@ public class ParseException : Exception
         Exception? innerException = null)
         : this(GetParseExceptionMessage(destinationType, inputText, formatProvider, message), innerException)
     {
-        this.DestinationType = destinationType;
-        this.InputText = new string(inputText);
-        this.FormatProvider = formatProvider;
+        DestinationType = destinationType;
+        InputText = new string(inputText);
+        FormatProvider = formatProvider;
     }
 
     public ParseException(Type destinationType,
@@ -72,8 +72,8 @@ public class ParseException : Exception
         Exception? innerException = null)
         : this(GetParseExceptionMessage(destinationType, inputText, formatProvider, message), innerException)
     {
-        this.DestinationType = destinationType;
-        this.InputText = inputText;
-        this.FormatProvider = formatProvider;
+        DestinationType = destinationType;
+        InputText = inputText;
+        FormatProvider = formatProvider;
     }
 }

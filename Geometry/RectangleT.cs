@@ -88,10 +88,10 @@ public readonly struct Rectangle<T> :
 
     private Rectangle(T left, T top, T width, T height)
     {
-        this.X = left;
-        this.Y = top;
-        this.Width = width;
-        this.Height = height;
+        X = left;
+        Y = top;
+        Width = width;
+        Height = height;
     }
 
     public void Deconstruct(out T x, out T y, out T width, out T height)

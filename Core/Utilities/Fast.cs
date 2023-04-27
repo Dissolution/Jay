@@ -5,7 +5,7 @@ public static class Fast
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Equal<T>(ReadOnlySpan<T> left, ReadOnlySpan<T> right)
     {
-        return MemoryExtensions.SequenceEqual(left, right);
+        return SpanExtensions.SequenceEqual(left, right);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

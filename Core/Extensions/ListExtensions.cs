@@ -1,4 +1,4 @@
-﻿namespace Jay;
+﻿namespace Jay.Extensions;
 
 public static class ListExtensions
 {

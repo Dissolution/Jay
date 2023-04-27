@@ -30,15 +30,15 @@ public sealed class ParameterSignature : IEquatable<ParameterSignature>
     
     private ParameterSignature(ParameterAccess access, Type type)
     {
-        this.Access = access;
-        this.Type = type;
+        Access = access;
+        Type = type;
     }
 
     public bool Equals(ParameterSignature? parameterSignature)
     {
         return parameterSignature is not null &&
-               parameterSignature.Access == this.Access &&
-               parameterSignature.Type == this.Type;
+               parameterSignature.Access == Access &&
+               parameterSignature.Type == Type;
     }
 
     public override bool Equals(object? obj)

@@ -5,6 +5,76 @@
 /// </summary>
 public static class Validate
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static (int offset, int length) FastResolve(int available, Range range)
+    {
+        int start;
+        Index startIndex = range.Start;
+        if (startIndex.IsFromEnd)
+            start = available - startIndex.Value;
+        else
+            start = startIndex.Value;
+
+        int end;
+        Index endIndex = range.End;
+        if (endIndex.IsFromEnd)
+            end = available - endIndex.Value;
+        else
+            end = endIndex.Value;
+
+        return (start, end - start);
+    }
+
+
+    /// <summary>
+    /// Validates that <paramref name="value"/> is not <c>null</c>
+    /// </summary>
+    /// <typeparam name="T">The <see cref="Type"/> of <paramref name="value"/> to validate</typeparam>
+    /// <param name="value">The <typeparamref name="T"/> value to check for <c>null</c></param>
+    /// <param name="exMessage">An optional message for a thrown <see cref="ArgumentNullException"/></param>
+    /// <param name="valueName">The name of the value argument</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="value"/> is <c>null</c>
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ThrowIfNull<T>([AllowNull, NotNull] T value,
+        string? exMessage = null,
+        [CallerArgumentExpression(nameof(value))]
+        string? valueName = null)
+    {
+        if (value is null)
+            throw new ArgumentNullException(valueName, exMessage);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ThrowIfNullOrEmpty([AllowNull, NotNull] string str,
+        string? exMessage = null,
+        [CallerArgumentExpression(nameof(str))]
+        string? strName = null)
+    {
+        if (!string.IsNullOrEmpty(str)) return;
+        throw new ArgumentException(
+            exMessage,
+            strName);
+    }
+
+
+    public static void Between<T>(T value, 
+        T minInc, 
+        T maxInc,
+        [CallerArgumentExpression(nameof(value))]
+        string? valueName = null)
+        where T : IComparable<T>
+    {
+        int c = value.CompareTo(minInc);
+        if (c < 0)
+            throw new ArgumentOutOfRangeException(valueName, value, $"Value must be greater than or equal to {minInc}");
+        c = value.CompareTo(maxInc);
+        if (c > 0)
+            throw new ArgumentOutOfRangeException(valueName, value, $"Value must be lesser than or equal to {maxInc}");
+    }
+    
+
     /// <summary>
     /// Validates that the <paramref name="index"/> fits in <paramref name="available"/>
     /// </summary>
@@ -15,43 +85,99 @@ public static class Validate
     /// Thrown if <paramref name="index"/> <c>is</c> &lt; 0 <c>or</c> &gt;= <paramref name="available"/>
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Index(int available, int index, 
-        [CallerArgumentExpression(nameof(index))] string? indexName = null)
+    public static void Index(int available, int index,
+        [CallerArgumentExpression(nameof(index))]
+        string? indexName = null)
     {
         if ((uint)index < (uint)available) return;
-        throw new ArgumentOutOfRangeException(indexName, index,
-            $"{indexName} {index} must be between 0 and {available - 1}");
+        throw new ArgumentOutOfRangeException(
+            indexName,
+            index,
+            $"{indexName} must be between 0 and {available - 1}");
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int IndexGetLength(
+        int available, 
+        int index,
+        [CallerArgumentExpression(nameof(index))]
+        string? indexName = null)
+    {
+        if ((uint)index < (uint)available) return available - index;
+        throw new ArgumentOutOfRangeException(
+            indexName,
+            index,
+            $"{indexName} must be between 0 and {available - 1}");
+    }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Index(int available, Index index,
-        [CallerArgumentExpression(nameof(index))] string? indexName = null)
+        [CallerArgumentExpression(nameof(index))]
+        string? indexName = null)
     {
         int offset = index.GetOffset(available);
         if ((uint)offset < available) return;
-        throw new ArgumentOutOfRangeException(indexName, index,
+        throw new ArgumentOutOfRangeException(indexName,
+            index,
             $"{indexName} {index} must be between 0 and {available - 1}");
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Range(int available, Range range,
-        [CallerArgumentExpression(nameof(range))] string? rangeName = null)
+    public static void StartLength(
+        int available,
+        int start,
+        int length,
+        [CallerArgumentExpression(nameof(start))]
+        string? startName = null,
+        [CallerArgumentExpression(nameof(length))]
+        string? lengthName = null)
     {
-        (int offset, int length) = range.GetOffsetAndLength(available);
+        if ((uint)start > (uint)available)
+            throw new ArgumentOutOfRangeException(startName, start, $"Starting Index must be between 0 and {available}");
+        if ((uint)length > (uint)(available - start))
+            throw new ArgumentOutOfRangeException(lengthName, length, $"Length must be between 0 and {available - start}");
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Range(
+        int available,
+        Range range,
+        [CallerArgumentExpression(nameof(range))]
+        string? rangeName = null)
+    {
+        (int offset, int length) = FastResolve(available, range);
         if ((uint)offset + (uint)length <= (uint)available) return;
-        throw new ArgumentOutOfRangeException(rangeName, range,
-            $"{rangeName} {range} must be between 0 and {available - 1}");
+        throw new ArgumentOutOfRangeException(
+            rangeName,
+            range,
+            $"{rangeName} must be between 0 and {available - 1}");
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static (int offset, int length) RangeResolve(
+        int available,
+        Range range,
+        [CallerArgumentExpression(nameof(range))]
+        string? rangeName = null)
+    {
+        var ol = FastResolve(available, range);
+        if ((uint)ol.offset + (uint)ol.length <= (uint)available) return ol;
+        throw new ArgumentOutOfRangeException(
+            rangeName,
+            range,
+            $"{rangeName} must be between 0 and {available - 1}");
     }
 
 
-    public static void Insert(int available, int index, 
-        [CallerArgumentExpression(nameof(index))] string? indexName = null)
+    public static void InsertIndex(int available, int index,
+        [CallerArgumentExpression(nameof(index))]
+        string? indexName = null)
     {
         if ((uint)index <= available) return;
-        throw new ArgumentOutOfRangeException(indexName, index,
+        throw new ArgumentOutOfRangeException(indexName,
+            index,
             $"Insert {indexName} {index} must be between 0 and {available}");
     }
-
+  
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CopyTo(int available, Array? array, int arrayIndex = 0)
@@ -80,7 +206,7 @@ public static class Validate
     }
 
 
-    #region Replacement
+#region Replacement
     /// <summary>
     /// Replaces the given <see cref="string"/> with <see cref="string.Empty"/> if it is <see langword="null"/>.
     /// </summary>
@@ -113,7 +239,5 @@ public static class Validate
                     throw new ArgumentException("The replacement value must not be null", nameof(replacementValueFactory));
         }
     }
-    #endregion
-
-
+#endregion
 }

@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Jay;
+﻿namespace Jay.Extensions;
 
 public static class StreamExtensions
 {

@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace Jay;
+namespace Jay.Extensions;
 
 
 public static class ArrayExtensions
@@ -12,8 +12,7 @@ public static class ArrayExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T?[]? array,
-        out int length)
+    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T[]? array, out int length)
     {
         if (array is not null)
         {
@@ -47,32 +46,32 @@ public static class ArrayExtensions
         return true;
     }
 
-    public static bool Contains<T>(this T?[]? array, T? value)
+    public static bool Contains<T>(this T[]? array, T item)
     {
         if (array is null) return false;
         for (var i = 0; i < array.Length; i++)
         {
-            if (EqualityComparer<T>.Default.Equals(array[i], value))
+            if (EqualityComparer<T>.Default.Equals(array[i], item))
                 return true;
         }
 
         return false;
     }
 
-    public static bool Contains<T>(this T?[]? array, T? value, IEqualityComparer<T>? comparer)
+    public static bool Contains<T>(this T[]? array, T item, IEqualityComparer<T>? itemComparer)
     {
         if (array is null) return false;
-        if (comparer is null) return array.Contains(value);
+        if (itemComparer is null) return array.Contains(item);
         for (var i = 0; i < array.Length; i++)
         {
-            if (comparer.Equals(array[i], value))
+            if (itemComparer.Equals(array[i], item))
                 return true;
         }
 
         return false;
     }
 
-    [return: NotNullIfNotNull("default")]
+    [return: NotNullIfNotNull(nameof(@default))]
     public static T? GetOrDefault<T>(this T[]? array, int index, T? @default = default)
     {
         if (array is null)
@@ -127,7 +126,7 @@ public static class ArrayExtensions
     public static IEnumerator<T> GetEnumerator<T>(this T[] array) => new ArrayEnumerator<T>(array);
 
 
-    public static int IndexOf<T>(this T[] array, T value)
+    public static int FirstIndexOf<T>(this T[] array, T value)
     {
         for (var i = 0; i < array.Length; i++)
         {
@@ -209,6 +208,6 @@ public static class ArrayExtensions
 
     public static bool SequenceEqual<T>(this T[] array, ReadOnlySpan<T> items)
     {
-        return MemoryExtensions.SequenceEqual(array, items);
+        return SpanExtensions.SequenceEqual<T>(array, items);
     }
 }

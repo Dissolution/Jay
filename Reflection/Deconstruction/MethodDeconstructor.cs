@@ -37,10 +37,10 @@ public sealed class MethodDeconstructor
     {
         public ThisParameter(MemberInfo member)
         {
-            this.MemberImpl = member;
-            this.ClassImpl = member.DeclaringType;
-            this.NameImpl = "this";
-            this.PositionImpl = 0;
+            MemberImpl = member;
+            ClassImpl = member.DeclaringType;
+            NameImpl = "this";
+            PositionImpl = 0;
         }
     }
     
@@ -59,15 +59,15 @@ public sealed class MethodDeconstructor
     public MethodDeconstructor(MethodBase methodBase)
     {
         ArgumentNullException.ThrowIfNull(methodBase);
-        this.Method = methodBase;
+        Method = methodBase;
         MethodBody body = methodBase.GetMethodBody() ?? throw new ArgumentException("Method has no Body", nameof(methodBase));
-        this.Locals = body.LocalVariables;
+        Locals = body.LocalVariables;
         _ilBytes = body.GetILAsByteArray() ?? throw new ArgumentException("Method Body has no IL Bytes", nameof(methodBase));
         
         // We need to get all parameters, including the implicit This for instance methods
         if (methodBase.IsStatic)
         {
-            this.Parameters = methodBase.GetParameters();
+            Parameters = methodBase.GetParameters();
         }
         else
         {

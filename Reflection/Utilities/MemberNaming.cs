@@ -76,7 +76,7 @@ public static class MemberNaming
             return $"{memberType}_{nameId}";
         }
 
-        using var _ = StringBuilderPool.Shared.Rent(out var builder);
+        using var _ = StringBuilderPool.Shared.Borrow(out var builder);
         char ch = name[0];
         bool appendedBadChar = false;
         if (!IsValidNameCharacter(ch, true))

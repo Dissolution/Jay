@@ -1,4 +1,4 @@
-﻿namespace Jay;
+﻿namespace Jay.Extensions;
 
 /// <summary>
 /// Extensions on <see cref="Range"/>s.

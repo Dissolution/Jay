@@ -36,10 +36,10 @@ public sealed record class MemberSearchOptions
       Type? returnType = null,
       params Type[]? parameterTypes)
     {
-        this.Name = name;
-        this.Visibility = Visibility.Any;
-        this.ReturnType = returnType;
-        this.ParameterTypes = parameterTypes;
+        Name = name;
+        Visibility = Visibility.Any;
+        ReturnType = returnType;
+        ParameterTypes = parameterTypes;
     }
 
     public MemberSearchOptions(
@@ -48,10 +48,10 @@ public sealed record class MemberSearchOptions
         Type? returnType = null, 
         params Type[]? parameterTypes)
     {
-        this.Name = name;
-        this.Visibility = visibility;
-        this.ReturnType = returnType;
-        this.ParameterTypes = parameterTypes;
+        Name = name;
+        Visibility = visibility;
+        ReturnType = returnType;
+        ParameterTypes = parameterTypes;
     }
     
     private bool MatchesName(string memberName)
@@ -59,44 +59,44 @@ public sealed record class MemberSearchOptions
         if (Name is null) return true;
         if (memberName.Length < Name.Length) return false;
         if (NameMatch == NameMatchOptions.Exact)
-            return string.Equals(memberName, this.Name);
+            return string.Equals(memberName, Name);
         if (NameMatch.HasFlag(NameMatchOptions.IgnoreCase))
         {
             if (NameMatch.HasFlag(NameMatchOptions.Contains))
-                return memberName.Contains(this.Name, StringComparison.OrdinalIgnoreCase);
+                return memberName.Contains(Name, StringComparison.OrdinalIgnoreCase);
             
             if (NameMatch.HasFlag(NameMatchOptions.StartsWith))
             {
-                if (memberName.StartsWith(this.Name, StringComparison.OrdinalIgnoreCase))
+                if (memberName.StartsWith(Name, StringComparison.OrdinalIgnoreCase))
                     return true;
             }
             
             if (NameMatch.HasFlag(NameMatchOptions.EndsWith))
             {
-                if (memberName.EndsWith(this.Name, StringComparison.OrdinalIgnoreCase))
+                if (memberName.EndsWith(Name, StringComparison.OrdinalIgnoreCase))
                     return true;
             }
             
-            return string.Equals(memberName, this.Name, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(memberName, Name, StringComparison.OrdinalIgnoreCase);
         }
         else
         {
             if (NameMatch.HasFlag(NameMatchOptions.Contains))
-                return memberName.Contains(this.Name);
+                return memberName.Contains(Name);
             
             if (NameMatch.HasFlag(NameMatchOptions.StartsWith))
             {
-                if (memberName.StartsWith(this.Name))
+                if (memberName.StartsWith(Name))
                     return true;
             }
             
             if (NameMatch.HasFlag(NameMatchOptions.EndsWith))
             {
-                if (memberName.EndsWith(this.Name))
+                if (memberName.EndsWith(Name))
                     return true;
             }
             
-            return string.Equals(memberName, this.Name);
+            return string.Equals(memberName, Name);
 
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace Jay;
+﻿namespace Jay.Extensions;
 
 /// <summary>
 /// Extensions for <see cref="bool"/>s and <see cref="Nullable"/>&lt;<see cref="bool"/>&gt;s.

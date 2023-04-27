@@ -589,7 +589,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         // We don't know how big value will turn out to be once formatted,
         // so we can just let another temp TextBuilder do the work
         // and then we use the great logic above
-        using var temp = TextBuilder.Borrow();
+        using var temp = Borrow();
         temp.Write<T>(value);
         WriteAligned(temp.Written, alignment, width, fillChar);
     }
@@ -642,7 +642,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
 #pragma warning restore IDE0060 // Remove unused parameter
     {
         // The writing has already happened by the time we get into this method!
-        IL.Emit.Nop();
+        Emit.Nop();
     }
 
     public TextBuilder Append(char ch)
@@ -944,18 +944,18 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder Insert(int index, char ch)
     {
-        Validate.Insert(index, _length);
+        Validate.InsertIndex(index, _length);
         if (index == _length)
             return Append(ch);
         AllocateAt(index, 1)[0] = ch;
         return this;
     }
 
-    void IList<char>.Insert(int index, char ch) => this.Insert(index, ch);
+    void IList<char>.Insert(int index, char ch) => Insert(index, ch);
 
     public TextBuilder Insert(int index, ReadOnlySpan<char> text)
     {
-        Validate.Insert(index, _length);
+        Validate.InsertIndex(index, _length);
         if (index == _length)
             return Append(text);
         TextHelper.Unsafe.CopyTo(text, AllocateAt(index, text.Length));
@@ -969,8 +969,8 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
 
     public TextBuilder Insert(int index, Action<TextBuilder> buildInsertText)
     {
-        Validate.Insert(index, _length);
-        using var temp = TextBuilder.Borrow();
+        Validate.InsertIndex(index, _length);
+        using var temp = Borrow();
         buildInsertText(temp);
         if (index == _length)
         {
@@ -1206,7 +1206,7 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         return this;
     }
 
-    void ICollection<char>.Clear() => this.Clear();
+    void ICollection<char>.Clear() => Clear();
 
     public int Measure(Action<TextBuilder> buildText)
     {

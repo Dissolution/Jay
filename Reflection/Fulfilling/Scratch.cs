@@ -42,7 +42,7 @@ public class InterfaceImplementer
         ArgumentNullException.ThrowIfNull(interfaceType);
         if (!interfaceType.IsInterface)
             throw new ArgumentException("InterfaceBacker must be passed an interface type", nameof(interfaceType));
-        this.InterfaceType = interfaceType;
+        InterfaceType = interfaceType;
 
         _interfaces = new HashSet<Type>(InterfaceType.GetInterfaces())
         {

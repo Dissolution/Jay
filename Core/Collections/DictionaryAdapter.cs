@@ -1,40 +1,55 @@
 ﻿using System.Collections;
 
-namespace Jay.Collections; 
+namespace Jay.Collections;
 
+/// <summary>
+/// An adapter for <see cref="IDictionary"/> to a typed <see cref="IDictionary{TKey,TValue}"/>
+/// </summary>
+/// <typeparam name="TKey"></typeparam>
+/// <typeparam name="TValue"></typeparam>
 public sealed class DictionaryAdapter<TKey, TValue> : IDictionary<TKey, TValue>
     where TKey : notnull
 {
-    private static TKey GetKey([AllowNull, NotNull] object? objKey)
+    [return: NotNullIfNotNull(nameof(objKey))]
+    private static TKey ConvertObjKey(
+        [AllowNull, NotNull] object? objKey,
+        [CallerArgumentExpression(nameof(objKey))]
+        string? keyName = null)
     {
-        if (objKey is null)
-            throw new ArgumentNullException(nameof(objKey), "Key cannot be null");
-        if (objKey is TKey key)
-            return key;
-        throw new ArgumentException($"Key '{objKey}' is not a '{typeof(TKey).Name}'");
+        return objKey switch
+        {
+            null => throw new ArgumentNullException(keyName, "Key cannot be null"),
+            TKey key => key,
+            _ => throw new ArgumentException($"Key '{objKey}' is not a '{typeof(TKey).Name}'")
+        };
     }
-    private static TValue GetValue(object? objValue)
+    [return: NotNullIfNotNull(nameof(objValue))]
+    private static TValue ConvertObjValue(object? objValue)
     {
         if (objValue.CanBe<TValue>(out var value))
             return value!;
         throw new ArgumentException($"Value '{objValue}' is not a '{typeof(TValue).Name}'");
     }
-    
-    
+
+
     private readonly IDictionary _dictionary;
 
     public TValue this[TKey key]
     {
-        get => GetValue(_dictionary[key]);
+        get => ConvertObjValue(_dictionary[key]);
         set => _dictionary[key] = value;
     }
 
 
-
     ICollection<TKey> IDictionary<TKey, TValue>.Keys => _dictionary.Keys.Cast<TKey>().ToHashSet();
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+    public IReadOnlyCollection<TKey> Keys => _dictionary.Keys.Cast<TKey>().ToHashSet();
+#else
     public IReadOnlySet<TKey> Keys => _dictionary.Keys.Cast<TKey>().ToHashSet();
+#endif
 
     ICollection<TValue> IDictionary<TKey, TValue>.Values => _dictionary.Values.Cast<TValue>().ToList();
+
     public IReadOnlyCollection<TValue> Values => _dictionary.Values.Cast<TValue>().ToList();
 
     public int Count => _dictionary.Count;
@@ -46,26 +61,34 @@ public sealed class DictionaryAdapter<TKey, TValue> : IDictionary<TKey, TValue>
         _dictionary = dictionary;
     }
 
-    public void Add(TKey key, TValue value) => _dictionary.Add(key, value);
-    public void Add(KeyValuePair<TKey, TValue> pair) => _dictionary.Add(pair.Key, pair.Value);
+    public void Add(TKey key, TValue value) => _dictionary.Add((object)key, (object?)value);
+
+    public void Add(KeyValuePair<TKey, TValue> pair) => _dictionary.Add((object)pair.Key, (object?)pair.Value);
 
     public bool ContainsKey(TKey key)
     {
-        return _dictionary.Contains(key);
+        return _dictionary.Contains((object)key);
     }
 
-    public bool Contains(TKey key, TValue value) =>
-        _dictionary.Contains(key) &&
-        EqualityComparer<TValue>.Default.Equals(GetValue(_dictionary[key]), value);
-    public bool Contains(KeyValuePair<TKey, TValue> pair) =>
-        _dictionary.Contains(pair.Key) &&
-        EqualityComparer<TValue>.Default.Equals(GetValue(_dictionary[pair.Key]), pair.Value);
+    public bool Contains(TKey key, TValue value)
+    {
+        if (!_dictionary.Contains((object)key)) return false;
+        var existingValue = ConvertObjValue(_dictionary[key]);
+        return EqualityComparer<TValue>.Default.Equals(existingValue, value);
+    }
+
+    public bool Contains(KeyValuePair<TKey, TValue> pair)
+    {
+        if (!_dictionary.Contains((object)pair.Key)) return false;
+        var existingValue = ConvertObjValue(_dictionary[pair.Key]);
+        return EqualityComparer<TValue>.Default.Equals(existingValue, pair.Value);
+    }
 
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
         if (_dictionary.Contains(key))
         {
-            value = GetValue(_dictionary[key]);
+            value = ConvertObjValue(_dictionary[key]);
             return true;
         }
         value = default;
@@ -74,13 +97,13 @@ public sealed class DictionaryAdapter<TKey, TValue> : IDictionary<TKey, TValue>
 
     void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
-        ArgumentNullException.ThrowIfNull(array);
+        Validate.ThrowIfNull(array);
         if ((uint)arrayIndex + Count > array.Length)
             throw new ArgumentOutOfRangeException(nameof(arrayIndex));
 
         foreach (DictionaryEntry entry in _dictionary)
         {
-            array[arrayIndex++] = new(GetKey(entry.Key), GetValue(entry.Value));
+            array[arrayIndex++] = new(ConvertObjKey(entry.Key), ConvertObjValue(entry.Value));
         }
     }
 
@@ -103,7 +126,7 @@ public sealed class DictionaryAdapter<TKey, TValue> : IDictionary<TKey, TValue>
         }
         return false;
     }
-    
+
     public bool Remove(KeyValuePair<TKey, TValue> pair)
     {
         if (Contains(pair))
@@ -118,7 +141,7 @@ public sealed class DictionaryAdapter<TKey, TValue> : IDictionary<TKey, TValue>
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _dictionary
-            .Cast<DictionaryEntry>()
-            .Select(entry => new KeyValuePair<TKey, TValue>(GetKey(entry.Key), GetValue(entry.Value)))
-            .GetEnumerator();
+        .Cast<DictionaryEntry>()
+        .Select(entry => new KeyValuePair<TKey, TValue>(ConvertObjKey(entry.Key), ConvertObjValue(entry.Value)))
+        .GetEnumerator();
 }

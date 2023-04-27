@@ -37,14 +37,14 @@ public readonly struct Point<T> :
     
     public Point(T x, T y)
     {
-        this.X = x;
-        this.Y = y;
+        X = x;
+        Y = y;
     }
 
     public void Deconstruct(out T x, out T y)
     {
-        x = this.X;
-        y = this.Y;
+        x = X;
+        y = Y;
     }
 
 
@@ -116,7 +116,7 @@ public readonly struct Point<T> :
     /// <inheritdoc />
     public bool Equals(Point<T> point)
     {
-        return this.X == point.X && this.Y == point.Y;
+        return X == point.X && Y == point.Y;
     }
 
     /// <inheritdoc />

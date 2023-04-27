@@ -1,6 +1,6 @@
 ﻿using static InlineIL.IL;
 
-namespace Jay;
+namespace Jay.Extensions;
 
 public static class ObjectExtensions
 {
@@ -39,20 +39,12 @@ public static class ObjectExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool CanBe<T>(this object? obj, out T? value)
     {
-        if (obj is null)
-        {
-            value = default;
-            return typeof(T).CanContainNull();
-        }
-        else if (obj is T)
+        if (obj is T)
         {
             value = (T)obj;
             return true;
         }
-        else
-        {
-            value = default;
-            return false;
-        }
+        value = default;
+        return obj is null && typeof(T).CanContainNull();
     }
 }

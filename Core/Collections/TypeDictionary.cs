@@ -19,7 +19,7 @@ public class TypeDictionary<TValue> : Dictionary<Type, TValue>
     {
         if (base.TryGetValue(typeof(T), out var value))
             return value;
-        base.Add(typeof(T), addValue);
+        Add(typeof(T), addValue);
         return addValue;
     }
     public TValue GetOrAdd<T>(Func<Type, TValue> addValue)
@@ -27,7 +27,7 @@ public class TypeDictionary<TValue> : Dictionary<Type, TValue>
         if (base.TryGetValue(typeof(T), out var value))
             return value;
         value = addValue(typeof(T));
-        base.Add(typeof(T), value);
+        Add(typeof(T), value);
         return value;
     }
 

@@ -18,7 +18,7 @@ public static class TaskHelper
             return task.Result;
         return task.GetAwaiter().GetResult();
     }
-        
+#if NET6_0_OR_GREATER
     public static void Consume(ValueTask valueTask)
     {
         if (valueTask.IsCompleted)
@@ -34,4 +34,5 @@ public static class TaskHelper
             .GetAwaiter()
             .GetResult();
     }
+#endif
 }

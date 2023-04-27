@@ -7,6 +7,6 @@ public sealed class DumpAsAttribute : Attribute
 
     public DumpAsAttribute(string? dumped = null)
     {
-        this.Dumped = dumped;
+        Dumped = dumped;
     }
 }

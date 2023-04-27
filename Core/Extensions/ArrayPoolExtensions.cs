@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 
-namespace Jay;
+namespace Jay.Extensions;
 
 public static class ArrayPoolExtensions
 {

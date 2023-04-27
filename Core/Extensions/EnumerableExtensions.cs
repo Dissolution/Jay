@@ -1,10 +1,21 @@
 ﻿using Jay.Collections;
 using Jay.Comparison;
 
-namespace Jay;
+namespace Jay.Extensions;
 
 public static class EnumerableExtensions
 {
+#if NETSTANDARD2_0
+    public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
+    {
+        return new HashSet<T>(source);
+    }
+    public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source, IEqualityComparer<T>? itemComparer)
+    {
+        return new HashSet<T>(source, itemComparer);
+    }
+#endif
+
     public delegate bool SelectWherePredicate<in TIn, TOut>(TIn input, out TOut output);
 
     public static IEnumerable<TOut> SelectWhere<TIn, TOut>(this IEnumerable<TIn> source, SelectWherePredicate<TIn, TOut> selectWherePredicate)
@@ -82,7 +93,7 @@ public static class EnumerableExtensions
         {
             yield break;
         }
-       
+
         while (true)
         {
             // Move next
@@ -99,7 +110,7 @@ public static class EnumerableExtensions
                 enumerator.Dispose();
                 yield break;
             }
-            
+
             // Yield current
             T current;
             try
@@ -115,7 +126,7 @@ public static class EnumerableExtensions
             yield return current;
         }
     }
-      
+
     public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source)
     {
         return source.Where(value => value is not null)!;
@@ -223,8 +234,8 @@ public static class EnumerableExtensions
     }
 
     public static IEnumerable<T> OrderBy<T, TSub>(this IEnumerable<T> enumerable,
-                                              Func<T, TSub> selectSub,
-                                              params TSub[] order)
+        Func<T, TSub> selectSub,
+        params TSub[] order)
         where TSub : IEquatable<TSub>
     {
 
@@ -238,12 +249,12 @@ public static class EnumerableExtensions
         }
 
         return enumerable.OrderBy(selectSub,
-                                  new FuncComparer<TSub>((x, y) =>
-                                  {
-                                      if (x == null) return y == null ? 0 : -1;
-                                      if (y == null) return 1;
-                                      return getIndex(x).CompareTo(getIndex(y));
-                                  }));
+            new FuncComparer<TSub>((x, y) =>
+            {
+                if (x == null) return y == null ? 0 : -1;
+                if (y == null) return 1;
+                return getIndex(x).CompareTo(getIndex(y));
+            }));
     }
 
     public static void Consume<T>(this IEnumerable<T> enumerable, Action<T> perItem)
@@ -263,4 +274,22 @@ public static class EnumerableExtensions
             }
         }
     }
+
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+    public static bool TryGetNonEnumeratedCount<T>(this IEnumerable<T> enumerable, out int count)
+    {
+        if (enumerable is ICollection<T> collection)
+        {
+            count = collection.Count;
+            return true;
+        }
+        if (enumerable is IReadOnlyCollection<T> roCollection)
+        {
+            count = roCollection.Count;
+            return true;
+        }
+        count = 0;
+        return false;
+    }
+#endif
 }

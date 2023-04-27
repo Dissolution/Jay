@@ -49,17 +49,17 @@ public sealed class DelegateInfo : IEquatable<DelegateInfo>
     {
         _delegateType = null;
         _invokeMethod = method;
-        this.ReturnType = method.ReturnType();
-        this.Parameters = method.GetParameters();
-        this.ParameterTypes = method.GetParameterTypes();
+        ReturnType = method.ReturnType();
+        Parameters = method.GetParameters();
+        ParameterTypes = method.GetParameterTypes();
     }
 
     private Type GetGenericDelegateType()
     {
         // Action?
-        if (this.ReturnType == typeof(void))
+        if (ReturnType == typeof(void))
         {
-            var actionType = this.ParameterCount switch
+            var actionType = ParameterCount switch
                              {
                                  00 => typeof(Action),
                                  01 => typeof(Action<>),
@@ -80,10 +80,10 @@ public sealed class DelegateInfo : IEquatable<DelegateInfo>
                                  16 => typeof(Action<,,,,,,,,,,,,,,,>),
                                  _ => throw new NotImplementedException(),
                              };
-            return actionType.MakeGenericType(this.ParameterTypes);
+            return actionType.MakeGenericType(ParameterTypes);
         }
         // Func
-        var funcType = this.ParameterCount switch
+        var funcType = ParameterCount switch
                        {
                            00 => typeof(Func<>),
                            01 => typeof(Func<,>),
@@ -104,9 +104,9 @@ public sealed class DelegateInfo : IEquatable<DelegateInfo>
                            16 => typeof(Func<,,,,,,,,,,,,,,,,>),
                            _ => throw new NotImplementedException(),
                        };
-        var funcTypeArgs = new Type[this.ParameterCount + 1];
-        Fast.Copy<Type>(this.ParameterTypes, funcTypeArgs);
-        funcTypeArgs[^1] = this.ReturnType;
+        var funcTypeArgs = new Type[ParameterCount + 1];
+        Fast.Copy<Type>(ParameterTypes, funcTypeArgs);
+        funcTypeArgs[^1] = ReturnType;
         return funcType.MakeGenericType(funcTypeArgs);
     }
     
@@ -118,8 +118,8 @@ public sealed class DelegateInfo : IEquatable<DelegateInfo>
     public bool Equals(DelegateInfo? delegateInfo)
     {
         return delegateInfo is not null &&
-               delegateInfo.ReturnType == this.ReturnType &&
-               Fast.Equal<Type>(delegateInfo.ParameterTypes, this.ParameterTypes);
+               delegateInfo.ReturnType == ReturnType &&
+               Fast.Equal<Type>(delegateInfo.ParameterTypes, ParameterTypes);
     }
     public override bool Equals(object? obj)
     {

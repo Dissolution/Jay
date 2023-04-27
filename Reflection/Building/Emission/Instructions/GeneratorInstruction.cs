@@ -107,20 +107,20 @@ public sealed class GeneratorInstruction : Instruction
     
     private GeneratorInstruction(ILGeneratorMethod ilGeneratorMethod, object? argument = null)
     {
-        this.IlGeneratorMethod = ilGeneratorMethod;
-        this.Argument = argument;
+        IlGeneratorMethod = ilGeneratorMethod;
+        Argument = argument;
     }
 
     public override bool Equals(Instruction? instruction)
     {
         return instruction is GeneratorInstruction generatorInstruction &&
-               generatorInstruction.IlGeneratorMethod == this.IlGeneratorMethod &&
-               DefaultComparers.Instance.Equals(generatorInstruction.Argument, this.Argument);
+               generatorInstruction.IlGeneratorMethod == IlGeneratorMethod &&
+               DefaultComparers.Instance.Equals(generatorInstruction.Argument, Argument);
     }
 
     public override void DumpTo(ref DumpStringHandler dumpHandler, DumpFormat dumpFormat = default)
     {
-        switch (this.IlGeneratorMethod)
+        switch (IlGeneratorMethod)
         {
             case ILGeneratorMethod.None:
                 return;
@@ -210,7 +210,7 @@ public sealed class GeneratorInstruction : Instruction
             }
             case ILGeneratorMethod.EmitCalli:
             {
-                object[]? args = this.ArgumentArray;
+                object[]? args = ArgumentArray;
                 if (args is null) throw new InvalidOperationException();
                 if (args.Length == 3)
                 {

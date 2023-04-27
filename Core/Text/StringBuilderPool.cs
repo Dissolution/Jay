@@ -8,7 +8,8 @@ public sealed class StringBuilderPool : ObjectPool<StringBuilder>
     public static StringBuilderPool Shared { get; } = new();
 
     public StringBuilderPool()
-        : base(factory: static () => new StringBuilder(), 
+        : base(
+            factory: static () => new StringBuilder(), 
             clean: static builder => builder.Clear())
     { }
 
@@ -16,6 +17,16 @@ public sealed class StringBuilderPool : ObjectPool<StringBuilder>
     {
         string str = builder.ToString();
         Return(builder);
+        return str;
+    }
+    
+    public new string Use(Action<StringBuilder> instanceAction)
+    {
+        Validate.ThrowIfNull(instanceAction);
+        StringBuilder sb = Rent();
+        instanceAction.Invoke(sb);
+        string str = sb.ToString();
+        Return(sb);
         return str;
     }
 }

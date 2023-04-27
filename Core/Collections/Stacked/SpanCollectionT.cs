@@ -1,21 +1,27 @@
-﻿using System.Buffers;
-using System.Diagnostics;
-using Jay.Collections.Pooling;
+﻿// _array should not be readonly because we want it to be nulled when we Dispose!
+// ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace Jay.Collections.Stacked;
 
-public ref struct SpanList<T>
+/// <summary>
+/// 
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <remarks>
+/// This is not the same as SpanList{T}:
+/// - SpanList{T} can continue expansion beyond starting capacity
+/// </remarks>
+public ref struct SpanCollection<T>
     /* roughly:
      * IList<T>, IReadOnlyList<T>,
      * ICollection<T>, IReadOnlyCollection<T>,
-     * IEnumerable<T>,
-     * IDisposable
+     * IEnumerable<T>
      */
 {
-    private T[]? _arrayFromPool;
+    public static implicit operator SpanCollection<T>(Span<T> buffer) => new SpanCollection<T>(buffer);
+    
     private Span<T> _buffer;
     private int _count;
-
 
     public ref T this[int index]
     {
@@ -26,7 +32,7 @@ public ref struct SpanList<T>
             return ref _buffer[index];
         }
     }
-
+    
     public Span<T> this[Range range]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,13 +50,7 @@ public ref struct SpanList<T>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set
         {
-            int oldCount = _count;
-            Validate.Between(value, 0, oldCount);
-            if (value == oldCount) return;
-            if (TypeExtensions.IsReferenceOrContainsReferences<T>())
-            {
-                _buffer[new Range(start: value, end: oldCount)].Clear();
-            }
+            Validate.Between(value, 0, Capacity);
             _count = value;
         }
     }
@@ -61,78 +61,26 @@ public ref struct SpanList<T>
         get => _buffer.Length;
     }
 
-    public SpanList()
+    public SpanCollection(Span<T> emptyBuffer)
     {
-        _buffer = _arrayFromPool = ArrayPool<T>.Shared.Rent(256);
-        _count = 0;
-    }
-    public SpanList(int minCapacity)
-    {
-        _buffer = _arrayFromPool = ArrayPool<T>.Shared.Rent(Math.Max(minCapacity, 256));
-        _count = 0;
-    }
-    public SpanList(Span<T> emptyBuffer)
-    {
-        _arrayFromPool = null;
         _buffer = emptyBuffer;
         _count = 0;
     }
-    public SpanList(Span<T> buffer, int count)
+    public SpanCollection(Span<T> buffer, int count)
     {
-        Validate.Between(count, 0, buffer.Length);
-        _arrayFromPool = null;
+        Validate.Between(count, 0, Capacity);
         _buffer = buffer;
         _count = count;
-    }
-
-
-    private void Grow()
-    {
-        const int ArrayMaxLength = 0x7FFFFFC7; // same as Array.MaxLength
-
-        // Double the size of the span
-        int nextCapacity = Capacity * 2;
-
-        if ((uint)nextCapacity > ArrayMaxLength)
-        {
-            throw new InvalidOperationException();
-        }
-
-        T[] array = ArrayPool<T>.Shared.Rent(nextCapacity);
-        TryCopyTo(array);
-
-        T[]? toReturn = _arrayFromPool;
-        _buffer = _arrayFromPool = array;
-        if (toReturn != null)
-        {
-            ArrayPool<T>.Shared.Return(toReturn);
-        }
-    }
-
-    // Hide uncommon path
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void AddWithResize(T item)
-    {
-        Debug.Assert(_count == _buffer.Length);
-        int pos = _count;
-        Grow();
-        _buffer[pos] = item;
-        _count = pos + 1;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(T item)
     {
         int index = _count;
-        if (index < Capacity)
-        {
-            _buffer[index] = item;
-            _count = index + 1;
-        }
-        else
-        {
-            AddWithResize(item);
-        }
+        if (index >= Capacity)
+            throw new InvalidOperationException("Cannot add a new Item: At Capacity");
+        _buffer[index] = item;
+        _count = index + 1;
     }
 
     public void AddAll(params T[] items) => AddAll(items.AsSpan());
@@ -407,27 +355,18 @@ public ref struct SpanList<T>
         return newArray;
     }
 
-    public SpanList<T> Clone()
+    public SpanCollection<T> Clone(Span<T> cloneBuffer)
     {
         var buffer = AsSpan();
-        var clone = new SpanList<T>();
+        var clone = new SpanCollection<T>(cloneBuffer);
         buffer.CopyTo(clone._buffer);
         clone._count = _count;
         return clone;
     }
 
-    public SpanList<T> Clone(Span<T> cloneBuffer)
+    public bool SequenceEqual(SpanCollection<T> spanCollection, IEqualityComparer<T>? itemComparer = default)
     {
-        var buffer = AsSpan();
-        var clone = new SpanList<T>(cloneBuffer);
-        buffer.CopyTo(clone._buffer);
-        clone._count = _count;
-        return clone;
-    }
-
-    public bool SequenceEqual(SpanList<T> spanList, IEqualityComparer<T>? itemComparer = default)
-    {
-        return AsSpan().SequenceEqual(spanList.AsSpan(), itemComparer);
+        return AsSpan().SequenceEqual(spanCollection.AsSpan(), itemComparer);
     }
 
     public bool SequenceEqual(ReadOnlySpan<T> span, IEqualityComparer<T>? itemComparer = default)
@@ -484,20 +423,9 @@ public ref struct SpanList<T>
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Dispose()
-    {
-        T[]? toReturn = _arrayFromPool;
-        if (toReturn != null)
-        {
-            _arrayFromPool = null;
-            ArrayPool<T>.Shared.Return(toReturn, true);
-        }
-    }
-
     public override bool Equals(object? obj)
     {
-        if (obj is T[] array) return SequenceEqual(array.AsSpan());
+        if (obj is T[] array) return SequenceEqual((ReadOnlySpan<T>)array.AsSpan());
         if (obj is IEnumerable<T> items) return SequenceEqual(items);
         return false;
     }
@@ -542,7 +470,5 @@ public ref struct SpanList<T>
         text.Append(']');
         return text.ToString();
 #endif
-
-
     }
 }

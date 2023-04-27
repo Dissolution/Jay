@@ -45,7 +45,7 @@ public abstract class Dumper<T> : Dumper, IDumper<T>
         else
         {
             // call the implementation
-            this.DumpImpl(ref dumpHandler, value, format);
+            DumpImpl(ref dumpHandler, value, format);
         }
     }
 

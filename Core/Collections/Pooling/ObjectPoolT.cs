@@ -8,9 +8,12 @@ namespace Jay.Collections.Pooling;
 /// A thread-safe pool of <typeparamref name="T"/> instances.
 /// </summary>
 /// <typeparam name="T">An instance class</typeparam>
-public class ObjectPool<T> : IObjectPool<T>, IDisposable 
+public class ObjectPool<T> : IObjectPool<T>, IDisposable
     where T : class
 {
+    /// <summary>
+    /// A <c>struct</c> holder for a <typeparamref name="T"/> value
+    /// </summary>
     [DebuggerDisplay("{" + nameof(Value) + ",nq}")]
     protected struct Item
     {
@@ -39,17 +42,17 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <summary>
     /// Instance creation function.
     /// </summary>
-    private readonly Func<T> _factory;
+    private readonly PoolInstanceFactory<T> _itemFactory;
 
     /// <summary>
     /// Optional instance clean action.
     /// </summary>
-    private readonly Action<T>? _clean;
+    private readonly PoolInstanceClean<T>? _cleanItem;
 
     /// <summary>
     /// Optional instance disposal action.
     /// </summary>
-    private readonly Action<T>? _dispose;
+    private readonly PoolInstanceDispose<T>? _disposeItem;
 
     internal bool IsDisposed
     {
@@ -62,6 +65,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// </summary>
     public int Capacity => _items.Length + 1;
 
+    /// <inheritdoc/>
     public int Count
     {
         get
@@ -75,7 +79,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
             return count;
         }
     }
-    
+
     /// <summary>
     /// Creates a new <see cref="ObjectPool{T}"/> for classes.
     /// </summary>
@@ -83,12 +87,15 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <param name="factory">A function to create a new <typeparamref name="T"/> instance.</param>
     /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
     /// <param name="dispose">An optional action to perform on a <typeparamref name="T"/> if it is disposed.</param>
-    public ObjectPool(Func<T> factory,
-                      Action<T>? clean = null,
-                      Action<T>? dispose = null)
-        : this(Pool.DefaultCapacity, factory, clean, dispose) { }
+    public ObjectPool(
+        PoolInstanceFactory<T> factory,
+        PoolInstanceClean<T>? clean = null,
+        PoolInstanceDispose<T>? dispose = null)
+        : this(Pool.DefaultCapacity, factory, clean, dispose)
+    {
+    }
 
-    
+
     /// <summary>
     /// Creates a new <see cref="ObjectPool{T}"/> for classes with a specified <paramref name="capacity"/>.
     /// </summary>
@@ -97,20 +104,24 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <param name="factory">A function to create a new <typeparamref name="T"/> instance.</param>
     /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
     /// <param name="dispose">An optional action to perform on a <typeparamref name="T"/> if it is disposed.</param>
-    public ObjectPool(int capacity,
-                      Func<T> factory,
-                      Action<T>? clean = null,
-                      Action<T>? dispose = null)
+    public ObjectPool(
+        int capacity,
+        PoolInstanceFactory<T> factory,
+        PoolInstanceClean<T>? clean = null,
+        PoolInstanceDispose<T>? dispose = null)
     {
         if (capacity < 1 || capacity > Pool.MaxCapacity)
         {
-            throw new ArgumentOutOfRangeException(nameof(capacity), capacity,
-                $"Pool Capacity must be 1 <= {capacity} <= {Pool.MaxCapacity}");
+            throw new ArgumentOutOfRangeException(
+                nameof(capacity),
+                capacity,
+                $"Pool Capacity must be between 1 and {Pool.MaxCapacity}");
         }
 
-        _factory = factory ?? throw new ArgumentNullException(nameof(factory));
-        _clean = clean;
-        _dispose = dispose;
+        _itemFactory = factory ?? throw new ArgumentNullException(nameof(factory));
+        _cleanItem = clean;
+        _disposeItem = dispose;
+        
         _firstItem = default;
         _items = new Item[capacity - 1];
     }
@@ -152,7 +163,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         }
 
         //Just create a new value.
-        return _factory();
+        return _itemFactory();
     }
 
     /// <summary>
@@ -176,7 +187,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         }
 
         // We couldn't store this value, dispose it and let it get collected
-        _dispose?.Invoke(instance);
+        _disposeItem?.Invoke(instance);
     }
 
     /// <summary>
@@ -219,12 +230,12 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         if (instance is null) return;
 
         // Always clean the item
-        _clean?.Invoke(instance);
-            
+        _cleanItem?.Invoke(instance);
+
         // If we're disposed, just dispose the instance and exit
         if (IsDisposed)
         {
-            _dispose?.Invoke(instance);
+            _disposeItem?.Invoke(instance);
             return;
         }
 
@@ -253,21 +264,32 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <remarks>
     /// <paramref name="instance"/> must not be used after this is disposed.
     /// </remarks>
-    public IDisposable Rent(out T instance)
+    public IDisposable Borrow(out T instance)
     {
         instance = Rent();
         return new PoolInstance<T>(this, instance);
     }
 
-    public void Rent(Action<T> instanceAction)
+    /// <inheritdoc/>
+    public IPoolInstance<T> Borrow()
     {
+        var instance = Rent();
+        return new PoolInstance<T>(this, instance);
+    }
+
+    /// <inheritdoc/>
+    public void Use(Action<T> instanceAction)
+    {
+        Validate.ThrowIfNull(instanceAction);
         T instance = Rent();
         instanceAction.Invoke(instance);
         Return(instance);
     }
 
-    public TResult Rent<TResult>(Func<T, TResult> instanceFunc)
+    /// <inheritdoc/>
+    public TResult Use<TResult>(Func<T, TResult> instanceFunc)
     {
+        Validate.ThrowIfNull(instanceFunc);
         T instance = Rent();
         TResult result = instanceFunc.Invoke(instance);
         Return(instance);
@@ -282,14 +304,14 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         // Have I already been disposed?
         if (Interlocked.Increment(ref _disposed) > 1) return;
         // We only do anything if we have a disposer
-        if (_dispose != null)
+        if (_disposeItem != null)
         {
-            var dispose = _dispose!;
-            
+            var disposeItem = _disposeItem!;
+
             T? item = Reference.Exchange<T?>(ref _firstItem, null);
             if (item != null)
             {
-                dispose(item);
+                disposeItem(item);
             }
             var items = _items;
             for (var i = 0; i < items.Length; i++)
@@ -297,7 +319,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
                 item = Reference.Exchange<T?>(ref items[i].Value, null);
                 if (item != null)
                 {
-                    dispose(item);
+                    disposeItem(item);
                 }
             }
         }

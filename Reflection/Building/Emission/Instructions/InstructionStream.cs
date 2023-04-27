@@ -7,7 +7,7 @@ public class InstructionStream : LinkedList<InstructionLine>, IDumpable
 {
     public InstructionLine? FindByOffset(int offset)
     {
-        if (offset < 0 || this.Count == 0)
+        if (offset < 0 || Count == 0)
             return null;
         foreach (var streamLine in this)
         {
@@ -28,7 +28,7 @@ public class InstructionStream : LinkedList<InstructionLine>, IDumpable
     public void RemoveAfter(LinkedListNode<InstructionLine>? node)
     {
         if (node is null) return;
-        var last = this.Last;
+        var last = Last;
         if (last is not null && last.Value != node.Value)
         {
             RemoveLast();

@@ -80,7 +80,7 @@ public class JayflectException : Exception
         
         var dumper = new DumpStringHandler();
         dumper.Write(base.ToString());
-        foreach (var pair in this.Data)
+        foreach (var pair in Data)
         {
             dumper.Write(Environment.NewLine);
             dumper.Write(pair.Key);

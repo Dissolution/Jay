@@ -2,9 +2,9 @@
 
 namespace Jay.Comparison;
 
-public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
-                                                    IEqualityComparer<T[]>,
-                                                    IEqualityComparer<IEnumerable<T>>
+public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T?>,
+                                                    IEqualityComparer<T[]?>,
+                                                    IEqualityComparer<IEnumerable<T>?>
 {
     public static EnumerableEqualityComparer<T> Default { get; } = new EnumerableEqualityComparer<T>();
 
@@ -63,12 +63,12 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
 
     public bool Equals(ReadOnlySpan<T> left, ReadOnlySpan<T> right)
     {
-        return MemoryExtensions.SequenceEqual(left, right, _equalityComparer);
+        return SpanExtensions.SequenceEqual(left, right, _equalityComparer);
     }
 
     public bool Equals(ReadOnlySpan<T> left, T[]? right)
     {
-        return MemoryExtensions.SequenceEqual(left, right, _equalityComparer);
+        return SpanExtensions.SequenceEqual(left, right, _equalityComparer);
     }
 
     public bool Equals(ReadOnlySpan<T> left, IEnumerable<T>? right)
@@ -121,12 +121,12 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
 
     public bool Equals(T[]? left, ReadOnlySpan<T> right)
     {
-        return MemoryExtensions.SequenceEqual(left, right, _equalityComparer);
+        return SpanExtensions.SequenceEqual(left, right, _equalityComparer);
     }
 
     public bool Equals(T[]? left, T[]? right)
     {
-        return MemoryExtensions.SequenceEqual(left, right, _equalityComparer);
+        return SpanExtensions.SequenceEqual(left, right, _equalityComparer);
     }
 
     public bool Equals(T[]? left, IEnumerable<T>? right)
@@ -175,9 +175,15 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T>,
     public bool Equals(IEnumerable<T>? left, T? right)
     {
         if (left is null) return right is null;
+#if NET6_0_OR_GREATER
         if (left.TryGetNonEnumeratedCount(out int count))
         {
             if (count != 1) return false;
+#else
+        if (left is ICollection<T> collection)
+        {
+            if (collection.Count != 1) return false;
+#endif
             if (left is IList<T> leftList)
             {
                 return _equalityComparer.Equals(leftList[0], right);

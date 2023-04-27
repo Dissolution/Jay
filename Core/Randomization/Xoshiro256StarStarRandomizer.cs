@@ -56,8 +56,8 @@ internal sealed class Xoshiro256StarStarRandomizer : Randomizer
 
     public Xoshiro256StarStarRandomizer(ulong seed, bool isHighResolution = false)
     {
-        this.Seed = seed;
-        this.IsHighResolution = isHighResolution;
+        Seed = seed;
+        IsHighResolution = isHighResolution;
 
         /* Notes.
          * The first random sample will be very strongly correlated to the value we give to the 

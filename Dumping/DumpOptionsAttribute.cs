@@ -16,6 +16,6 @@ public sealed class DumpOptionsAttribute : Attribute
     
     public DumpOptionsAttribute(int priority)
     {
-        this.Priority = priority;
+        Priority = priority;
     }
 }

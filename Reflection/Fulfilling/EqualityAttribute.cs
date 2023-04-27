@@ -7,7 +7,7 @@ public class EqualityAttribute : Attribute
 
     public EqualityAttribute(bool participatesInEquality = true)
     {
-        this.ParticipatesInEquality = participatesInEquality;
+        ParticipatesInEquality = participatesInEquality;
     }
 
     /// <inheritdoc />

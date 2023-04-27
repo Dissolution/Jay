@@ -7,7 +7,7 @@ public interface IPoolInstance<out T> : IDisposable
     where T : class
 {
     /// <summary>
-    /// Gets the temporary instance value
+    /// Gets the temporarily borrowed instance value
     /// </summary>
     /// <exception cref="ObjectDisposedException">
     /// Thrown if this <see cref="IPoolInstance{T}"/> has been disposed
