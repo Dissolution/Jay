@@ -13,7 +13,7 @@ public static class ReaderWriterLockSlimExtensions
     public static IDisposable GetReadLock(this ReaderWriterLockSlim rwLock)
     {
         rwLock.EnterReadLock();
-        return Disposable.Action(rwLock.ExitReadLock);
+        return Disposable.FromAction(rwLock.ExitReadLock);
     }
         
     /// <summary>
@@ -22,6 +22,6 @@ public static class ReaderWriterLockSlimExtensions
     public static IDisposable GetWriteLock(this ReaderWriterLockSlim rwLock)
     {
         rwLock.EnterWriteLock();
-        return Disposable.Action(rwLock.ExitWriteLock);
+        return Disposable.FromAction(rwLock.ExitWriteLock);
     }
 }

@@ -55,7 +55,7 @@ internal abstract class Iterator<T> : IIterator<T>
     
     protected Iterator(IEnumerator<T> enumerator)
     {
-        Validate.ThrowIfNull(enumerator);
+        Validate.NotNull(enumerator);
         _enumerator = enumerator;
         _index = -1;
     }

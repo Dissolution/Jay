@@ -1,3 +1,5 @@
+#if !NETSTANDARD2_0
+
 namespace Jay.Extensions;
 
 public static class AsyncEnumerableExtensions
@@ -13,3 +15,5 @@ public static class AsyncEnumerableExtensions
         return list;
     }
 }
+
+#endif

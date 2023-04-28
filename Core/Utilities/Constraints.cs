@@ -1,8 +1,5 @@
 ﻿// ReSharper disable UnusedTypeParameter
 
-using Jay.Parsing;
-using System.Numerics;
-
 namespace Jay.Utilities;
 
 public static class Constraints
@@ -31,11 +28,11 @@ public static class Constraints
     {
     }
 
-    public readonly struct IsNumberParsable<T> where T : INumberParsable<T>
+#if NET7_0_OR_GREATER
+    public readonly struct IsSpanParsable<T> where T : ISpanParsable<T>
     {
     }
 
-#if NET7_0_OR_GREATER
     public readonly struct IsNumberBase<T> where T : INumberBase<T>
     {
     }

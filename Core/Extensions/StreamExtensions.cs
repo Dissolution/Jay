@@ -2,6 +2,7 @@
 
 public static class StreamExtensions
 {
+    #if !NETSTANDARD2_0
     /// <summary>
     /// Determines a stream's encoding by analyzing its byte order mark (BOM).
     /// Defaults to ASCII when detection of the encoding fails.
@@ -54,4 +55,7 @@ public static class StreamExtensions
                 stream.Seek(position, SeekOrigin.Begin);
         }
     }
+
+#endif
 }
+

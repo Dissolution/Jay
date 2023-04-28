@@ -280,7 +280,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <inheritdoc/>
     public void Use(Action<T> instanceAction)
     {
-        Validate.ThrowIfNull(instanceAction);
+        Validate.NotNull(instanceAction);
         T instance = Rent();
         instanceAction.Invoke(instance);
         Return(instance);
@@ -289,7 +289,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <inheritdoc/>
     public TResult Use<TResult>(Func<T, TResult> instanceFunc)
     {
-        Validate.ThrowIfNull(instanceFunc);
+        Validate.NotNull(instanceFunc);
         T instance = Rent();
         TResult result = instanceFunc.Invoke(instance);
         Return(instance);

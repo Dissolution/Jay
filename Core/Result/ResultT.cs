@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using Jay.Exceptions;
 
 namespace Jay.Result;
 
@@ -137,7 +136,7 @@ public readonly partial struct Result<T> : IEquatable<Result<T>>,
         return false;
     }
 
-    public override int GetHashCode() => UnsupportedException.ThrowForGetHashCode(this);
+    public override int GetHashCode() => throw new NotSupportedException();
 
     public override string ToString()
     {

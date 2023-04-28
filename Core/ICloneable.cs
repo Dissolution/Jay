@@ -7,6 +7,7 @@
 public interface ICloneable<out TSelf> : ICloneable
     where TSelf : ICloneable<TSelf>
 {
+#if !NETSTANDARD2_0
     /// <summary>
     /// Returns a shallow clone the given <typeparamref name="TSelf"/> <paramref name="value"/>
     /// </summary>
@@ -29,6 +30,7 @@ public interface ICloneable<out TSelf> : ICloneable
 
     /// <inheritdoc cref="ICloneable"/>
     object ICloneable.Clone() => (object)Clone();
+#endif
 
     /// <summary>
     /// Create a shallow Clone of this instance

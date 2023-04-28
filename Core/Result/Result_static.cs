@@ -12,12 +12,14 @@ namespace Jay.Result;
 /// We want the end user to use Result almost exactly as if it was bool.
 /// </remarks>
 /// 
-public readonly partial struct Result : 
-    IEqualityOperators<Result, Result, bool>,
+public readonly partial struct Result
+#if NET7_0_OR_GREATER
+    : IEqualityOperators<Result, Result, bool>,
     IEqualityOperators<Result, bool, bool>
+#endif
 {
     internal const string DefaultErrorMessage = "Operation Failed";
-    
+
     public static implicit operator Result(bool pass) => pass ? Pass : new Result(false, new Exception(DefaultErrorMessage));
     public static implicit operator Result(Exception? exception) => new Result(false, exception ?? new Exception(DefaultErrorMessage));
     public static implicit operator bool(Result result) => result._pass;
@@ -26,7 +28,7 @@ public readonly partial struct Result :
     public static bool operator true(Result result) => result._pass;
     public static bool operator false(Result result) => !result._pass;
     public static bool operator !(Result result) => !result._pass;
-    
+
     public static bool operator ==(Result x, Result y) => x._pass == y._pass;
     public static bool operator ==(Result result, bool pass) => result._pass == pass;
     public static bool operator !=(Result x, Result y) => x._pass != y._pass;
@@ -54,7 +56,7 @@ public readonly partial struct Result :
         exception ??= new Exception(DefaultErrorMessage);
         return new Result(false, exception);
     }
-    
+
     /// <summary>
     /// Tries to invoke the <paramref name="action"/> and returns a <see cref="Result"/>
     /// </summary>
@@ -108,12 +110,12 @@ public readonly partial struct Result :
             return ex;
         }
     }
-    
+
     /// <inheritdoc cref="Result{T}"/>
     public static Result<T> TryInvoke<T>([AllowNull, NotNullWhen(true)] Func<T>? func) => Result<T>.TryInvoke(func);
 
     public static Result<T> AsResult<T>(ResultOutFunc<T> outResult) => Result<T>.TryInvoke(outResult);
-    
+
     public static T InvokeThrow<T>(ResultOutFunc<T> outResult)
     {
         Result result = outResult(out T value);
@@ -145,7 +147,7 @@ public readonly partial struct Result :
             return fallback;
         }
     }
-    
+
     /// <summary>
     /// Tries to dispose of <paramref name="value"/>.
     /// </summary>
@@ -167,13 +169,16 @@ public readonly partial struct Result :
         }
     }
 
+#if !NETSTANDARD2_0
     public static async ValueTask DisposeAsync<T>(T? value)
     {
-        if (value is IAsyncDisposable asyncDisposable)
+        // Avoids boxing for disposable structs
+        if (value is IAsyncDisposable)
         {
             try
             {
-                await asyncDisposable.DisposeAsync();
+                // Avoids boxing for disposable structs
+                await ((IAsyncDisposable)value).DisposeAsync();
             }
             catch // (Exception ex)
             {
@@ -185,6 +190,7 @@ public readonly partial struct Result :
         {
             try
             {
+                // Avoids boxing for disposable structs
                 ((IDisposable)value).Dispose();
             }
             catch // (Exception ex)
@@ -193,4 +199,5 @@ public readonly partial struct Result :
             }
         }
     }
+#endif
 }

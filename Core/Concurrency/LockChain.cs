@@ -14,7 +14,7 @@ public sealed class LockChain : IDisposable
         get
         {
             AddLock();
-            return Disposable.Action(RemoveLock);
+            return Disposable.FromAction(RemoveLock);
         }
     }
 

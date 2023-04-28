@@ -19,6 +19,16 @@
         <Content Include="jay.ico" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Fody" Version="6.7.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="InlineIL.Fody" Version="1.7.4">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+    
     <ItemGroup Condition="'$(TargetFramework)'=='netStandard2.0'">
         <PackageReference Include="System.Buffers" Version="4.5.1" />
         <PackageReference Include="System.Memory" Version="4.5.5" />
@@ -43,16 +53,12 @@
     <!-- Global Usings -->
     <ItemGroup>
         <Using Include="System.Text" />
+        <Using Include="System.Collections" />
+        <Using Include="System.Numerics" />
         <Using Include="System.Diagnostics.CodeAnalysis" />
         <Using Include="System.Runtime.CompilerServices" />
         <Using Include="Jay.Extensions" />
         <Using Include="Jay.Validation" />
     </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="Fody" Version="6.7.0">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="InlineIL.Fody" Version="1.7.4" />
-    </ItemGroup>
+   
 </Project>

@@ -1,4 +1,4 @@
-﻿namespace Jay.Parsing;
+﻿namespace Jay.Exceptions;
 
 public class ParseException : Exception
 {
@@ -60,9 +60,9 @@ public class ParseException : Exception
         Exception? innerException = null)
         : this(GetParseExceptionMessage(destinationType, inputText, formatProvider, message), innerException)
     {
-        DestinationType = destinationType;
-        InputText = new string(inputText);
-        FormatProvider = formatProvider;
+        this.DestinationType = destinationType;
+        this.InputText = inputText.ToString();
+        this.FormatProvider = formatProvider;
     }
 
     public ParseException(Type destinationType,
@@ -72,8 +72,8 @@ public class ParseException : Exception
         Exception? innerException = null)
         : this(GetParseExceptionMessage(destinationType, inputText, formatProvider, message), innerException)
     {
-        DestinationType = destinationType;
-        InputText = inputText;
-        FormatProvider = formatProvider;
+        this.DestinationType = destinationType;
+        this.InputText = inputText;
+        this.FormatProvider = formatProvider;
     }
 }

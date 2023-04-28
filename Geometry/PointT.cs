@@ -1,5 +1,4 @@
-﻿using Jay.Parsing;
-using Jay.Text;
+﻿using Jay.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -10,7 +9,7 @@ public readonly struct Point<T> :
     IAdditionOperators<Point<T>, Point<T>, Point<T>>, 
     ISubtractionOperators<Point<T>, Point<T>, Point<T>>,
     IEquatable<Point<T>>,
-    INumberParsable<Point<T>>, ISpanParsable<Point<T>>, IParsable<Point<T>>,
+    ISpanParsable<Point<T>>, IParsable<Point<T>>,
     ISpanFormattable, IFormattable,
     ICloneable<Point<T>>
     where T : INumber<T>, IMinMaxValue<T>, ISpanParsable<T>

@@ -1,4 +1,6 @@
-﻿namespace Jay.Utilities;
+﻿#if NET6_0_OR_GREATER
+
+namespace Jay.Utilities;
 
 public sealed class BackgroundTask : IDisposable
 {
@@ -90,3 +92,4 @@ public sealed class BackgroundTask : IDisposable
     }
 }
 
+#endif

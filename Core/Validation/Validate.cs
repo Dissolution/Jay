@@ -37,7 +37,7 @@ public static class Validate
     /// Thrown if <paramref name="value"/> is <c>null</c>
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowIfNull<T>([AllowNull, NotNull] T value,
+    public static void NotNull<T>([AllowNull, NotNull] T value,
         string? exMessage = null,
         [CallerArgumentExpression(nameof(value))]
         string? valueName = null)

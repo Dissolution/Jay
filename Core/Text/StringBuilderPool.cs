@@ -22,7 +22,7 @@ public sealed class StringBuilderPool : ObjectPool<StringBuilder>
     
     public new string Use(Action<StringBuilder> instanceAction)
     {
-        Validate.ThrowIfNull(instanceAction);
+        Validate.NotNull(instanceAction);
         StringBuilder sb = Rent();
         instanceAction.Invoke(sb);
         string str = sb.ToString();

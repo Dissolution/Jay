@@ -2,23 +2,27 @@
 
 namespace Jay.Result;
 
-public readonly partial struct Result<T> : 
+public readonly partial struct Result<T>
+#if NET7_0_OR_GREATER
+    : 
     IEqualityOperators<Result<T>, Result<T>, bool>,
     IEqualityOperators<Result<T>, Result, bool>,
     IEqualityOperators<Result<T>, bool, bool>
-
+#endif
 {
     public static implicit operator Result<T>(T? value) => new Result<T>(true, value, null);
-    public static implicit operator Result<T>(Exception? exception) => new Result<T>(false, default(T), exception ?? new Exception(Result.DefaultErrorMessage));
+    public static implicit operator Result<T>(Exception? exception) =>
+        new Result<T>(false, default(T), exception ?? new Exception(Result.DefaultErrorMessage));
     public static implicit operator bool(Result<T> result) => result._pass;
     public static explicit operator T?(Result<T> result) => result.GetValue();
-    public static explicit operator Exception?(Result<T> result) => result._pass ? null : result._error ?? new Exception(Result.DefaultErrorMessage);
+    public static explicit operator Exception?(Result<T> result) =>
+        result._pass ? null : result._error ?? new Exception(Result.DefaultErrorMessage);
     public static implicit operator Result(Result<T> result) => new Result(result._pass, result._error);
 
     public static bool operator true(Result<T> result) => result._pass;
     public static bool operator false(Result<T> result) => !result._pass;
     public static bool operator !(Result<T> result) => !result._pass;
-    
+
     public static bool operator ==(Result<T> x, Result<T> y) => x._pass == y._pass;
     public static bool operator ==(Result<T> x, Result y) => x._pass == y._pass;
     public static bool operator ==(Result<T> result, bool pass) => result._pass == pass;
@@ -36,7 +40,7 @@ public readonly partial struct Result<T> :
     public static bool operator ^(Result<T> x, Result y) => x._pass ^ y._pass;
     public static bool operator ^(Result<T> result, bool pass) => result._pass ^ pass;
 
-    
+
     /// <summary>
     /// Returns a passing <see cref="Result{T}"/> with the given <paramref name="value"/>.
     /// </summary>
@@ -57,8 +61,8 @@ public readonly partial struct Result<T> :
         exception ??= new Exception(Result.DefaultErrorMessage);
         return new Result<T>(false, default(T), exception);
     }
-    
-    
+
+
     /// <inheritdoc cref="Jay.Result.Result.TryInvoke"/>
     public static Result TryInvoke(Func<T>? func, out T? value)
     {
@@ -96,7 +100,7 @@ public readonly partial struct Result<T> :
         Result result = resultOutFunc(out T value);
         return result.WithValue<T>(value);
     }
-    
+
     /// <inheritdoc cref="Jay.Result.Result.InvokeOrDefault"/>
     public static T InvokeOrDefault(Func<T>? func, T fallback)
     {
