@@ -208,6 +208,6 @@ public static class ArrayExtensions
 
     public static bool SequenceEqual<T>(this T[] array, ReadOnlySpan<T> items)
     {
-        return SpanExtensions.SequenceEqual<T>(array, items);
+        return array.AsSpan().SequenceEqual<T>(items);
     }
 }

@@ -1,31 +1,32 @@
-﻿namespace Jay.Exceptions;
+﻿using Jay.Text;
+
+namespace Jay.Exceptions;
 
 public class ParseException : Exception
 {
     protected static string GetParseExceptionMessage(Type destinationType, ReadOnlySpan<char> inputText, IFormatProvider? provider,
         string? customMessage)
     {
-        var builder = new DefaultInterpolatedStringHandler();
+        using var _ = StringBuilderPool.Shared.Borrow(out var builder);
 
-        builder.AppendLiteral("Cannot parse \"");
-        builder.AppendFormatted(inputText);
-        builder.AppendLiteral("\" to a ");
-        builder.AppendFormatted<Type>(destinationType);
+        builder.Append("Cannot parse \"")
+            .Append(inputText)
+            .Append("\" to a ")
+            .Append(destinationType);
 
         if (provider is not null)
         {
-            builder.AppendLiteral(" with custom provider '");
-            builder.AppendFormatted<IFormatProvider>(provider);
-            builder.AppendLiteral("'");
+            builder.Append(" with custom provider '")
+                .Append(provider)
+                .Append("'");
         }
 
         if (!string.IsNullOrWhiteSpace(customMessage))
         {
-            builder.AppendLiteral(": ");
-            builder.AppendLiteral(customMessage);
+            builder.Append(": ").Append(customMessage);
         }
 
-        return builder.ToStringAndClear();
+        return builder.ToString();
     }
 
     public static ParseException Create<T>(ReadOnlySpan<char> inputText,
@@ -70,7 +71,7 @@ public class ParseException : Exception
         IFormatProvider? formatProvider,
         string? message = null,
         Exception? innerException = null)
-        : this(GetParseExceptionMessage(destinationType, inputText, formatProvider, message), innerException)
+        : this(GetParseExceptionMessage(destinationType, inputText.AsSpan(), formatProvider, message), innerException)
     {
         this.DestinationType = destinationType;
         this.InputText = inputText;

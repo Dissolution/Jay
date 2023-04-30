@@ -95,6 +95,15 @@ public static class EnumExtensions
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static long ToInt64<TEnum>(this TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(@enum));
+        Emit.Conv_I8();
+        return Return<long>();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong ToUInt64<TEnum>(this TEnum @enum)
         where TEnum : struct, Enum
     {

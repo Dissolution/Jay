@@ -1,269 +1,119 @@
-﻿// For some reason, HashCode does not have nullability attributes correctly applied
-#pragma warning disable CS8604
-
+﻿using System.ComponentModel;
 
 namespace Jay.Utilities;
 
-public static class Hasher
+public partial struct Hasher
 {
-    public static int Generate<T>(
-        T? value)
-    {
-        return HashCode.Combine<T>(value);
-    }
+    private uint _v1, _v2, _v3, _v4;
+    private uint _queue1, _queue2, _queue3;
+    private uint _length;
 
-    public static int Generate<T1, T2>(
-        T1? value1, T2? value2)
+    private void AddHashCode(int value)
     {
-        return HashCode.Combine<T1, T2>(value1, value2);
-    }
+        // The original xxHash works as follows:
+        // 0. Initialize immediately. We can't do this in a struct (no
+        //    default ctor).
+        // 1. Accumulate blocks of length 16 (4 uints) into 4 accumulators.
+        // 2. Accumulate remaining blocks of length 4 (1 uint) into the
+        //    hash.
+        // 3. Accumulate remaining blocks of length 1 into the hash.
 
-    public static int Generate<T1, T2, T3>(
-        T1? value1, T2? value2, T3? value3)
-    {
-        return HashCode.Combine<T1, T2, T3>(value1, value2, value3);
-    }
+        // There is no need for #3 as this type only accepts ints. _queue1,
+        // _queue2 and _queue3 are basically a buffer so that when
+        // ToHashCode is called we can execute #2 correctly.
 
-    public static int Generate<T1, T2, T3, T4>(
-        T1? value1, T2? value2, T3? value3, T4? value4)
-    {
-        return HashCode.Combine<T1, T2, T3, T4>(value1, value2, value3, value4);
-    }
+        // We need to initialize the xxHash32 state (_v1 to _v4) lazily (see
+        // #0) nd the last place that can be done if you look at the
+        // original code is just before the first block of 16 bytes is mixed
+        // in. The xxHash32 state is never used for streams containing fewer
+        // than 16 bytes.
 
-    public static int Generate<T1, T2, T3, T4, T5>(
-        T1? value1, T2? value2, T3? value3, T4? value4, T5? value5)
-    {
-        return HashCode.Combine<T1, T2, T3, T4, T5>(value1, value2, value3, value4, value5);
-    }
+        // To see what's really going on here, have a look at the Combine
+        // methods.
 
-    public static int Generate<T1, T2, T3, T4, T5, T6>(
-        T1? value1, T2? value2, T3? value3, T4? value4, T5? value5, T6? value6)
-    {
-        return HashCode.Combine<T1, T2, T3, T4, T5, T6>(value1, value2, value3, value4, value5, value6);
-    }
+        uint val = (uint)value;
 
-    public static int Generate<T1, T2, T3, T4, T5, T6, T7>(
-        T1? value1, T2? value2, T3? value3, T4? value4, T5? value5, T6? value6, T7? value7)
-    {
-        return HashCode.Combine<T1, T2, T3, T4, T5, T6, T7>(value1, value2, value3, value4, value5, value6, value7);
-    }
+        // Storing the value of _length locally shaves of quite a few bytes
+        // in the resulting machine code.
+        uint previousLength = _length++;
+        uint position = previousLength % 4;
 
-    public static int Generate<T1, T2, T3, T4, T5, T6, T7, T8>(
-        T1? value1, T2? value2, T3? value3, T4? value4, T5? value5, T6? value6, T7? value7, T8? value8)
-    {
-        return HashCode.Combine<T1, T2, T3, T4, T5, T6, T7, T8>(value1, value2, value3, value4, value5, value6, value7, value8);
-    }
-
-    public static int Generate<T>(ReadOnlySpan<T> span)
-    {
-        switch (span.Length)
+        // Switch can't be inlined.
+        if (position == 0)
+            _queue1 = val;
+        else if (position == 1)
+            _queue2 = val;
+        else if (position == 2)
+            _queue3 = val;
+        else // position == 3
         {
-            case 0: return 0;
-            case 1: return HashCode.Combine(span[0]);
-            case 2: return HashCode.Combine(span[0], span[1]);
-            case 3: return HashCode.Combine(span[0], span[1], span[2]);
-            case 4: return HashCode.Combine(span[0], span[1], span[2], span[3]);
-            case 5: return HashCode.Combine(span[0], span[1], span[2], span[3], span[4]);
-            case 6: return HashCode.Combine(span[0], span[1], span[2], span[3], span[4], span[5]);
-            case 7: return HashCode.Combine(span[0], span[1], span[2], span[3], span[4], span[5], span[6]);
-            case 8: return HashCode.Combine(span[0], span[1], span[2], span[3], span[4], span[5], span[6], span[7]);
-            default:
-                {
-                    var hasher = new HashCode();
-                    for (var i = 0; i < span.Length; i++)
-                    {
-                        hasher.Add(span[i]);
-                    }
-                    return hasher.ToHashCode();
-                }
+            if (previousLength == 3)
+                Initialize(out _v1, out _v2, out _v3, out _v4);
+
+            _v1 = Round(_v1, _queue1);
+            _v2 = Round(_v2, _queue2);
+            _v3 = Round(_v3, _queue3);
+            _v4 = Round(_v4, val);
         }
     }
 
-    public static int Generate<T>(ReadOnlySpan<T> span, IEqualityComparer<T>? comparer)
+    public void Add<T>(T? value)
     {
-        var hasher = new HashCode();
-        for (var i = 0; i < span.Length; i++)
+        this.AddHashCode(value?.GetHashCode() ?? 0);
+    }
+
+    public void Add<T>(T? value, IEqualityComparer<T>? comparer)
+    {
+        this.AddHashCode(value is null ? 0 : (comparer?.GetHashCode(value) ?? value.GetHashCode()));
+    }
+
+    public int ToHashCode()
+    {
+        // Storing the value of _length locally shaves of quite a few bytes
+        // in the resulting machine code.
+        uint length = _length;
+
+        // position refers to the *next* queue position in this method, so
+        // position == 1 means that _queue1 is populated; _queue2 would have
+        // been populated on the next call to Add.
+        uint position = length % 4;
+
+        // If the length is less than 4, _v1 to _v4 don't contain anything
+        // yet. xxHash32 treats this differently.
+
+        uint hash = length < 4 ? MixEmptyState() : MixState(_v1, _v2, _v3, _v4);
+
+        // _length is incremented once per Add(Int32) and is therefore 4
+        // times too small (xxHash length is in bytes, not ints).
+
+        hash += length * 4;
+
+        // Mix what remains in the queue
+
+        // Switch can't be inlined right now, so use as few branches as
+        // possible by manually excluding impossible scenarios (position > 1
+        // is always false if position is not > 0).
+        if (position > 0)
         {
-            hasher.Add<T>(span[i], comparer);
+            hash = QueueRound(hash, _queue1);
+            if (position > 1)
+            {
+                hash = QueueRound(hash, _queue2);
+                if (position > 2)
+                    hash = QueueRound(hash, _queue3);
+            }
         }
-        return hasher.ToHashCode();
+
+        hash = MixFinal(hash);
+        return (int)hash;
     }
 
-    public static int Generate<T>(params T[]? array)
-    {
-        if (array is null) return 0;
-        switch (array.Length)
-        {
-            case 0: return 0;
-            case 1: return HashCode.Combine(array[0]);
-            case 2: return HashCode.Combine(array[0], array[1]);
-            case 3: return HashCode.Combine(array[0], array[1], array[2]);
-            case 4: return HashCode.Combine(array[0], array[1], array[2], array[3]);
-            case 5: return HashCode.Combine(array[0], array[1], array[2], array[3], array[4]);
-            case 6: return HashCode.Combine(array[0], array[1], array[2], array[3], array[4], array[5]);
-            case 7: return HashCode.Combine(array[0], array[1], array[2], array[3], array[4], array[5], array[6]);
-            case 8: return HashCode.Combine(array[0], array[1], array[2], array[3], array[4], array[5], array[6], array[7]);
-            default:
-                {
-                    var hasher = new HashCode();
-                    for (var i = 0; i < array.Length; i++)
-                    {
-                        hasher.Add(array[i]);
-                    }
-                    return hasher.ToHashCode();
-                }
-        }
-    }
+    [Obsolete("Hasher is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.",
+        error: true)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public override int GetHashCode() => throw new NotSupportedException();
 
-    public static int Generate<T>(T[]? array, IEqualityComparer<T>? comparer)
-    {
-        if (array is null) return 0;
-        var hasher = new HashCode();
-        for (var i = 0; i < array.Length; i++)
-        {
-            hasher.Add<T>(array[i], comparer);
-        }
-        return hasher.ToHashCode();
-    }
-
-    public static int Generate<T>(IEnumerable<T>? enumerable)
-    {
-        if (enumerable is null) return 0;
-        var hasher = new HashCode();
-        foreach (T value in enumerable)
-        {
-            hasher.Add<T>(value);
-        }
-        return hasher.ToHashCode();
-    }
-
-    public static int Generate<T>(IEnumerable<T>? enumerable, IEqualityComparer<T>? comparer)
-    {
-        if (enumerable is null) return 0;
-        var hasher = new HashCode();
-        foreach (T value in enumerable)
-        {
-            hasher.Add<T>(value, comparer);
-        }
-        return hasher.ToHashCode();
-    }
-
-    public static int Generate(params object?[]? objects)
-    {
-        if (objects is null) return 0;
-        switch (objects.Length)
-        {
-            case 0: return 0;
-            case 1: return HashCode.Combine(objects[0]);
-            case 2: return HashCode.Combine(objects[0], objects[1]);
-            case 3: return HashCode.Combine(objects[0], objects[1], objects[2]);
-            case 4: return HashCode.Combine(objects[0], objects[1], objects[2], objects[3]);
-            case 5: return HashCode.Combine(objects[0], objects[1], objects[2], objects[3], objects[4]);
-            case 6: return HashCode.Combine(objects[0], objects[1], objects[2], objects[3], objects[4], objects[5]);
-            case 7: return HashCode.Combine(objects[0], objects[1], objects[2], objects[3], objects[4], objects[5], objects[6]);
-            case 8: return HashCode.Combine(objects[0], objects[1], objects[2], objects[3], objects[4], objects[5], objects[6], objects[7]);
-            default:
-                {
-                    var hasher = new HashCode();
-                    for (var i = 0; i < objects.Length; i++)
-                    {
-                        hasher.Add(objects[i]);
-                    }
-                    return hasher.ToHashCode();
-                }
-        }
-    }
-
-    public static int Generate(object?[]? objects, IEqualityComparer<object>? comparer)
-    {
-        if (objects is null) return 0;
-        var hasher = new HashCode();
-        for (var i = 0; i < objects.Length; i++)
-        {
-            hasher.Add<object>(objects[i], comparer);
-        }
-        return hasher.ToHashCode();
-    }
-
-
-    public static void Add<T>(this ref HashCode hashCode, ReadOnlySpan<T> span)
-    {
-        switch (span.Length)
-        {
-            case 0: return;
-            case 1:
-                hashCode.Add(span[0]);
-                return;
-            case 2:
-                hashCode.Add(span[0]);
-                hashCode.Add(span[1]);
-                return;
-            case 3:
-                hashCode.Add(span[0]);
-                hashCode.Add(span[1]);
-                hashCode.Add(span[2]);
-                return;
-            case 4:
-                hashCode.Add(span[0]);
-                hashCode.Add(span[1]);
-                hashCode.Add(span[2]);
-                hashCode.Add(span[3]);
-                return;
-            case 5:
-                hashCode.Add(span[0]);
-                hashCode.Add(span[1]);
-                hashCode.Add(span[2]);
-                hashCode.Add(span[3]);
-                hashCode.Add(span[4]);
-                return;
-            case 6:
-                hashCode.Add(span[0]);
-                hashCode.Add(span[1]);
-                hashCode.Add(span[2]);
-                hashCode.Add(span[3]);
-                hashCode.Add(span[4]);
-                hashCode.Add(span[5]);
-                return;
-            case 7:
-                hashCode.Add(span[0]);
-                hashCode.Add(span[1]);
-                hashCode.Add(span[2]);
-                hashCode.Add(span[3]);
-                hashCode.Add(span[4]);
-                hashCode.Add(span[5]);
-                hashCode.Add(span[6]);
-                return;
-            case 8:
-                hashCode.Add(span[0]);
-                hashCode.Add(span[1]);
-                hashCode.Add(span[2]);
-                hashCode.Add(span[3]);
-                hashCode.Add(span[4]);
-                hashCode.Add(span[5]);
-                hashCode.Add(span[6]);
-                hashCode.Add(span[7]);
-                return;
-            default:
-                {
-                    for (var i = 0; i < span.Length; i++)
-                    {
-                        hashCode.Add(span[i]);
-                    }
-                    return;
-                }
-        }
-    }
-
-    public static void Add<T>(this ref HashCode hashCode, params T[] values)
-    {
-        hashCode.Add((ReadOnlySpan<T>)values);
-    }
-
-    public static void Add<T>(this ref HashCode hashCode, IEnumerable<T> values)
-    {
-        foreach (var value in values)
-        {
-            hashCode.Add(value);
-        }
-    }
+    [Obsolete("Hasher is a mutable struct and should not be compared with other HashCodes.", error: true)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public override bool Equals(object? obj) => throw new NotSupportedException();
 }

@@ -82,8 +82,16 @@ public static class EnumerableExtensions
         yield return secondValue;
     }
 
-    public static IEnumerable<T> IgnoreExceptions<T>(this IEnumerable<T> enumerable)
+    /// <summary>
+    /// A deep wrapper for <see cref="IEnumerable{T}"/> that ignores all thrown exceptions
+    /// at every level of enumeration, only returning values that could be acquired without error
+    /// </summary>
+    /// <param name="enumerable"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static IEnumerable<T> IgnoreExceptions<T>(this IEnumerable<T>? enumerable)
     {
+        if (enumerable is null) yield break;
         IEnumerator<T> enumerator;
         try
         {

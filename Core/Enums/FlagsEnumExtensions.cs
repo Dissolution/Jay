@@ -1,6 +1,5 @@
 ﻿using InlineIL;
-using System.Numerics;
-
+using Jay.Utilities;
 using static InlineIL.IL;
 
 namespace Jay.Enums;
@@ -111,7 +110,7 @@ public static class FlagsEnumExtensions
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Conv_U8();
-        Emit.Call(MethodRef.Method(typeof(BitOperations), nameof(BitOperations.PopCount), typeof(ulong)));
+        Emit.Call(MethodRef.Method(typeof(Maths), nameof(Maths.PopCount), typeof(ulong)));
         return Return<int>();
     }
 

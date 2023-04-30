@@ -15,7 +15,7 @@ public static class Pool
     /// <summary>
     /// The maximum capacity for any pool
     /// </summary>
-    internal static readonly int MaxCapacity = 0X7FFFFFC7;  // == Array.MaxLength
+    internal static readonly int ArrayMaxCapacity = 0X7FFFFFC7;  // == Array.MaxLength
 
 
     /// <summary>

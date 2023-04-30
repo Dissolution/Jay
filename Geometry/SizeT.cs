@@ -1,16 +1,13 @@
-﻿using System.Globalization;
-using Jay.Parsing;
-
-namespace Jay.Geometry;
+﻿namespace Jay.Geometry;
 
 public readonly struct Size<T> :
     IEqualityOperators<Size<T>, Size<T>, bool>,
     IAdditionOperators<Size<T>, Size<T>, Size<T>>,
     ISubtractionOperators<Size<T>, Size<T>, Size<T>>,
     IEquatable<Size<T>>,
-    INumberParsable<Size<T>>, ISpanParsable<Size<T>>, IParsable<Size<T>>,
+    ISpanParsable<Size<T>>, IParsable<Size<T>>,
     ISpanFormattable, IFormattable,
-    ICloneable<Size<T>>
+    ICloneable
     where T : INumber<T>, IMinMaxValue<T>, ISpanParsable<T>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -57,8 +54,8 @@ public readonly struct Size<T> :
 
     public static Size<T> Parse(ReadOnlySpan<char> text, IFormatProvider? formatProvider = null)
     {
-        if (!TryParse(text, formatProvider, out var size)) 
-            throw ParseException.Create<Size<T>>(text, formatProvider);
+        if (!TryParse(text, formatProvider, out var size))
+            throw new ArgumentException("Unable to parse");
         return size;
     }
     
@@ -104,8 +101,8 @@ public readonly struct Size<T> :
         return true;
     }
 
+    object ICloneable.Clone() => (object)this.Clone();
     public Size<T> Clone() => this;
-
     public Size<T> DeepClone() => this;
 
     /// <inheritdoc />
@@ -164,13 +161,13 @@ public readonly struct Size<T> :
 
     public string ToString(string? format, IFormatProvider? formatProvider = null)
     {
-        var stringHandler = new DefaultInterpolatedStringHandler();
-        stringHandler.AppendLiteral("[");
-        stringHandler.AppendFormatted<T>(Width, format);
-        stringHandler.AppendLiteral("x");
-        stringHandler.AppendFormatted<T>(Height, format);
-        stringHandler.AppendLiteral("]");
-        return stringHandler.ToStringAndClear();
+        var builder = new DefaultInterpolatedStringHandler();
+        builder.AppendLiteral("[");
+        builder.AppendFormatted<T>(Width, format);
+        builder.AppendLiteral("x");
+        builder.AppendFormatted<T>(Height, format);
+        builder.AppendLiteral("]");
+        return builder.ToStringAndClear();
     }
 
     /// <inheritdoc />

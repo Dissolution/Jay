@@ -2,11 +2,11 @@
 
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AssemblyName>Jay.Geometry</AssemblyName>
-        <RootNamespace>Jay.Geometry</RootNamespace>
-        <LangVersion>preview</LangVersion>
+        <RootNamespace>Jay.Geometry</RootNamespace>        
         <EnablePreviewFeatures>true</EnablePreviewFeatures>
         <ApplicationIcon>jay.ico</ApplicationIcon>
     </PropertyGroup>
@@ -16,11 +16,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Core\Core.csproj" />
-      <ProjectReference Include="..\Text\Text.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
+        <Using Include="System.Diagnostics.CodeAnalysis"/>
+        <Using Include="System.Globalization"/>
       <Using Include="System.Numerics" />
       <Using Include="System.Runtime.CompilerServices;" />
     </ItemGroup>

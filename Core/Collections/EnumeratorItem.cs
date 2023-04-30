@@ -1,4 +1,6 @@
-﻿namespace Jay.Collections;
+﻿using Jay.Text;
+
+namespace Jay.Collections;
 
 public sealed class EnumeratorItem<T> : IEquatable<T>
 {
@@ -35,13 +37,13 @@ public sealed class EnumeratorItem<T> : IEquatable<T>
 
     public bool Equals(T? value)
     {
-        return EqualityComparer<T>.Default.Equals(Value, value);
+        return EqualityComparer<T>.Default.Equals(Value!, value!);
     }
 
     public override bool Equals(object? obj)
     {
         if (obj is T value)
-            return EqualityComparer<T>.Default.Equals(Value, value);
+            return EqualityComparer<T>.Default.Equals(Value!, value!);
         return false;
     }
 
@@ -53,17 +55,14 @@ public sealed class EnumeratorItem<T> : IEquatable<T>
 
     public override string ToString()
     {
-        var text = new DefaultInterpolatedStringHandler();
+        using var _ = StringBuilderPool.Shared.Borrow(out var builder);
         // Index
-        text.AppendFormatted('[');
-        text.AppendFormatted(Index);
-        text.AppendFormatted('/');
+        builder.Append('[').Append(Index).Append('/');
         if (SourceLength.HasValue)
-            text.AppendFormatted(SourceLength.Value);
+            builder.Append(SourceLength.Value);
         else
-            text.AppendFormatted('?');
-        text.AppendFormatted("] ");
-        text.AppendFormatted(Value);
-        return text.ToStringAndClear();
+            builder.Append('?');
+        builder.Append("] ").Append(Value);
+        return builder.ToString();
     }
 }

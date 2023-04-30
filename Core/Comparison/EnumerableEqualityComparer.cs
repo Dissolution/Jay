@@ -17,18 +17,18 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T?>,
 
     public bool Equals(T? left, T? right)
     {
-        return _equalityComparer.Equals(left, right);
+        return _equalityComparer.Equals(left!, right!);
     }
 
     public bool Equals(T? left, ReadOnlySpan<T> right)
     {
-        return right.Length == 1 && _equalityComparer.Equals(left, right[0]);
+        return right.Length == 1 && _equalityComparer.Equals(left!, right[0]!);
     }
 
     public bool Equals(T? left, T[]? right)
     {
         if (right is null) return left is null;
-        return right.Length == 1 && _equalityComparer.Equals(left, right[0]);
+        return right.Length == 1 && _equalityComparer.Equals(left!, right[0]!);
     }
 
     public bool Equals(T? left, IEnumerable<T>? right)
@@ -39,18 +39,18 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T?>,
             if (count != 1) return false;
             if (right is IList<T> rightList)
             {
-                return _equalityComparer.Equals(left, rightList[0]);
+                return _equalityComparer.Equals(left!, rightList[0]!);
             }
 
             using var rightEnumerator = right.GetEnumerator();
             rightEnumerator.MoveNext();
-            return _equalityComparer.Equals(left, rightEnumerator.Current);
+            return _equalityComparer.Equals(left!, rightEnumerator.Current!);
         }
         else
         {
             using var rightEnumerator = right.GetEnumerator();
             if (!rightEnumerator.MoveNext()) return false;
-            var equal = _equalityComparer.Equals(left, rightEnumerator.Current);
+            var equal = _equalityComparer.Equals(left!, rightEnumerator.Current!);
             if (rightEnumerator.MoveNext()) return false;
             return equal;
         }
@@ -58,17 +58,17 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T?>,
 
     public bool Equals(ReadOnlySpan<T> left, T? right)
     {
-        return left.Length == 1 && _equalityComparer.Equals(left[0], right);
+        return left.Length == 1 && _equalityComparer.Equals(left[0]!, right!);
     }
 
     public bool Equals(ReadOnlySpan<T> left, ReadOnlySpan<T> right)
     {
-        return SpanExtensions.SequenceEqual(left, right, _equalityComparer);
+        return left.SequenceEqual(right, _equalityComparer);
     }
 
     public bool Equals(ReadOnlySpan<T> left, T[]? right)
     {
-        return SpanExtensions.SequenceEqual(left, right, _equalityComparer);
+        return left.SequenceEqual(right.AsSpan(), _equalityComparer);
     }
 
     public bool Equals(ReadOnlySpan<T> left, IEnumerable<T>? right)
@@ -116,17 +116,17 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T?>,
     public bool Equals(T[]? left, T? right)
     {
         if (left is null) return right is null;
-        return left.Length == 1 && _equalityComparer.Equals(left[0], right);
+        return left.Length == 1 && _equalityComparer.Equals(left[0]!, right!);
     }
 
     public bool Equals(T[]? left, ReadOnlySpan<T> right)
     {
-        return SpanExtensions.SequenceEqual(left, right, _equalityComparer);
+        return left.AsSpan().SequenceEqual(right, _equalityComparer);
     }
 
     public bool Equals(T[]? left, T[]? right)
     {
-        return SpanExtensions.SequenceEqual(left, right, _equalityComparer);
+        return left.AsSpan().SequenceEqual(right.AsSpan(), _equalityComparer);
     }
 
     public bool Equals(T[]? left, IEnumerable<T>? right)
@@ -186,18 +186,18 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T?>,
 #endif
             if (left is IList<T> leftList)
             {
-                return _equalityComparer.Equals(leftList[0], right);
+                return _equalityComparer.Equals(leftList[0]!, right!);
             }
 
             using var leftEnumerator = left.GetEnumerator();
             leftEnumerator.MoveNext();
-            return _equalityComparer.Equals(leftEnumerator.Current, right);
+            return _equalityComparer.Equals(leftEnumerator.Current!, right!);
         }
         else
         {
             using var leftEnumerator = left.GetEnumerator();
             if (!leftEnumerator.MoveNext()) return false;
-            var equal = _equalityComparer.Equals(leftEnumerator.Current, right);
+            var equal = _equalityComparer.Equals(leftEnumerator.Current!, right!);
             if (leftEnumerator.MoveNext()) return false;
             return equal;
         }
@@ -448,21 +448,40 @@ public sealed class EnumerableEqualityComparer<T> : IEqualityComparer<T?>,
 
     public int GetHashCode(T? value)
     {
-        return Hasher.Generate(value, _equalityComparer);
+        var hasher = new Hasher();
+        hasher.Add<T>(value, _equalityComparer);
+        return hasher.ToHashCode();
     }
 
     public int GetHashCode(ReadOnlySpan<T> values)
     {
-        return Hasher.Generate<T>(values, _equalityComparer);
+        var hasher = new Hasher();
+        for (var i = 0; i < values.Length; i++)
+        {
+            hasher.Add<T>(values[i], _equalityComparer);
+        }
+        return hasher.ToHashCode();
     }
 
     public int GetHashCode(T[]? values)
     {
-        return Hasher.Generate<T>(values, _equalityComparer);
+        if (values is null) return 0;
+        var hasher = new Hasher();
+        for (var i = 0; i < values.Length; i++)
+        {
+            hasher.Add<T>(values[i], _equalityComparer);
+        }
+        return hasher.ToHashCode();
     }
 
     public int GetHashCode(IEnumerable<T>? values)
     {
-        return Hasher.Generate<T>(values, _equalityComparer);
+        if (values is null) return 0;
+        var hasher = new Hasher();
+        foreach (var value in values)
+        {
+            hasher.Add<T>(value, _equalityComparer);
+        }
+        return hasher.ToHashCode();
     }
 }

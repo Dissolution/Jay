@@ -130,6 +130,18 @@ public static class TypeExtensions
         return Attribute.IsDefined(type, typeof(TAttribute));
     }
 
+    public static IEnumerable<Type> GetAllBaseTypes(this Type type, bool includeSelf = false)
+    {
+        if (includeSelf)
+            yield return type;
+        Type? baseType = type.BaseType;
+        while (baseType is not null)
+        {
+            yield return baseType;
+            baseType = baseType.BaseType;
+        }
+    }
+
     public static IReadOnlyCollection<Type> GetAllImplementedTypes(this Type type)
     {
         var types = new HashSet<Type>();

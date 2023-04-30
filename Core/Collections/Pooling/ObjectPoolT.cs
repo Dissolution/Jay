@@ -110,12 +110,12 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         PoolInstanceClean<T>? clean = null,
         PoolInstanceDispose<T>? dispose = null)
     {
-        if (capacity < 1 || capacity > Pool.MaxCapacity)
+        if (capacity < 1 || capacity > Pool.ArrayMaxCapacity)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(capacity),
                 capacity,
-                $"Pool Capacity must be between 1 and {Pool.MaxCapacity}");
+                $"Pool Capacity must be between 1 and {Pool.ArrayMaxCapacity}");
         }
 
         _itemFactory = factory ?? throw new ArgumentNullException(nameof(factory));

@@ -1,8 +1,4 @@
-﻿using Jay.Text;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-
-namespace Jay.Geometry;
+﻿namespace Jay.Geometry;
 
 public readonly struct Point<T> : 
     IEqualityOperators<Point<T>, Point<T>, bool>, 
@@ -11,7 +7,7 @@ public readonly struct Point<T> :
     IEquatable<Point<T>>,
     ISpanParsable<Point<T>>, IParsable<Point<T>>,
     ISpanFormattable, IFormattable,
-    ICloneable<Point<T>>
+    ICloneable
     where T : INumber<T>, IMinMaxValue<T>, ISpanParsable<T>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -50,14 +46,14 @@ public readonly struct Point<T> :
     public static Point<T> Parse(string text, IFormatProvider? provider = null)
     {
         if (!TryParse(text, provider, out var point))
-            throw ParseException.Create<Point<T>>(text, provider);
+            throw new ArgumentException($"Cannot parse '{text}' to a Point<{typeof(T).Name}>", nameof(text));
         return point;
     }
 
     public static Point<T> Parse(ReadOnlySpan<char> text, IFormatProvider? provider = null)
     {
         if (!TryParse(text, provider, out var point))
-            throw ParseException.Create<Point<T>>(text, provider);
+            throw new ArgumentException($"Cannot parse '{text}' to a Point<{typeof(T).Name}>", nameof(text));
         return point;
     }
 
@@ -107,10 +103,9 @@ public readonly struct Point<T> :
          => TryParse(text.AsSpan(), numberStyle, formatProvider, out point);
 
 
+    object ICloneable.Clone() => (object)this.Clone();
     public Point<T> Clone() => this;
-
     public Point<T> DeepClone() => this;
-
 
     /// <inheritdoc />
     public bool Equals(Point<T> point)
@@ -168,15 +163,15 @@ public readonly struct Point<T> :
         return true;
     }
 
-    public string ToString(string? format, IFormatProvider? formatProvider = null)
+    public string ToString(string? format, IFormatProvider? _ = null)
     {
-        var text = new CharSpanBuilder();
-        text.Write("(");
-        text.Write<T>(X, format);
-        text.Write(",");
-        text.Write<T>(Y, format);
-        text.Write(")");
-        return text.ToStringAndDispose();
+        var builder = new DefaultInterpolatedStringHandler();
+        builder.AppendFormatted('(');
+        builder.AppendFormatted(X, format);
+        builder.AppendFormatted(',');
+        builder.AppendFormatted(Y, format);
+        builder.AppendFormatted(')');
+        return builder.ToStringAndClear();
     }
 
 

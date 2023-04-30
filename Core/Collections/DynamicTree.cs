@@ -1,7 +1,6 @@
 ﻿using System.Dynamic;
-using System.Collections;
-using Jay.Exceptions;
 using Jay.Text;
+using Jay.Utilities;
 
 namespace Jay.Collections;
 
@@ -13,56 +12,52 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
     }
 
     private readonly Dictionary<object, DynamicTree> _branches;
-    private object? _value;
-    private bool _hasValue;
+    private Option<object> _branchValue;
 
     private DynamicTree()
     {
         _branches = new Dictionary<object, DynamicTree>(0);
-        _value = default;
-        _hasValue = false;
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        if (_hasValue)
-            yield return _value;
+        _branchValue = Option.None;
     }
 
     private bool SetValue(object? value)
     {
-        _value = value;
-        _hasValue = true;
+        _branchValue = Option.Create(value);
         return true;
     }
 
     private bool TryGetValue(out object? value)
     {
-        value = _value;
-        return _hasValue;
+        return _branchValue.TryGetValue(out value);
     }
 
     private void WriteTo(StringBuilder builder, int indent)
     {
-        if (_hasValue)
+        if (_branchValue.TryGetValue(out var value))
         {
-            builder.Append(_value);
-            builder.AppendLine();
+            builder.Append(value).AppendLine();
         }
 
         foreach (var item in _branches.Indexed())
         {
-            item.Deconstruct(out KeyValuePair<object, DynamicTree> branch);
+            item.Deconstruct(out var kvp);
+            object name = kvp.Key;
+            DynamicTree branch = kvp.Value;
             for (var i = 0; i < indent; i++)
             {
                 builder.Append("  ");
             }
             builder.Append(item.IsLast ? "└" : "├")
-                .Append("[")
-                .Append(branch.Key)
-                .Append("]")
-                .Append(branch.Value._hasValue ? ": " : Environment.NewLine);
-            branch.Value.WriteTo(builder, indent + 1);
+                .Append('[').Append(name).Append(']');
+            if (!branch._branchValue.IsNone)
+            {
+                builder.Append(": ");
+            }
+            else
+            {
+                builder.AppendLine();
+            }
+            branch.WriteTo(builder, indent + 1);
         }
     }
 
@@ -98,17 +93,11 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
 
     public override bool TryConvert(ConvertBinder binder, out object? result)
     {
-        if (_hasValue)
+        if (_branchValue.TryGetValue(out var bv))
         {
-            if (_value is null)
+            if (bv.GetType().Implements(binder.ReturnType))
             {
-                result = null;
-                return binder.ReturnType.CanContainNull();
-            }
-
-            if (_value.GetType().Implements(binder.ReturnType))
-            {
-                result = _value;
+                result = bv;
                 return true;
             }
         }
@@ -117,25 +106,21 @@ public sealed class DynamicTree : DynamicObject, IEnumerable<object?>
         return false;
     }
 
-
-    public IEnumerator<object?> GetEnumerator()
-    {
-        if (_hasValue)
-            yield return _value;
-    }
+    IEnumerator IEnumerable.GetEnumerator() => _branchValue.GetEnumerator();
+    public IEnumerator<object?> GetEnumerator() => _branchValue.GetEnumerator(); 
 
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        return _hasValue && Equals(_value, obj);
+        return _branchValue.Equals(obj);
     }
 
     /// <inheritdoc />
-    public override int GetHashCode() => UnsupportedException.ThrowForGetHashCode(this);
+    public override int GetHashCode() => throw new NotSupportedException();
 
 
     public override string ToString()
     {
-        return StringBuilderPool.Shared.Use(sb => WriteTo(sb, 0));
+        return StringBuilderPool.Shared.Use(sb => this.WriteTo(sb, 0));
     }
 }

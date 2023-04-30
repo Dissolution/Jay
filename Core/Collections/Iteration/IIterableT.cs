@@ -34,32 +34,69 @@ public interface IIterator<T> : IEnumerator<T>, IDisposable, IEnumerator
 #endif
 }
 
-internal abstract class Iterator<T> : IIterator<T>
+public static class IteratorExtensions
+{
+    public static IIterator<T> GetIterator<T>(this IEnumerable<T> enumerable)
+    {
+#if !NETSTANDARD2_0
+        if (enumerable.TryGetNonEnumeratedCount(out int count))
+        {
+            return new Iterator<T>(enumerable.GetEnumerator())
+            {
+                TotalCount = count,
+            };
+        }
+#else
+        if (enumerable is ICollection<T> collection)
+        {
+            return new Iterator<T>(enumerable.GetEnumerator())
+            {
+                TotalCount = collection.Count,
+            };
+        }
+#endif
+        else
+        {
+            return new Iterator<T>(enumerable.GetEnumerator());
+        }
+    }
+}
+
+internal class Iterator<T> : IIterator<T>
 {
     protected readonly IEnumerator<T> _enumerator;
 
     protected int _index;
     private T? _current;
 
-    
+
     public int Index => _index;
 
-    public abstract int? TotalCount { get; }
+    public int? TotalCount { get; init; } = null;
 
     public bool IsFirst => _index == 0;
 
-    public abstract bool? IsLast { get; }
-    
+    public bool? IsLast
+    {
+        get
+        {
+            if (TotalCount.TryGetValue(out var count))
+                return _index == count - 1;
+            return null;
+        }
+    }
+
     object? IEnumerator.Current => _current;
+
     public T Current => _current!;
-    
-    protected Iterator(IEnumerator<T> enumerator)
+
+    public Iterator(IEnumerator<T> enumerator)
     {
         Validate.NotNull(enumerator);
         _enumerator = enumerator;
         _index = -1;
     }
-    
+
     public void Deconstruct(out T current)
     {
         current = this.Current;
@@ -69,9 +106,10 @@ internal abstract class Iterator<T> : IIterator<T>
         index = _index;
         current = Current;
     }
-    
+
     public virtual bool TryMoveNext([MaybeNullWhen(false)] out T current)
     {
+        _index++;
         if (_enumerator.MoveNext())
         {
             current = _current = _enumerator.Current;
@@ -92,67 +130,5 @@ internal abstract class Iterator<T> : IIterator<T>
     public virtual void Dispose()
     {
         _enumerator.Dispose();
-    }
-}
-
-internal class ListIterator<T> : IIterator<T>
-{
-    protected readonly IList<T> _list;
-
-    private int _index;
-
-    public int Index => _index;
-
-    public int? TotalCount => _list.Count;
-
-    public bool IsFirst => _index == 0;
-
-    public bool? IsLast => _index == _list.Count - 1;
-
-    object? IEnumerator.Current => this.Current;
-    public T Current => _list[_index];
-    
-    public ListIterator(IList<T> list)
-    {
-        _list = list;
-        _index = -1;
-    }
-    public void Deconstruct(out T current)
-    {
-        current = this.Current;
-    }
-    public void Deconstruct(out int index, out T current)
-    {
-        index = _index;
-        current = Current;
-    }
-    
-    public bool TryMoveNext([MaybeNullWhen(false)] out T current)
-    {
-        int index = _index + 1;
-        if (index < _list.Count)
-        {
-            _index = index;
-            current = _list[index];
-            return true;
-        }
-        current = default;
-        return false;
-    }
-    
-    bool IEnumerator.MoveNext()
-    {
-        int index = _index + 1;
-        if (index < _list.Count)
-        {
-            _index = index;
-            return true;
-        }
-        return false;
-    }
-
-    public void Reset()
-    {
-        _index = -1;
     }
 }

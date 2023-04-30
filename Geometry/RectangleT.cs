@@ -1,14 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using Jay.Parsing;
-
-namespace Jay.Geometry;
+﻿namespace Jay.Geometry;
 
 public readonly struct Rectangle<T> :
     IEqualityOperators<Rectangle<T>, Rectangle<T>, bool>,
     IEquatable<Rectangle<T>>,
-    INumberParsable<Rectangle<T>>, ISpanParsable<Rectangle<T>>, IParsable<Rectangle<T>>,
-    ISpanFormattable, IFormattable
+    ISpanParsable<Rectangle<T>>, IParsable<Rectangle<T>>,
+    ISpanFormattable, IFormattable,
+    ICloneable
     where T : INumber<T>, IMinMaxValue<T>, ISpanParsable<T>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -174,6 +171,7 @@ public readonly struct Rectangle<T> :
         => TryParse(text.AsSpan(), numberStyle, provider, out rectangle);
 
 
+    object ICloneable.Clone() => (object)this.Clone();
     public Rectangle<T> Clone() => this;
 
     public bool Contains(Point<T> point)
@@ -231,11 +229,11 @@ public readonly struct Rectangle<T> :
 
     public string ToString(string? format, IFormatProvider? formatProvider = null)
     {
-        var stringHandler = new DefaultInterpolatedStringHandler();
-        stringHandler.AppendFormatted<Point<T>>(Location, format);
-        stringHandler.AppendLiteral("/");
-        stringHandler.AppendFormatted<Size<T>>(Size, format);
-        return stringHandler.ToStringAndClear();
+        var builder = new DefaultInterpolatedStringHandler();
+        builder.AppendFormatted(Location, format);
+        builder.AppendLiteral("/");
+        builder.AppendFormatted(Size, format);
+        return builder.ToStringAndClear();
     }
 
     public override string ToString()

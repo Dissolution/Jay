@@ -2,7 +2,6 @@
 
 using Jay.Dumping.Extensions;
 using Jay.Dumping.Interpolated;
-
 using static Jay.Dumping.DumperImport;
 
 namespace Jay.Dumping;
