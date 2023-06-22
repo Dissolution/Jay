@@ -1,4 +1,4 @@
-﻿namespace Jay.Result;
+﻿namespace Jay;
 
 /// <summary>
 /// A function that returns a <see cref="Result"/> and an <c>out</c> <paramref name="value"/>, similar to a <c>TryParse</c> operation

@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Jay.Reflection.Extensions;
+﻿namespace Jay.Reflection.Extensions;
 
 public static class MethodBaseExtensions
 {

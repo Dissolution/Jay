@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using Jay.Reflection.Exceptions;
 
 // I use _ in 'constant' member names for readability
 // ReSharper disable InconsistentNaming

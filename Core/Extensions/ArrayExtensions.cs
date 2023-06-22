@@ -119,7 +119,7 @@ public static class ArrayExtensions
 
         public void Dispose()
         {
-            Result.Result.Dispose(_arrayEnumerator);
+            Result.Dispose(_arrayEnumerator);
         }
     }
 

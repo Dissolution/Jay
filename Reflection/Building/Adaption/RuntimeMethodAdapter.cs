@@ -1,7 +1,5 @@
 ﻿using Jay.Dumping.Interpolated;
 using Jay.Reflection.Building.Emission;
-using Jay.Reflection.Exceptions;
-using Jay.Reflection.Extensions;
 
 namespace Jay.Reflection.Building.Adaption;
 
@@ -52,7 +50,7 @@ public class RuntimeMethodAdapter
     }
     
     
-    private Result.Result HasInstanceParam(out int offset)
+    private Result HasInstanceParam(out int offset)
     {
         // The instance will be the first parameter
         var instanceParameter = DelegateSig.Parameters.FirstOrDefault();
@@ -83,7 +81,7 @@ public class RuntimeMethodAdapter
             return false;
     }
 
-    private Result.Result TryLoadParams(int delegateParamOffset, int methodParamOffset = 0)
+    private Result TryLoadParams(int delegateParamOffset, int methodParamOffset = 0)
     {
         if (DelegateSig.ParameterCount - delegateParamOffset != 1)
             return GetAdaptEx($"No params available as the only/last parameter");
@@ -94,14 +92,14 @@ public class RuntimeMethodAdapter
         return true;
     }
 
-    private Result.Result TryLoadArgs(int delegateParamOffset, int methodParamOffset = 0)
+    private Result TryLoadArgs(int delegateParamOffset, int methodParamOffset = 0)
     {
         var lastInstructionNode = Emitter.Instructions.Last;
         var delParams = DelegateSig.Parameters;
         var methParams = MethodSig.Parameters;
         if (delParams.Length - delegateParamOffset != methParams.Length - methodParamOffset)
             return GetAdaptEx($"Incorrect number of parameters available");
-        Result.Result result;
+        Result result;
         int m = methodParamOffset;
         int d = delegateParamOffset;
         while (m < methParams.Length && d < delParams.Length)
@@ -120,9 +118,9 @@ public class RuntimeMethodAdapter
         return true;
     }
 
-    private Result.Result TryLoadInstanceArgs()
+    private Result TryLoadInstanceArgs()
     {
-        Result.Result result;
+        Result result;
         
         // Static Method
         if (Method.IsStatic)
@@ -208,7 +206,7 @@ public class RuntimeMethodAdapter
         return result;
     }
 
-    public static Result.Result TryAdapt(MethodBase method, DelegateInfo delegateSig, [NotNullWhen(true)] out Delegate? adapterDelegate)
+    public static Result TryAdapt(MethodBase method, DelegateInfo delegateSig, [NotNullWhen(true)] out Delegate? adapterDelegate)
     {
         // faster return
         adapterDelegate = default;
@@ -229,7 +227,7 @@ public class RuntimeMethodAdapter
         return true;
     }
 
-    public static Result.Result TryAdapt<TDelegate>(MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate)
+    public static Result TryAdapt<TDelegate>(MethodBase method, [NotNullWhen(true)] out TDelegate? @delegate)
         where TDelegate : Delegate
     {
         var result = TryAdapt(method, DelegateInfo.For<TDelegate>(), out var del);

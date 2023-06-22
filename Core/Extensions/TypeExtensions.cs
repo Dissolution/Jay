@@ -1,34 +1,7 @@
-﻿using System.Reflection;
-using Jay.Collections;
-
-namespace Jay.Extensions;
+﻿namespace Jay.Extensions;
 
 public static class TypeExtensions
 {
-    private static readonly ConcurrentTypeDictionary<bool> _isRefOrContainsRefCache = new();
-
-    public static bool IsReferenceOrContainsReferences<T>()
-    {
-#if !NETSTANDARD2_0
-        return RuntimeHelpers.IsReferenceOrContainsReferences<T>();
-#else
-        return IsReferenceOrContainsReferences(typeof(T));
-#endif
-    }
-    public static bool IsReferenceOrContainsReferences(Type type)
-    {
-        return _isRefOrContainsRefCache.GetOrAdd(type,
-            t =>
-            {
-                if (!t.IsValueType) return true;
-                return t
-                    .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                    .Select(static field => field.FieldType)
-                    .Any(static fieldType => IsReferenceOrContainsReferences(fieldType));
-            });
-    }
-
-
     public static bool Implements<T>(this Type? type) => Implements(type, typeof(T));
 
     public static bool Implements(this Type? type, Type? otherType)
@@ -48,19 +21,16 @@ public static class TypeExtensions
         }
         return false;
     }
-
-    public static bool IsStatic(this Type? type)
-    {
-        return type is null || (type.IsAbstract && type.IsSealed);
-    }
-
+    
     public static bool CanContainNull(this Type? type)
     {
-        if (type is null) return true;
-        if (type.IsStatic()) return false;
-        if (type.IsValueType)
-            return type.Implements(typeof(Nullable<>));
-        return true;
+        return type switch
+        {
+            null => true,
+            { IsAbstract: true, IsSealed: true } => false,  // static
+            { IsValueType: true } => type.Implements(typeof(Nullable<>)),
+            _ => true,
+        };
     }
 
     public static bool IsNullable(this Type? type)

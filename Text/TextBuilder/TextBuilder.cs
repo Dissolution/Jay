@@ -1369,9 +1369,9 @@ public partial class TextBuilder : IList<char>, IReadOnlyList<char>,
         return TextHelper.Equals(Written, text);
     }
 
-    public override bool Equals(object? obj) => UnsupportedException.ThrowForEquals(this);
+    public override bool Equals(object? obj) => throw new NotSupportedException();
 
-    public override int GetHashCode() => UnsupportedException.ThrowForGetHashCode(this);
+    public override int GetHashCode() => throw new NotSupportedException();
 
     public string ToString(Range range)
     {

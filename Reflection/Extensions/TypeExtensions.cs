@@ -1,4 +1,5 @@
-﻿using Jay.Reflection.Utilities;
+﻿using Jay.Utilities;
+using Danger = Jay.Reflection.Utilities.Danger;
 
 namespace Jay.Reflection.Extensions;
 
@@ -104,13 +105,6 @@ public static class TypeExtensions
     
     static TypeExtensions()
     {
-        _isReferenceMethod = Searching.MemberSearch.FindMethod(typeof(RuntimeHelpers), new()
-            {
-                Name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences),
-                Visibility = Reflection.Visibility.Public | Reflection.Visibility.Static,
-                ReturnType = typeof(bool),
-                ParameterTypes = Type.EmptyTypes,
-            });
         _sizeOfMethod = Searching.MemberSearch.FindMethod(typeof(Danger), new()
             {
                 Name = nameof(Danger.SizeOf),
@@ -119,13 +113,6 @@ public static class TypeExtensions
                 ParameterTypes = Type.EmptyTypes,
             });
     }
-
-    public static bool IsReferenceOrContainsReferences(this Type type)
-    {
-        return (bool)_isReferenceMethod.MakeGenericMethod(type).Invoke(null, null)!;
-    }
-
-    public static bool IsUnmanaged(this Type type) => !IsReferenceOrContainsReferences(type);
 
     public static object? GetDefault(this Type type)
     {
@@ -136,7 +123,7 @@ public static class TypeExtensions
 
     public static int? GetSize(this Type type)
     {
-        if (IsReferenceOrContainsReferences(type)) return null;
+        if (TypeHelpers.IsReferenceOrContainsReferences(type)) return null;
         return (int?)_sizeOfMethod.MakeGenericMethod(type).Invoke(null, null);
     }
 

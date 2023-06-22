@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Jay.Reflection.Expressions;
+﻿namespace Jay.Reflection.Expressions;
 
 public abstract class ExpressionVisitorBase : ExpressionVisitor
 {

@@ -1,4 +1,4 @@
-﻿namespace Jay.Result;
+﻿namespace Jay;
 
 /// <summary>
 /// Represents the result of an operation as a Pass or a Failure with <see cref="Exception"/> information.

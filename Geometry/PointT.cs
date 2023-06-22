@@ -4,6 +4,7 @@ public readonly struct Point<T> :
     IEqualityOperators<Point<T>, Point<T>, bool>, 
     IAdditionOperators<Point<T>, Point<T>, Point<T>>, 
     ISubtractionOperators<Point<T>, Point<T>, Point<T>>,
+    IUnaryNegationOperators<Point<T>, Point<T>>,
     IEquatable<Point<T>>,
     ISpanParsable<Point<T>>, IParsable<Point<T>>,
     ISpanFormattable, IFormattable,
@@ -25,6 +26,7 @@ public readonly struct Point<T> :
 
     public static readonly Point<T> Empty = default;
     
+    
     public readonly T X;
     public readonly T Y;
 
@@ -32,14 +34,13 @@ public readonly struct Point<T> :
     
     public Point(T x, T y)
     {
-        X = x;
-        Y = y;
+        this.X = x;
+        this.Y = y;
     }
-
     public void Deconstruct(out T x, out T y)
     {
-        x = X;
-        y = Y;
+        x = this.X;
+        y = this.Y;
     }
 
 
@@ -57,13 +58,16 @@ public readonly struct Point<T> :
         return point;
     }
 
+    public static bool TryParse([NotNullWhen(true)] string? text, IFormatProvider? provider, out Point<T> point)
+        => TryParse(text.AsSpan(), default, provider, out point);
 
-    public static bool TryParse([NotNullWhen(true)] string? text, IFormatProvider? provider, [MaybeNullWhen(false)] out Point<T> point)
-    => TryParse(text.AsSpan(), default, provider, out point);
-
-
-    public static bool TryParse(ReadOnlySpan<char> text, IFormatProvider? provider, [MaybeNullWhen(false)] out Point<T> point)
+    public static bool TryParse(ReadOnlySpan<char> text, IFormatProvider? provider, out Point<T> point)
          => TryParse(text, default, provider, out point);
+    
+    public static bool TryParse([NotNullWhen(true)] string? text, out Point<T> point)
+        => TryParse(text.AsSpan(), default, default, out point);
+    public static bool TryParse(ReadOnlySpan<char> text, out Point<T> point)
+        => TryParse(text, default, default, out point);
 
     public static bool TryParse(ReadOnlySpan<char> text, NumberStyles numberStyle, IFormatProvider? provider, out Point<T> point)
     {
@@ -105,18 +109,18 @@ public readonly struct Point<T> :
 
     object ICloneable.Clone() => (object)this.Clone();
     public Point<T> Clone() => this;
-    public Point<T> DeepClone() => this;
 
     /// <inheritdoc />
     public bool Equals(Point<T> point)
     {
-        return X == point.X && Y == point.Y;
+        return this.X == point.X && this.Y == point.Y;
     }
 
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
         if (obj is Point<T> point) return Equals(point);
+        if (obj is (T x, T y)) return this.X == x && this.Y == y;
         return false;
     }
 
@@ -125,7 +129,6 @@ public readonly struct Point<T> :
     {
         return HashCode.Combine(X, Y);
     }
-
 
     public bool TryFormat(Span<char> destination, out int charsWritten, 
         ReadOnlySpan<char> format = default, 

@@ -1,9 +1,8 @@
-﻿using System.Diagnostics;
-using Jay.Collections;
+﻿using Jay.Collections;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
 using Jay.Reflection.Caching;
-using Jay.Reflection.Extensions;
+using Jay.Utilities;
 
 namespace Jay.Reflection.Cloning;
 
@@ -32,42 +31,38 @@ public static class Cloner
     {
         if (obj is null) return null;
         var type = obj.GetType();
-        return GetObjectDeepClone(type).Invoke(obj);
+        return GetOrCreateObjectDeepClone(type).Invoke(obj);
     }
     
    
-    internal static DeepClone<T> GetDeepClone<T>()
+    internal static DeepClone<T> GetOrCreateDeepClone<T>()
     {
-        return (_deepCloneCache.GetOrAdd<T>(CreateDeepClone) as DeepClone<T>)!;
+        var del = _valueCloneCache.GetOrAdd<T>(CreateDeepClone);
+        if (del is DeepClone<T> deepClone)
+            return deepClone;
+        throw new InvalidOperationException();
+    }
+    internal static Delegate GetOrCreateDeepClone(Type valueType)
+    {
+        var del = _valueCloneCache.GetOrAdd(valueType, CreateDeepClone);
+        if (del is not null)
+            return del;
+        throw new InvalidOperationException();
+    }
+    
+    internal static DeepClone<object?> GetOrCreateObjectDeepClone(Type type)
+    {
+        var dcd = _objectCloneCache.GetOrAdd(type,
+            t =>
+            {
+                var valueClone = GetOrCreateDeepClone(t);
+                // We can wrap this delegate!
+                return WrapValueDeepClone(t, valueClone);
+            });
+        return dcd;
     }
     
 
-    public static T[] DeepClone1DArray<T>(T[] array)
-    {
-        int len = array.Length;
-        T[] clone = new T[len];
-        var deepClone = GetDeepClone<T>();
-        for (int i = 0; i < len; i++)
-        {
-            clone[i] = deepClone(array[i]);
-        }
-        return clone;
-    }
-    public static T[,] DeepClone2DArray<T>(T[,] array)
-    {
-        int arrayLen0 = array.GetLength(0);
-        int arrayLen1 = array.GetLength(1);
-        T[,] clone = new T[arrayLen0, arrayLen1];
-        var deepClone = GetDeepClone<T>();
-        for (var x = 0; x < array.GetLength(0); x++)
-        {
-            for (var y = 0; y < array.GetLength(1); y++)
-            {
-                clone[x, y] = deepClone(array[x, y]);
-            }
-        }
-        return clone;
-    }
 
     [return: NotNullIfNotNull(nameof(array))]
     public static Array? DeepCloneArray(Array? array)
@@ -75,18 +70,46 @@ public static class Cloner
         if (array is null) return null;
         var arrayWrapper = new ArrayWrapper(array);
         Array clone = Array.CreateInstance(arrayWrapper.ElementType, arrayWrapper.RankLengths, arrayWrapper.LowerBounds);
-        var cloner = GetObjectDeepClone(arrayWrapper.ElementType);
+        var elementCloner = GetOrCreateObjectDeepClone(arrayWrapper.ElementType);
         var cloneWrapper = new ArrayWrapper(clone);
         using var e = arrayWrapper.GetEnumerator();
         while (e.MoveNext())
         {
             int[] index = e.Indices;
-            cloneWrapper.SetValue(index, cloner(e.Current!));
+            cloneWrapper.SetValue(index, elementCloner(e.Current));
         }
         return clone;
     }
 
+    private static DeepClone<object?> WrapValueDeepClone(Type type, Delegate valueDeepClone)
+    {
+        var builder = RuntimeBuilder.CreateRuntimeDelegateBuilder<DeepClone<object?>>(Dump($"clone_{type}_as_obj"));
+        var emitter = builder.Emitter;
+        // Null check
+        emitter
+            .Ldarg(0) // load object?
+            .Brtrue(out var notNull) // if (obj != null) goto: notnull;
+            .Ldnull()
+            .Ret() // return null;
+            .MarkLabel(notNull) //notnull:
+            // Attempt to cast object -> T
+            .Ldarg(0)
+            .Isinst(type)
+            .Brtrue(out var isT)
+            .ThrowException<ArgumentNullException>("value", $"Object is not a {type}")
+            .MarkLabel(isT)
+            // Cast to T, call valueDeepClone, box
+            .Ldarg(0)
+            .Unbox_Any(type)
+            .Call(valueDeepClone.Method)
+            .Box(type)
+            .Ret();
 
+        var il = emitter.ToString();
+        Debugger.Break();
+        
+        return builder.CreateDelegate();
+    }
 
     private static Delegate CreateDeepClone(Type type)
     {
@@ -95,23 +118,30 @@ public static class Cloner
             Dump($"clone_{type}"));
         var emitter = builder.Emitter;
 
-        /*
         // Null check for non-value types
         if (!type.IsValueType)
         {
             emitter.Ldarg(0)
-                .Ldind(type)
+                .Ldnull()
+                .Ceq()
                 .Brfalse(out var notNull)
                 .Ldnull()
                 .Ret()
                 .MarkLabel(notNull);
         }
-        */
 
-        // unmanaged or string we just dup + return
-        if (type == typeof(string) || type.IsUnmanaged())
+        // prevent infinite recursion loops
+        if (type == typeof(object))
         {
-            emitter.Ldarga(0).Ldind(type).Ret();
+            var ctor = ExpressionExtensions.ExtractMember<ConstructorInfo>(() => new object());
+            Debugger.Break();
+            emitter.Newobj(ctor)
+                .Ret();
+        }
+        // unmanaged or string we just dup + return
+        else if (type == typeof(string) || type.IsUnmanaged())
+        {
+            emitter.Ldarga(0).Ret();
         }
         // Special Array handling
         else if (type.IsArray)
@@ -142,10 +172,11 @@ public static class Cloner
                     if (field.FieldType.Implements<FieldInfo>())
                         Debugger.Break();
 
+                    var fieldDeepClone = GetDeepCloneMethod(field.FieldType);
                     emitter.Ldloca(copy)
                         .Ldarg(0)
                         .Ldfld(field)
-                        .Call(GetDeepCloneMethod(field.FieldType))
+                        .Call(fieldDeepClone)
                         .Stfld(field);
                 }
             }
@@ -178,7 +209,13 @@ public static class Cloner
 
         return builder.CreateDelegate();
     }
-
+    
+    private static MethodInfo GetDeepCloneMethod(Type type)
+    {
+        return Searching.MemberSearch.FindMethod(typeof(Cloner),
+                new(nameof(DeepClone), Visibility.Public | Visibility.Static))
+            .MakeGenericMethod(type);
+    }
 
   
 
@@ -186,37 +223,38 @@ public static class Cloner
     public static T DeepClone<T>(this T value)
     {
         if (value is null) return default!;
-        return GetDeepClone<T>().Invoke(value);
+        return GetOrCreateDeepClone<T>().Invoke(value);
     }
-
-    private static MethodInfo GetDeepCloneMethod(Type type)
+    
+    [return: NotNullIfNotNull(nameof(array))]
+    public static T[]? DeepClone<T>(this T[]? array)
     {
-        return Searching.MemberSearch.FindMethod(typeof(Cloner),
-                new(
-                    nameof(DeepClone),
-                    Visibility.Public | Visibility.Static))
-            .MakeGenericMethod(type);
+        if (array is null) return null;
+        int len = array.Length;
+        T[] clone = new T[len];
+        var itemCloner = GetOrCreateDeepClone<T>();
+        for (int i = 0; i < len; i++)
+        {
+            clone[i] = itemCloner(array[i])!;
+        }
+        return clone;
     }
-
-    private static DeepClone<object> CreateObjectClone(Type type)
+    
+    [return: NotNullIfNotNull(nameof(array))]
+    public static T[,]? DeepClone<T>(this T[,]? array)
     {
-        if (type == typeof(object)) // prevent recursion
-            return FastClone<object>;
-
-        return RuntimeBuilder.CreateDelegate<DeepClone<object>>(
-            Dump($"clone_object_{type}"),
-            emitter => emitter
-                .Ldarg(0)
-                .Unbox_Any(type)
-                .Call(GetDeepCloneMethod(type))
-                .Box(type)
-                .Ret());
+        if (array is null) return null;
+        int arrayLen0 = array.GetLength(0);
+        int arrayLen1 = array.GetLength(1);
+        T[,] clone = new T[arrayLen0, arrayLen1];
+        var deepClone = GetOrCreateDeepClone<T>();
+        for (var x = 0; x < array.GetLength(0); x++)
+        {
+            for (var y = 0; y < array.GetLength(1); y++)
+            {
+                clone[x, y] = deepClone(array[x, y])!;
+            }
+        }
+        return clone;
     }
-
-    internal static DeepClone<object> GetObjectDeepClone(Type objectType)
-    {
-        return _objectCloneCache.GetOrAdd(objectType, CreateObjectClone);
-    }
-
-   
 }

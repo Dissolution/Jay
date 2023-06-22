@@ -766,12 +766,12 @@ public sealed partial class UberDictionary<TKey, TValue> : IEnumerable<KVP<TKey,
                     "shouldn't underflow because max hashtable length is MaxPrimeArrayLength = 0x7FEFFFFD(2146435069) _freelist underflow threshold 2147483646");
                 entry.Next = StartOfFreeList - _freeList;
 
-                if (TypeExtensions.IsReferenceOrContainsReferences<TKey>())
+                if (TypeHelpers.IsReferenceOrContainsReferences<TKey>())
                 {
                     entry.Key = default!;
                 }
 
-                if (TypeExtensions.IsReferenceOrContainsReferences<TValue>())
+                if (TypeHelpers.IsReferenceOrContainsReferences<TValue>())
                 {
                     entry.Value = default!;
                 }
@@ -826,12 +826,12 @@ public sealed partial class UberDictionary<TKey, TValue> : IEnumerable<KVP<TKey,
                     "shouldn't underflow because max hashtable length is MaxPrimeArrayLength = 0x7FEFFFFD(2146435069) _freelist underflow threshold 2147483646");
                 entry.Next = StartOfFreeList - _freeList;
 
-                if (TypeExtensions.IsReferenceOrContainsReferences<TKey>())
+                if (TypeHelpers.IsReferenceOrContainsReferences<TKey>())
                 {
                     entry.Key = default!;
                 }
 
-                if (TypeExtensions.IsReferenceOrContainsReferences<TValue>())
+                if (TypeHelpers.IsReferenceOrContainsReferences<TValue>())
                 {
                     entry.Value = default!;
                 }

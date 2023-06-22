@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace Jay.Result;
+﻿namespace Jay;
 
 public readonly partial struct Result<T>
 #if NET7_0_OR_GREATER
@@ -63,7 +61,7 @@ public readonly partial struct Result<T>
     }
 
 
-    /// <inheritdoc cref="Jay.Result.Result.TryInvoke"/>
+    /// <inheritdoc cref="Result.TryInvoke"/>
     public static Result TryInvoke(Func<T>? func, out T? value)
     {
         return Result.TryInvoke<T>(func, out value);

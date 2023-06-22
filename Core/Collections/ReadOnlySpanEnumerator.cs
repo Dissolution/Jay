@@ -1,4 +1,4 @@
-﻿namespace Jay.Collections.Stacked;
+﻿namespace Jay.Collections;
 
 /// <summary>
 /// Enumerates the elements of a <see cref="ReadOnlySpan{T}"/>.
@@ -18,7 +18,7 @@ public ref struct ReadOnlySpanEnumerator<T>
     /// <summary>
     /// Gets the current index of enumeration
     /// </summary>
-    public int Index
+    public readonly int Index
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _index;
@@ -27,7 +27,7 @@ public ref struct ReadOnlySpanEnumerator<T>
     /// <summary>
     /// Gets the element at the current position of the enumerator.
     /// </summary>
-    public ref readonly T Current
+    public readonly ref readonly T Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref _span[_index];
@@ -42,6 +42,12 @@ public ref struct ReadOnlySpanEnumerator<T>
     {
         _span = span;
         _index = -1;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Deconstruct(out ReadOnlySpan<T> span, out int index)
+    {
+        span = _span;
+        index = _index;
     }
 
     /// <summary>

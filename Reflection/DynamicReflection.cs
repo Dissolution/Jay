@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Dynamic;
+﻿using System.Dynamic;
 
 using Jay.Dumping.Extensions;
 using Jay.Reflection.Building.Adaption;
@@ -590,7 +589,7 @@ public sealed class DynamicReflection : DynamicObject
 
     public override int GetHashCode()
     {
-        return Hasher.Generate(_target, _targetType);
+        return Hasher.Combine(_target, _targetType);
     }
 
     public override string ToString()

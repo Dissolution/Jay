@@ -4,6 +4,7 @@ public readonly struct Size<T> :
     IEqualityOperators<Size<T>, Size<T>, bool>,
     IAdditionOperators<Size<T>, Size<T>, Size<T>>,
     ISubtractionOperators<Size<T>, Size<T>, Size<T>>,
+    IUnaryNegationOperators<Size<T>, Size<T>>,
     IEquatable<Size<T>>,
     ISpanParsable<Size<T>>, IParsable<Size<T>>,
     ISpanFormattable, IFormattable,
@@ -35,6 +36,9 @@ public readonly struct Size<T> :
     public readonly T Width;
     public readonly T Height;
 
+    /// <summary>
+    /// Does this <see cref="Size{T}"/> contain greater than zero area?
+    /// </summary>
     public bool HasArea => Width > T.Zero && Height > T.Zero;
 
     public Size(T width, T height)
@@ -103,7 +107,6 @@ public readonly struct Size<T> :
 
     object ICloneable.Clone() => (object)this.Clone();
     public Size<T> Clone() => this;
-    public Size<T> DeepClone() => this;
 
     /// <inheritdoc />
     public bool Equals(Size<T> size)

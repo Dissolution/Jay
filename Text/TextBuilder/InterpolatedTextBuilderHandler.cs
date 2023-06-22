@@ -60,10 +60,10 @@ public ref struct InterpolatedTextBuilderHandler
 
 
     public override bool Equals(object? obj) =>
-        UnsupportedException.ThrowForEquals(typeof(InterpolatedTextBuilderHandler));
+        throw new NotSupportedException();
 
     public override int GetHashCode() =>
-        UnsupportedException.ThrowForGetHashCode(typeof(InterpolatedTextBuilderHandler));
+        throw new NotSupportedException();
 
     public override string ToString()
     {

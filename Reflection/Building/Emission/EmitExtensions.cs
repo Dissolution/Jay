@@ -1,6 +1,4 @@
-﻿using Jay.Reflection.Extensions;
-
-namespace Jay.Reflection.Building.Emission;
+﻿namespace Jay.Reflection.Building.Emission;
 
 public static class Extensions
 {

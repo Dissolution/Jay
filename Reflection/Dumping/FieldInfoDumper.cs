@@ -1,6 +1,5 @@
 ﻿using Jay.Dumping;
 using Jay.Dumping.Interpolated;
-using Jay.Reflection.Extensions;
 
 namespace Jay.Reflection.Dumping;
 

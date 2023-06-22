@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
 using Jay.Collections.Pooling;
+using Jay.Utilities;
 
 namespace Jay.Collections.Stacked;
 
@@ -47,7 +48,7 @@ public ref struct SpanList<T>
             int oldCount = _count;
             Validate.Between(value, 0, oldCount);
             if (value == oldCount) return;
-            if (TypeExtensions.IsReferenceOrContainsReferences<T>())
+            if (TypeHelpers.IsReferenceOrContainsReferences<T>())
             {
                 _buffer[new Range(start: value, end: oldCount)].Clear();
             }

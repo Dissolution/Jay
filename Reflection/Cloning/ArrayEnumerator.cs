@@ -46,7 +46,7 @@ public sealed class ArrayEnumerator : IEnumerator<object?>, IEnumerator
         if (_indices is null)
         {
             _indices = new int[_arrayEnumerable.Rank];
-            Fast.Copy<int>(_arrayEnumerable.LowerBounds, _indices);
+            Easy.CopyTo<int>(_arrayEnumerable.LowerBounds, _indices);
         }
 
         if (TryIncrementIndex(0))

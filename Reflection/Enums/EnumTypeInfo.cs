@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Jay.Reflection.Enums;
+﻿namespace Jay.Reflection.Enums;
 
 public abstract class EnumTypeInfo
 {

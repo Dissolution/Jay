@@ -1,9 +1,4 @@
-﻿using System.Diagnostics;
-using Jay.Reflection.Exceptions;
-using Jay.Reflection.Extensions;
-using Jay.Utilities;
-
-namespace Jay.Reflection.Searching;
+﻿namespace Jay.Reflection.Searching;
 
 public static class MemberSearch
 {
@@ -133,7 +128,7 @@ public static class MemberSearch
     {
         ConstructorInfo? constructor = typeof(TInstance)
             .GetConstructors(Reflect.Flags.Instance)
-            .FirstOrDefault(ctor => Fast.Equal<Type>(ctor.GetParameterTypes(), argTypes));
+            .FirstOrDefault(ctor => MemoryExtensions.SequenceEqual<Type>(ctor.GetParameterTypes(), argTypes));
         return constructor;
     }
     
@@ -141,7 +136,7 @@ public static class MemberSearch
     {
         ConstructorInfo? constructor = instanceType
             .GetConstructors(Reflect.Flags.Instance)
-            .FirstOrDefault(ctor => Fast.Equal<Type>(ctor.GetParameterTypes(), argTypes));
+            .FirstOrDefault(ctor => MemoryExtensions.SequenceEqual<Type>(ctor.GetParameterTypes(), argTypes));
         return constructor;
     }
     

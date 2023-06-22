@@ -1,5 +1,4 @@
-﻿using Jay.Reflection.Extensions;
-using Jay.Utilities;
+﻿using Jay.Utilities;
 
 namespace Jay.Reflection;
 
@@ -105,7 +104,7 @@ public sealed class DelegateInfo : IEquatable<DelegateInfo>
                            _ => throw new NotImplementedException(),
                        };
         var funcTypeArgs = new Type[ParameterCount + 1];
-        Fast.Copy<Type>(ParameterTypes, funcTypeArgs);
+        Easy.CopyTo<Type>(ParameterTypes, funcTypeArgs);
         funcTypeArgs[^1] = ReturnType;
         return funcType.MakeGenericType(funcTypeArgs);
     }
@@ -119,7 +118,7 @@ public sealed class DelegateInfo : IEquatable<DelegateInfo>
     {
         return delegateInfo is not null &&
                delegateInfo.ReturnType == ReturnType &&
-               Fast.Equal<Type>(delegateInfo.ParameterTypes, ParameterTypes);
+               Easy.Equal<Type>(delegateInfo.ParameterTypes, ParameterTypes);
     }
     public override bool Equals(object? obj)
     {
@@ -129,7 +128,8 @@ public sealed class DelegateInfo : IEquatable<DelegateInfo>
     {
         var hasher = new HashCode();
         hasher.Add<Type>(ReturnType);
-        hasher.Add<Type>(ParameterTypes);
+        foreach (var type in ParameterTypes)
+            hasher.Add<Type>(type);
         return hasher.ToHashCode();
     }
     public override string ToString()

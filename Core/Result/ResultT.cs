@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace Jay.Result;
+﻿namespace Jay;
 
 /// <summary>
 ///

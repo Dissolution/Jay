@@ -1,5 +1,4 @@
 ﻿using Jay.Reflection.Building.Adaption;
-using Jay.Reflection.Extensions;
 
 namespace Jay.Reflection.Building.Emission;
 
@@ -66,6 +65,43 @@ public static class EmitterExtensions
         }
 
         // Everything will be loaded!
+        return emitter;
+    }
+
+    public static IFluentILEmitter ThrowException<TException>(this IFluentILEmitter emitter, params object?[] exceptionArgs)
+        where TException : Exception
+    {
+        var exArgsTypes = exceptionArgs.Select(arg => arg?.GetType()).ToList();
+
+        // Find the ctor we can call with these args
+        var validCtors = typeof(TException)
+            .GetConstructors(Reflect.Flags.Instance)
+            .Where(ctor =>
+            {
+                var ctorParams = ctor.GetParameters();
+                int ctorParamsCount = ctorParams.Length;
+                if (ctorParamsCount != exArgsTypes.Count) return false;
+                var impl = true;
+                for (var i = 0; i < ctorParamsCount; i++)
+                {
+                    var argType = exArgsTypes[i]?.GetType();
+                    var paramType = ctorParams[i].ParameterType;
+                    if (!argType.Implements(paramType)) return false;
+                }
+                return true;
+            })
+            .ToList();
+        Debugger.Break();
+        var ctor = validCtors[0];
+        foreach (var arg in exceptionArgs)
+        {
+            emitter.LoadValue(arg);
+        }
+        emitter.Newobj(ctor).Throw();
+
+        var il = emitter.ToString();
+        Debugger.Break();
+        
         return emitter;
     }
 }

@@ -7,6 +7,7 @@ using System.Reflection;
 using Jay;
 using Jay.Comparison;
 using Jay.Dumping.Extensions;
+using Jay.Extensions;
 using Jay.Reflection;
 using Jay.Text.TextBuilder;
 using Jay.Utilities;

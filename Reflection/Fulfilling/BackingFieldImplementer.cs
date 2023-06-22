@@ -1,5 +1,4 @@
-﻿using Jay.Reflection.Extensions;
-using Jay.Reflection.Utilities;
+﻿using Jay.Reflection.Utilities;
 
 namespace Jay.Reflection.Fulfilling;
 

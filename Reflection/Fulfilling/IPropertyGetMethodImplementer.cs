@@ -1,6 +1,4 @@
-﻿using Jay.Reflection.Extensions;
-
-namespace Jay.Reflection.Fulfilling;
+﻿namespace Jay.Reflection.Fulfilling;
 
 public interface IPropertyGetMethodImplementer
 {

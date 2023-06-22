@@ -1,6 +1,4 @@
-﻿using Jay.Reflection.Extensions;
-
-namespace Jay.Reflection;
+﻿namespace Jay.Reflection;
 
 public sealed class ParameterSignature : IEquatable<ParameterSignature>
 {

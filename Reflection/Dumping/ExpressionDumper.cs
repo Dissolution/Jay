@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Jay.Dumping;
+﻿using Jay.Dumping;
 using Jay.Dumping.Interpolated;
 
 namespace Jay.Reflection.Dumping;

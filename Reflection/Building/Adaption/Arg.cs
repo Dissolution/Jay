@@ -1,9 +1,6 @@
 ﻿#pragma warning disable CS0659, CS0660, CS0661
 
-using System.Diagnostics;
-
 using Jay.Reflection.Building.Emission;
-using Jay.Reflection.Exceptions;
 
 namespace Jay.Reflection.Building.Adaption;
 
@@ -49,7 +46,7 @@ public abstract class Arg : IEquatable<Arg>
     
     protected abstract void LoadAddress(IFluentILEmitter emitter);
 
-    public Result.Result CanLoadAs(Arg destArg, out int exactness)
+    public Result CanLoadAs(Arg destArg, out int exactness)
     {
         JayflectException GetNotImplementedEx() => new JayflectException
         {
@@ -147,7 +144,7 @@ public abstract class Arg : IEquatable<Arg>
 
     }
 
-    public virtual Result.Result TryLoadAs(
+    public virtual Result TryLoadAs(
         IFluentILEmitter emitter,
         Arg destArg,
         bool emitTypeChecks = false)

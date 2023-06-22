@@ -1,7 +1,6 @@
 ﻿using Jay.Collections;
 using Jay.Reflection.Building;
 using Jay.Reflection.Building.Emission;
-using Jay.Reflection.Extensions;
 using Jay.Validation;
 
 namespace Jay.Reflection.Fulfilling;

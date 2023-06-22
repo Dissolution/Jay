@@ -38,7 +38,7 @@ public static class NonGenericEnumerableTextBuilderExtensions
             }
             finally
             {
-                Result.Result.Dispose(e);
+                Result.Dispose(e);
             }
         }
 
