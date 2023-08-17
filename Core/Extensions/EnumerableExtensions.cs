@@ -30,8 +30,9 @@ public static class EnumerableExtensions
     }
 
     [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static T? OneOrDefault<T>(this IEnumerable<T> source, T? defaultValue = default)
+    public static T? OneOrDefault<T>(this IEnumerable<T>? source, T? defaultValue = default)
     {
+        if (source is null) return defaultValue;
         using var e = source.GetEnumerator();
         if (!e.MoveNext()) return defaultValue;
         T value = e.Current;
@@ -40,9 +41,10 @@ public static class EnumerableExtensions
     }
 
     [return: NotNullIfNotNull(nameof(defaultValue))]
-    public static T? OneOrDefault<T>(this IEnumerable<T> source,
+    public static T? OneOrDefault<T>(this IEnumerable<T>? source,
         Func<T, bool> predicate, T? defaultValue = default)
     {
+        if (source is null) return defaultValue;
         using var e = source.GetEnumerator();
         while (e.MoveNext())
         {
