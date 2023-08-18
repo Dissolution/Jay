@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Jay</RootNamespace>
+        <AssemblyName>Jay.Core</AssemblyName>
+
+        <TargetFrameworks>
+            <!-- All Core Versions -->
+            net7.0;net6.0;netcoreapp3.1;
+            <!-- Both net standard versions, as Source Generators are stuck on 2.0 -->
+            netstandard2.1;netstandard2.0;
+            <!-- .Net Framework -->
+            net48
+        </TargetFrameworks>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <!-- Global Usings -->
+    <ItemGroup>
+        <Using Include="System.Runtime.CompilerServices"/>
+        <Using Include="System.Diagnostics.CodeAnalysis"/>
+        <Using Include="Jay.Validation"/>
+        <Using Include="Jay.Extensions"/>
+    </ItemGroup>
+
+    <!-- NuGet Packages -->
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+        <Using Remove="System.Net.Http"/>
+        
+        <PackageReference Include="IndexRange" Version="1.0.2">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="System.Memory" Version="4.5.5"/>
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+        <PackageReference Include="IndexRange" Version="1.0.2">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="System.Memory" Version="4.5.5"/>
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Fody" Version="6.8.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="InlineIL.Fody" Version="1.7.4">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="PolySharp" Version="1.13.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+
+    </ItemGroup>
+
+
+</Project>
