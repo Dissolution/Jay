@@ -1,4 +1,8 @@
-﻿using static InlineIL.IL;
+﻿#if !NETCOREAPP3_1_OR_GREATER
+#pragma warning disable CS8604
+#endif
+
+using static InlineIL.IL;
 
 namespace Jay.Extensions;
 
@@ -85,16 +89,11 @@ public static class GenericExtensions
         return false;
     }
 
-    /// <summary>
-    /// Is this <see cref="object" /> <c>null</c>, <see cref="None" />, or <see cref="DBNull" />?
-    /// </summary>
-    public static bool IsNone<T>([NotNullWhen(false)] T? obj)
+    public static string ToNonNullString<T>(this T? value, string fallback = "")
     {
-        return obj is null or None or DBNull;
-    }
-
-    public static Option<T> ToOption<T>(this T? value)
-    {
-        return Option<T>.Create(value);
+        if (value is null) return (fallback ?? "");
+        string? str = value.ToString();
+        if (str is null) return (fallback ?? "");
+        return str;
     }
 }

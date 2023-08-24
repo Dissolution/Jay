@@ -31,7 +31,7 @@ public static class TypeExtensions
         {
             null => true,
             { IsAbstract: true, IsSealed: true } => false, // static
-            { IsValueType: true } => type.Implements(typeof(Nullable<>)),
+            { IsValueType: true } => Nullable.GetUnderlyingType(type) != null, // Is Nullable
             _ => true,
         };
     }

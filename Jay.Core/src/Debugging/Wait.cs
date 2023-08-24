@@ -1,4 +1,4 @@
-﻿namespace Jay.Concurrency;
+﻿namespace Jay.Debugging;
 
 /// <summary>
 /// Utility class for wasting CPU cycles

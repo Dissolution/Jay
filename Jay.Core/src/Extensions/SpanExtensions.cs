@@ -48,14 +48,5 @@ public static class SpanExtensions
         }
         return true;
     }
-#else
-    // public static bool SequenceEqual<T>(this Span<T> first, Span<T> second, IEqualityComparer<T>? itemComparer = null)
-    //     => MemoryExtensions.SequenceEqual(first, second, itemComparer);
-    // public static bool SequenceEqual<T>(this Span<T> first, ReadOnlySpan<T> second, IEqualityComparer<T>? itemComparer = null)
-    //     => MemoryExtensions.SequenceEqual(first, second, itemComparer);
-    // public static bool SequenceEqual<T>(this ReadOnlySpan<T> first, Span<T> second, IEqualityComparer<T>? itemComparer = null)
-    //     => MemoryExtensions.SequenceEqual(first, second, itemComparer);
-    // public static bool SequenceEqual<T>(this ReadOnlySpan<T> first, ReadOnlySpan<T> second, IEqualityComparer<T>? itemComparer = null)
-    //     => MemoryExtensions.SequenceEqual(first, second, itemComparer);
 #endif
 }

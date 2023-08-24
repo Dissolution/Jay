@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Jay.Utilities;
 
 namespace Jay;
 
@@ -9,30 +10,27 @@ public readonly partial struct Option<T> :
     IEnumerable<T>
 {
     private readonly bool _some;
-    private readonly T? _value;
+    private readonly T _value;
 
-    private Option(bool some, T? value)
+    private Option(bool some, T value)
     {
         _some = some;
         _value = value;
     }
 
-    public bool IsSome([NotNullWhen(true)] out T? value)
+    public bool IsSome(out T value)
     {
         value = _value;
         return _some;
     }
 
-    public bool IsNone()
-    {
-        return !_some;
-    }
+    public bool IsNone() => !_some;
 
     public void Match(Action<T> some, Action none)
     {
         if (_some)
         {
-            some(_value!);
+            some(_value);
         }
         else
         {
@@ -44,7 +42,7 @@ public readonly partial struct Option<T> :
     {
         if (_some)
         {
-            some(_value!);
+            some(_value);
         }
         else
         {
@@ -56,7 +54,7 @@ public readonly partial struct Option<T> :
     {
         if (_some)
         {
-            return some(_value!);
+            return some(_value);
         }
         return none();
     }
@@ -65,7 +63,7 @@ public readonly partial struct Option<T> :
     {
         if (_some)
         {
-            return some(_value!);
+            return some(_value);
         }
         return none(default);
     }
@@ -74,7 +72,7 @@ public readonly partial struct Option<T> :
     {
         if (_some)
         {
-            return Result<T>.Ok(_value!);
+            return Result<T>.Ok(_value);
         }
         return Result<T>.Error(error);
     }
@@ -84,57 +82,49 @@ public readonly partial struct Option<T> :
     {
         if (_some)
         {
-            return Result<T, E>.Ok(_value!);
+            return Result<T, E>.Ok(_value);
         }
         return Result<T, E>.Error(errorIfNone());
     }
 
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public IEnumerator<T> GetEnumerator()
     {
         if (_some)
         {
-            yield return _value!;
+            yield return _value;
         }
     }
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
+    
     public bool Equals(Option<T> option)
     {
         if (_some)
         {
-            return option._some && EqualityComparer<T>.Default.Equals(_value!, option._value!);
+            return option._some && 
+                EqualityComparer<T>.Default.Equals(_value, option._value);
         }
         return !option._some;
     }
 
     public bool Equals(T? value)
     {
-        if (value is not null)
-        {
-            return _some && EqualityComparer<T>.Default.Equals(_value!, value);
-        }
-        return !_some;
+        return _some && EqualityComparer<T?>.Default.Equals(_value, value);
     }
-    public bool Equals(None _)
-    {
-        return !_some;
-    }
+
+    public bool Equals(None _) => IsNone();
 
     public override bool Equals(object? obj)
     {
-        if (obj.IsNone()) return !_some;
-        if (obj is T value) return Equals(value);
-        if (obj is Option<T> option) return Equals(option);
+        if (obj.CanBe<T>(out var value))
+            return Equals(value);
+        if (obj is null or None _) return IsNone();
         return false;
     }
 
     public override int GetHashCode()
     {
         if (!_some) return 0;
-        return _value!.GetHashCode();
+        return Hasher.Combine(_value);
     }
 
     public override string ToString()

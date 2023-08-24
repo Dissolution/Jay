@@ -1,4 +1,6 @@
-﻿namespace Jay.Concurrency;
+﻿using Jay.Utilities;
+
+namespace Jay.Concurrency;
 
 public sealed class LockChain : IDisposable
 {
@@ -12,7 +14,7 @@ public sealed class LockChain : IDisposable
         get
         {
             AddLock();
-            return Disposable.Disposable.FromAction(RemoveLock);
+            return Disposable.FromAction(RemoveLock);
         }
     }
 
@@ -43,6 +45,7 @@ public sealed class LockChain : IDisposable
     {
         return _count == 0 || _waitHandle.WaitOne();
     }
+    
     public bool WaitForNoLocks(TimeSpan timeout)
     {
         return _count == 0 || _waitHandle.WaitOne(timeout);

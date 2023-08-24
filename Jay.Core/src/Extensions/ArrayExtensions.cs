@@ -178,11 +178,6 @@ public static class ArrayExtensions
         }
     }
 
-    public static bool SequenceEqual<T>(this T[] array, ReadOnlySpan<T> items)
-    {
-        return array.AsSpan().SequenceEqual(items);
-    }
-
     internal sealed class ArrayEnumerator<T> : IEnumerator<T>, IEnumerator,
         IDisposable
     {

@@ -19,13 +19,14 @@
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+        <Using Remove="System.Net.Http"/>
     </ItemGroup>
-    
+
     <!-- Global Usings -->
     <ItemGroup>
-<!--        <Using Include="Jay" />-->
+        <!--        <Using Include="Jay" />-->
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Jay.Core\src\Jay.Core.csproj" />
+        <ProjectReference Include="..\Jay.Core\src\Jay.Core.csproj"/>
     </ItemGroup>
 </Project>

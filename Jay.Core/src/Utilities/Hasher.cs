@@ -78,7 +78,7 @@ public ref struct Hasher
         hash ^= hash >> 16;
         return hash;
     }
-
+    
     public static int Combine<T1>(T1? value1)
     {
         var hc1 = (uint)(value1?.GetHashCode() ?? 0);
@@ -513,6 +513,7 @@ public ref struct Hasher
         return (int)hash;
     }
 
+#pragma warning disable CS0809
     [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.",
         true)]
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -527,7 +528,8 @@ public ref struct Hasher
     {
         throw new NotSupportedException();
     }
-
+#pragma warning restore CS0809
+    
     public override string ToString()
     {
         return $"{ToHashCode():X}";

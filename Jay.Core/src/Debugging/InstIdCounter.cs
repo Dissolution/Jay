@@ -20,11 +20,7 @@ public static class InstIdCounter<T>
         }
         long id = Interlocked.Increment(ref _id);
         uiid = new(id);
-#if NET48 || NETSTANDARD2_0
         _instanceIds.Add(value, uiid);
-#else
-        _instanceIds.AddOrUpdate(value, uiid);
-#endif
         return uiid;
     }
 }

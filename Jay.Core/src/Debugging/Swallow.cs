@@ -1,15 +1,15 @@
 ﻿namespace Jay.Debugging;
 
+/// <summary>
+/// Swallows <see cref="Exception"/>s
+/// </summary>
 public static class Swallow
 {
     /// <summary>
     /// A deep wrapper for <see cref="IEnumerable{T}" /> that ignores all thrown exceptions
     /// at every level of enumeration, only returning values that could be acquired without error
     /// </summary>
-    /// <param name="enumerable"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    public static IEnumerable<T> SwallowEnumerate<T>(this IEnumerable<T>? enumerable)
+    public static IEnumerable<T> Swallowed<T>(this IEnumerable<T>? enumerable)
     {
         if (enumerable is null) yield break;
         IEnumerator<T> enumerator;

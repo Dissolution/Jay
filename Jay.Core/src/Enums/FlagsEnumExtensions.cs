@@ -1,19 +1,24 @@
-﻿using InlineIL;
+﻿using System.Diagnostics;
+using InlineIL;
 using Jay.Utilities;
 using static InlineIL.IL;
 
 namespace Jay.Enums;
 
+/// <summary>
+/// Generic (non-boxing) extensions upon <c>[Flags] enum</c>
+/// </summary>
+/// <remarks>
+/// There is no way to constrict these extensions to flagged enums,
+/// so beware of odd behavior for non-flagged enums
+/// </remarks>
 public static class FlagsEnumExtensions
 {
     /// <summary>
-    /// Returns a bitwise NOT / Inverse / Complement (<c>~</c>) of the <paramref name="enum" />
+    /// Returns a bitwise NOT (<c>~</c>) of this <paramref name="enum" />
     /// </summary>
-    /// <typeparam name="TEnum">The <see cref="Type" /> of <see langword="enum" /> to NOT</typeparam>
-    /// <param name="enum">THe <typeparamref name="TEnum" /> to get the inverse of</param>
-    /// <returns>The inverse <typeparamref name="TEnum" /></returns>
     /// <remarks>
-    /// <c>return ~<paramref name="enum" />;</c>
+    /// Also known as the inverse or bitwise complement
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TEnum Not<TEnum>(this TEnum @enum)
@@ -114,6 +119,32 @@ public static class FlagsEnumExtensions
         return Return<int>();
     }
 
+    public static TEnum[] GetFlags<TEnum>(this TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        int flagCount = FlagCount(@enum);
+        var flags = new TEnum[flagCount];
+        int f = 0;
+        int maxBits = Scary.SizeOf<TEnum>() * 8;
+        ulong enumValue = EnumExtensions.ToUInt64(@enum);
+        //string enumValueBits = Convert.ToString((long)enumValue, 2);
+        for (var shift = 0; shift < maxBits; shift++)
+        {
+            ulong mask = 1UL << shift;
+            //string maskBits = Convert.ToString((long)mask, 2);
+            if ((enumValue & mask) != 0UL)
+            {
+                var flag = EnumExtensions.FromUInt64<TEnum>(mask);
+                flags[f++] = flag;
+            }
+        }
+        Debug.Assert(f == flagCount);
+        return flags;
+    }
+
+    /// <summary>
+    /// Adds the <paramref name="flag"/> to this <paramref name="enum"/>
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddFlag<TEnum>(this ref TEnum @enum, TEnum flag)
         where TEnum : struct, Enum
@@ -121,6 +152,12 @@ public static class FlagsEnumExtensions
         @enum = Or(@enum, flag);
     }
 
+    /// <summary>
+    /// Returns this <paramref name="enum"/> combined with the <paramref name="flag"/>
+    /// </summary>
+    /// <remarks>
+    /// <c>return</c> <paramref name="enum"/> <c>|</c> <paramref name="flag"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TEnum WithFlag<TEnum>(this TEnum @enum, TEnum flag)
         where TEnum : struct, Enum
@@ -149,7 +186,7 @@ public static class FlagsEnumExtensions
     {
         return @enum.And(flag).NotEqual(default);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasFlags<TEnum>(this TEnum @enum, TEnum flag)
         where TEnum : struct, Enum
@@ -178,7 +215,6 @@ public static class FlagsEnumExtensions
         return @enum.And(flag1.Or(flag2).Or(flag3)).NotEqual(default);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAnyFlags<TEnum>(this TEnum @enum, params TEnum[] flags)
         where TEnum : struct, Enum
     {
@@ -214,7 +250,6 @@ public static class FlagsEnumExtensions
         return @enum.And(flag).Equal(flag);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAllFlags<TEnum>(this TEnum @enum, params TEnum[] flags)
         where TEnum : struct, Enum
     {

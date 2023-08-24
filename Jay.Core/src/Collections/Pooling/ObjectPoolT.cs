@@ -4,60 +4,54 @@
 
 namespace Jay.Collections.Pooling;
 
-/// <summary>
-/// A thread-safe pool of <typeparamref name="T" /> instances.
-/// </summary>
-/// <typeparam name="T">An instance class</typeparam>
+/// <inheritdoc cref="IObjectPool{T}"/>
 public class ObjectPool<T> : IObjectPool<T>, IDisposable
     where T : class
 {
     /// <summary>
-    /// Optional instance clean action.
+    /// Optional instance cleaning action
+    /// Performed on each instance returned to the pool to get them ready to be re-used
     /// </summary>
     private readonly PoolInstanceClean<T>? _cleanItem;
 
     /// <summary>
-    /// Optional instance disposal action.
+    /// Optional instance disposal action
+    /// Performed on any instance dropped by this pool (due to <see cref="Capacity"/>
+    /// and when this pool is disposed
     /// </summary>
     private readonly PoolInstanceDispose<T>? _disposeItem;
 
     /// <summary>
     /// Instance creation function.
+    /// Whenever an instance is requested but unavailable, this function will create a new instance
     /// </summary>
     private readonly PoolInstanceFactory<T> _itemFactory;
 
+    
     /// <summary>
-    /// Storage for the pool items.
-    /// </summary>
-    protected readonly Item[] _items;
-
-    /// <summary>
-    /// Whether or not this pool has been disposed.
-    /// </summary>
-    /// <remarks>
-    /// We want disposal to be thread-safe (as the rest of the methods are), so we use <see cref="Interlocked" /> to manage it.
-    /// Since `Interlocked.CompareExchange` does not work on <see cref="bool" /> values, we use an <see cref="int" /> where `> 0` means disposed.
-    /// </remarks>
-    protected int _disposed;
-
-    /// <summary>
-    /// The first item is stored in a dedicated field because we expect to be able to satisfy most requests from it.
+    /// The first instance is stored in a dedicated field because we expect to be able to
+    /// satisfy most requests from it
     /// </summary>
     protected T? _firstItem;
-
-    internal bool IsDisposed
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Interlocked.CompareExchange(ref _disposed, 0, 0) > 0;
-    }
-
+    
+    /// <summary>
+    /// Storage for the extra pool instances
+    /// </summary>
+    protected Item[]? _items;
+    
     /// <summary>
     /// Creates a new <see cref="ObjectPool{T}" /> for classes.
     /// </summary>
     /// <typeparam name="T">An instance class</typeparam>
-    /// <param name="factory">A function to create a new <typeparamref name="T" /> instance.</param>
-    /// <param name="clean">An optional action to perform on a <typeparamref name="T" /> when it is returned.</param>
-    /// <param name="dispose">An optional action to perform on a <typeparamref name="T" /> if it is disposed.</param>
+    /// <param name="factory">
+    /// A function to create a new <typeparamref name="T" /> instance.
+    /// </param>
+    /// <param name="clean">
+    /// An optional action to perform on a <typeparamref name="T" /> when it is returned.
+    /// </param>
+    /// <param name="dispose">
+    /// An optional action to perform on a <typeparamref name="T" /> if it is disposed.
+    /// </param>
     public ObjectPool(
         PoolInstanceFactory<T> factory,
         PoolInstanceClean<T>? clean = null,
@@ -81,12 +75,12 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         PoolInstanceClean<T>? clean = null,
         PoolInstanceDispose<T>? dispose = null)
     {
-        if (capacity < 1 || capacity > Pool.ArrayMaxCapacity)
+        if (capacity < 1 || capacity > Pool.MaxCapacity)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(capacity),
                 capacity,
-                $"Pool Capacity must be between 1 and {Pool.ArrayMaxCapacity}");
+                $"Pool Capacity must be between 1 and {Pool.MaxCapacity}");
         }
 
         _itemFactory = factory ?? throw new ArgumentNullException(nameof(factory));
@@ -96,11 +90,16 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         _firstItem = default;
         _items = new Item[capacity - 1];
     }
-
-    /// <summary>
-    /// Gets the maximum number of items retained by this pool.
-    /// </summary>
-    public int Capacity => _items.Length + 1;
+    
+    /// <inheritdoc />
+    public int Capacity
+    {
+        get
+        {
+            if (_items is null) return 0;
+            return _items.Length + 1;
+        }
+    }
 
     /// <inheritdoc />
     public int Count
@@ -109,6 +108,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         {
             var count = 0;
             if (_firstItem is not null) count++;
+            if (_items is null) return count;
             for (var i = 0; i < _items.Length; i++)
             {
                 if (_items[i].Value is not null) count++;
@@ -128,7 +128,8 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     public T Rent()
     {
         // Always check if we've been disposed
-        CheckDisposed();
+        if (_items is null)
+            throw new ObjectDisposedException("This Object Pool has been disposed");
 
         /* PERF: Examine the first element.
          * If that fails, AllocateSlow will look at the remaining elements.
@@ -160,7 +161,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         _cleanItem?.Invoke(instance);
 
         // If we're disposed, just dispose the instance and exit
-        if (IsDisposed)
+        if (_items is null)
         {
             _disposeItem?.Invoke(instance);
             return;
@@ -193,32 +194,32 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <remarks>
     /// <paramref name="instance" /> must not be used after this is disposed.
     /// </remarks>
-    public IDisposable Borrow(out T instance)
+    public IDisposable GetInstance(out T instance)
     {
         instance = Rent();
         return new PoolInstance<T>(this, instance);
     }
 
     /// <inheritdoc />
-    public IPoolInstance<T> Borrow()
+    public IPoolInstance<T> GetInstance()
     {
         T instance = Rent();
         return new PoolInstance<T>(this, instance);
     }
 
     /// <inheritdoc />
-    public void Use(Action<T> instanceAction)
+    public void Borrow(Action<T> instanceAction)
     {
-        Validate.NotNull(instanceAction);
+        Validate.IsNotNull(instanceAction);
         T instance = Rent();
         instanceAction.Invoke(instance);
         Return(instance);
     }
 
     /// <inheritdoc />
-    public TResult Use<TResult>(Func<T, TResult> instanceFunc)
+    public TResult Borrow<TResult>(Func<T, TResult> instanceFunc)
     {
-        Validate.NotNull(instanceFunc);
+        Validate.IsNotNull(instanceFunc);
         T instance = Rent();
         TResult result = instanceFunc.Invoke(instance);
         Return(instance);
@@ -230,42 +231,22 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// </summary>
     public void Dispose()
     {
-        // Have I already been disposed?
-        if (Interlocked.Increment(ref _disposed) > 1) return;
-        // We only do anything if we have a disposer
-        if (_disposeItem != null)
+        T? item = Interlocked.Exchange<T?>(ref _firstItem, null);
+        if (item is not null)
         {
-            var disposeItem = _disposeItem!;
-
-            T? item = Reference.Exchange<T?>(ref _firstItem, null);
-            if (item != null)
-            {
-                disposeItem(item);
-            }
-            var items = _items;
+            _disposeItem?.Invoke(item);
+        }
+        var items = Interlocked.Exchange<Item[]?>(ref _items, null);
+        if (items is not null)
+        {
             for (var i = 0; i < items.Length; i++)
             {
-                item = Reference.Exchange<T?>(ref items[i].Value, null);
+                item = Interlocked.Exchange<T?>(ref items[i].Value, null);
                 if (item != null)
                 {
-                    disposeItem(item);
+                    _disposeItem?.Invoke(item);
                 }
             }
-        }
-        Debug.Assert(_items.All(item => item.Value == null));
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Check if this <see cref="ObjectPool{T}" /> has been disposed, and if it has, throw an <see cref="ObjectDisposedException" />.
-    /// </summary>
-    /// <exception cref="ObjectDisposedException"></exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void CheckDisposed()
-    {
-        if (IsDisposed)
-        {
-            throw new ObjectDisposedException("This ObjectPool has been disposed");
         }
     }
 
@@ -276,7 +257,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     {
         var items = _items;
         T? instance;
-        for (var i = 0; i < items.Length; i++)
+        for (var i = 0; i < items!.Length; i++)
         {
             /* Note that the initial read is optimistically not synchronized.
              * That is intentional. 
@@ -303,7 +284,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     private void ReturnSlow(T instance)
     {
         var items = _items;
-        for (var i = 0; i < items.Length; i++)
+        for (var i = 0; i < items!.Length; i++)
         {
             // Like AllocateSlow, the initial read is not synchronized and will only interlock on a candidate.
             if (items[i].Value is null)

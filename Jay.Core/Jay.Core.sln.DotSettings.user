@@ -1,0 +1,11 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d4fd5046_002D70ee_002D4072_002Da6dd_002D305b73ce6719/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestOG #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::553BA9AC-56AD-4717-9534-21FF652755E8::net7.0::Jay.Tests.SpanIteratorTests.TestRefs&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::553BA9AC-56AD-4717-9534-21FF652755E8::net7.0::Jay.Tests.SpanIteratorTests.TestRefDiscard&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::553BA9AC-56AD-4717-9534-21FF652755E8::net7.0::Jay.Tests.Options.NoneTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::553BA9AC-56AD-4717-9534-21FF652755E8::net7.0::Jay.Tests.NoneTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::553BA9AC-56AD-4717-9534-21FF652755E8::net7.0::Jay.Tests.ResultTests.ResultErrorTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

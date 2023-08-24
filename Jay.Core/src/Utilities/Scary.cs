@@ -2,6 +2,10 @@
 
 namespace Jay.Utilities;
 
+/// <summary>
+/// Similar to <see cref="System.Runtime.CompilerServices.Unsafe"/>, this helper class is full
+/// of bad things you shouldn't use unless you understand what you are doing.
+/// </summary>
 public static class Scary
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -21,44 +25,14 @@ public static class Scary
         Emit.Ceq();
         return Return<bool>();
     }
-    
-    /// <summary>
-    /// Synchronously consume a <see cref="Task"/>
-    /// </summary>
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void Consume(Task task)
-    {
-        if (task.IsCompleted)
-            return;
-        task.GetAwaiter().GetResult();
-    }
 
-    /// <summary>
-    /// Synchronously consume a <see cref="Task{TResult}"/>
-    /// </summary>
-    public static TResult Consume<TResult>(Task<TResult> task)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int SizeOf<T>()
+        where T : struct
     {
-        if (task.IsCompleted)
-            return task.Result;
-        return task.GetAwaiter().GetResult();
+        Emit.Sizeof<T>();
+        return Return<int>();
     }
     
-#if !(NET48 || NETSTANDARD2_0)
-    public static void Consume(ValueTask valueTask)
-    {
-        if (valueTask.IsCompleted)
-            return;
-        valueTask.AsTask().GetAwaiter().GetResult();
-    }
 
-    public static TResult Consume<TResult>(ValueTask<TResult> valueTask)
-    {
-        if (valueTask.IsCompleted)
-            return valueTask.Result;
-        return valueTask
-            .AsTask()
-            .GetAwaiter()
-            .GetResult();
-    }
-#endif
 }

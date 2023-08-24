@@ -1,10 +1,11 @@
-﻿#if NETSTANDARD2_0
+﻿
 using System.Text;
 
 namespace Jay.Text;
 
 public static class StringBuilderExtensions
 {
+#if NETSTANDARD2_0
     public static StringBuilder Append(this StringBuilder builder, ReadOnlySpan<char> text)
     {
         unsafe
@@ -16,5 +17,41 @@ public static class StringBuilderExtensions
         }
         return builder;
     }
-}
 #endif
+
+    public static StringBuilder Append<T>(
+        this StringBuilder builder,
+        T? value,
+        string? format = null,
+        IFormatProvider? provider = null)
+    {
+        string? str;
+        if (value is null)
+        {
+            return builder;
+        }
+        // No boxing for value types
+        // ReSharper disable once MergeCastWithTypeCheck
+        if (value is IFormattable)
+        {
+            str = ((IFormattable)value).ToString(format, provider);
+        }
+        else
+        {
+            str = value.ToString();
+        }
+        return builder.Append(str);
+    }
+    
+    
+    /// <summary>
+    /// Returns this <see cref="StringBuilder"/> instance to <see cref="StringBuilderPool"/>.<see cref="StringBuilderPool.Shared"/>
+    /// and then returns the <see cref="string"/> it built.
+    /// </summary>
+    public static string ReturnToString(this StringBuilder builder)
+    {
+        var str = builder.ToString();
+        StringBuilderPool.Shared.Return(builder);
+        return str;
+    }
+}

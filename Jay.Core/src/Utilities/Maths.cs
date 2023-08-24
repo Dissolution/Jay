@@ -5,6 +5,9 @@ using System.Numerics;
 
 namespace Jay.Utilities;
 
+/// <summary>
+/// Math and number related utilities
+/// </summary>
 public static class Maths
 {
     private static ReadOnlySpan<byte> Log2DeBruijn => new byte[32]
@@ -14,8 +17,7 @@ public static class Maths
         08, 12, 20, 28, 15, 17, 24, 07,
         19, 27, 23, 06, 26, 05, 04, 31,
     };
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
     private static int Log2SoftwareFallback(uint value)
     {
         // No AggressiveInlining due to large method size
@@ -111,12 +113,18 @@ public static class Maths
     }
 
 
+    /// <summary>
+    /// Half of <paramref name="value"/>, rounded up
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int HalfRoundUp(int value)
     {
         return (value >> 1) + (value & 1);
     }
 
+    /// <summary>
+    /// Half of <paramref name="value"/>, rounded down
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int HalfRoundDown(int value)
     {
@@ -207,9 +215,47 @@ public static class Maths
         return result;
     }
 
+    /// <summary>
+    /// 2 ^ <paramref name="exponent"/>
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int PowerOfTwo(int exponent)
     {
         return 1 << exponent;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Clamp(this int value, int min)
+    {
+        if (value >= min)
+        {
+            return value;
+        }
+        return min;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Clamp(this int value, int min, int max)
+    {
+#if NET48 || NETSTANDARD2_0
+        if (min > max)
+        {
+            throw new ArgumentException("Max must not be greater than min", nameof(max));
+        }
+
+        if (value < min)
+        {
+            return min;
+        }
+
+        if (value > max)
+        {
+            return max;
+        }
+
+        return value;
+#else
+        return Math.Clamp(value, min, max);
+#endif
     }
 }

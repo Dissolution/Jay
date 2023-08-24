@@ -111,7 +111,7 @@ public readonly partial struct Result<T, E> :
     {
         if (_ok)
         {
-            return Option<T>.Create(_value);
+            return Option<T>.Some(_value!);
         }
         return Option<T>.None;
     }

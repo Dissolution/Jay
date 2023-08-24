@@ -16,7 +16,7 @@ public static class CharExtensions
     public static ReadOnlySpan<char> AsSpan(in this char ch)
     {
 #if NET7_0_OR_GREATER
-        return new(in ch);
+        return new ReadOnlySpan<char>(in ch);
 #else
         unsafe
         {

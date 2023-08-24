@@ -12,21 +12,24 @@ public sealed class StringBuilderPool : ObjectPool<StringBuilder>
 
     public StringBuilderPool()
         : base(
-            static () => new(),
-            static builder => builder.Clear())
+            factory: static () => new(),
+            clean: static builder => builder.Clear())
     {
     }
 
+    /// <summary>
+    /// Returns the <see cref="StringBuilder"/> instance to this pool and then
+    /// returns the <see cref="string"/> it built.
+    /// </summary>
     public string ReturnToString(StringBuilder builder)
     {
         var str = builder.ToString();
         Return(builder);
         return str;
     }
-
-    public new string Use(Action<StringBuilder> instanceAction)
+    
+    public new string Borrow(Action<StringBuilder> instanceAction)
     {
-        Validate.NotNull(instanceAction);
         StringBuilder sb = Rent();
         instanceAction.Invoke(sb);
         var str = sb.ToString();

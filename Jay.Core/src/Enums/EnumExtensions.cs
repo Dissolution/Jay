@@ -2,8 +2,17 @@
 
 namespace Jay.Enums;
 
+/// <summary>
+/// Generic (non-boxing) extensions upon <c>enum</c>
+/// </summary>
 public static class EnumExtensions
 {
+    /// <summary>
+    /// Is this <paramref name="enum"/> == <c>default(</c><typeparamref name="TEnum"/><c>)</c>?
+    /// </summary>
+    /// <typeparam name="TEnum">
+    /// The <see cref="Type"/> of this <c>enum</c>
+    /// </typeparam>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsDefault<TEnum>(this TEnum @enum)
         where TEnum : struct, Enum
@@ -13,23 +22,23 @@ public static class EnumExtensions
         Emit.Ceq();
         return Return<bool>();
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equal<TEnum>(this TEnum left, TEnum right)
+    public static bool Equal<TEnum>(this TEnum @enum, TEnum other)
         where TEnum : struct, Enum
     {
-        Emit.Ldarg(nameof(left));
-        Emit.Ldarg(nameof(right));
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(other));
         Emit.Ceq();
         return Return<bool>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NotEqual<TEnum>(this TEnum left, TEnum right)
+    public static bool NotEqual<TEnum>(this TEnum @enum, TEnum other)
         where TEnum : struct, Enum
     {
-        Emit.Ldarg(nameof(left));
-        Emit.Ldarg(nameof(right));
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(other));
         Emit.Ceq();
         Emit.Ldc_I4_0();
         Emit.Ceq();
@@ -37,51 +46,51 @@ public static class EnumExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool LessThan<TEnum>(this TEnum left, TEnum right)
+    public static bool LessThan<TEnum>(this TEnum @enum, TEnum other)
         where TEnum : struct, Enum
     {
-        Emit.Ldarg(nameof(left));
-        Emit.Ldarg(nameof(right));
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(other));
         Emit.Clt();
         return Return<bool>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool LessThanOrEqual<TEnum>(this TEnum left, TEnum right)
+    public static bool LessThanOrEqual<TEnum>(this TEnum @enum, TEnum other)
         where TEnum : struct, Enum
     {
-        Emit.Ldarg(nameof(right));
-        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(other));
+        Emit.Ldarg(nameof(@enum));
         Emit.Cgt();
         return Return<bool>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool GreaterThan<TEnum>(this TEnum left, TEnum right)
+    public static bool GreaterThan<TEnum>(this TEnum @enum, TEnum other)
         where TEnum : struct, Enum
     {
-        Emit.Ldarg(nameof(left));
-        Emit.Ldarg(nameof(right));
+        Emit.Ldarg(nameof(@enum));
+        Emit.Ldarg(nameof(other));
         Emit.Cgt();
         return Return<bool>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool GreaterThanOrEqual<TEnum>(this TEnum left, TEnum right)
+    public static bool GreaterThanOrEqual<TEnum>(this TEnum @enum, TEnum other)
         where TEnum : struct, Enum
     {
-        Emit.Ldarg(nameof(right));
-        Emit.Ldarg(nameof(left));
+        Emit.Ldarg(nameof(other));
+        Emit.Ldarg(nameof(@enum));
         Emit.Clt();
         return Return<bool>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CompareTo<TEnum>(this TEnum left, TEnum right)
+    public static int CompareTo<TEnum>(this TEnum @enum, TEnum other)
         where TEnum : struct, Enum
     {
-        if (LessThan(left, right)) return -1;
-        if (GreaterThan(left, right)) return 1;
+        if (LessThan(@enum, other)) return -1;
+        if (GreaterThan(@enum, other)) return 1;
         return 0;
     }
 
@@ -110,5 +119,11 @@ public static class EnumExtensions
         Emit.Ldarg(nameof(@enum));
         Emit.Conv_U8();
         return Return<ulong>();
+    }
+
+    public static TEnum FromUInt64<TEnum>(ulong value)
+    {
+        Emit.Ldarg(nameof(value));
+        return Return<TEnum>();
     }
 }

@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Jay.Tests</RootNamespace>
+        <AssemblyName>Jay.Core.Tests</AssemblyName>
+
+        <TargetFrameworks>
+            <!-- All Core Versions -->
+            net7.0;net6.0;netcoreapp3.1;
+            <!-- Both net standard versions, as Source Generators are stuck on 2.0 -->
+            netstandard2.1;netstandard2.0;
+            <!-- .Net Framework -->
+            net48
+        </TargetFrameworks>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+
+        <IsPackable>false</IsPackable>
+        <!-- Quiet Nuget warnings about xunit.testrunner for multitargetting -->
+        <NoWarn>$(NoWarn);NU1701</NoWarn>
+    </PropertyGroup>
+
+    <!-- Global Usings -->
+    <ItemGroup>
+        <Using Include="System.Runtime.CompilerServices"/>
+        <Using Include="System.Diagnostics.CodeAnalysis"/>
+        <Using Include="Jay.Validation"/>
+        <Using Include="Jay.Extensions"/>
+    </ItemGroup>
+    
+    <!-- NuGet Packages -->
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+        <PackageReference Include="IndexRange" Version="1.0.2">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="System.Memory" Version="4.5.5"/>
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+        <PackageReference Include="IndexRange" Version="1.0.2">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="System.Memory" Version="4.5.5"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.1" />
+        <PackageReference Include="xunit" Version="2.5.0" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.collector" Version="6.0.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\src\Jay.Core.csproj" />
+    </ItemGroup>
+
+</Project>

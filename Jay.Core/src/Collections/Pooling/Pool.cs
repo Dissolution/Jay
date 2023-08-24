@@ -10,12 +10,12 @@ public static class Pool
     /// <summary>
     /// The default capacity any pool should start with
     /// </summary>
-    internal static readonly int DefaultCapacity = 1 + 2 * Environment.ProcessorCount;
+    internal static readonly int DefaultCapacity = 1 + (2 * Environment.ProcessorCount);
 
     /// <summary>
     /// The maximum capacity for any pool
     /// </summary>
-    internal static readonly int ArrayMaxCapacity = 0X7FFFFFC7; // == Array.MaxLength
+    internal const int MaxCapacity = 0X7FFFFFC7; // == Array.MaxLength
 
 
     /// <summary>

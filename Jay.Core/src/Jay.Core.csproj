@@ -16,6 +16,12 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+        <Version>0.1.0</Version>
+        <Authors>TimothyJay</Authors>
+
+        <!-- lambda expression issue -->
+        <NoWarn>8622</NoWarn>
     </PropertyGroup>
 
     <!-- Global Usings -->
@@ -29,7 +35,7 @@
     <!-- NuGet Packages -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
         <Using Remove="System.Net.Http"/>
-        
+
         <PackageReference Include="IndexRange" Version="1.0.2">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -44,7 +50,7 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3"/>
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -59,8 +65,13 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-
     </ItemGroup>
 
-
+    <ItemGroup>
+        <!-- Expose my internals to the Tests library -->
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Jay.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+    
 </Project>

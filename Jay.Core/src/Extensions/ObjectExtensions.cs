@@ -33,7 +33,19 @@ public static class ObjectExtensions
         return false;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    /// <summary>
+    /// If this <see cref="object"/> can be a <typeparamref name="T"/> value,
+    /// cast it to that value and return <c>true</c>.
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="value"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    /// <remarks>
+    /// This differs from the <c>is</c> keyword in that,
+    /// if <paramref name="obj"/> is <c>null</c> and <typeparamref name="T"/> can contain <c>null</c>,
+    /// returning <c>null</c> as <paramref name="value"/> is valid.
+    /// </remarks>
     public static bool CanBe<T>(this object? obj, out T? value)
     {
         if (obj is T)
