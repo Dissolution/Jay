@@ -1,10 +1,3 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=3f812efa_002D5214_002D42ed_002D9227_002D2d45080d4799/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestFluent #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Or&gt;&#xD;
-    &lt;Project Location="C:\git\Jay\Jay.Core\Tests" Presentation="&amp;lt;Jay.Core.Tests&amp;gt;" /&gt;&#xD;
-    &lt;Project Location="C:\git\Jay\Jay.Text\Tests" Presentation="&amp;lt;Jay.Text.Tests&amp;gt;" /&gt;&#xD;
-  &lt;/Or&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	
 	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=a3bec967_002Dc4d8_002D43b4_002Da409_002D14b803758981_0023Jay_002EText_002EBenchmarks/@EntryIndexedValue">True</s:Boolean>
-	</wpf:ResourceDictionary>
+	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=ca65107c_002Df921_002D42c7_002Da306_002D5636415ec9a9_0023Jay_002ESourceGen/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

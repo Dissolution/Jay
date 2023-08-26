@@ -44,7 +44,7 @@ public static partial class Disposable
 #endif
         public void Dispose()
         {
-            return; // Do nothing
+            // Do nothing
         }
     }
 }

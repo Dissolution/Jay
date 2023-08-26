@@ -25,6 +25,12 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         _builder = (TBuilder)this;
         _newline = Environment.NewLine;
     }
+    protected FluentTextBuilder(int minCapacity) 
+        : base(minCapacity)
+    {
+        _builder = (TBuilder)this;
+        _newline = Environment.NewLine;
+    }
 
     public Span<char> GetWrittenSpan(TBA<TBuilder> action)
     {
@@ -563,6 +569,11 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
     public TBuilder Delimit<T>(string delimiter, IEnumerable<T> values, TBAI<TBuilder, T> perValueIndex)
     {
         return Delimit(w => w.Append(delimiter), values, perValueIndex);
+    }
+
+    public TBuilder DelimitAppend<T>(string delimiter, IEnumerable<T> values)
+    {
+        return Delimit(w => w.Append(delimiter), values, static (b, v) => b.Format<T>(v));
     }
 
     public TBuilder DelimitLines<T>(IEnumerable<T> values, TBA<TBuilder, T> perValue)

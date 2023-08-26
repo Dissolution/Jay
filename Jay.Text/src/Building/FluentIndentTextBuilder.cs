@@ -4,8 +4,7 @@ using Jay.Text.Splitting;
 
 namespace Jay.Text.Building;
 
-public class FluentIndentTextBuilder<TBuilder>
-: FluentTextBuilder<TBuilder>
+public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
     where TBuilder : FluentIndentTextBuilder<TBuilder>
 {
     protected Stack<string> _indents;
@@ -14,8 +13,13 @@ public class FluentIndentTextBuilder<TBuilder>
     {
         _indents = new(0);
     }
-    
-    internal string GetCurrentPositionAsIndent()
+    public FluentIndentTextBuilder(int minCapacity) 
+        : base(minCapacity)
+    {
+        _indents = new(0);
+    }
+
+    protected internal string GetCurrentPositionAsIndent()
     {
         // Start searching all Written for the last newline
         var lastNewLineIndex = Written.LastIndexOf(_newline.AsSpan());

@@ -1,29 +1,29 @@
 ﻿#if NET7_0_OR_GREATER
 namespace Jay.Text.Utilities;
 
-public interface IEasyParsable<T> : ISpanParsable<T>, IParsable<T>
-    where T : IEasyParsable<T>
+public interface IEasyParsable<TSelf> : ISpanParsable<TSelf>, IParsable<TSelf>
+    where TSelf : IEasyParsable<TSelf>
 {
-    static T ISpanParsable<T>.Parse(ReadOnlySpan<char> text, IFormatProvider? _)
+    static TSelf ISpanParsable<TSelf>.Parse(ReadOnlySpan<char> text, IFormatProvider? _)
     {
-        if (T.TryParse(text, out var value))
+        if (TSelf.TryParse(text, out var value))
             return value;
-        throw new ArgumentException($"Cannot parse '{text}' to a {typeof(T)}", nameof(text));
+        throw new ArgumentException($"Cannot parse '{text}' to a {typeof(TSelf)}", nameof(text));
     }
-    static T IParsable<T>.Parse([AllowNull, NotNullWhen(true)] string? str, IFormatProvider? _)
+    static TSelf IParsable<TSelf>.Parse([AllowNull, NotNull] string? str, IFormatProvider? _)
     {
-        if (T.TryParse(str, out var value))
+        if (TSelf.TryParse(str, out var value))
             return value;
-        throw new ArgumentException($"Cannot parse '{str}' to a {typeof(T)}", nameof(str));
+        throw new ArgumentException($"Cannot parse '{str}' to a {typeof(TSelf)}", nameof(str));
     }
 
-    static bool ISpanParsable<T>.TryParse(ReadOnlySpan<char> text, IFormatProvider? _, [NotNullWhen(true)] out T? value)
-        => T.TryParse(text, out value);
-
-    static bool IParsable<T>.TryParse([AllowNull, NotNullWhen(true)] string? str, IFormatProvider? _, [NotNullWhen(true)] out T? value)
-        => T.TryParse(str, out value);
-
-    static virtual bool TryParse([AllowNull, NotNullWhen(true)] string? str, [NotNullWhen(true)] out T? value) => T.TryParse(str.AsSpan(), out value);
-    static abstract bool TryParse(ReadOnlySpan<char> text, [NotNullWhen(true)] out T? value);
-}
+    static abstract bool TryParse(ReadOnlySpan<char> text, [MaybeNullWhen(false)] out TSelf result);
+    static virtual bool TryParse([AllowNull, NotNullWhen(true)] string? str, [MaybeNullWhen(false)] out TSelf result)
+        => TSelf.TryParse((ReadOnlySpan<char>)str, out result);
+    
+    static bool ISpanParsable<TSelf>.TryParse(ReadOnlySpan<char> text, IFormatProvider? _, [MaybeNullWhen(false)] out TSelf result) 
+        => TSelf.TryParse(text, out result);
+    
+    static bool IParsable<TSelf>.TryParse([AllowNull, NotNullWhen(true)] string? str, IFormatProvider? _, [MaybeNullWhen(false)] out TSelf result)
+        => TSelf.TryParse(str, out result);}
 #endif

@@ -20,7 +20,7 @@ public ref struct TextSplitEnumerator
     }
 
     public ReadOnlySpan<char> Text => _currentTextSlice;
-    public string String => _currentTextSlice.ToString();
+    public string CurrentString => _currentTextSlice.ToString();
     public Range Range => _currentRange;
 
     public TextSplitEnumerator(TextSplitEnumerable splitEnumerable)

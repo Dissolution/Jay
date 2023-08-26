@@ -1,5 +1,3 @@
-using Jay.Text.Building;
-
 namespace Jay.Text.Tests.TextBuilderTests;
 
 public class ReplaceTests

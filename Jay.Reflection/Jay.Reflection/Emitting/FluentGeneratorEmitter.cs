@@ -1,0 +1,339 @@
+﻿using System.Runtime.InteropServices;
+using Jay.Reflection.Validation;
+
+namespace Jay.Reflection.Emitting;
+
+public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitter>
+{
+    private readonly ILGenerator _ilGenerator;
+    private readonly List<Label> _labels;
+    private readonly List<LocalBuilder> _locals;
+
+    public override int Offset => _ilGenerator.ILOffset;
+
+    public SmartEmitter Smart => new SmartEmitter(this);
+
+    public FluentGeneratorEmitter(ILGenerator ilGenerator)
+    {
+        _ilGenerator = ilGenerator;
+        _labels = new(0);
+        _locals = new(0);
+    }
+
+    private EmitLabel CreateEmitLabel(string? lblName, Label label)
+    {
+        var emitLabel = new EmitLabel(
+            name: GetVariableName(lblName, _labels.Count),
+            label: label);
+        _labels.Add(label);
+        _emitLabels.Add(emitLabel);
+        return emitLabel;
+    }
+
+    private Label GetLabel(EmitLabel emitLabel)
+    {
+        return _labels
+            .Where(emitLabel.Equals)
+            .One();
+    }
+
+    private EmitLocal CreateEmitLocal(string? localName, LocalBuilder localBuilder)
+    {
+        var emitLocal = new EmitLocal(
+            name: GetVariableName(localName, _locals.Count),
+            localBuilder: localBuilder);
+        _locals.Add(localBuilder);
+        _emitLocals.Add(emitLocal);
+        return emitLocal;
+    }
+
+    private LocalBuilder GetLocalBuilder(EmitLocal emitLocal)
+    {
+        int index = emitLocal.Index;
+        if ((uint)index < _locals.Count)
+            return _locals[index];
+        throw new ArgumentOutOfRangeException(
+            nameof(emitLocal),
+            emitLocal,
+            CodeBuilder.Render(emitLocal));
+    }
+
+#region Emit OpCode
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode)
+    {
+        _ilGenerator.Emit(opCode);
+        return base.Emit(opCode);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, byte arg)
+    {
+        _ilGenerator.Emit(opCode, arg);
+        return base.Emit(opCode, arg);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, sbyte arg)
+    {
+        _ilGenerator.Emit(opCode, arg);
+        return base.Emit(opCode, arg);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, short arg)
+    {
+        _ilGenerator.Emit(opCode, arg);
+        return base.Emit(opCode, arg);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, int arg)
+    {
+        _ilGenerator.Emit(opCode, arg);
+        return base.Emit(opCode, arg);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, long arg)
+    {
+        _ilGenerator.Emit(opCode, arg);
+        return base.Emit(opCode, arg);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, float arg)
+    {
+        _ilGenerator.Emit(opCode, arg);
+        return base.Emit(opCode, arg);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, double arg)
+    {
+        _ilGenerator.Emit(opCode, arg);
+        return base.Emit(opCode, arg);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, string? str)
+    {
+        _ilGenerator.Emit(opCode, str ?? "");
+        return base.Emit(opCode, str);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, EmitLabel emitLabel)
+    {
+        var label = GetLabel(emitLabel);
+        _ilGenerator.Emit(opCode, label);
+        return base.Emit(opCode, emitLabel);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, params EmitLabel[] emitLabels)
+    {
+        var labels = Array.ConvertAll(emitLabels, el => GetLabel(el));
+        _ilGenerator.Emit(opCode, labels);
+        return base.Emit(opCode, emitLabels);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, EmitLocal emitLocal)
+    {
+        var local = GetLocalBuilder(emitLocal);
+        _ilGenerator.Emit(opCode, local);
+        return base.Emit(opCode, emitLocal);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, FieldInfo field)
+    {
+        _ilGenerator.Emit(opCode, field);
+        return base.Emit(opCode, field);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, ConstructorInfo ctor)
+    {
+        _ilGenerator.Emit(opCode, ctor);
+        return base.Emit(opCode, ctor);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, MethodInfo method)
+    {
+        _ilGenerator.Emit(opCode, method);
+        return base.Emit(opCode, method);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, Type type)
+    {
+        _ilGenerator.Emit(opCode, type);
+        return base.Emit(opCode, type);
+    }
+
+    public override FluentGeneratorEmitter Emit(OpCode opCode, SignatureHelper signature)
+    {
+        _ilGenerator.Emit(opCode, signature);
+        return base.Emit(opCode, signature);
+    }
+
+#endregion
+
+#region Try/Catch/Finally
+
+    public override FluentGeneratorEmitter BeginExceptionBlock(
+        out EmitLabel emitLabel,
+        [CallerArgumentExpression(nameof(emitLabel))]
+        string lblName = "")
+    {
+        var label = _ilGenerator.BeginExceptionBlock();
+        emitLabel = CreateEmitLabel(lblName, label);
+        return Emit(GeneratorEmission.BeginExceptionBlock(emitLabel));
+    }
+
+    public override FluentGeneratorEmitter BeginCatchBlock(Type exceptionType)
+    {
+        _ilGenerator.BeginCatchBlock(exceptionType);
+        return base.BeginCatchBlock(exceptionType);
+    }
+
+    public override FluentGeneratorEmitter BeginFinallyBlock()
+    {
+        _ilGenerator.BeginFinallyBlock();
+        return base.BeginFinallyBlock();
+    }
+
+    public override FluentGeneratorEmitter BeginExceptFilterBlock()
+    {
+        _ilGenerator.BeginExceptFilterBlock();
+        return base.BeginExceptFilterBlock();
+    }
+
+    public override FluentGeneratorEmitter BeginFaultBlock()
+    {
+        _ilGenerator.BeginFaultBlock();
+        return base.BeginFaultBlock();
+    }
+
+    public override FluentGeneratorEmitter EndExceptionBlock()
+    {
+        _ilGenerator.EndExceptionBlock();
+        return base.EndExceptionBlock();
+    }
+
+#endregion
+
+#region Scope
+
+    public override FluentGeneratorEmitter BeginScope()
+    {
+        _ilGenerator.BeginScope();
+        return base.BeginScope();
+    }
+
+    public override FluentGeneratorEmitter EndScope()
+    {
+        _ilGenerator.EndScope();
+        return base.EndScope();
+    }
+
+    public override FluentGeneratorEmitter UsingNamespace(string nameSpace)
+    {
+        _ilGenerator.UsingNamespace(nameSpace);
+        return base.UsingNamespace(nameSpace);
+    }
+
+#endregion
+
+#region Locals
+
+    public override FluentGeneratorEmitter DeclareLocal(
+        Type type,
+        bool isPinned,
+        out EmitLocal emitLocal,
+        [CallerArgumentExpression(nameof(emitLocal))]
+        string localName = "")
+    {
+        var localBuilder = _ilGenerator.DeclareLocal(type, isPinned);
+        emitLocal = CreateEmitLocal(localName, localBuilder);
+        return Emit(GeneratorEmission.DeclareLocal(emitLocal));
+    }
+
+#endregion
+
+#region Labels
+
+    public override FluentGeneratorEmitter DefineLabel(
+        out EmitLabel emitLabel,
+        [CallerArgumentExpression(nameof(emitLabel))]
+        string lblName = "")
+    {
+        var label = _ilGenerator.DefineLabel();
+        emitLabel = CreateEmitLabel(lblName, label);
+        return Emit(GeneratorEmission.DefineLabel(emitLabel));
+    }
+
+    public override FluentGeneratorEmitter MarkLabel(EmitLabel emitLabel)
+    {
+        var label = GetLabel(emitLabel);
+        _ilGenerator.MarkLabel(label);
+        return Emit(GeneratorEmission.MarkLabel(emitLabel));
+    }
+
+#endregion
+
+#region Method Calling
+
+    public override FluentGeneratorEmitter EmitCall(MethodInfo methodInfo, Type[]? optionalParameterTypes)
+    {
+        _ilGenerator.EmitCall(
+            methodInfo.GetCallOpCode(),
+            methodInfo,
+            optionalParameterTypes);
+        return base.EmitCall(methodInfo, optionalParameterTypes);
+    }
+
+    public override FluentGeneratorEmitter EmitCalli(
+        CallingConventions callingConventions, Type? returnType,
+        Type[]? parameterTypes, Type[]? optionalParameterTypes)
+    {
+        _ilGenerator.EmitCalli(
+            OpCodes.Calli,
+            callingConventions,
+            returnType,
+            parameterTypes,
+            optionalParameterTypes);
+        return base.EmitCalli(
+            callingConventions,
+            returnType,
+            parameterTypes,
+            optionalParameterTypes);
+    }
+#if !NETSTANDARD2_0
+    public override FluentGeneratorEmitter EmitCalli(CallingConvention callingConvention, Type? returnType, Type[]? parameterTypes)
+    {
+        _ilGenerator.EmitCalli(OpCodes.Calli, callingConvention, returnType, parameterTypes);
+        return base.EmitCalli(callingConvention, returnType, parameterTypes);
+    }
+#endif
+
+#endregion
+
+#region ILGenerator
+
+    public FluentGeneratorEmitter WriteLine(string? text)
+    {
+        _ilGenerator.EmitWriteLine(text ?? "");
+        return Emit(GeneratorEmission.WriteLine(text ?? ""));
+    }
+
+    public FluentGeneratorEmitter WriteLine(FieldInfo fieldInfo)
+    {
+        _ilGenerator.EmitWriteLine(fieldInfo);
+        return Emit(GeneratorEmission.WriteLine(fieldInfo));
+    }
+
+    public FluentGeneratorEmitter WriteLine(EmitLocal emitLocal)
+    {
+        var local = GetLocalBuilder(emitLocal);
+        _ilGenerator.EmitWriteLine(local);
+        return Emit(GeneratorEmission.WriteLine(emitLocal));
+    }
+
+    public override FluentGeneratorEmitter ThrowException(Type exceptionType)
+    {
+        Validate.IsExceptionType(exceptionType);
+        _ilGenerator.ThrowException(exceptionType);
+        return Emit(GeneratorEmission.ThrowException(exceptionType));
+    }
+
+#endregion
+}

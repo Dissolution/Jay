@@ -103,7 +103,7 @@ public class SplitTests
             // Their values have to be exactly the same
             Assert.NotNull(stringSplitEnumerator.Current);
             string stringSplitString = stringSplitEnumerator.Current!;
-            string textSplitString = textSplitEnumerator.String;
+            string textSplitString = textSplitEnumerator.CurrentString;
             Assert.Equal(stringSplitString, textSplitString);
             if (stringSplitString != textSplitString) return;
 

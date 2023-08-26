@@ -24,7 +24,7 @@ public sealed partial class Easy :
             .GetProperty("Default", BindingFlags.Public | BindingFlags.Static)
             .ThrowIfNull()
             .GetValue(null)
-            .AsValid<IComparer>();
+            .MustBe<IComparer>();
     }
 
     internal static IComparer<T> FindComparer<T>()

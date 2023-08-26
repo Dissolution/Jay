@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
+﻿// ReSharper disable StringLiteralTypo
 namespace Jay.Tests;
 
 public class NoneTests

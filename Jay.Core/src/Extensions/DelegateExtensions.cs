@@ -22,12 +22,12 @@ public static class EventHandlerExtensions
             Task task = Task.Factory.FromAsync(
                 (callback, state) =>
                 {
-                    var handler = state.AsValid<EventHandler<TArgs>>();
+                    var handler = state.MustBe<EventHandler<TArgs>>();
                     return handler.BeginInvoke(sender, args, callback, state);
                 },
                 result =>
                 {
-                    var handler = result.AsyncState.AsValid<EventHandler<TArgs>>();
+                    var handler = result.AsyncState.MustBe<EventHandler<TArgs>>();
                     try
                     {
                         handler.EndInvoke(result);
@@ -56,14 +56,14 @@ public static class EventHandlerExtensions
         var handlers = eventHandler.GetInvocationList();
         for (var i = 0; i < handlers.Length; i++)
         {
-            var handler = handlers[i].AsValid<EventHandler<TArgs>>();
+            var handler = handlers[i].MustBe<EventHandler<TArgs>>();
             handler.BeginInvoke(sender, args, EndInvoke<TArgs>, handler);
         }
     }
 
     private static void EndInvoke<TArgs>(IAsyncResult result)
     {
-        var handler = result.AsyncState.AsValid<EventHandler<TArgs>>();
+        var handler = result.AsyncState.MustBe<EventHandler<TArgs>>();
         try
         {
             handler.EndInvoke(result);

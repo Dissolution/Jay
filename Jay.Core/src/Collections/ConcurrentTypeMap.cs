@@ -15,6 +15,15 @@ public class ConcurrentTypeMap<TValue> : ConcurrentDictionary<Type, TValue>
     
     public ConcurrentTypeMap(int capacity)
         : base(Environment.ProcessorCount, capacity) { }
+
+    public void Add(KeyValuePair<Type, TValue> pair)
+    {
+        base.TryAdd(pair.Key, pair.Value);
+    }
+    public void Add((Type Key, TValue Value) pair)
+    {
+        base.TryAdd(pair.Key, pair.Value);
+    }
     
     public bool ContainsKey<T>() => base.ContainsKey(typeof(T));
 

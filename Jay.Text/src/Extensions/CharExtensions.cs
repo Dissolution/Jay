@@ -18,6 +18,8 @@ public static class CharExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsAsciiLetter(this char ch) => (ch is >= 'a' and <= 'z') || (ch is >= 'A' and <= 'Z');
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsAsciiLetterOrDigit(this char ch) => IsAsciiLetter(ch) || IsAsciiDigit(ch);
 #else
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsAsciiDigit(this char ch) => char.IsAsciiDigit(ch);
@@ -33,6 +35,8 @@ public static class CharExtensions
 
      [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsAsciiLetter(this char ch) => char.IsAsciiLetter(ch);
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsAsciiLetterOrDigit(this char ch) => char.IsAsciiLetterOrDigit(ch);
 #endif
 }

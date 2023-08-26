@@ -1,6 +1,7 @@
-﻿using System.Runtime.InteropServices;
-#if NETCOREAPP3_1_OR_GREATER
+﻿#if NETCOREAPP3_1_OR_GREATER
 using System.Numerics;
+#else
+using System.Runtime.InteropServices;
 #endif
 
 namespace Jay.Utilities;
@@ -10,6 +11,7 @@ namespace Jay.Utilities;
 /// </summary>
 public static class Maths
 {
+#if !NETCOREAPP3_1_OR_GREATER
     private static ReadOnlySpan<byte> Log2DeBruijn => new byte[32]
     {
         00, 09, 01, 10, 13, 21, 02, 29,
@@ -17,7 +19,7 @@ public static class Maths
         08, 12, 20, 28, 15, 17, 24, 07,
         19, 27, 23, 06, 26, 05, 04, 31,
     };
-    
+
     private static int Log2SoftwareFallback(uint value)
     {
         // No AggressiveInlining due to large method size
@@ -37,6 +39,7 @@ public static class Maths
             // uint|long -> IntPtr cast on 32-bit platforms does expensive overflow checks not needed here
             (IntPtr)(value * 0x07C4ACDDu >> 27));
     }
+#endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint RotateLeft(uint value, int offset)

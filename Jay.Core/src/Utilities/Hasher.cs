@@ -19,7 +19,7 @@ public ref struct Hasher
     private const uint Prime4 = 668_265_263U;
     private const uint Prime5 = 374_761_393U;
 
-    private static unsafe uint CreateSeed()
+    private static uint CreateSeed()
     {
 #if NET48 || NETSTANDARD2_0
         using var rng = RandomNumberGenerator.Create();

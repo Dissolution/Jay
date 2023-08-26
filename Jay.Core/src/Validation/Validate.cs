@@ -1,4 +1,6 @@
-﻿namespace Jay.Validation;
+﻿using System.Diagnostics;
+
+namespace Jay.Validation;
 
 /// <summary>
 /// A utility class for all sort of Validation
@@ -52,6 +54,28 @@ public static class Validate
         if (value is null)
             throw new ArgumentNullException(valueName, exMessage);
     }
+    
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting.
+    public static void IsNotNullOrEmpty(
+        [AllowNull, NotNull]
+        string? str,
+        [CallerArgumentExpression(nameof(str))]
+        string? strName = null)
+    {
+        if (string.IsNullOrEmpty(str))
+            throw new ArgumentNullException(strName);
+    }
+    public static void IsNotNullOrWhiteSpace(
+        [AllowNull, NotNull]
+        string? str,
+        [CallerArgumentExpression(nameof(str))]
+        string? strName = null)
+    {
+        if (string.IsNullOrWhiteSpace(str))
+            throw new ArgumentNullException(strName);
+
+    }
+#pragma warning restore CS8777
 
     public static void IsBetween<T>(T value,
         T inclusiveMinimum,
@@ -158,7 +182,6 @@ public static class Validate
     }
 
 
-  
 
 
 

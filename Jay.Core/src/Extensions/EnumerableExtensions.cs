@@ -1,4 +1,5 @@
 ﻿using Jay.Collections;
+// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 
 namespace Jay.Extensions;
 
@@ -42,6 +43,17 @@ public static class EnumerableExtensions
         return enumerable.SelectMany(i => selectWhere(i));
     }
 
+    public static T One<T>(this IEnumerable<T> enumerable)
+    {
+        using var e = enumerable.GetEnumerator();
+        if (!e.MoveNext())
+            throw new InvalidOperationException("There are no items");
+        var one = e.Current;
+        if (e.MoveNext())
+            throw new InvalidOperationException("There are too many items");
+        return one;
+    }
+    
     [return: NotNullIfNotNull(nameof(defaultValue))]
     public static T? OneOrDefault<T>(this IEnumerable<T>? source, T? defaultValue = default)
     {
@@ -235,8 +247,8 @@ public static class EnumerableExtensions
         return enumerable
             .OrderBy(selectSub, Comparer<TSub>.Create((x, y) =>
             {
-                if (x == null) return y == null ? 0 : -1;
-                if (y == null) return 1;
+                if (x is null) return y is null ? 0 : -1;
+                if (y is null) return 1;
                 return getIndex(x).CompareTo(getIndex(y));
             }));
     }

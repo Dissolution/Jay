@@ -1,4 +1,9 @@
-﻿using static InlineIL.IL;
+﻿#if !(NET48 || NETSTANDARD2_0)
+using System.Runtime.InteropServices;
+#endif
+using Jay.Utilities;
+using static InlineIL.IL;
+
 // ReSharper disable EntityNameCapturedOnly.Local
 
 namespace Jay.Text.Utilities;
@@ -22,9 +27,11 @@ public static partial class TextHelper
             Emit.Cpblk();
         }
 #endif
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void CopyBlock(in char sourcePtr, ref char destPtr, int charCount)
+        internal static void CopyBlock(
+            in char sourcePtr, ref char destPtr,
+            int charCount)
         {
             Emit.Ldarg(nameof(destPtr));
             Emit.Ldarg(nameof(sourcePtr));
@@ -35,7 +42,9 @@ public static partial class TextHelper
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void CopyTo(ReadOnlySpan<char> source, Span<char> dest, int sourceLen)
+        internal static void CopyTo(
+            ReadOnlySpan<char> source, Span<char> dest,
+            int sourceLen)
         {
             CopyBlock(
                 in source.GetPinnableReference(),
@@ -44,7 +53,9 @@ public static partial class TextHelper
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void CopyTo(string source, Span<char> dest, int sourceLen)
+        internal static void CopyTo(
+            string source, Span<char> dest,
+            int sourceLen)
         {
 #if !NETCOREAPP3_1_OR_GREATER
             unsafe
@@ -62,6 +73,23 @@ public static partial class TextHelper
                 in source.GetPinnableReference(),
                 ref dest.GetPinnableReference(),
                 sourceLen);
+#endif
+        }
+
+        /// <summary>
+        /// This is dangerous!
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<char> AsSpan(in string text)
+        {
+            ref readonly char ch = ref text.GetPinnableReference();
+#if NET48 || NETSTANDARD2_0
+            unsafe
+            {
+                return new Span<char>(Scary.InToVoidPointer(in ch), text.Length);
+            }
+#else
+            return MemoryMarshal.CreateSpan<char>(ref Scary.InToRef(in ch), text.Length);
 #endif
         }
     }

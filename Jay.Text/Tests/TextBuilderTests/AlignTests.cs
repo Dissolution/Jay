@@ -1,5 +1,4 @@
 ﻿using Jay.Collections.Iteration;
-using Jay.Text.Building;
 
 namespace Jay.Text.Tests.TextBuilderTests;
 

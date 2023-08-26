@@ -27,7 +27,7 @@ public readonly ref struct TextSplitEnumerable
         var strings = new List<string>();
         while (e.MoveNext())
         {
-            strings.Add(e.String);
+            strings.Add(e.CurrentString);
         }
         return strings;
     }

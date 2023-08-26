@@ -1,0 +1,1 @@
+﻿https://github.com/dotnet/csharpstandard/blob/draft-v8/standard/conversions.md#104-standard-conversions

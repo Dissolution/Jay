@@ -4,12 +4,24 @@ namespace Jay.Text.Building;
 [InterpolatedStringHandler]
 public ref struct InterpolatedTextBuilder
 {
+    public static implicit operator InterpolatedTextBuilder(string? text)
+    {
+        var builder = new InterpolatedTextBuilder();
+        builder.AppendFormatted(text);
+        return builder;
+    }
+    
+    
     private readonly TextWriter _textWriter;
+
+    public InterpolatedTextBuilder()
+    {
+        _textWriter = new();
+    }
     
     public InterpolatedTextBuilder(int literalLength, int formattedCount)
     {
-        _textWriter = new();
-        throw new InvalidOperationException();
+        _textWriter = new(BuilderHelper.GetInterpolatedStartCapacity(literalLength, formattedCount));
     }
     
     public InterpolatedTextBuilder(int literalLength, int formattedCount, TextWriter textWriter)
@@ -30,6 +42,11 @@ public ref struct InterpolatedTextBuilder
     public void AppendFormatted(scoped ReadOnlySpan<char> text)
     {
         _textWriter.Write(text);
+    }
+    
+    public void AppendFormatted(string? str)
+    {
+        _textWriter.Write(str);
     }
     
     public void AppendFormatted<T>(T? value)
