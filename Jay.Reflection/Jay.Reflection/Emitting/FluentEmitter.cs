@@ -918,7 +918,7 @@ public class FluentEmitter<TSelf> : IToCode
 
     public virtual TSelf ThrowException(Type exceptionType)
     {
-        Validate.IsExceptionType(exceptionType);
+        ValidateType.IsExceptionType(exceptionType);
 
         var ctor = MemberSearch.OneOrDefault<ConstructorInfo>(
             exceptionType,
@@ -1507,7 +1507,7 @@ public class FluentEmitter<TSelf> : IToCode
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.unbox"/>
     public  TSelf Unbox(Type valueType)
     {
-        Validate.IsValueType(valueType);
+        ValidateType.IsValueType(valueType);
         return Emit(OpCodes.Unbox, valueType);
     }
 
@@ -1543,7 +1543,7 @@ public class FluentEmitter<TSelf> : IToCode
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.castclass"/>
     public  TSelf Castclass(Type classType)
     {
-        Validate.IsClassOrInterfaceType(classType);
+        ValidateType.IsClassOrInterfaceType(classType);
         return Emit(OpCodes.Castclass, classType);
     }
 
@@ -1859,7 +1859,7 @@ public class FluentEmitter<TSelf> : IToCode
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.cpobj"/>
     public TSelf Cpobj(Type valueType)
     {
-        Validate.IsValueType(valueType);
+        ValidateType.IsValueType(valueType);
         return Emit(OpCodes.Cpobj, valueType);
     }
 
@@ -1889,7 +1889,7 @@ public class FluentEmitter<TSelf> : IToCode
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.initobj"/>
     public TSelf Initobj(Type valueType)
     {
-        Validate.IsValueType(valueType);
+        ValidateType.IsValueType(valueType);
         return Emit(OpCodes.Initobj, valueType);
     }
 
@@ -2944,7 +2944,7 @@ public class FluentEmitter<TSelf> : IToCode
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.sizeof"/>
     public  TSelf Sizeof(Type type)
     {
-        Validate.IsValueType(type);
+        ValidateType.IsValueType(type);
         return Emit(OpCodes.Sizeof, type);
     }
 

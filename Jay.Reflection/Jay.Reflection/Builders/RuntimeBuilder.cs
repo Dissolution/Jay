@@ -1,4 +1,5 @@
-﻿using Jay.Reflection.Emitting;
+﻿using System.Collections.Concurrent;
+using Jay.Reflection.Emitting;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Info;
 using Jay.Reflection.Searching;
@@ -9,6 +10,8 @@ namespace Jay.Reflection.Builders;
 
 public static class RuntimeBuilder
 {
+    private static readonly ConcurrentDictionary<string, None> _memberNames = new(Environment.ProcessorCount, 0);
+    
     public static AssemblyBuilder AssemblyBuilder { get; }
 
     public static ModuleBuilder ModuleBuilder { get; }
@@ -20,13 +23,31 @@ public static class RuntimeBuilder
         ModuleBuilder = AssemblyBuilder.DefineDynamicModule($"{nameof(RuntimeBuilder)}_Module");
     }
 
+    private static string RegisterName(string name)
+    {
+        int ctr = 1;
+        while (!_memberNames.TryAdd(name, default))
+        {
+            name = $"{name}_{ctr}";
+            ctr += 1;
+        }
+        return name;
+    }
+    
+    private static string GetMemberName(MemberTypes memberType, InterpolatedCodeBuilder suggestion)
+    {
+        string sugg = suggestion.ToStringAndDispose();
+        string name = MemberNaming.CreateMemberName(memberType, sugg);
+        return RegisterName(name);
+    }
+    
     public static DynamicMethod CreateDynamicMethod(
         DelegateInfo signature,
         InterpolatedCodeBuilder name = default)
     {
         return new DynamicMethod(
             // ensure we have a valid name
-            name: MemberNaming.CreateMemberName(MemberTypes.Method, name.ToStringAndDispose()),
+            name: GetMemberName(MemberTypes.Method, name),
             // only valid combination
             attributes: MethodAttributes.Public | MethodAttributes.Static,
             // only valid value
@@ -208,7 +229,7 @@ public static class RuntimeBuilder
 
     public static CustomAttributeBuilder GetCustomAttributeBuilder(Type attributeType, params object[] ctorArgs)
     {
-        Validate.IsAttributeType(attributeType);
+        ValidateType.IsAttributeType(attributeType);
         var search = new MemberSearchOptions
         {
             ParameterTypes = ctorArgs.GetElementTypes(typeof(object)),

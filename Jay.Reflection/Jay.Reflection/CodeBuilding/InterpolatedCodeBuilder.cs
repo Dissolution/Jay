@@ -15,7 +15,7 @@ public ref struct InterpolatedCodeBuilder
     }
     
     
-    private readonly CodeBuilder _codeBuilder;
+    private readonly CodeBuilder? _codeBuilder;
 
     public InterpolatedCodeBuilder()
     {
@@ -34,32 +34,32 @@ public ref struct InterpolatedCodeBuilder
     
     public void AppendLiteral(string literal)
     {
-        _codeBuilder.Write(literal);
+        _codeBuilder?.Write(literal);
     }
 
     public void AppendFormatted(char ch)
     {
-        _codeBuilder.Write(ch);
+        _codeBuilder?.Write(ch);
     }
     
     public void AppendFormatted(scoped ReadOnlySpan<char> text)
     {
-        _codeBuilder.Write(text);
+        _codeBuilder?.Write(text);
     }
     
     public void AppendFormatted(string? str)
     {
-        _codeBuilder.Write(str);
+        _codeBuilder?.Write(str);
     }
     
     public void AppendFormatted<T>(T? value)
     {
-        _codeBuilder.Format<T>(value);
+        _codeBuilder?.Format<T>(value);
     }
     
     public void AppendFormatted<T>(T? value, string? format)
     {
-        _codeBuilder.Format<T>(value, format);
+        _codeBuilder?.Format<T>(value, format);
     }
 
     public void Dispose()
@@ -71,14 +71,14 @@ public ref struct InterpolatedCodeBuilder
 
     public string ToStringAndDispose()
     {
-        var str = _codeBuilder.ToString();
+        var str = this.ToString();
         this.Dispose();
         return str;
     }
     
     public override string ToString()
     {
-        return _codeBuilder.ToString();
+        return _codeBuilder?.ToString() ?? "";
     }
 
     public override bool Equals(object? obj) => throw new NotSupportedException();

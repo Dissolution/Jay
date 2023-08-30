@@ -3,10 +3,16 @@
 public sealed record class MemberSearchOptions : IToCode
 {
     public Visibility Visibility { get; init; } = Visibility.Any;
+
     public string? Name { get; init; } = null;
+
     public NameMatchOptions NameMatch { get; init; } = NameMatchOptions.Exact;
+
     public Type? ReturnType { get; init; } = null;
+
     public Type[]? ParameterTypes { get; init; } = null;
+
+    public int? GenericTypeCount { get; init; } = null;
     //public bool ConvertableTypeMatch { get; init; } = false;
 
     public BindingFlags BindingFlags
@@ -22,7 +28,6 @@ public sealed record class MemberSearchOptions : IToCode
 
     public MemberSearchOptions()
     {
-        
     }
 
     public MemberSearchOptions(string? name, NameMatchOptions nameMatchOptions = NameMatchOptions.Exact)
@@ -36,48 +41,59 @@ public sealed record class MemberSearchOptions : IToCode
         this.Name = name;
         this.Visibility = visibility;
     }
-    
-    public MemberSearchOptions(string? name, Visibility visibility, Type returnType)
+
+    public MemberSearchOptions(
+        string? name, Visibility visibility,
+        Type returnType)
     {
         this.Name = name;
         this.Visibility = visibility;
         this.ReturnType = returnType;
     }
 
-    public MemberSearchOptions(string? name, Type? returnType, params Type[]? parameterTypes)
+    public MemberSearchOptions(
+        string? name, Type? returnType,
+        params Type[]? parameterTypes)
     {
         this.Name = name;
         this.ReturnType = returnType;
         this.ParameterTypes = parameterTypes;
     }
-    
+
     private bool MatchesName(string memberName)
     {
-        if (this.Name is null) return true; // match any name
-        if (memberName.Length < Name.Length) return false;
+        if (this.Name is null)
+            return true; // match any name
+        if (memberName.Length < Name.Length)
+            return false;
         if (NameMatch == NameMatchOptions.Exact)
             return string.Equals(memberName, Name);
         if (NameMatch.HasFlag(NameMatchOptions.IgnoreCase))
         {
             if (NameMatch.HasFlag(NameMatchOptions.Contains))
                 return memberName.Contains(Name, StringComparison.OrdinalIgnoreCase);
-            if (NameMatch.HasFlag(NameMatchOptions.StartsWith) && memberName.StartsWith(Name, StringComparison.OrdinalIgnoreCase)) 
+            if (NameMatch.HasFlag(NameMatchOptions.StartsWith) && memberName.StartsWith(Name, StringComparison.OrdinalIgnoreCase))
                 return true;
-            if (NameMatch.HasFlag(NameMatchOptions.EndsWith) && memberName.EndsWith(Name, StringComparison.OrdinalIgnoreCase)) 
+            if (NameMatch.HasFlag(NameMatchOptions.EndsWith) && memberName.EndsWith(Name, StringComparison.OrdinalIgnoreCase))
                 return true;
-            return string.Equals(memberName, Name, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(
+                memberName,
+                Name,
+                StringComparison.OrdinalIgnoreCase);
         }
         if (NameMatch.HasFlag(NameMatchOptions.Contains))
             return memberName.Contains(Name);
-        if (NameMatch.HasFlag(NameMatchOptions.StartsWith) && memberName.StartsWith(Name)) 
+        if (NameMatch.HasFlag(NameMatchOptions.StartsWith) && memberName.StartsWith(Name))
             return true;
-        if (NameMatch.HasFlag(NameMatchOptions.EndsWith) && memberName.EndsWith(Name)) 
+        if (NameMatch.HasFlag(NameMatchOptions.EndsWith) && memberName.EndsWith(Name))
             return true;
         return string.Equals(memberName, Name);
     }
+
     private bool MatchesReturnType(Type returnType)
     {
-        if (ReturnType is null) return true;
+        if (ReturnType is null)
+            return true;
         // if (ConvertableTypeMatch)
         // {
         //     if (!RuntimeMethodAdapter.CanAdaptType(returnType, ReturnType))
@@ -90,6 +106,7 @@ public sealed record class MemberSearchOptions : IToCode
         }
         return true;
     }
+
     private bool MatchesParameterType(Type sourceType, Type destType)
     {
         // if (ConvertableTypeMatch)
@@ -104,10 +121,13 @@ public sealed record class MemberSearchOptions : IToCode
         }
         return true;
     }
+
     private bool MatchesParameterTypes(Type[] argTypes)
     {
-        if (ParameterTypes is null) return true;
-        if (ParameterTypes.Length != argTypes.Length) return false;
+        if (ParameterTypes is null)
+            return true;
+        if (ParameterTypes.Length != argTypes.Length)
+            return false;
         for (var i = 0; i < argTypes.Length; i++)
         {
             if (!MatchesParameterType(ParameterTypes[i], argTypes[i]))
@@ -115,51 +135,66 @@ public sealed record class MemberSearchOptions : IToCode
         }
         return true;
     }
-    
+
     public bool Matches(MemberInfo member)
     {
         // We always know visibility matches, as we passed it to get this member
-        
-        if (!MatchesName(member.Name)) return false;
+
+        if (!MatchesName(member.Name))
+            return false;
+
+        if (GenericTypeCount.TryGetValue(out var genericTypeCount) &&
+            member.GenericTypeCount() != genericTypeCount)
+            return false;
 
         if (member is FieldInfo field)
         {
-            if (!MatchesReturnType(field.FieldType)) return false;
-            if (!MatchesParameterTypes(Type.EmptyTypes)) return false;
+            if (!MatchesReturnType(field.FieldType))
+                return false;
+            if (!MatchesParameterTypes(Type.EmptyTypes))
+                return false;
             return true;
         }
-        
+
         if (member is PropertyInfo property)
         {
-            if (!MatchesReturnType(property.PropertyType)) return false;
-            if (!MatchesParameterTypes(property.GetIndexParameterTypes())) return false;
+            if (!MatchesReturnType(property.PropertyType))
+                return false;
+            if (!MatchesParameterTypes(property.GetIndexParameterTypes()))
+                return false;
             return true;
         }
-        
+
         if (member is EventInfo eventInfo)
         {
-            if (!MatchesReturnType(eventInfo.EventHandlerType!)) return false;
-            if (!MatchesParameterTypes(Type.EmptyTypes)) return false;
+            if (!MatchesReturnType(eventInfo.EventHandlerType!))
+                return false;
+            if (!MatchesParameterTypes(Type.EmptyTypes))
+                return false;
             return true;
         }
-        
+
         if (member is ConstructorInfo ctor)
         {
-            if (!MatchesReturnType(ctor.DeclaringType!)) return false;
-            if (!MatchesParameterTypes(ctor.GetParameterTypes())) return false;
+            if (!MatchesReturnType(ctor.DeclaringType!))
+                return false;
+            if (!MatchesParameterTypes(ctor.GetParameterTypes()))
+                return false;
             return true;
         }
-        
+
         if (member is MethodInfo method)
         {
-            if (!MatchesReturnType(method.ReturnType!)) return false;
-            if (!MatchesParameterTypes(method.GetParameterTypes())) return false;
+            if (!MatchesReturnType(method.ReturnType!))
+                return false;
+            if (!MatchesParameterTypes(method.GetParameterTypes()))
+                return false;
             return true;
         }
 
         throw new NotImplementedException();
     }
-    
+
     public void WriteCodeTo(CodeBuilder codeBuilder)
     {
         if (Visibility != Visibility.None)

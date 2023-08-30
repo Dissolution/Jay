@@ -12,6 +12,21 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Using Include="System.Collections.Immutable"/>
+        <Using Include="System.Diagnostics"/>
+        <Using Include="System.Diagnostics.CodeAnalysis"/>
+        <Using Include="System.Reflection"/>
+        <Using Include="Microsoft.CodeAnalysis"/>
+        <Using Include="Microsoft.CodeAnalysis.CSharp"/>
+        <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax"/>
+        <Using Include="Jay.Extensions"/>
+        <Using Include="Jay.Reflection"/>
+        <Using Include="Jay.Reflection.Extensions"/>
+        <Using Include="Jay.SourceGen.Extensions"/>
+        <Using Include="Jay.Reflection.CodeBuilding"/>
+    </ItemGroup>
+    
+    <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -23,5 +38,11 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>        
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\Jay.Core\src\Jay.Core.csproj" />
+      <ProjectReference Include="..\..\Jay.Reflection\Jay.Reflection\Jay.Reflection.csproj" />
+      <ProjectReference Include="..\..\Jay.Text\src\Jay.Text.csproj" />
     </ItemGroup>
 </Project>

@@ -32,8 +32,8 @@ public class RuntimeDelegateBuilder : IToCode
 
     public Delegate CreateDelegate()
     {
-        string il = CodeBuilder.Render(this.Emitter);
-        Debugger.Break();
+        //string il = CodeBuilder.Render(this.Emitter);
+        //Debugger.Break();
         return _dynamicMethod.CreateDelegate(_delegateInfo.DelegateType);
     }
 

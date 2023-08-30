@@ -41,14 +41,6 @@ public /* static */ partial class ReflectedException
                     .Emit(OpCodes.Ret);
             });
     }
-
-    public static TException Create<TException>(
-        InterpolatedCodeBuilder message,
-        params object?[] args)
-        where TException : Exception
-    {
-        throw new NotImplementedException();
-    }
 }
 
 /// <summary>

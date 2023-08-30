@@ -1,6 +1,8 @@
-﻿namespace Jay.Reflection.Validation;
+﻿using Jay.Reflection.Exceptions;
 
-internal static class Validate
+namespace Jay.Reflection.Validation;
+
+internal static class ValidateType
 {
     public static void IsDelegateType([AllowNull, NotNull] Type? type, [CallerArgumentExpression(nameof(type))] string? typeParamName = null)
     {
@@ -13,7 +15,7 @@ internal static class Validate
             throw new ArgumentException(CodeBuilder.Render($"The specified type '{type}' is not a Delegate"), typeParamName);
         }
     }
-    
+
     public static void IsExceptionType([AllowNull, NotNull] Type? type, [CallerArgumentExpression(nameof(type))] string? typeParamName = null)
     {
         if (type is null)
@@ -25,7 +27,7 @@ internal static class Validate
             throw new ArgumentException(CodeBuilder.Render($"The specified type '{type}' is not an Exception"), typeParamName);
         }
     }
-    
+
     public static void IsAttributeType([AllowNull, NotNull] Type? type, [CallerArgumentExpression(nameof(type))] string? typeParamName = null)
     {
         if (type is null)
@@ -37,7 +39,7 @@ internal static class Validate
             throw new ArgumentException(CodeBuilder.Render($"The specified type '{type}' is not an Attribute"), typeParamName);
         }
     }
-    
+
     public static void IsValueType([AllowNull, NotNull] Type? type, [CallerArgumentExpression(nameof(type))] string? typeParamName = null)
     {
         if (type is null)
@@ -49,8 +51,9 @@ internal static class Validate
             throw new ArgumentException(CodeBuilder.Render($"The given type '{type}' must be a value type"), typeParamName);
         }
     }
-    
-    public static void IsClassOrInterfaceType([AllowNull, NotNull] Type? type, [CallerArgumentExpression(nameof(type))] string? typeParamName = null)
+
+    public static void IsClassOrInterfaceType(
+        [AllowNull, NotNull] Type? type, [CallerArgumentExpression(nameof(type))] string? typeParamName = null)
     {
         if (type is null)
         {
@@ -61,7 +64,7 @@ internal static class Validate
             throw new ArgumentException(CodeBuilder.Render($"The given type '{type}' must be a class or interface type"), typeParamName);
         }
     }
-    
+
     public static void IsStaticType([AllowNull, NotNull] Type? type, [CallerArgumentExpression(nameof(type))] string? typeParamName = null)
     {
         if (type is null)
@@ -74,7 +77,25 @@ internal static class Validate
         }
     }
 
-    public static T[] LengthIs<T>([AllowNull, NotNull] T[]? array, int length,
+    public static void IsEnum(
+        [AllowNull, NotNull] Type? type,
+        [CallerArgumentExpression(nameof(type))]
+        string? typeParameterName = null)
+    {
+        if (type is null)
+        {
+            throw new ArgumentNullException(typeParameterName);
+        }
+        if (!type.IsValueType || !type.IsEnum)
+        {
+            throw new ArgumentException(
+                CodeBuilder.Render($"The given type '{type}' must be an enum type"), 
+                typeParameterName);
+        }
+    }
+
+    public static T[] LengthIs<T>(
+        [AllowNull, NotNull] T[]? array, int length,
         [CallerArgumentExpression(nameof(array))]
         string? arrayParamName = null)
     {

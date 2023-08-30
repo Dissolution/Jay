@@ -7,6 +7,7 @@ namespace Jay.Reflection.Adapters.Args;
 public partial record Arg : IToCode
 {
     public static implicit operator Arg(Type? type) => new Arg.Stack { Type = type ?? typeof(void) };
+    public static implicit operator Arg(EmitLocal local) => new Arg.Local(local) { Type = local.Type };
     public static implicit operator Arg(ParameterInfo parameter) => new Arg.Parameter(parameter) { Type = parameter.ParameterType };
     
     public partial record Field(Arg? Instance, FieldInfo FieldInfo);

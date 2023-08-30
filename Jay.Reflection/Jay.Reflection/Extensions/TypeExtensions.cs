@@ -27,7 +27,8 @@ public static class TypeExtensions
     public static Visibility Visibility(this Type? type)
     {
         var visibility = None;
-        if (type is null) return visibility;
+        if (type is null)
+            return visibility;
         if (type.IsStatic())
             visibility |= Static;
         else
@@ -46,71 +47,83 @@ public static class TypeExtensions
     private static bool IsPublic(Type type)
     {
         return type.IsVisible
-               && type.IsPublic
-               && !type.IsNotPublic
-               && !type.IsNested
-               && !type.IsNestedPublic
-               && !type.IsNestedFamily
-               && !type.IsNestedPrivate
-               && !type.IsNestedAssembly
-               && !type.IsNestedFamORAssem
-               && !type.IsNestedFamANDAssem;
+            && type.IsPublic
+            && !type.IsNotPublic
+            && !type.IsNested
+            && !type.IsNestedPublic
+            && !type.IsNestedFamily
+            && !type.IsNestedPrivate
+            && !type.IsNestedAssembly
+            && !type.IsNestedFamORAssem
+            && !type.IsNestedFamANDAssem;
     }
 
     private static bool IsInternal(Type type)
     {
         return !type.IsVisible
-               && !type.IsPublic
-               && type.IsNotPublic
-               && !type.IsNested
-               && !type.IsNestedPublic
-               && !type.IsNestedFamily
-               && !type.IsNestedPrivate
-               && !type.IsNestedAssembly
-               && !type.IsNestedFamORAssem
-               && !type.IsNestedFamANDAssem;
+            && !type.IsPublic
+            && type.IsNotPublic
+            && !type.IsNested
+            && !type.IsNestedPublic
+            && !type.IsNestedFamily
+            && !type.IsNestedPrivate
+            && !type.IsNestedAssembly
+            && !type.IsNestedFamORAssem
+            && !type.IsNestedFamANDAssem;
     }
 
     // only nested types can be declared "protected"
     private static bool IsProtected(Type type)
     {
         return !type.IsVisible
-               && !type.IsPublic
-               && !type.IsNotPublic
-               && type.IsNested
-               && !type.IsNestedPublic
-               && type.IsNestedFamily
-               && !type.IsNestedPrivate
-               && !type.IsNestedAssembly
-               && !type.IsNestedFamORAssem
-               && !type.IsNestedFamANDAssem;
+            && !type.IsPublic
+            && !type.IsNotPublic
+            && type.IsNested
+            && !type.IsNestedPublic
+            && type.IsNestedFamily
+            && !type.IsNestedPrivate
+            && !type.IsNestedAssembly
+            && !type.IsNestedFamORAssem
+            && !type.IsNestedFamANDAssem;
     }
 
     // only nested types can be declared "private"
     private static bool IsPrivate(Type type)
     {
         return !type.IsVisible
-               && !type.IsPublic
-               && !type.IsNotPublic
-               && type.IsNested
-               && !type.IsNestedPublic
-               && !type.IsNestedFamily
-               && type.IsNestedPrivate
-               && !type.IsNestedAssembly
-               && !type.IsNestedFamORAssem
-               && !type.IsNestedFamANDAssem;
+            && !type.IsPublic
+            && !type.IsNotPublic
+            && type.IsNested
+            && !type.IsNestedPublic
+            && !type.IsNestedFamily
+            && type.IsNestedPrivate
+            && !type.IsNestedAssembly
+            && !type.IsNestedFamORAssem
+            && !type.IsNestedFamANDAssem;
     }
+
+#if !NET6_0_OR_GREATER
+    public static ConstructorInfo? GetConstructor(
+        this Type type,
+        BindingFlags bindingFlags,
+        params Type[] parameterTypes)
+    {
+        return type.GetConstructor(
+            bindingFlags,
+            default,
+            parameterTypes,
+            default);
+    }
+#endif
 
     public static bool HasDefaultConstructor(this Type type, [NotNullWhen(true)] out ConstructorInfo? defaultCtor)
     {
         defaultCtor = type.GetConstructor(
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, 
-            default,
-            Type.EmptyTypes,
-            default);
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            Type.EmptyTypes);
         return defaultCtor is not null;
     }
-    
+
     public static object? GetDefault(this Type type)
     {
         if (type.IsClass || type.IsInterface)
@@ -122,9 +135,9 @@ public static class TypeExtensions
     {
         return Scary.GetUninitializedObject(type);
     }
-    
+
     public static bool IsObjectArray(this Type type) => type == typeof(object[]);
-    
+
     public static ParameterAccess GetAccess(this Type type, out Type baseType)
     {
         if (type.IsByRef)

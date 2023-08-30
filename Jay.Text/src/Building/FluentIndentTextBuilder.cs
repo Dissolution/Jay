@@ -7,6 +7,8 @@ namespace Jay.Text.Building;
 public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
     where TBuilder : FluentIndentTextBuilder<TBuilder>
 {
+    protected static readonly string DefaultIndent = "   ";
+    
     protected Stack<string> _indents;
     
     public FluentIndentTextBuilder() : base()
@@ -32,6 +34,20 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
          */
         var after = Written.Slice(lastNewLineIndex + _newline.Length);
         return after.ToString();
+    }
+    
+    protected internal TBuilder IndentAwareAction(Action<TBuilder> action)
+    {
+        // Capture our original indents
+        var originalIndents = _indents;
+        // Replace them with a single indent based upon this position
+        _indents = new Stack<string>(1);
+        _indents.Push(GetCurrentPositionAsIndent());
+        // perform the action
+        action(_builder);
+        // restore the indents
+        _indents = originalIndents;
+        return _builder;
     }
 
     public override TBuilder NewLine()
@@ -90,15 +106,7 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
             }
             case TBA<TBuilder> tba:
             {
-                // Capture our original indents
-                var originalIndents = _indents;
-                // Replace them with a single indent based upon this position
-                _indents = new Stack<string>(1);
-                _indents.Push(GetCurrentPositionAsIndent());
-                // perform the action
-                tba(_builder);
-                // restore the indents
-                _indents = originalIndents;
+                IndentAwareAction(tb => tba(tb));
                 return;
             }
             case string str:
@@ -137,4 +145,58 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
         Debug.Assert(indent == popped);
         return _builder;
     }
+    /*
+    public TBuilder IndentBlock(Action<TBuilder> indentBlock)
+    {
+        return IndentBlock(DefaultIndent, indentBlock);
+    }
+
+    public TBuilder IndentBlock(string indent, Action<TBuilder> indentBlock)
+    {
+        var oldIndent = _newLineIndent;
+        // We might be on a new line, but not yet indented
+        if (TextHelper.Equals(CurrentLine, oldIndent))
+        {
+            Append(indent);
+        }
+
+        var newIndent = oldIndent + indent;
+        _newLineIndent = newIndent;
+        indentBlock(this);
+        _newLineIndent = oldIndent;
+        // Did we do a newline that we need to decrease?
+        if (Written.EndsWith(newIndent.AsSpan()))
+        {
+            _position -= newIndent.Length;
+            Append(oldIndent);
+        }
+        return this;
+    }
+
+    public TBuilder EnsureOnStartOfNewLine()
+    {
+        if (!Written.EndsWith(_newLineIndent.AsSpan()))
+        {
+            return NewLine();
+        }
+        return this;
+    }
+
+    public TBuilder BracketBlock(Action<TBuilder> bracketBlock, string? indent = null)
+    {
+        indent ??= DefaultIndent;
+        // Trim all trailing whitespace
+        return TrimEnd()
+            // Start a new line
+            .NewLine()
+            // Starting bracket
+            .AppendLine('{')
+            // Starts an indented block inside of that bracket
+            .IndentBlock(indent, bracketBlock)
+            // Be sure that we're not putting the end bracket at the end of text
+            .EnsureOnStartOfNewLine()
+            // Ending bracket
+            .Append('}');
+    }
+    */
 }

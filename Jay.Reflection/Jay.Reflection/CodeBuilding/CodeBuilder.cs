@@ -1,16 +1,13 @@
 ﻿using System.Collections;
+using Jay.Reflection.Text;
 using Jay.Text.Building;
 
 namespace Jay.Reflection.CodeBuilding;
 
-public delegate void CBA(CodeBuilder builder);
-
-public delegate void CBA<in T>(CodeBuilder builder, T value);
-
-public delegate void CBAI<in T>(CodeBuilder builder, T value, int index);
-
 public sealed class CodeBuilder : FluentIndentTextBuilder<CodeBuilder>
 {
+    public static CodeBuilder New => new();
+    
     public static string Render(InterpolatedCodeBuilder code)
     {
         return code.ToStringAndDispose();
@@ -40,6 +37,8 @@ public sealed class CodeBuilder : FluentIndentTextBuilder<CodeBuilder>
     {
     }
     
+    
+    
     public override void Format<T>(T? value, string? format = null, IFormatProvider? provider = null) where T : default
     {
         switch (value)
@@ -59,6 +58,27 @@ public sealed class CodeBuilder : FluentIndentTextBuilder<CodeBuilder>
                 codeBuilderAction(_builder);
                 // restore the indents
                 _indents = originalIndents;
+                return;
+            }
+            case Delegate del:
+            {
+                // Check for CBA compatability
+                CBA? cba = Result.InvokeOrDefault(
+                    () => Delegate.CreateDelegate(
+                        typeof(CBA),
+                        del.Target,
+                        del.Method) as CBA);
+                if (cba is not null)
+                {
+                    this.Format<CBA>(cba);
+                }
+                else
+                {
+                    base.Format<Delegate>(
+                        del,
+                        format,
+                        provider);
+                }
                 return;
             }
             case string str:
@@ -110,4 +130,55 @@ public sealed class CodeBuilder : FluentIndentTextBuilder<CodeBuilder>
         }
     }
 
+    public void Format<T>(T? value, Naming naming)
+    {
+        if (naming == Naming.Field)
+        {
+            this.Write('_');
+            this.Format<T>(value, Naming.Pascal);
+            return;
+        }
+        
+        var written = this.GetWrittenSpan(cb => cb.Format<T>(value));
+        switch (naming)
+        {
+            case Naming.Default:
+                return;
+            case Naming.Lower:
+            {
+                written.ForEach((ref char ch) => ch = char.ToLower(ch));
+                return;
+            }
+            case Naming.Upper:
+            {
+                written.ForEach((ref char ch) => ch = char.ToUpper(ch));
+                return;
+            }
+            case Naming.Camel:
+            {
+                if (written.Length > 0)
+                {
+                    written[0] = char.ToUpper(written[0]);
+                }
+                return;
+            }
+            case Naming.Pascal:
+            {
+                if (written.Length > 0)
+                {
+                    written[0] = char.ToLower(written[0]);
+                }
+                return;
+            }
+           default:
+               return;
+        }
+    }
+
+    public CodeBuilder Append<T>(T? value, Naming naming)
+    {
+        Format<T>(value, naming);
+        return this;
+    }
+    
 }

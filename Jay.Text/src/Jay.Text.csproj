@@ -20,9 +20,6 @@
         <Version>0.1.0</Version>
         <Authors>TimothyJay</Authors>
 
-        <ApplicationIcon>..\BlueJay.ico</ApplicationIcon>
-        <PackageIcon>..\BlueJay.png</PackageIcon>
-
         <!-- lambda expression issue -->
         <NoWarn>8622</NoWarn>
     </PropertyGroup>

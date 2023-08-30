@@ -1,5 +1,7 @@
-﻿using Jay.Reflection.Builders;
+﻿using Jay.Reflection.Adapters.Args;
+using Jay.Reflection.Builders;
 using Jay.Reflection.Caching;
+using Jay.Reflection.Emitting;
 
 namespace Jay.Reflection.Adapters;
 
@@ -9,11 +11,11 @@ public static class FieldAdapter
     {
         return RuntimeBuilder.BuildDelegate<GetValue<TInstance, TValue>>(
             $"get_{field.DeclaringType}_{field.Name}",
-            builder => builder.Emitter.Smart
+            builder => builder.Emitter
                 .LoadInstanceFor(builder.Parameters[0], field)
-                .Load(field)
-                .Cast(field.FieldType, builder.ReturnType)
-                .Return());
+                .Ldfld(field)
+                .EmitCast(field.FieldType, builder.ReturnType)
+                .Ret());
     }
 
     public static GetValue<TInstance, TValue> GetGetValueDelegate<TInstance, TValue>(FieldInfo fieldInfo)
@@ -32,12 +34,11 @@ public static class FieldAdapter
     {
         return RuntimeBuilder.BuildDelegate<SetValue<TInstance, TValue>>(
             $"set_{field.OwnerType()}_{field.Name}",
-            builder => builder.Emitter.Smart
+            builder => builder.Emitter
                 .LoadInstanceFor(builder.Parameters[0], field)
-                .Load(builder.Parameters[1])
-                .Cast(builder.Parameters[1], field.FieldType)
-                .Store(field)
-                .Return());
+                .EmitCast(builder.Parameters[1], field.FieldType)
+                .Stfld(field)
+                .Ret());
     }
 
     public static SetValue<TInstance, TValue> GetSetValueDelegate<TInstance, TValue>(FieldInfo field)

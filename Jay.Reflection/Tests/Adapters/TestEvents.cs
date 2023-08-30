@@ -1,27 +1,22 @@
-﻿using System.ComponentModel;
-using System.Security.Cryptography.X509Certificates;
-using Jay.Reflection.Extensions;
-using Jay.Reflection.Searching;
-
-namespace Jay.Reflection.Tests.Adapters;
+﻿namespace Jay.Reflection.Tests.Adapters;
 
 public class TestEvents
 {
     [Fact]
     public void TestAddHandler()
     {
-        uint counter = 0U;
+        int counter = 0;
         var testNotify = new TestNotify();
         
         testNotify.PropertyChanged += notifyOnPropertyChanged;
-        Assert.Equal(0U, counter);
-        testNotify.Id = TestGenerator.Int();
-        Assert.Equal(1U, counter);
+        Assert.Equal(0, counter);
+        testNotify.Id = EntityGenerator.New<int>();
+        Assert.Equal(1, counter);
         
         testNotify.PropertyChanged -= notifyOnPropertyChanged;
-        Assert.Equal(1U, counter);
-        testNotify.Id = TestGenerator.Int();
-        Assert.Equal(1U, counter);
+        Assert.Equal(1, counter);
+        testNotify.Id = EntityGenerator.New<int>();
+        Assert.Equal(1, counter);
 
         var propertyChangedEvent = typeof(TestNotify)
             .GetEvents(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
@@ -32,9 +27,9 @@ public class TestEvents
         
         
         propertyChangedEvent!.AddHandler(ref testNotify, notifyOnPropertyChanged);
-        Assert.Equal(1U, counter);
-        testNotify.Id = TestGenerator.Int();
-        Assert.Equal(2U, counter);
+        Assert.Equal(1, counter);
+        testNotify.Id = EntityGenerator.New<int>();
+        Assert.Equal(2, counter);
         return;
 
 

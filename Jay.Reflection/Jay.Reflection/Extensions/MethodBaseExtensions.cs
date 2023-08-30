@@ -27,14 +27,20 @@ public static class MethodBaseExtensions
     [return: NotNullIfNotNull(nameof(method))]
     public static Type? ReturnType(this MethodBase? method)
     {
-        if (method is null)
-            return null;
-        if (method is MethodInfo methodInfo)
-            return methodInfo.ReturnType;
-        if (method is ConstructorInfo constructorInfo)
-            return constructorInfo.DeclaringType!;
-        Debug.Fail("How did we get here?");
-        return typeof(void);
+        switch (method)
+        {
+            case null:
+                return null;
+            case MethodInfo methodInfo:
+                return methodInfo.ReturnType;
+            case ConstructorInfo staticCtor when staticCtor.IsStatic:
+                return typeof(void);
+            case ConstructorInfo instanceCtor:
+                return instanceCtor.DeclaringType!;
+            default:
+                Debug.Fail("How did we get here?");
+                return typeof(void);
+        }
     }
 
     /// <summary>

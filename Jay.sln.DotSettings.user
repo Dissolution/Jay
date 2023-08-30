@@ -1,3 +1,7 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=22844e24_002D0efc_002D4805_002Dae4f_002D9595569cb71b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from &amp;lt;Jay.Reflection.Tests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;Project Location="C:\git\Jay\Jay.Reflection\Tests" Presentation="&amp;lt;Jay.Reflection.Tests&amp;gt;" /&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=3de38267_002D2648_002D4630_002D94c2_002Dae3fc9c195ba_0023Jay_002ESourceGen_002ENeo/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=a3bec967_002Dc4d8_002D43b4_002Da409_002D14b803758981_0023Jay_002EText_002EBenchmarks/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=ca65107c_002Df921_002D42c7_002Da306_002D5636415ec9a9_0023Jay_002ESourceGen/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
+	</wpf:ResourceDictionary>

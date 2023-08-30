@@ -4,31 +4,83 @@ using Jay.Reflection.Caching;
 
 namespace Jay.Reflection.Emitting;
 
-[Union]
-public partial record ValueRef
+public static class SmartEmitterExtensions
 {
-    public static implicit operator Type(ValueRef valueRef) => valueRef.Type;
-    
-    public partial record Field(FieldInfo FieldInfo)
+    public static TEmitter LoadInstanceFor<TEmitter>(
+        this TEmitter emitter,
+        Arg arg, MemberInfo member)
+        where TEmitter : FluentEmitter<TEmitter>
     {
-        public override Type Type => this.FieldInfo.FieldType;
+        if (member.TryGetInstanceType(out var instanceType))
+        {
+            // Do we need a value type's instance?
+            if (instanceType.IsValueType)
+            {
+                // We need a reference to the value
+
+                // We have a T?
+                if (arg.RootType == instanceType)
+                {
+                    if (arg.IsByRef)
+                    {
+                        arg.EmitLoad(emitter);
+                    }
+                    else
+                    {
+                        arg.EmitLoadAddress(emitter);
+                    }
+                    return emitter;
+                }
+
+                // We have an object?
+                if (arg.RootType == typeof(object))
+                {
+                    arg.EmitLoad(emitter);
+                    // ref object?
+                    if (arg.IsByRef)
+                    {
+                        emitter.Ldind_Ref();
+                    }
+                    return emitter.Unbox(instanceType);
+                }
+
+                // cannot
+                throw new InvalidOperationException();
+            }
+            // we just need a non-value
+            else
+            {
+                // We have a T?
+                if (arg.RootType == instanceType)
+                {
+                    arg.EmitLoad(emitter);
+                    if (arg.IsByRef)
+                    {
+                        emitter.Ldind(arg.RootType);
+                    }
+                    return emitter;
+                }
+
+                // source is object or implements instance type
+                if (arg.RootType == typeof(object) ||
+                    arg.RootType.Implements(instanceType))
+                {
+                    arg.EmitLoad(emitter);
+                    // ref object?
+                    if (arg.IsByRef)
+                    {
+                        emitter.Ldobj(arg.RootType);
+                    }
+                    return emitter.Castclass(instanceType);
+                }
+
+                // cannot
+                throw new InvalidOperationException();
+            }
+        }
+        // no instance to load, ok!
+        return emitter;
     }
-
-    public partial record Local(EmitLocal EmitLocal)
-    {
-        public override Type Type => this.EmitLocal.Type;
-    }
-
-    public partial record Parameter(ParameterInfo ParameterInfo)
-    {
-        public override Type Type => this.ParameterInfo.ParameterType;
-    }
-    
-    public abstract Type Type { get; }
-
-    public bool IsByRef => Type.IsByRef;
-
-    public Type RootType => IsByRef ? Type.GetElementType().ThrowIfNull() : Type;
 }
 
 public sealed class SmartEmitter : IToCode
@@ -47,21 +99,15 @@ public sealed class SmartEmitter : IToCode
         throw new NotImplementedException();
     }
 
-    public SmartEmitter Load(ValueRef valueRef)
+    public SmartEmitter Load(Arg arg)
     {
-        valueRef.Match(
-            field => _genEmitter.Ldfld(field.FieldInfo),
-            local => _genEmitter.Ldloc(local.EmitLocal),
-            parameter => _genEmitter.Ldarg((ParameterInfo)parameter.ParameterInfo));
+        arg.EmitLoad(_genEmitter);
         return this;
     }
-    
-    public SmartEmitter LoadAddress(ValueRef valueRef)
+
+    public SmartEmitter LoadAddress(Arg arg)
     {
-        valueRef.Match(
-            field => _genEmitter.Ldflda(field.FieldInfo),
-            local => _genEmitter.Ldloca(local.EmitLocal),
-            parameter => _genEmitter.Ldarga((ParameterInfo)parameter.ParameterInfo));
+        arg.EmitLoadAddress(_genEmitter);
         return this;
     }
 
@@ -113,8 +159,8 @@ public sealed class SmartEmitter : IToCode
                     .Ldtoken(type)
                     .Call(MemberCache.Methods.Type_GetTypeFromHandle);
                 return this;
-            case FieldInfo field:
-                return Load(field);
+            // case FieldInfo field:
+            //     return Load(field);
             case ParameterInfo parameter:
                 return Load(parameter);
             case EmitLocal local:
@@ -124,86 +170,19 @@ public sealed class SmartEmitter : IToCode
         }
     }
 
-    public SmartEmitter LoadInstanceFor(ValueRef valueRef, MemberInfo member)
-    {
-        if (member.TryGetInstanceType(out var instanceType))
-        {
-            // Do we need a value type's instance?
-            if (instanceType.IsValueType)
-            {
-                // We need a reference to the value
-                
-                // We have a T?
-                if (valueRef.RootType == instanceType)
-                {
-                    if (valueRef.IsByRef)
-                        return Load(valueRef);
-                    return LoadAddress(valueRef);
-                }
-                
-                // We have an object?
-                if (valueRef.RootType == typeof(object))
-                {
-                    Load(valueRef);
-                    // ref object?
-                    if (valueRef.IsByRef)
-                    {
-                        _genEmitter.Ldind_Ref();
-                    }
-                    _genEmitter.Unbox(instanceType);
-                    return this;
-                }
 
-                // cannot
-                throw new InvalidOperationException();
-            }
-            // we just need a non-value
-            else
-            {
-                // We have a T?
-                if (valueRef.RootType == instanceType)
-                {
-                    Load(valueRef);
-                    if (valueRef.IsByRef)
-                    {
-                        _genEmitter.Ldind(valueRef.RootType);
-                    }
-                    return this;
-                }
-                
-                // source is object or implements instance type
-                if (valueRef.RootType == typeof(object) ||
-                    valueRef.RootType.Implements(instanceType))
-                {
-                    Load(valueRef);
-                    // ref object?
-                    if (valueRef.IsByRef)
-                    {
-                        _genEmitter.Ldobj(valueRef.RootType);
-                    }
-                    _genEmitter.Castclass(instanceType);
-                    return this;
-                }
-                
-                // cannot
-                throw new InvalidOperationException();
-            }
-        }
-        // no instance to load, ok!
-        return this;
-    }
-    
-    
     public SmartEmitter Store(FieldInfo field)
     {
         _genEmitter.Stfld(field);
         return this;
     }
+
     public SmartEmitter Store(EmitLocal local)
     {
         _genEmitter.Stloc(local);
         return this;
     }
+
     public SmartEmitter Store(ParameterInfo parameter)
     {
         _genEmitter.Starg(parameter.Position);
@@ -212,12 +191,19 @@ public sealed class SmartEmitter : IToCode
 
     public SmartEmitter Cast(Type sourceType, Type destType)
     {
-        ArgExtensions.EmitCast(_genEmitter, sourceType, destType);
+        ArgExtensions.EmitCast(
+            _genEmitter,
+            sourceType,
+            destType);
         return this;
     }
-    public SmartEmitter Cast(ValueRef source, Type destType)
+
+    public SmartEmitter Cast(Arg source, Type destType)
     {
-        ArgExtensions.EmitCast(_genEmitter, source.Type, destType);
+        ArgExtensions.EmitCast(
+            _genEmitter,
+            source.Type,
+            destType);
         return this;
     }
 
@@ -236,44 +222,63 @@ public sealed class SmartEmitter : IToCode
     public SmartEmitter DeclareLocal<T>(
         out EmitLocal emitLocal,
         [CallerArgumentExpression(nameof(emitLocal))]
-        string localName = "") => DeclareLocal(typeof(T), false, out emitLocal, localName);
+        string localName = "") => DeclareLocal(
+        typeof(T),
+        false,
+        out emitLocal,
+        localName);
+
     public SmartEmitter DeclareLocal<T>(
         bool isPinned,
         out EmitLocal emitLocal,
         [CallerArgumentExpression(nameof(emitLocal))]
-        string localName = "") => DeclareLocal(typeof(T), isPinned, out emitLocal, localName);
+        string localName = "") => DeclareLocal(
+        typeof(T),
+        isPinned,
+        out emitLocal,
+        localName);
+
     public SmartEmitter DeclareLocal(
         Type type,
         out EmitLocal emitLocal,
         [CallerArgumentExpression(nameof(emitLocal))]
-        string localName = "") => DeclareLocal(type, false, out emitLocal, localName);
-    
+        string localName = "") => DeclareLocal(
+        type,
+        false,
+        out emitLocal,
+        localName);
+
     public SmartEmitter DeclareLocal(
-        Type type, 
-        bool isPinned, 
-        out EmitLocal emitLocal, 
+        Type type,
+        bool isPinned,
+        out EmitLocal emitLocal,
         [CallerArgumentExpression(nameof(emitLocal))]
         string localName = "")
     {
-        _genEmitter.DeclareLocal(type, isPinned, out emitLocal, localName);
+        _genEmitter.DeclareLocal(
+            type,
+            isPinned,
+            out emitLocal,
+            localName);
         return this;
     }
+
     public SmartEmitter Define(
-        out EmitLabel emitLabel, 
+        out EmitLabel emitLabel,
         [CallerArgumentExpression(nameof(emitLabel))]
         string lblName = "")
     {
         _genEmitter.DefineLabel(out emitLabel, lblName);
         return this;
     }
+
     public SmartEmitter Mark(EmitLabel emitLabel)
     {
         _genEmitter.MarkLabel(emitLabel);
         return this;
     }
 
-    
-    
+
     public void WriteCodeTo(CodeBuilder codeBuilder)
     {
         this.Emissions.WriteCodeTo(codeBuilder);

@@ -30,7 +30,7 @@ public sealed class DynamicReflection : DynamicObject
     }
     private DynamicReflection(Type staticType)
     {
-        Validate.IsStaticType(staticType);
+        ValidateType.IsStaticType(staticType);
         _target = null;
         _targetType = staticType;
         _delegateCache = new();

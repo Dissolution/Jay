@@ -11,7 +11,7 @@ namespace Jay;
 /// The opposite of <see cref="M:Option{T}.Some" />,
 /// <see cref="None" /> is <c>==</c> and <see cref="Equals" />
 /// <see cref="None" /> and <c>null</c><br />
-/// Similar to <see cref="void" />, <c>Nil</c>, or <c>()</c> in other languages<br />
+/// Similar to <see cref="void" />, <c>nil</c>, or <c>()</c> in other languages<br />
 /// </summary>
 [StructLayout(LayoutKind.Auto, Size = 0)]
 public readonly struct None :

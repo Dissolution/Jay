@@ -205,7 +205,7 @@ public static class EventAdapter
              * which can be invoked.
              */
             var eventHandlerType = backingField.FieldType;
-            Validate.IsDelegateType(eventHandlerType);
+            ValidateType.IsDelegateType(eventHandlerType);
             var invokeMethod = eventHandlerType
                 .GetInvokeMethod()
                 .ThrowIfNull();

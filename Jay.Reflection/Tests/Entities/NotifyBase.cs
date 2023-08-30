@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace Jay.Reflection.Tests.Entities;
 
@@ -51,7 +50,7 @@ public class TestNotify : NotifyBase
 
     public TestNotify()
     {
-        _id = TestGenerator.Int();
-        _name = TestGenerator.String();
+        _id = EntityGenerator.New<int>();
+        _name = EntityGenerator.New<string>();
     }
 }

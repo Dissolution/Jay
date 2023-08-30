@@ -31,7 +31,7 @@ public sealed class DelegateInfo : IToCode,
 
     public static DelegateInfo For(Type delegateType)
     {
-        Validate.IsDelegateType(delegateType);
+        ValidateType.IsDelegateType(delegateType);
         return new DelegateInfo(delegateType);
     }
 

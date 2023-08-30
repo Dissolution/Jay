@@ -7,7 +7,7 @@ public sealed class GeneratorEmission : Emission
 {
     public static GeneratorEmission BeginCatchBlock(Type exceptionType)
     {
-        Validate.IsExceptionType(exceptionType);
+        ValidateType.IsExceptionType(exceptionType);
         return new(exceptionType);
     }
     public static GeneratorEmission BeginExceptFilterBlock() => new();

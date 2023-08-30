@@ -330,7 +330,7 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
 
     public override FluentGeneratorEmitter ThrowException(Type exceptionType)
     {
-        Validate.IsExceptionType(exceptionType);
+        ValidateType.IsExceptionType(exceptionType);
         _ilGenerator.ThrowException(exceptionType);
         return Emit(GeneratorEmission.ThrowException(exceptionType));
     }
