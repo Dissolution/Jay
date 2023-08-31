@@ -1,7 +1,9 @@
 ﻿namespace Jay.Text.Extensions;
 
 
-
+/// <summary>
+/// Extensions on <see cref="ReadOnlySpan{T}">ReadOnlySpan&lt;char&gt;</see>
+/// </summary>
 public static class TextExtensions
 {
     public static bool StartsWith(this ReadOnlySpan<char> text, char ch)

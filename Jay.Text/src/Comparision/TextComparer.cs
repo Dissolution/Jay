@@ -2,11 +2,11 @@
 
 public abstract class TextComparer : ITextComparer
 {
-    public int Compare(string? x, string? y) => Compare(x.AsSpan(), y.AsSpan());
+    public virtual int Compare(string? x, string? y) => Compare(x.AsSpan(), y.AsSpan());
 
-    public int Compare(char[]? x, char[]? y) => Compare(x.AsSpan(), y.AsSpan());
+    public virtual int Compare(char[]? x, char[]? y) => Compare(x.AsSpan(), y.AsSpan());
 
-    public int Compare(char x, char y) => Compare(x.AsSpan(), y.AsSpan());
+    public virtual int Compare(char x, char y) => Compare(x.AsSpan(), y.AsSpan());
 
     public int Compare(object? x, object? y)
     {

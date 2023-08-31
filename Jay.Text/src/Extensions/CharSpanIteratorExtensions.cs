@@ -1,12 +1,12 @@
 ﻿using Jay.Collections.Iteration;
 
-namespace Jay.Text.Utilities;
+namespace Jay.Text.Extensions;
 
 /// <summary>
-/// Extensions on <see cref="SpanIterator{T}"/> where <typeparamref name="T"/> is <c>char</c>
+/// Extensions on <see cref="SpanIterator{T}">SpanIterator&lt;char&gt;</see>
 /// </summary>
 /// <remarks>
-/// Text has a lot of special ways to be handled with char.IsXYZ() methods
+/// Text has extra common ways to be consumed with char.IsXYZ() methods
 /// </remarks>
 public static class CharSpanIteratorExtensions
 {

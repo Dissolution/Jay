@@ -1,4 +1,5 @@
-﻿#if NET6_0_OR_GREATER
+﻿using Jay.Utilities;
+#if NET6_0_OR_GREATER
 using System.Runtime.InteropServices;
 #endif
 
@@ -27,7 +28,7 @@ public static class CompatExtensions
         {
             fixed (char* strPtr = str)
             {
-                return ref Unsafe.AsRef<char>(strPtr);
+                return ref Scary.PointerToRef<char>(strPtr);
             }
         }
     }

@@ -33,14 +33,14 @@ public static class CasingExtensions
             {
                 Span<char> buffer = stackalloc char[textLen];
                 buffer[0] = textInfo.ToLower(text[0]);
-                TextHelper.Unsafe.CopyTo(text.AsSpan(1), buffer.Slice(1), textLen - 1);
+                TextHelper.CopyTo(text.AsSpan(1), buffer.Slice(1));
                 return buffer.ToString();
             }
             case Casing.Pascal:
             {
                 Span<char> buffer = stackalloc char[textLen];
                 buffer[0] = textInfo.ToUpper(text[0]);
-                TextHelper.Unsafe.CopyTo(text.AsSpan(1), buffer.Slice(1), textLen - 1);
+                TextHelper.CopyTo(text.AsSpan(1), buffer.Slice(1));
                 return buffer.ToString();
             }
             case Casing.Title:
@@ -86,14 +86,14 @@ public static class CasingExtensions
             {
                 Span<char> buffer = stackalloc char[textLen];
                 buffer[0] = textInfo.ToLower(text[0]);
-                TextHelper.Unsafe.CopyTo(text.Slice(1), buffer.Slice(1), textLen - 1);
+                TextHelper.CopyTo(text.Slice(1), buffer.Slice(1));
                 return buffer.ToString();
             }
             case Casing.Pascal:
             {
                 Span<char> buffer = stackalloc char[textLen];
                 buffer[0] = textInfo.ToUpper(text[0]);
-                TextHelper.Unsafe.CopyTo(text.Slice(1), buffer.Slice(1), textLen - 1);
+                TextHelper.CopyTo(text.Slice(1), buffer.Slice(1));
                 return buffer.ToString();
             }
             case Casing.Title:

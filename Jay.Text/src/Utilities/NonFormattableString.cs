@@ -1,8 +1,19 @@
 ﻿namespace Jay.Text.Utilities;
 
 /// <summary>
-/// Provides a way for methods capturing <see cref="FormattableString"/> to exist alongside methods that only care about <see cref="string"/>
+/// Provides a way for methods capturing <see cref="FormattableString"/> to exist alongside
+/// methods that only care about <see cref="string"/>
 /// </summary>
+/// <remarks>
+/// This allows for these two methods to exist side-by-side with proper calling support:<br/>
+/// <c>void DoThing(FormattableString formatString);</c><br/>
+/// <c>void DoThing(NonFormattableString str);</c><br/>
+///
+/// So if you call <c>DoThing($"...")</c> it will pass along the <see cref="FormattableString"/><br/>
+/// and if you call <c>DoThing("...")</c> it will capture the <see cref="string"/> in a <see cref="NonFormattableString"/><br/>
+///
+/// This is used for backwards compatability, as InterpolatedStringHandlers have largely replaced its necessity
+/// </remarks>
 public readonly struct NonFormattableString : 
     IEquatable<NonFormattableString>,
     IEquatable<string>
@@ -20,7 +31,7 @@ public readonly struct NonFormattableString :
     private readonly string? _str;
 
     /// <summary>
-    /// Gets the contained <c>ReadOnlySpan&lt;char&gt;</c>
+    /// Gets the contained <see cref="ReadOnlySpan{T}">ReadOnlySpan&lt;char&gt;</see>
     /// </summary>
     public ReadOnlySpan<char> Text => _str.AsSpan();
     

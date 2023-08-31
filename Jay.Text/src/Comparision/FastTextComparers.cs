@@ -3,8 +3,15 @@
 
 namespace Jay.Text.Comparision;
 
-public sealed class FastTextComparers : ITextComparers
+/// <summary>
+/// The fastest way to Equal, GetHashCode, and Compare text
+/// </summary>
+public sealed class FastTextComparers : ITextComparer, ITextEqualityComparer
 {
+    public static FastTextComparers Default { get; } = new();
+    
+    private FastTextComparers() { }
+    
 #region Compare
     int IComparer<string?>.Compare(string? x, string? y) => Compare(x, y);
     int IComparer<char[]?>.Compare(char[]? x, char[]? y) => Compare(x, y);
@@ -327,39 +334,33 @@ public sealed class FastTextComparers : ITextComparers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetHashCode(string? str)
     {
-        if (str is null) return 0;
-        return str.GetHashCode();
+        return TextComparers.Ordinal.GetHashCode(str);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetHashCode(char[]? chars)
     {
-        return new string(chars).GetHashCode();
+        return TextComparers.Ordinal.GetHashCode(chars);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetHashCode(ReadOnlySpan<char> text)
     {
-        return text.ToString().GetHashCode();
+        return TextComparers.Ordinal.GetHashCode(text);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetHashCode(string? str, StringComparison comparison)
     {
-        if (str is null) return 0;
-        var comparer = new StringComparisonTextComparers(comparison);
-        return comparer.GetHashCode(str);
+        return TextComparers.FromComparison(comparison).GetHashCode(str);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetHashCode(char[]? chars, StringComparison comparison)
     {
-        if (chars is null) return 0;
-        var comparer = new StringComparisonTextComparers(comparison);
-        return comparer.GetHashCode(chars);
+        return TextComparers.FromComparison(comparison).GetHashCode(chars);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetHashCode(ReadOnlySpan<char> text, StringComparison comparison)
     {
-        var comparer = new StringComparisonTextComparers(comparison);
-        return comparer.GetHashCode(text);
+        return TextComparers.FromComparison(comparison).GetHashCode(text);
     }
 #endif
 #endregion

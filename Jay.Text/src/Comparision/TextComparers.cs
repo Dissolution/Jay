@@ -1,6 +1,6 @@
 ﻿namespace Jay.Text.Comparision;
 
-public abstract class TextComparers : ITextComparers
+public abstract class TextComparers : ITextComparer, ITextEqualityComparer
 {
     public static implicit operator TextComparers(StringComparison comparison)
         => FromComparison(comparison);
@@ -11,9 +11,7 @@ public abstract class TextComparers : ITextComparers
     public static TextComparers OrdinalIgnoreCase { get; } = new StringComparisonTextComparers(StringComparison.OrdinalIgnoreCase);
     public static TextComparers Invariant { get; } = new StringComparisonTextComparers(StringComparison.InvariantCulture);
     public static TextComparers InvariantIgnoreCase { get; } = new StringComparisonTextComparers(StringComparison.InvariantCultureIgnoreCase);
-
-    public static ITextComparers Fast { get; } = new FastTextComparers();
-
+    
     public static TextComparers FromComparison(StringComparison comparison)
     {
         return comparison switch

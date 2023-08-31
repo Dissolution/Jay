@@ -15,7 +15,7 @@ internal sealed class StringComparisonTextComparers : TextComparers
             StringComparison.InvariantCultureIgnoreCase => StringComparer.InvariantCultureIgnoreCase,
             StringComparison.Ordinal => StringComparer.Ordinal,
             StringComparison.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase,
-            _ => StringComparer.CurrentCulture
+            _ => StringComparer.CurrentCulture,
         };
     }
 #endif

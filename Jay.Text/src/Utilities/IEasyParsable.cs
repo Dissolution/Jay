@@ -1,6 +1,13 @@
 ﻿#if NET7_0_OR_GREATER
 namespace Jay.Text.Utilities;
 
+/// <summary>
+/// An interface collecting together <see cref="ISpanParsable{TSelf}"/> and <see cref="IParsable{TSelf}"/>
+/// that do not care about <see cref="IFormatProvider"/> support.
+/// It has implicit implementations of all Parse and TryParse methods that use <see cref="IFormatProvider"/>
+/// and provides two abstract/virtual TryParse methods to override instead.
+/// </summary>
+/// <typeparam name="TSelf"></typeparam>
 public interface IEasyParsable<TSelf> : ISpanParsable<TSelf>, IParsable<TSelf>
     where TSelf : IEasyParsable<TSelf>
 {

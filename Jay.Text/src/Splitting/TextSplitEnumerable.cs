@@ -1,5 +1,8 @@
 ﻿namespace Jay.Text.Splitting;
 
+/// <summary>
+/// An <see cref="IEnumerable{T}">IEnumerable&lt;ReadOnlySpan&lt;char&gt;&gt;</see>
+/// </summary>
 public readonly ref struct TextSplitEnumerable 
     // : IEnumerable<ReadOnlySpan<char>>, IEnumerable
 {
@@ -21,6 +24,9 @@ public readonly ref struct TextSplitEnumerable
         StringComparison = stringComparison;
     }
 
+    /// <summary>
+    /// Consume this <see cref="TextSplitEnumerable"/> into a <see cref="IReadOnlyList{T}">IReadOnlyList&lt;string&gt;</see>
+    /// </summary>
     public IReadOnlyList<string> ToListOfStrings()
     {
         var e = GetEnumerator();
@@ -32,6 +38,9 @@ public readonly ref struct TextSplitEnumerable
         return strings;
     }
 
+    /// <summary>
+    /// Consume this <see cref="TextSplitEnumerable"/> into a <see cref="TextSplitList"/>
+    /// </summary>
     public TextSplitList ToList()
     {
         List<Range> ranges = new();

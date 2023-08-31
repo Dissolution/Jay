@@ -4,7 +4,8 @@
 
 ```xml
 <!-- To refer to a specific instance of a generic type -->
-<see cref="System.Span{T}">Span&lt;char&gt;</see>
+<see cref="Span{T}">Span&lt;char&gt;</see>
+<see cref="ReadOnlySpan{T}">ReadOnlySpan&lt;char&gt;</see>
 ```
 
 

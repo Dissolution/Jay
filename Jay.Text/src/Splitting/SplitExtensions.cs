@@ -1,5 +1,10 @@
 ﻿namespace Jay.Text.Splitting;
 
+/// <summary>
+/// Extensions on <see cref="Span{T}">Span&lt;char&gt;</see> and
+/// <see cref="ReadOnlySpan{T}">ReadOnlySpan&lt;char&gt;</see> to create
+/// <see cref="TextSplitEnumerable"/>
+/// </summary>
 public static class SplitExtensions
 {
     public static TextSplitEnumerable TextSplit(
