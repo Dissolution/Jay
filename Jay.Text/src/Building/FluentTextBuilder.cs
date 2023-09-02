@@ -25,7 +25,8 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         _builder = (TBuilder)this;
         _newline = Environment.NewLine;
     }
-    protected FluentTextBuilder(int minCapacity) 
+
+    protected FluentTextBuilder(int minCapacity)
         : base(minCapacity)
     {
         _builder = (TBuilder)this;
@@ -39,7 +40,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         int end = Length;
         return Written[new Range(start: start, end: end)];
     }
-    
+
     public TBuilder Act(TBA<TBuilder> tba)
     {
         tba(_builder);
@@ -47,6 +48,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
     }
 
     public virtual TBuilder NewLine() => Append(_newline);
+
     public TBuilder NewLines(int count)
     {
         for (var i = 0; i < count; i++)
@@ -55,52 +57,105 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         }
         return _builder;
     }
-    
+
 #region Append
     public TBuilder Append(char ch)
     {
         this.Write(ch);
         return _builder;
     }
-    public TBuilder AppendLine(char ch) 
-        => this.Append(ch).NewLine();
+
+    public TBuilder AppendLine(char ch)
+        => this.Append(ch)
+            .NewLine();
 
     public TBuilder Append(scoped ReadOnlySpan<char> text)
     {
         this.Write(text);
         return _builder;
     }
-    public TBuilder AppendLine(scoped ReadOnlySpan<char> text) 
-        => this.Append(text).NewLine();
-    
+
+    public TBuilder AppendLine(scoped ReadOnlySpan<char> text)
+        => this.Append(text)
+            .NewLine();
+
     public TBuilder Append(string? str)
     {
         this.Write(str);
         return _builder;
     }
-    public TBuilder AppendLine(string? str) 
-        => this.Append(str).NewLine();
 
-    
-    public TBuilder Append([InterpolatedStringHandlerArgument("")] ref InterpolatedTextBuilder text)
+    public TBuilder AppendLine(string? str)
+        => this.Append(str)
+            .NewLine();
+
+
+    public TBuilder Append([InterpolatedStringHandlerArgument("")] ref InterpolatedTextWriter text)
     {
         this.Write(ref text);
         return _builder;
     }
-    public TBuilder AppendLine(ref InterpolatedTextBuilder text) 
-        => this.Append(ref text).NewLine();
 
-    public TBuilder Append<T>(T? value, string? format = null, IFormatProvider? provider = null)
+    public TBuilder AppendLine(ref InterpolatedTextWriter text)
+        => this.Append(ref text)
+            .NewLine();
+
+    public TBuilder Append<T>(T? value)
+    {
+        base.Format<T?>(value);
+        return _builder;
+    }
+
+    public TBuilder AppendLine<T>(T? value)
+        => this.Append(value)
+            .NewLine();
+
+    public TBuilder Append<T>(T? value, string? format, IFormatProvider? provider = null)
     {
         base.Format<T?>(value, format, provider);
         return _builder;
     }
-  
-    public TBuilder AppendLine<T>(T? value, string? format = null, IFormatProvider? provider = null) 
-        => this.Append(value, format, provider).NewLine();
+
+    public TBuilder AppendLine<T>(T? value, string? format, IFormatProvider? provider = null)
+        => this.Append(value, format, provider)
+            .NewLine();
+
+    public TBuilder Append<T>(T? value, scoped ReadOnlySpan<char> format, IFormatProvider? provider = null)
+    {
+        base.Format<T?>(value, format, provider);
+        return _builder;
+    }
+
+    public TBuilder AppendLine<T>(T? value, scoped ReadOnlySpan<char> format, IFormatProvider? provider = null)
+        => this.Append(value, format, provider)
+            .NewLine();
 #endregion
 
-    public override void Format<T>(T? value, string? format = null, IFormatProvider? provider = null) where T : default
+    public override void Format<T>(T? value) where T : default
+    {
+        if (value is TBA<TBuilder> tba)
+        {
+            tba(_builder);
+        }
+        else
+        {
+            base.Format(value);
+        }
+    }
+
+    public override void Format<T>(T? value, scoped ReadOnlySpan<char> format, IFormatProvider? provider = null) where T : default
+    {
+        if (value is TBA<TBuilder> tba)
+        {
+            tba(_builder);
+        }
+        else
+        {
+            base.Format(value, format, provider);
+        }
+    }
+    
+    public override void Format<T>(T? value, string? format, IFormatProvider? provider = null) where T : default
     {
         if (value is TBA<TBuilder> tba)
         {
@@ -117,15 +172,18 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
     {
         if (width < 1)
             throw new ArgumentOutOfRangeException(nameof(width), width, "Width must be 1 or greater");
+
         var appendSpan = Allocate(width);
         if (alignment == Alignment.Left)
         {
             appendSpan[0] = ch;
-            appendSpan[1..].Fill(' ');
+            appendSpan[1..]
+                .Fill(' ');
         }
         else if (alignment == Alignment.Right)
         {
-            appendSpan[..^1].Fill(' ');
+            appendSpan[..^1]
+                .Fill(' ');
             appendSpan[^1] = ch;
         }
         else // Center
@@ -147,12 +205,15 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
                     padding = width / 2 - 1;
                 }
             }
-            appendSpan[..padding].Fill(' ');
+            appendSpan[..padding]
+                .Fill(' ');
             appendSpan[padding] = ch;
-            appendSpan[(padding + 1)..].Fill(' ');
+            appendSpan[(padding + 1)..]
+                .Fill(' ');
         }
         return _builder;
     }
+
     public TBuilder Align(string? str, int width, Alignment alignment) => Align(str.AsSpan(), width, alignment);
 
     public TBuilder Align(ReadOnlySpan<char> text, int width, Alignment alignment)
@@ -160,12 +221,14 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         int textLen = text.Length;
         if (textLen == 0)
         {
-            Allocate(width).Fill(' ');
+            Allocate(width)
+                .Fill(' ');
             return _builder;
         }
         int spaces = width - textLen;
         if (spaces < 0)
             throw new ArgumentOutOfRangeException(nameof(width), width, $"Width must be {textLen} or greater");
+
         if (spaces == 0)
         {
             this.Write(text);
@@ -174,17 +237,18 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         var appendSpan = Allocate(width);
         if (alignment == Alignment.Left)
         {
-            TextHelper.Unsafe.CopyTo(text, appendSpan, textLen);
-            appendSpan[textLen..].Fill(' ');
+            TextHelper.Unsafe.CopyBlock(text, appendSpan, textLen);
+            appendSpan[textLen..]
+                .Fill(' ');
         }
         else if (alignment == Alignment.Right)
         {
-            appendSpan[..spaces].Fill(' ');
-            TextHelper.Unsafe.CopyTo(text, appendSpan[spaces..], textLen);
+            appendSpan[..spaces]
+                .Fill(' ');
+            TextHelper.Unsafe.CopyBlock(text, appendSpan[spaces..], textLen);
         }
         else // Center
         {
-
             int frontPadding;
             // Even spacing is easy split
             if (spaces % 2 == 0)
@@ -202,9 +266,11 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
                     frontPadding = (int)Math.Floor(spaces / 2d);
                 }
             }
-            appendSpan[..frontPadding].Fill(' ');
-            TextHelper.Unsafe.CopyTo(text, appendSpan[frontPadding..], textLen);
-            appendSpan[(frontPadding + textLen)..].Fill(' ');
+            appendSpan[..frontPadding]
+                .Fill(' ');
+            TextHelper.Unsafe.CopyBlock(text, appendSpan[frontPadding..], textLen);
+            appendSpan[(frontPadding + textLen)..]
+                .Fill(' ');
         }
         return _builder;
     }
@@ -370,42 +436,43 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
             pos++;
             if (pos < format.Length)
                 return format[pos];
+
             throw createFormatException(format, pos, "Attempted to move past final character");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         static FormatException createFormatException(ReadOnlySpan<char> format, int pos, string? details = null)
         {
-            using var message = new InterpolatedTextBuilder();
-            message.AppendLiteral("Invalid Format at position ");
-            message.AppendFormatted(pos);
-            message.AppendLiteral(Environment.NewLine);
+            using var message = new InterpolatedText();
+            message.Write("Invalid Format at position ");
+            message.Write(pos);
+            message.Write(Environment.NewLine);
             int start = pos - 16;
             if (start < 0)
                 start = 0;
             int end = pos + 16;
             if (end > format.Length)
                 end = format.Length - 1;
-            message.AppendFormatted(format[new Range(start, end)]);
+            message.Write(format[new Range(start, end)]);
             if (details is not null)
             {
-                message.AppendLiteral(Environment.NewLine);
-                message.AppendLiteral("Details: ");
-                message.AppendFormatted(details);
+                message.Write(Environment.NewLine);
+                message.Write("Details: ");
+                message.Write(details);
             }
             return new FormatException(message.ToString());
         }
     }
-    
+
     public TBuilder Format(string format, params object?[] args)
     {
         WriteFormatLine(format.AsSpan(), args);
         return _builder;
     }
 
-    public TBuilder FormatLine(string format, params object?[] args) => Format(format, args).NewLine();
-    
-
+    public TBuilder FormatLine(string format, params object?[] args)
+        => Format(format, args)
+            .NewLine();
 #endregion
 
 
@@ -442,7 +509,9 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         else
         {
             using var e = values.GetEnumerator();
-            if (!e.MoveNext()) return _builder;
+            if (!e.MoveNext())
+                return _builder;
+
             int i = 0;
             perValueIndex(_builder, e.Current, i);
             while (e.MoveNext())
@@ -454,14 +523,13 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         return _builder;
     }
 
-    public TBuilder EnumerateAppend<T>(IEnumerable<T> enumerable) =>
-        Enumerate(enumerable, static (tb, v) => tb.Append(v));
+    public TBuilder EnumerateAppend<T>(IEnumerable<T> enumerable) => Enumerate(enumerable, static (tb, v) => tb.Append(v));
 
-    public TBuilder EnumerateAppendLines<T>(IEnumerable<T> enumerable) =>
-        Enumerate(enumerable, static (tb, v) => tb.AppendLine(v));
+    public TBuilder EnumerateAppendLines<T>(IEnumerable<T> enumerable) => Enumerate(enumerable, static (tb, v) => tb.AppendLine(v));
 
-    public TBuilder EnumerateLines<T>(IEnumerable<T> enumerable, TBA<TBuilder, T> perValue) =>
-        Enumerate(enumerable,
+    public TBuilder EnumerateLines<T>(IEnumerable<T> enumerable, TBA<TBuilder, T> perValue)
+        => Enumerate(
+            enumerable,
             (tb, v) =>
             {
                 perValue(tb, v);
@@ -508,7 +576,9 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         if (values is IList<T> list)
         {
             var count = list.Count;
-            if (count == 0) return _builder;
+            if (count == 0)
+                return _builder;
+
             perValue(_builder, list[0]);
             for (var i = 1; i < count; i++)
             {
@@ -519,7 +589,9 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         else
         {
             using var e = values.GetEnumerator();
-            if (!e.MoveNext()) return _builder;
+            if (!e.MoveNext())
+                return _builder;
+
             perValue(_builder, e.Current);
             while (e.MoveNext())
             {
@@ -536,7 +608,9 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         if (values is IList<T> list)
         {
             var count = list.Count;
-            if (count == 0) return _builder;
+            if (count == 0)
+                return _builder;
+
             perValueIndex(_builder, list[0], 0);
             for (var i = 1; i < count; i++)
             {
@@ -547,7 +621,9 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         else
         {
             using var e = values.GetEnumerator();
-            if (!e.MoveNext()) return _builder;
+            if (!e.MoveNext())
+                return _builder;
+
             int i = 0;
             perValueIndex(_builder, e.Current, i);
             while (e.MoveNext())
@@ -606,6 +682,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         int oldTextLen = oldText.Length;
         if (oldTextLen == 0)
             throw new ArgumentException("Cannot replace null or empty text", nameof(oldText));
+
         int newTextLen = newText.Length;
         // Length zero is okay
 
@@ -640,7 +717,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
                 // Write the range
                 Range range = splitList.Range(i);
                 (int offset, int length) = range.GetOffsetAndLength(Length);
-                TextHelper.Unsafe.CopyTo(
+                TextHelper.Unsafe.CopyBlock(
                     written.Slice(offset, length),
                     written.Slice(writePos), length);
                 writePos += length;
@@ -654,7 +731,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
                 }
 
                 // Write our new text
-                TextHelper.Unsafe.CopyTo(newText, written.Slice(writePos), newTextLen);
+                TextHelper.Unsafe.CopyBlock(newText, written.Slice(writePos), newTextLen);
                 writePos += newTextLen;
             }
 
@@ -668,7 +745,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         {
             // Move current to a buffer
             Span<char> buffer = stackalloc char[Length];
-            TextHelper.Unsafe.CopyTo(written, buffer, Length);
+            TextHelper.Unsafe.CopyBlock(written, buffer, Length);
             // Set us to zero
             Length = 0;
 
@@ -684,7 +761,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
                 writePos += length;
 
                 // If we're at end, we are done
-                if (i == (splitList.Count-1))
+                if (i == (splitList.Count - 1))
                 {
                     Debug.Assert(offset + length == buffer.Length);
                     //Length = writePos;
@@ -705,12 +782,10 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         }
     }
 
-    public TBuilder Replace(string oldText, string? newText, StringComparison comparison = StringComparison.Ordinal)
-        => Replace(oldText.AsSpan(), newText.AsSpan(), comparison);
-
+    public TBuilder Replace(string oldText, string? newText, StringComparison comparison = StringComparison.Ordinal) => Replace(oldText.AsSpan(), newText.AsSpan(), comparison);
 #endregion
 
-    #region Trim
+#region Trim
     public TBuilder TrimStart()
     {
         int start = 0;
@@ -745,7 +820,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         Length = end + 1;
         return _builder;
     }
-    #endregion
+#endregion
 
     public TBuilder Clear()
     {
@@ -753,13 +828,12 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
         Length = 0;
         return _builder;
     }
-    
-    
+
+
     public TBuilder If(
         bool predicateResult,
         TBA<TBuilder>? ifTrue,
-        TBA<TBuilder>? ifFalse = null
-    )
+        TBA<TBuilder>? ifFalse = null)
     {
         if (predicateResult)
         {
@@ -775,8 +849,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
     public TBuilder If(
         Func<bool> predicate,
         TBA<TBuilder>? ifTrue,
-        TBA<TBuilder>? ifFalse = null
-    )
+        TBA<TBuilder>? ifFalse = null)
     {
         if (predicate())
         {

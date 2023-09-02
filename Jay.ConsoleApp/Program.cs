@@ -11,7 +11,7 @@ Console.ReadLine();
 return;
 
 
-void DoThing(InterpolatedTextBuilder text)
+void DoThing(InterpolatedTextWriter text)
 {
     string str = text.ToStringAndDispose();
     Console.WriteLine(str);

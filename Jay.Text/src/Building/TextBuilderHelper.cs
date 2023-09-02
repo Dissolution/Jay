@@ -1,8 +1,8 @@
 ﻿using Jay.Utilities;
 
-namespace Jay.Text.Scratch;
+namespace Jay.Text.Building;
 
-internal static class BuilderHelper
+internal static class TextBuilderHelper
 {
     /// <summary>
     /// The minimum possible capacity of any builder<br/>

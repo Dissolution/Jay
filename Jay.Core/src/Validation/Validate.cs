@@ -46,7 +46,8 @@ public static class Validate
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="value" /> is <c>null</c>
     /// </exception>
-    public static void IsNotNull<T>([AllowNull] [NotNull] T value,
+    public static void IsNotNull<T>(
+        [AllowNull] [NotNull] T value,
         string? exMessage = null,
         [CallerArgumentExpression(nameof(value))]
         string? valueName = null)
@@ -54,30 +55,29 @@ public static class Validate
         if (value is null)
             throw new ArgumentNullException(valueName, exMessage);
     }
-    
+
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting.
     public static void IsNotNullOrEmpty(
-        [AllowNull, NotNull]
-        string? str,
+        [AllowNull, NotNull] string? str,
         [CallerArgumentExpression(nameof(str))]
         string? strName = null)
     {
         if (string.IsNullOrEmpty(str))
             throw new ArgumentNullException(strName);
     }
+
     public static void IsNotNullOrWhiteSpace(
-        [AllowNull, NotNull]
-        string? str,
+        [AllowNull, NotNull] string? str,
         [CallerArgumentExpression(nameof(str))]
         string? strName = null)
     {
         if (string.IsNullOrWhiteSpace(str))
             throw new ArgumentNullException(strName);
-
     }
 #pragma warning restore CS8777
 
-    public static void IsBetween<T>(T value,
+    public static void IsBetween<T>(
+        T value,
         T inclusiveMinimum,
         T inclusiveMaximum,
         [CallerArgumentExpression(nameof(value))]
@@ -88,6 +88,7 @@ public static class Validate
         int c = comparer.Compare(value, inclusiveMinimum);
         if (c < 0)
             throw new ArgumentOutOfRangeException(valueName, value, $"Value must be greater than or equal to {inclusiveMinimum}");
+
         c = comparer.Compare(value, inclusiveMaximum);
         if (c > 0)
             throw new ArgumentOutOfRangeException(valueName, value, $"Value must be lesser than or equal to {inclusiveMaximum}");
@@ -103,40 +104,52 @@ public static class Validate
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown if <paramref name="index" /> <c>is</c> &lt; 0 <c>or</c> &gt;= <paramref name="available" />
     /// </exception>
-    public static void Index(int available, 
+    public static void Index(
+        int available,
         int index,
         [CallerArgumentExpression(nameof(index))]
         string? indexName = null)
     {
-        if ((uint)index < (uint)available) return;
+        if ((uint)index < (uint)available)
+            return;
+
         throw new ArgumentOutOfRangeException(
             indexName,
             index,
             $"{indexName} must be between 0 and {available - 1}");
     }
 
-    public static void Index(int available, 
+    public static void Index(
+        int available,
         Index index,
         [CallerArgumentExpression(nameof(index))]
         string? indexName = null)
     {
         int offset = index.GetOffset(available);
-        if ((uint)offset < available) return;
-        throw new ArgumentOutOfRangeException(indexName,
+        if ((uint)offset < available)
+            return;
+
+        throw new ArgumentOutOfRangeException(
+            indexName,
             index,
             $"{indexName} {index} must be between 0 and {available - 1}");
     }
 
-    public static void InsertIndex(int available, int index,
+    public static void InsertIndex(
+        int available, int index,
         [CallerArgumentExpression(nameof(index))]
         string? indexName = null)
     {
-        if ((uint)index <= available) return;
-        throw new ArgumentOutOfRangeException(indexName,
+        if ((uint)index <= available)
+            return;
+
+        throw new ArgumentOutOfRangeException(
+            indexName,
             index,
             $"Insert {indexName} {index} must be between 0 and {available}");
     }
-    
+
+
     public static void Range(
         int available,
         int start,
@@ -160,7 +173,9 @@ public static class Validate
         string? rangeName = null)
     {
         (int offset, int length) = FastOffsetLength(available, range);
-        if ((uint)offset + (uint)length <= (uint)available) return;
+        if ((uint)offset + (uint)length <= (uint)available)
+            return;
+
         throw new ArgumentOutOfRangeException(
             rangeName,
             range,
@@ -174,15 +189,14 @@ public static class Validate
         string? rangeName = null)
     {
         (int offset, int length) ol = FastOffsetLength(available, range);
-        if ((uint)ol.offset + (uint)ol.length <= (uint)available) return ol;
+        if ((uint)ol.offset + (uint)ol.length <= (uint)available)
+            return ol;
+
         throw new ArgumentOutOfRangeException(
             rangeName,
             range,
             $"{rangeName} must be between 0 and {available - 1}");
     }
-
-
-
 
 
     public static void CanCopyTo(int count, Array? array, int arrayIndex = 0)
@@ -208,7 +222,7 @@ public static class Validate
         if (array.Length - arrayIndex < count)
             throw new ArgumentException($"Array must have at a capacity of at least {arrayIndex + count}", nameof(array));
     }
-    
+
     public static void CanCopyTo<T>(int count, Span<T> span, int spanIndex = 0)
     {
         if ((uint)spanIndex > span.Length)
@@ -216,4 +230,38 @@ public static class Validate
         if (span.Length - spanIndex < count)
             throw new ArgumentException($"Span must have at a capacity of at least {spanIndex + count}", nameof(span));
     }
+
+#region Validate + Return
+    public static ref T RefIndex<T>(
+        Span<T> span,
+        int index,
+        [CallerArgumentExpression(nameof(index))]
+        string? indexName = null)
+    {
+        if ((uint)index < span.Length)
+            return ref span[index];
+
+        throw new ArgumentOutOfRangeException(
+            indexName,
+            index,
+            span.Length == 0 ? "There are no items" : $"{indexName} {index} must be between 0 and {span.Length - 1}");
+    }
+
+    public static Span<T> RetSlice<T>(
+        Span<T> span,
+        Range range,
+        [CallerArgumentExpression(nameof(range))]
+        string? rangeName = null)
+    {
+        int spanLen = span.Length;
+        (int offset, int length) = FastOffsetLength(spanLen, range);
+        if ((uint)offset + (uint)length <= spanLen)
+            return span[range];
+
+        throw new ArgumentOutOfRangeException(
+            rangeName,
+            range,
+            $"{rangeName} must be in [0..{spanLen - 1})");
+    }
+#endregion
 }

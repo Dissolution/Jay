@@ -1,11 +1,11 @@
-﻿// ReSharper disable InvokeAsExtensionMethod
+﻿// ReSharper disable EntityNameCapturedOnly.Local
+// ReSharper disable InvokeAsExtensionMethod
 // ^ I want to be sure I'm calling the very specific version of a method
 
 #if !(NET48 || NETSTANDARD2_0)
 using System.Runtime.InteropServices;
 #endif
 using Jay.Text.Building;
-using Jay.Text.Comparision;
 using Jay.Utilities;
 using static InlineIL.IL;
 
@@ -21,15 +21,14 @@ namespace Jay.Text.Utilities;
 public static class TextHelper
 {
     /// <summary>
-    /// Use an <see cref="InterpolatedTextBuilder"/> to render a formattable string
+    /// Use an <see cref="InterpolatedTextWriter"/> to render a formattable string
     /// </summary>
-    public static string Interpolate(this ref InterpolatedTextBuilder text)
+    public static string Interpolate(this ref InterpolatedTextWriter text)
     {
         return text.ToStringAndDispose();
     }
 
 #region CopyTo
-
     /// <summary>
     /// Copies the <paramref name="source"/> text to <paramref name="dest"/>
     /// </summary>
@@ -37,11 +36,10 @@ public static class TextHelper
     {
         if (!TryCopyTo(source, dest))
         {
-            throw new InvalidOperationException(
-                Interpolate($"Cannot copy source char[{source.Length}] \"{source}\" to destination char[{dest?.Length}]"));
+            throw new InvalidOperationException(Interpolate($"Cannot copy source char[{source.Length}] \"{source}\" to destination char[{dest?.Length}]"));
         }
     }
-    
+
     /// <summary>
     /// Copies the <paramref name="source"/> text to <paramref name="dest"/>
     /// </summary>
@@ -49,8 +47,7 @@ public static class TextHelper
     {
         if (!TryCopyTo(source, dest))
         {
-            throw new InvalidOperationException(
-                Interpolate($"Cannot copy source ReadOnlySpan<char> \"{source}\" [{source.Length}] to destination char[{dest?.Length}]"));
+            throw new InvalidOperationException(Interpolate($"Cannot copy source ReadOnlySpan<char> \"{source}\" [{source.Length}] to destination char[{dest?.Length}]"));
         }
     }
 
@@ -61,11 +58,10 @@ public static class TextHelper
     {
         if (!TryCopyTo(source, dest))
         {
-            throw new InvalidOperationException(
-                Interpolate($"Cannot copy source string \"{source}\" [{source.Length}] to destination char[{dest?.Length}]"));
+            throw new InvalidOperationException(Interpolate($"Cannot copy source string \"{source}\" [{source.Length}] to destination char[{dest?.Length}]"));
         }
     }
-    
+
     /// <summary>
     /// Copies the <paramref name="source"/> text to <paramref name="dest"/>
     /// </summary>
@@ -73,11 +69,10 @@ public static class TextHelper
     {
         if (!TryCopyTo(source, dest))
         {
-            throw new InvalidOperationException(
-                Interpolate($"Cannot copy source char[{source!.Length}] \"{source}\" to destination Span<char>[{dest.Length}]"));
+            throw new InvalidOperationException(Interpolate($"Cannot copy source char[{source!.Length}] \"{source}\" to destination Span<char>[{dest.Length}]"));
         }
     }
-    
+
     /// <summary>
     /// Copies the <paramref name="source"/> text to <paramref name="dest"/>
     /// </summary>
@@ -85,8 +80,7 @@ public static class TextHelper
     {
         if (!TryCopyTo(source, dest))
         {
-            throw new InvalidOperationException(
-                Interpolate($"Cannot copy source ReadOnlySpan<char> \"{source}\" [{source.Length}] to destination Span<char>[{dest.Length}]"));
+            throw new InvalidOperationException(Interpolate($"Cannot copy source ReadOnlySpan<char> \"{source}\" [{source.Length}] to destination Span<char>[{dest.Length}]"));
         }
     }
 
@@ -97,8 +91,7 @@ public static class TextHelper
     {
         if (!TryCopyTo(source, dest))
         {
-            throw new InvalidOperationException(
-                Interpolate($"Cannot copy source string \"{source}\" [{source?.Length}] to destination Span<char>[{dest.Length}]"));
+            throw new InvalidOperationException(Interpolate($"Cannot copy source string \"{source}\" [{source?.Length}] to destination Span<char>[{dest.Length}]"));
         }
     }
 
@@ -109,6 +102,7 @@ public static class TextHelper
     {
         if (source is null)
             return true;
+
         var sourceLen = source.Length;
         if (sourceLen == 0)
             return true;
@@ -116,9 +110,10 @@ public static class TextHelper
             return false;
         if (sourceLen > dest.Length)
             return false;
+
         Unsafe.CopyBlock(
-            in source.GetPinnableReference(),
-            ref dest.GetPinnableReference(),
+            source,
+            dest,
             sourceLen);
         return true;
     }
@@ -126,7 +121,7 @@ public static class TextHelper
     /// <summary>
     /// Try to copy the text in <paramref name="source"/> to <paramref name="dest"/>
     /// </summary>
-    public static bool TryCopyTo(ReadOnlySpan<char> source, char[]? dest)
+    public static bool TryCopyTo(scoped ReadOnlySpan<char> source, char[]? dest)
     {
         var sourceLen = source.Length;
         if (sourceLen == 0)
@@ -135,9 +130,10 @@ public static class TextHelper
             return false;
         if (sourceLen > dest.Length)
             return false;
+
         Unsafe.CopyBlock(
-            in source.GetPinnableReference(),
-            ref dest.GetPinnableReference(),
+            source,
+            dest,
             sourceLen);
         return true;
     }
@@ -149,6 +145,7 @@ public static class TextHelper
     {
         if (source is null)
             return true;
+
         var sourceLen = source.Length;
         if (sourceLen == 0)
             return true;
@@ -156,28 +153,10 @@ public static class TextHelper
             return false;
         if (sourceLen > dest.Length)
             return false;
+
         Unsafe.CopyBlock(
-            in source.GetPinnableReference(),
-            ref dest.GetPinnableReference(),
-            sourceLen);
-        return true;
-    }
-    
-    /// <summary>
-    /// Try to copy the text in <paramref name="source"/> to <paramref name="dest"/>
-    /// </summary>
-    public static bool TryCopyTo([NotNullWhen(false)] char[]? source, Span<char> dest)
-    {
-        if (source is null)
-            return true;
-        var sourceLen = source.Length;
-        if (sourceLen == 0)
-            return true;
-        if (sourceLen > dest.Length)
-            return false;
-        Unsafe.CopyBlock(
-            in source.GetPinnableReference(),
-            ref dest.GetPinnableReference(),
+            source,
+            dest,
             sourceLen);
         return true;
     }
@@ -185,16 +164,38 @@ public static class TextHelper
     /// <summary>
     /// Try to copy the text in <paramref name="source"/> to <paramref name="dest"/>
     /// </summary>
-    public static bool TryCopyTo(ReadOnlySpan<char> source, Span<char> dest)
+    public static bool TryCopyTo([NotNullWhen(false)] char[]? source, Span<char> dest)
+    {
+        if (source is null)
+            return true;
+
+        var sourceLen = source.Length;
+        if (sourceLen == 0)
+            return true;
+        if (sourceLen > dest.Length)
+            return false;
+
+        Unsafe.CopyBlock(
+            source,
+            dest,
+            sourceLen);
+        return true;
+    }
+
+    /// <summary>
+    /// Try to copy the text in <paramref name="source"/> to <paramref name="dest"/>
+    /// </summary>
+    public static bool TryCopyTo(scoped ReadOnlySpan<char> source, Span<char> dest)
     {
         var sourceLen = source.Length;
         if (sourceLen == 0)
             return true;
         if (sourceLen > dest.Length)
             return false;
+
         Unsafe.CopyBlock(
-            in source.GetPinnableReference(),
-            ref dest.GetPinnableReference(),
+            source,
+            dest,
             sourceLen);
         return true;
     }
@@ -206,37 +207,230 @@ public static class TextHelper
     {
         if (source is null)
             return true;
+
         var sourceLen = source.Length;
         if (sourceLen == 0)
             return true;
         if (sourceLen > dest.Length)
             return false;
+
         Unsafe.CopyBlock(
-            in source.GetPinnableReference(),
-            ref dest.GetPinnableReference(),
+            source,
+            dest,
             sourceLen);
         return true;
     }
-
 #endregion
-    
-    #region Unsafe
 
+#region Unsafe
+    /// <summary>
+    /// WARNING: All methods in <see cref="Unsafe"/> have no bounds checking!
+    /// </summary>
     public static class Unsafe
     {
+        /* Input:<br/>
+         * <c>in char</c>, <c>char[]</c>, <c>ReadOnlySpan&lt;char&gt;</c>, <c>string</c><br/>
+         * Output:<br/>
+         * <c>ref char</c>, <c>char[]</c>, <c>Span&lt;char&gt;<c/>
+         */
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void CopyBlock(
-            in char sourcePtr, ref char destPtr,
-            int charCount)
+        public static void CopyBlock(
+            in char source,
+            ref char destination,
+            int count)
         {
-            Emit.Ldarg(nameof(destPtr));
-            Emit.Ldarg(nameof(sourcePtr));
-            Emit.Ldarg(nameof(charCount));
+            Emit.Ldarg(nameof(destination));
+            Emit.Ldarg(nameof(source));
+            Emit.Ldarg(nameof(count));
             Emit.Sizeof<char>();
             Emit.Mul();
             Emit.Cpblk();
         }
-        
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            in char source,
+            char[] destination,
+            int count)
+        {
+            CopyBlock(in source, ref destination.GetPinnableReference(), count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            in char source,
+            Span<char> destination,
+            int count)
+        {
+            CopyBlock(in source, ref destination.GetPinnableReference(), count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            char[] source,
+            ref char destination,
+            int count)
+        {
+            CopyBlock(in source.GetPinnableReference(), ref destination, count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            char[] source,
+            char[] destination,
+            int count)
+        {
+            CopyBlock(in source.GetPinnableReference(), ref destination.GetPinnableReference(), count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            char[] source,
+            Span<char> destination,
+            int count)
+        {
+            CopyBlock(in source.GetPinnableReference(), ref destination.GetPinnableReference(), count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            ReadOnlySpan<char> source,
+            ref char destination,
+            int count)
+        {
+            CopyBlock(in source.GetPinnableReference(), ref destination, count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            ReadOnlySpan<char> source,
+            char[] destination,
+            int count)
+        {
+            CopyBlock(in source.GetPinnableReference(), ref destination.GetPinnableReference(), count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            ReadOnlySpan<char> source,
+            Span<char> destination,
+            int count)
+        {
+            CopyBlock(in source.GetPinnableReference(), ref destination.GetPinnableReference(), count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            string source,
+            ref char destination,
+            int count)
+        {
+            CopyBlock(in source.GetPinnableReference(), ref destination, count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            string source,
+            char[] destination,
+            int count)
+        {
+            CopyBlock(in source.GetPinnableReference(), ref destination.GetPinnableReference(), count);
+        }
+
+        /// <summary>
+        /// Copies the block of <paramref name="count"/>  <see cref="char">characters</see>
+        /// from <paramref name="source"/> to <paramref name="destination"/>
+        /// </summary>
+        /// <param name="source">The source readable text</param>
+        /// <param name="destination">The destination writable text</param>
+        /// <param name="count">The number of characters to copy</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyBlock(
+            string source,
+            Span<char> destination,
+            int count)
+        {
+            CopyBlock(in source.GetPinnableReference(), ref destination.GetPinnableReference(), count);
+        }
+
         /// <summary>
         /// This is dangerous!
         /// </summary>
@@ -254,5 +448,5 @@ public static class TextHelper
 #endif
         }
     }
-    #endregion
+#endregion
 }

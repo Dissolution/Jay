@@ -1,5 +1,5 @@
-﻿
-namespace Jay.Text.Scratch;
+﻿// ReSharper disable UnusedParameter.Local
+namespace Jay.Text.Building;
 
 [InterpolatedStringHandler]
 public ref struct InterpolatedTextWriter
@@ -11,7 +11,8 @@ public ref struct InterpolatedTextWriter
         return builder;
     }
     
-    private readonly ITextWriter _textWriter;
+    
+    private readonly TextWriter _textWriter;
 
     public InterpolatedTextWriter()
     {
@@ -20,10 +21,10 @@ public ref struct InterpolatedTextWriter
     
     public InterpolatedTextWriter(int literalLength, int formattedCount)
     {
-        _textWriter = new(Jay.Text.Building.BuilderHelper.GetInterpolatedStartCapacity(literalLength, formattedCount));
+        _textWriter = new(TextBuilderHelper.GetInterpolatedStartCapacity(literalLength, formattedCount));
     }
     
-    public InterpolatedTextWriter(int literalLength, int formattedCount, ITextWriter textWriter)
+    public InterpolatedTextWriter(int literalLength, int formattedCount, TextWriter textWriter)
     {
         _textWriter = textWriter;
     }
@@ -43,6 +44,11 @@ public ref struct InterpolatedTextWriter
         _textWriter.Write(text);
     }
     
+    public void AppendFormatted(params char[]? chars)
+    {
+        _textWriter.Write(chars);
+    }
+    
     public void AppendFormatted(string? str)
     {
         _textWriter.Write(str);
@@ -57,24 +63,29 @@ public ref struct InterpolatedTextWriter
     {
         _textWriter.Format<T>(value, format);
     }
+    
+    public void AppendFormatted<T>(T? value, ReadOnlySpan<char> format)
+    {
+        _textWriter.Format<T>(value, format);
+    }
 
     public void Dispose()
     {
-        var toReturn = _textWriter;
+        TextWriter? toReturn = _textWriter;
         this = default;
         toReturn?.Dispose();
     }
 
     public string ToStringAndDispose()
     {
-        var str = _textWriter?.ToString();
+        var str = _textWriter.ToString();
         this.Dispose();
-        return str!;
+        return str;
     }
     
     public override string ToString()
     {
-        return _textWriter?.ToString()!;
+        return _textWriter.ToString();
     }
 
     public override bool Equals(object? obj) => throw new NotSupportedException();

@@ -1,46 +1,27 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
 using Jay.Utilities;
+// ReSharper disable MergeCastWithTypeCheck
 
 namespace Jay.Text.Building;
 
-public class TextWriter : IDisposable
+public class TextWriter : IBuildingText
 {
-    protected char[] _chars;
-    protected int _length;
+    private char[] _chars;
+    private int _length;
 
-    public char this[int index]
+    public ref char this[int index]
     {
-        get
-        {
-            if ((uint)index < _length)
-                return _chars[index];
-            throw new ArgumentOutOfRangeException(nameof(index), index, $"{nameof(index)} must be between 0 and {_length - 1}");
-        }
-        set
-        {
-            if ((uint)index < _length)
-            {
-                _chars[index] = value;
-                return;
-            }
-            throw new ArgumentOutOfRangeException(nameof(index), index, $"{nameof(index)} must be between 0 and {_length - 1}");
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref Validate.RefIndex<char>(_chars, index);
     }
 
     public Span<char> this[Range range]
     {
-        get
-        {
-            Validate.Range(_length, range);
-            return Written[range];
-        }
-        set
-        {
-            Validate.Range(_length, range);
-            // has additional validation built in 
-            TextHelper.CopyTo(value, Written[range]);
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Validate.RetSlice<char>(_chars, range);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set => TextHelper.CopyTo(value, Validate.RetSlice<char>(_chars, range));
     }
 
     public int Length
@@ -51,21 +32,33 @@ public class TextWriter : IDisposable
         internal set => _length = value.Clamp(0, Capacity);
     }
 
-    public int Capacity => _chars.Length;
+    public int Capacity
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _chars.Length;
+    }
 
-    public Span<char> Written => _chars.AsSpan(0, _length);
+    public Span<char> Written
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _chars.AsSpan(0, _length);
+    }
 
-    public Span<char> Available => _chars.AsSpan(_length);
+    public Span<char> Available
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _chars.AsSpan(_length);
+    }
 
     public TextWriter()
     {
-        _chars = ArrayPool<char>.Shared.Rent(BuilderHelper.MinimumCapacity);
+        _chars = ArrayPool<char>.Shared.Rent(TextBuilderHelper.MinimumCapacity);
         _length = 0;
     }
 
     public TextWriter(int minCapacity)
     {
-        _chars = ArrayPool<char>.Shared.Rent(Math.Max(minCapacity, BuilderHelper.MinimumCapacity));
+        _chars = ArrayPool<char>.Shared.Rent(TextBuilderHelper.GetGrowToCapacity(TextBuilderHelper.MinimumCapacity, minCapacity));
         _length = 0;
     }
 
@@ -77,11 +70,11 @@ public class TextWriter : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void GrowCore(int minCapacity)
     {
-        Debug.Assert(minCapacity > BuilderHelper.MinimumCapacity);
+        Debug.Assert(minCapacity > TextBuilderHelper.MinimumCapacity);
         Debug.Assert(minCapacity > Capacity);
 
         char[] newArray = ArrayPool<char>.Shared.Rent(minCapacity);
-        TextHelper.Unsafe.CopyTo(_chars, newArray, _length);
+        TextHelper.CopyTo(_chars, newArray);
 
         char[] toReturn = _chars;
         _chars = newArray;
@@ -92,14 +85,14 @@ public class TextWriter : IDisposable
     private void GrowBy(int addingCharCount)
     {
         Debug.Assert(addingCharCount > 0);
-        GrowCore(BuilderHelper.GetGrowByCapacity(Capacity, addingCharCount));
+        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, addingCharCount));
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowThenCopy(char ch)
     {
         int index = _length;
-        GrowCore(BuilderHelper.GetGrowByCapacity(Capacity, 1));
+        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, 1));
         TextHelper.Unsafe.CopyBlock(
             in ch,
             ref _chars[index],
@@ -112,8 +105,8 @@ public class TextWriter : IDisposable
     {
         int index = _length;
         int len = text.Length;
-        GrowCore(BuilderHelper.GetGrowByCapacity(Capacity, len));
-        TextHelper.Unsafe.CopyTo(text, _chars.AsSpan(index..), len);
+        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, len));
+        TextHelper.Unsafe.CopyBlock(text, _chars.AsSpan(index..), len);
         _length = index + len;
     }
 
@@ -122,7 +115,7 @@ public class TextWriter : IDisposable
     {
         int index = _length;
         int len = text.Length;
-        GrowCore(BuilderHelper.GetGrowByCapacity(Capacity, len));
+        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, len));
         TextHelper.Unsafe.CopyBlock(
             in text.GetPinnableReference(),
             ref _chars[index],
@@ -219,10 +212,10 @@ public class TextWriter : IDisposable
         var keepLength = keep.Length;
         // We know we have enough space to grow to
         var rightBuffer = _chars.AsSpan(index + 1, keepLength);
-        TextHelper.Unsafe.CopyTo(
+        TextHelper.Unsafe.CopyBlock(
             source: keep,
-            dest: rightBuffer,
-            sourceLen: keepLength);
+            destination: rightBuffer,
+            count: keepLength);
         // return where we allocated
         return ref _chars[index];
     }
@@ -265,10 +258,10 @@ public class TextWriter : IDisposable
             var keepLen = keep.Length;
             // We know we have enough space to grow to
             var destBuffer = _chars.AsSpan(index + length, keepLen);
-            TextHelper.Unsafe.CopyTo(
+            TextHelper.Unsafe.CopyBlock(
                 source: keep,
-                dest: destBuffer,
-                sourceLen: keepLen);
+                destination: destBuffer,
+                count: keepLen);
             // return where we allocated
             return _chars.AsSpan(index, length);
         }
@@ -295,22 +288,36 @@ public class TextWriter : IDisposable
     }
     public virtual void Write(scoped ReadOnlySpan<char> text)
     {
-        if (TextHelper.TryCopyTo(text, Available))
+        int textLen = text.Length;
+        if (textLen > 0)
         {
-            _length += text.Length;
-        }
-        else
-        {
-            GrowThenCopy(text);
+            int pos = _length;
+            Span<char> chars = _chars;
+            if (pos + textLen <= chars.Length)
+            {
+                TextHelper.Unsafe.CopyBlock(text, chars[pos..], textLen);
+                _length = pos + textLen;
+            }
+            else
+            {
+                GrowThenCopy(text);
+            }
         }
     }
+
+    public virtual void Write(params char[]? characters) => Write(characters.AsSpan());
+    
     public virtual void Write(string? str)
     {
         if (str is not null)
         {
-            if (TextHelper.TryCopyTo(str, Available))
+            int pos = _length;
+            var chars = _chars;
+            int textLen = str.Length;
+            if (pos + textLen <= chars.Length)
             {
-                _length += str.Length;
+                TextHelper.Unsafe.CopyBlock(str, ref chars[pos], textLen);
+                _length = pos + textLen;
             }
             else
             {
@@ -318,14 +325,16 @@ public class TextWriter : IDisposable
             }
         }
     }
-    public virtual void Write([InterpolatedStringHandlerArgument("")] ref InterpolatedTextBuilder itb)
+    public virtual void Write([InterpolatedStringHandlerArgument("")] ref InterpolatedTextWriter interpolatedText)
     {
         // written
     }
 #endregion
 
 #region Format
-    public virtual void Format<T>(T? value, string? format = null, IFormatProvider? provider = null)
+    public virtual void Format<T>(T? value) => Format<T>(value, default(ReadOnlySpan<char>));
+    
+    public virtual void Format<T>(T? value, string? format, IFormatProvider? provider = null)
     {
         string? str;
         if (value is IFormattable)
@@ -338,7 +347,7 @@ public class TextWriter : IDisposable
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, format, provider))
                 {
-                    GrowBy(BuilderHelper.MinimumCapacity);
+                    GrowBy(TextBuilderHelper.MinimumCapacity);
                 }
                 _length += charsWritten;
                 return;
@@ -347,6 +356,37 @@ public class TextWriter : IDisposable
 
             // constrained call avoiding boxing for value types
             str = ((IFormattable)value).ToString(format, provider);
+        }
+        else
+        {
+            str = value?.ToString();
+        }
+
+        Write(str);
+    }
+    
+    public virtual void Format<T>(T? value, scoped ReadOnlySpan<char> format, IFormatProvider? provider = null)
+    {
+        string? str;
+        if (value is IFormattable)
+        {
+#if NET6_0_OR_GREATER
+            // If the value can format itself directly into our buffer, do so.
+            if (value is ISpanFormattable)
+            {
+                int charsWritten;
+                // constrained call avoiding boxing for value types
+                while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, format, provider))
+                {
+                    GrowBy(TextBuilderHelper.MinimumCapacity);
+                }
+                _length += charsWritten;
+                return;
+            }
+#endif
+
+            // constrained call avoiding boxing for value types
+            str = ((IFormattable)value).ToString(format.ToString(), provider);
         }
         else
         {
@@ -372,7 +412,7 @@ public class TextWriter : IDisposable
         var keepLen = keep.Length;
         // The place to put it at the cut
         var destBuffer = _chars.AsSpan(index, keepLen);
-        TextHelper.Unsafe.CopyTo(keep, destBuffer, keepLen);
+        TextHelper.Unsafe.CopyBlock(keep, destBuffer, keepLen);
         // Length is shorter
         _length = curLen - 1;
     }
@@ -392,7 +432,7 @@ public class TextWriter : IDisposable
         var keepLen = keep.Length;
         // The place to put it at the cut
         var destBuffer = _chars.AsSpan(index, keepLen);
-        TextHelper.Unsafe.CopyTo(keep, destBuffer, keepLen);
+        TextHelper.Unsafe.CopyBlock(keep, destBuffer, keepLen);
         // Length is shorter
         _length = curLen - length;
     }
@@ -428,7 +468,7 @@ public class TextWriter : IDisposable
             var keepLen = keep.Length;
             // The place we write the keep
             var destBuffer = _chars.AsSpan(0, keepLen);
-            TextHelper.Unsafe.CopyTo(keep, destBuffer, keepLen);
+            TextHelper.Unsafe.CopyBlock(keep, destBuffer, keepLen);
 
             // Length is shorter
             _length = curLen - length;

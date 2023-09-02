@@ -52,8 +52,7 @@ public sealed class CodeBuilder : FluentIndentTextBuilder<CodeBuilder>
                 // Capture our original indents
                 var originalIndents = _indents;
                 // Replace them with a single indent based upon this position
-                _indents = new Stack<string>(1);
-                _indents.Push(GetCurrentPositionAsIndent());
+                _indents = new List<string>(1) { GetCurrentPositionAsIndent() };
                 // perform the action
                 codeBuilderAction(_builder);
                 // restore the indents

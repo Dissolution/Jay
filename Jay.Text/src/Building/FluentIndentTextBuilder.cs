@@ -9,7 +9,7 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
 {
     protected static readonly string DefaultIndent = "   ";
     
-    protected Stack<string> _indents;
+    protected List<string> _indents;
     
     public FluentIndentTextBuilder() : base()
     {
@@ -41,8 +41,7 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
         // Capture our original indents
         var originalIndents = _indents;
         // Replace them with a single indent based upon this position
-        _indents = new Stack<string>(1);
-        _indents.Push(GetCurrentPositionAsIndent());
+        _indents = new List<string>(1) { GetCurrentPositionAsIndent() };
         // perform the action
         action(_builder);
         // restore the indents
@@ -68,13 +67,13 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
         // We're going to be splitting on NewLine
         var e = new TextSplitEnumerator(str.AsSpan(), _newline.AsSpan());
         if (!e.MoveNext()) return;
-        this.Write(e.Current);
+        this.Write(e.Text);
         while (e.MoveNext())
         {
             // Delimit with NewLine
             this.NewLine();
             // Write this slice
-            this.Write(e.Current);
+            this.Write(e.Text);
         }
     }
 
@@ -86,17 +85,19 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
         // We're going to be splitting on NewLine
         var e = new TextSplitEnumerator(text, _newline.AsSpan());
         if (!e.MoveNext()) return;
-        this.Write(e.Current);
+        this.Write(e.Text);
         while (e.MoveNext())
         {
             // Delimit with NewLine
             this.NewLine();
             // Write this slice
-            this.Write(e.Current);
+            this.Write(e.Text);
         }
     }
 
-    public override void Format<T>(T? value, string? format = null, IFormatProvider? provider = null) where T : default
+    public override void Format<T>(T? value, ReadOnlySpan<char> format, IFormatProvider? provider = null) where T : default => Format<T>(value, format.ToString(), provider);
+    
+    public override void Format<T>(T? value, string? format, IFormatProvider? provider = null) where T : default
     {
         switch (value)
         {
@@ -131,7 +132,7 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
             }
             default:
             {
-                base.Format<T>(value);
+                base.Format<T>(value, format, provider);
                 return;
             }
         }
@@ -139,10 +140,9 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
     
     public TBuilder Indented(string indent, TBA<TBuilder> indentedAction)
     {
-        _indents.Push(indent);
+        _indents.Add(indent);
         indentedAction(_builder);
-        var popped = _indents.Pop();
-        Debug.Assert(indent == popped);
+        _indents.RemoveAt(_indents.Count-1);
         return _builder;
     }
     /*
