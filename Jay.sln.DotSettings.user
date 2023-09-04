@@ -1,13 +1,24 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ArrangeAttributes/@EntryIndexedValue">DO_NOT_SHOW</s:String>
 	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ArrangeMethodOrOperatorBody/@EntryIndexedValue">DO_NOT_SHOW</s:String>
+	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ArrangeObjectCreationWhenTypeNotEvident/@EntryIndexedValue">HINT</s:String>
 	<s:Boolean x:Key="/Default/Environment/InjectedLayers/FileInjectedLayer/=90ED78DC9F5E2941BFF5629C207B35CE/@KeyIndexDefined">True</s:Boolean>
 	<s:String x:Key="/Default/Environment/InjectedLayers/FileInjectedLayer/=90ED78DC9F5E2941BFF5629C207B35CE/AbsolutePath/@EntryValue">C:\git\Jay.DotSettings</s:String>
 	<s:String x:Key="/Default/Environment/InjectedLayers/FileInjectedLayer/=90ED78DC9F5E2941BFF5629C207B35CE/RelativePath/@EntryValue">..\..\Jay.DotSettings</s:String>
 	<s:Boolean x:Key="/Default/Environment/InjectedLayers/InjectedLayerCustomization/=File90ED78DC9F5E2941BFF5629C207B35CE/@KeyIndexDefined">True</s:Boolean>
 	<s:Double x:Key="/Default/Environment/InjectedLayers/InjectedLayerCustomization/=File90ED78DC9F5E2941BFF5629C207B35CE/RelativePriority/@EntryValue">1</s:Double>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=22844e24_002D0efc_002D4805_002Dae4f_002D9595569cb71b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from &amp;lt;Jay.Reflection.Tests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Project Location="C:\git\Jay\Jay.Reflection\Tests" Presentation="&amp;lt;Jay.Reflection.Tests&amp;gt;" /&gt;&#xD;
+  &lt;Or&gt;&#xD;
+    &lt;Project Location="C:\git\Jay\Jay.Reflection\Tests" Presentation="&amp;lt;Jay.Reflection.Tests&amp;gt;" /&gt;&#xD;
+    &lt;TestAncestor&gt;&#xD;
+      &lt;TestId&gt;xUnit::E5525C16-7719-452A-9E7D-0F749CE53E80::.NETFramework,Version=v4.8::Jay.Tests.EnumTests.GetFlags_Intense&lt;/TestId&gt;&#xD;
+      &lt;TestId&gt;xUnit::E5525C16-7719-452A-9E7D-0F749CE53E80::net7.0::Jay.Tests.EnumTests.GetFlags_Intense&lt;/TestId&gt;&#xD;
+    &lt;/TestAncestor&gt;&#xD;
+  &lt;/Or&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=3de38267_002D2648_002D4630_002D94c2_002Dae3fc9c195ba_0023Jay_002ESourceGen_002ENeo/@EntryIndexedValue">True</s:Boolean>
+	
+	
+	
 	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=a3bec967_002Dc4d8_002D43b4_002Da409_002D14b803758981_0023Jay_002EText_002EBenchmarks/@EntryIndexedValue">True</s:Boolean>
 	</wpf:ResourceDictionary>

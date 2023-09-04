@@ -144,7 +144,6 @@ public ref struct TextSplitEnumerator
             if (_currentTextSlice.Length > 0 || !_splitOptions.HasFlag(TextSplitOptions.RemoveEmptyLines))
             {
                 // This is a valid return slice
-                return true;
             }
             // We're not going to return this slice, told not to
 

@@ -1,4 +1,6 @@
-﻿using static InlineIL.IL;
+﻿// ReSharper disable EntityNameCapturedOnly.Global
+
+using static InlineIL.IL;
 
 namespace Jay.Enums;
 
@@ -22,7 +24,7 @@ public static class EnumExtensions
         Emit.Ceq();
         return Return<bool>();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Equal<TEnum>(this TEnum @enum, TEnum other)
         where TEnum : struct, Enum
@@ -89,8 +91,10 @@ public static class EnumExtensions
     public static int CompareTo<TEnum>(this TEnum @enum, TEnum other)
         where TEnum : struct, Enum
     {
-        if (LessThan(@enum, other)) return -1;
-        if (GreaterThan(@enum, other)) return 1;
+        if (LessThan(@enum, other))
+            return -1;
+        if (GreaterThan(@enum, other))
+            return 1;
         return 0;
     }
 

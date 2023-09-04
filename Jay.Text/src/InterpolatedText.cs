@@ -68,7 +68,7 @@ public ref struct InterpolatedText
 
     public InterpolatedText()
     {
-        _chars = _charArray = ArrayPool<char>.Shared.Rent(TextBuilderHelper.MinimumCapacity);
+        _chars = _charArray = TextPool.Rent();
         _index = 0;
     }
 
@@ -82,8 +82,7 @@ public ref struct InterpolatedText
     [EditorBrowsable(EditorBrowsableState.Never)]
     public InterpolatedText(int literalLength, int formattedCount)
     {
-        _chars = _charArray = ArrayPool<char>.Shared
-            .Rent(TextBuilderHelper.GetInterpolatedStartCapacity(literalLength, formattedCount));
+        _chars = _charArray = TextPool.Rent(literalLength, formattedCount);
         _index = 0;
     }
 
@@ -102,31 +101,30 @@ public ref struct InterpolatedText
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void GrowCore(int minCapacity)
     {
-        char[] newArray = ArrayPool<char>.Shared.Rent(minCapacity);
+        char[] newArray = TextPool.Rent(minCapacity);
         Written.CopyTo(newArray);
 
         char[]? toReturn = _charArray;
         _chars = _charArray = newArray;
-
-        if (toReturn is not null)
-        {
-            ArrayPool<char>.Shared.Return(toReturn);
-        }
+        TextPool.Return(toReturn);
     }
-
-#if NET6_0_OR_GREATER
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void GrowBy(int addingCharCount)
+    private void GrowBy(int growCount)
     {
-        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, addingCharCount));
+        char[] newArray = TextPool.RentGrowBy(Capacity, growCount);
+        Written.CopyTo(newArray);
+
+        char[]? toReturn = _charArray;
+        _chars = _charArray = newArray;
+        TextPool.Return(toReturn);
     }
-#endif
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowThenCopy(char ch)
     {
         int index = _index;
-        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, 1));
+        GrowBy(1);
         TextHelper.Unsafe.CopyBlock(
             in ch,
             ref Available.GetPinnableReference(),
@@ -139,7 +137,7 @@ public ref struct InterpolatedText
     {
         int index = _index;
         int len = text.Length;
-        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, len));
+        GrowBy(len);
         TextHelper.Unsafe.CopyBlock(
             in text.GetPinnableReference(),
             ref Available.GetPinnableReference(),
@@ -152,7 +150,7 @@ public ref struct InterpolatedText
     {
         int index = _index;
         int len = text.Length;
-        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, len));
+        GrowBy(len);
         TextHelper.Unsafe.CopyBlock(
             in text.GetPinnableReference(),
             ref Available.GetPinnableReference(),
@@ -316,7 +314,7 @@ public ref struct InterpolatedText
                     _chars.Slice(_index),
                     out charsWritten, default, default))
                 {
-                    GrowBy(TextBuilderHelper.MinimumCapacity);
+                    GrowBy(TextPool.MINIMUM_CAPACITY);
                 }
 
                 _index += charsWritten;
@@ -350,7 +348,7 @@ public ref struct InterpolatedText
                     _chars.Slice(_index),
                     out charsWritten, format, provider))
                 {
-                    GrowBy(TextBuilderHelper.MinimumCapacity);
+                    GrowBy(TextPool.MINIMUM_CAPACITY);
                 }
 
                 _index += charsWritten;
@@ -384,7 +382,7 @@ public ref struct InterpolatedText
                     _chars.Slice(_index),
                     out charsWritten, format, provider))
                 {
-                    GrowBy(TextBuilderHelper.MinimumCapacity);
+                    GrowBy(TextPool.MINIMUM_CAPACITY);
                 }
 
                 _index += charsWritten;

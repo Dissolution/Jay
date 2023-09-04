@@ -20,7 +20,7 @@ public sealed class AttributeArguments : Dictionary<string, object?>
             for (var i = 0; i < count; i++)
             {
                 string name = ctorParams[i].Name;
-                Debug.Assert(this.ContainsKey(name) == false);
+                Debug.Assert(ContainsKey(name) == false);
                 object? value = ctorArgs[i].GetObjectValue();
                 this[name] = value;
             }
@@ -34,7 +34,7 @@ public sealed class AttributeArguments : Dictionary<string, object?>
             {
                 var arg = namedArgs[i];
                 string name = arg.Key;
-                Debug.Assert(this.ContainsKey(name) == false);
+                Debug.Assert(ContainsKey(name) == false);
                 object? value = arg.Value.GetObjectValue();
                 this[name] = value;
             }
@@ -52,7 +52,7 @@ public sealed class AttributeArguments : Dictionary<string, object?>
             for (var i = 0; i < ctorArgsLen; i++)
             {
                 string name = ctorParams[i].Name;
-                Debug.Assert(this.ContainsKey(name) == false);
+                Debug.Assert(ContainsKey(name) == false);
                 object? value = ctorArgs[i].Value;
                 this[name] = value;
             }
@@ -68,7 +68,7 @@ public sealed class AttributeArguments : Dictionary<string, object?>
                 {
                     var arg = namedArgs[i];
                     string name = arg.MemberName;
-                    Debug.Assert(this.ContainsKey(name) == false);
+                    Debug.Assert(ContainsKey(name) == false);
                     object? value = arg.TypedValue.Value;
                     this[name] = value;
                 }

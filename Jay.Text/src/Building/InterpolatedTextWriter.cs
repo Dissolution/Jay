@@ -21,7 +21,7 @@ public ref struct InterpolatedTextWriter
     
     public InterpolatedTextWriter(int literalLength, int formattedCount)
     {
-        _textWriter = new(TextBuilderHelper.GetInterpolatedStartCapacity(literalLength, formattedCount));
+        _textWriter = new(literalLength, formattedCount);
     }
     
     public InterpolatedTextWriter(int literalLength, int formattedCount, TextWriter textWriter)

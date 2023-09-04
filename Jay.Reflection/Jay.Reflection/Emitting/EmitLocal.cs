@@ -63,26 +63,26 @@ public readonly struct EmitLocal :
 
     public bool Equals(EmitLocal emitLocal)
     {
-        return Easy.Equal(this.Name, emitLocal.Name) &&
-            Easy.Equal(this.Index, emitLocal.Index) &&
-            Easy.Equal(this.Type, emitLocal.Type) &&
-            Easy.Equal(this.IsPinned, emitLocal.IsPinned);
+        return Easy.FastEqual(this.Name, emitLocal.Name) &&
+            Easy.FastEqual(this.Index, emitLocal.Index) &&
+            Easy.FastEqual(this.Type, emitLocal.Type) &&
+            Easy.FastEqual(this.IsPinned, emitLocal.IsPinned);
     }
 
     public bool Equals(LocalBuilder? localBuilder)
     {
         return localBuilder is not null && 
-            Easy.Equal(this.Index, localBuilder.LocalIndex) &&
-            Easy.Equal(this.Type, localBuilder.LocalType) &&
-            Easy.Equal(this.IsPinned, localBuilder.IsPinned);
+            Easy.FastEqual(this.Index, localBuilder.LocalIndex) &&
+            Easy.FastEqual(this.Type, localBuilder.LocalType) &&
+            Easy.FastEqual(this.IsPinned, localBuilder.IsPinned);
     }
 
     public bool Equals(LocalVariableInfo? localVariableInfo)
     {
         return localVariableInfo is not null && 
-            Easy.Equal(this.Index, localVariableInfo.LocalIndex) &&
-            Easy.Equal(this.Type, localVariableInfo.LocalType) &&
-            Easy.Equal(this.IsPinned, localVariableInfo.IsPinned);
+            Easy.FastEqual(this.Index, localVariableInfo.LocalIndex) &&
+            Easy.FastEqual(this.Type, localVariableInfo.LocalType) &&
+            Easy.FastEqual(this.IsPinned, localVariableInfo.IsPinned);
     }
 
     public override bool Equals(object? obj)

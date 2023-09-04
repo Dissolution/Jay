@@ -36,10 +36,26 @@ public sealed partial class Easy :
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equal<T>(T? left, T? right)
+    public static bool TypeEqual(Type? left, Type? right) => left == right;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TypeEqual<L, R>(L? left, R? right) => typeof(L) == typeof(R);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool FastEqual<T>(T? left, T? right)
     {
         return EqualityComparer<T>.Default.Equals(left, right);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool FastEquality<T, U>(T? left, U? right)
+        where T : IEquatable<U>
+    {
+        if (left is null)
+            return right is null;
+        return left.Equals(right);
+    }
+
 
     bool IEqualityComparer<object?>.Equals(object? x, object? y) => ObjEqual(x, y);
     bool IEqualityComparer.Equals(object? x, object? y) => ObjEqual(x, y);
@@ -224,6 +240,22 @@ public sealed partial class Easy :
     }
 #endregion
 
+    public static bool SetEqual<T>(ICollection<T>? left, ICollection<T>? right)
+    {
+        if (ReferenceEquals(left, right))
+            return true;
+        if (left is null || right is null)
+            return false;
+        if (left.Count != right.Count)
+            return false;
+        foreach (var item in left)
+        {
+            if (!right.Contains(item))
+                return false;
+        }
+        return true;
+    }
+    
     int IEqualityComparer<object?>.GetHashCode(object? obj) => GetHashCode(obj);
 
     int IEqualityComparer.GetHashCode(object? obj) => GetHashCode(obj);

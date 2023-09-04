@@ -965,7 +965,6 @@ public class FluentEmitter<TSelf> : IToCode
                     var paramType = ctorParams[i].ParameterType;
                     if (!argType.Implements(paramType)) return false;
                 }
-                return true;
             })
             .ToList();
         Debugger.Break();

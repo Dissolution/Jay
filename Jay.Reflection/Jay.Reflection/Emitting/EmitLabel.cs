@@ -43,7 +43,7 @@ public readonly struct EmitLabel :
 
     public bool Equals(EmitLabel emitLabel)
     {
-        return Easy.Equal(this.Name, emitLabel.Name) &&
+        return Easy.FastEqual(this.Name, emitLabel.Name) &&
             this.Position == emitLabel.GetHashCode();
     }
 

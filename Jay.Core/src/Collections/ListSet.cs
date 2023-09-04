@@ -50,7 +50,6 @@ public class ListSet<T>
             if (ItemComparer.Equals(item, _items[i]))
             {
                 _items.RemoveAt(i);
-                return true;
             }
         }
         return false;

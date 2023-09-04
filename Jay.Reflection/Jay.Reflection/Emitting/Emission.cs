@@ -11,8 +11,8 @@ public abstract class Emission : IToCode,
  #endif
     IEquatable<Emission>
 {
-    public static bool operator ==(Emission? left, Emission? right) => Easy.Equal(left, right);
-    public static bool operator !=(Emission? left, Emission? right) => !Easy.Equal(left, right);
+    public static bool operator ==(Emission? left, Emission? right) => Easy.FastEqual(left, right);
+    public static bool operator !=(Emission? left, Emission? right) => !Easy.FastEqual(left, right);
 
     private object?[]? _arguments;
     
@@ -72,7 +72,7 @@ public abstract class Emission : IToCode,
     public bool Equals(Emission? emission)
     {
         return emission is not null &&
-            Easy.Equal(Name, emission.Name) &&
+            Easy.FastEqual(Name, emission.Name) &&
             Easy.SeqEqual(this.Arguments, emission.Arguments);
     }
 

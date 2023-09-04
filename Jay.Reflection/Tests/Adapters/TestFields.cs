@@ -15,7 +15,7 @@ public class TestFields
             {
                 var srFieldValue = field.GetValue(instance);
                 var jrFieldValue = field.GetValue<object, object>(ref instance);
-                Assert.True(Easy.Equal(srFieldValue, jrFieldValue));
+                Assert.True(Easy.FastEqual(srFieldValue, jrFieldValue));
             }
         }
     }
@@ -33,8 +33,8 @@ public class TestFields
                 var value = EntityGenerator.New(field.FieldType);
                 field.SetValue<object, object>(ref instance, value);
                 var newValue = field.GetValue<object, object>(ref instance);
-                Assert.False(Easy.Equal(originalValue, newValue));
-                Assert.True(Easy.Equal(value, newValue));
+                Assert.False(Easy.FastEqual(originalValue, newValue));
+                Assert.True(Easy.FastEqual(value, newValue));
             }
         }
     }

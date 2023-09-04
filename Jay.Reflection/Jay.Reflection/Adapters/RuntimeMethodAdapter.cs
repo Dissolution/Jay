@@ -55,21 +55,18 @@ public class RuntimeMethodAdapter
             if (instanceParameter is null)
             {
                 offset = 0;
-                return true;
             }
             
             // If they use ref NoInstance as a helper, we can ignore
             if (instanceParameter.GetNonRefType() == typeof(NoInstance))
             {
                 offset = 1;
-                return true;
             }
             
             // Did they mark an instance attribute?
             if (instanceParameter.GetCustomAttribute<InstanceAttribute>() is not null)
             {
                 offset = 1;
-                return true;
             }
 
             // We're unsure

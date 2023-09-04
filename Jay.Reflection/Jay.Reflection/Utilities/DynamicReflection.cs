@@ -159,7 +159,6 @@ public sealed class DynamicReflection : DynamicObject
                     return false;
 
                 // Matches!
-                return true;
             })
             .ToList();
         method = methods.OneOrDefault();
@@ -581,7 +580,7 @@ public sealed class DynamicReflection : DynamicObject
 
     public int CompareTo(object? other) => Easy.Compare(_target, other);
 
-    public override bool Equals(object? obj) => Easy.Equals(_target, obj);
+    public override bool Equals(object? obj) => Easy.ObjEqual(_target, obj);
 
     public override int GetHashCode()
     {

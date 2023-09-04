@@ -20,10 +20,15 @@
         <Using Include="Microsoft.CodeAnalysis.CSharp"/>
         <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax"/>
         <Using Include="Jay.Extensions"/>
+        <Using Include="Jay.Enums"/>
+        <Using Include="Jay.Utilities"/>
         <Using Include="Jay.Reflection"/>
         <Using Include="Jay.Reflection.Extensions"/>
+        <Using Include="Jay.SourceGen.CodeBuilding"/>
         <Using Include="Jay.SourceGen.Extensions"/>
         <Using Include="Jay.Reflection.CodeBuilding"/>
+        
+        <Using Include="Jay.Easy" Static="true"/>
     </ItemGroup>
     
     <ItemGroup>

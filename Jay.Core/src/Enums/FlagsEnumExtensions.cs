@@ -1,7 +1,10 @@
-﻿using System.Diagnostics;
+﻿// ReSharper disable EntityNameCapturedOnly.Global
+
+using System.Diagnostics;
 using InlineIL;
 using Jay.Utilities;
 using static InlineIL.IL;
+
 
 namespace Jay.Enums;
 
@@ -184,35 +187,42 @@ public static class FlagsEnumExtensions
     public static bool HasFlag<TEnum>(this TEnum @enum, TEnum flag)
         where TEnum : struct, Enum
     {
-        return @enum.And(flag).NotEqual(default);
+        return @enum.And(flag)
+            .NotEqual(default);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasFlags<TEnum>(this TEnum @enum, TEnum flag)
         where TEnum : struct, Enum
     {
-        return @enum.And(flag).NotEqual(default);
+        return @enum.And(flag)
+            .NotEqual(default);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAnyFlags<TEnum>(this TEnum @enum, TEnum flag)
         where TEnum : struct, Enum
     {
-        return @enum.And(flag).NotEqual(default);
+        return @enum.And(flag)
+            .NotEqual(default);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAnyFlags<TEnum>(this TEnum @enum, TEnum flag1, TEnum flag2)
         where TEnum : struct, Enum
     {
-        return @enum.And(flag1.Or(flag2)).NotEqual(default);
+        return @enum.And(flag1.Or(flag2))
+            .NotEqual(default);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAnyFlags<TEnum>(this TEnum @enum, TEnum flag1, TEnum flag2, TEnum flag3)
         where TEnum : struct, Enum
     {
-        return @enum.And(flag1.Or(flag2).Or(flag3)).NotEqual(default);
+        return @enum.And(
+                flag1.Or(flag2)
+                    .Or(flag3))
+            .NotEqual(default);
     }
 
     public static bool HasAnyFlags<TEnum>(this TEnum @enum, params TEnum[] flags)
@@ -224,14 +234,16 @@ public static class FlagsEnumExtensions
             flag.AddFlag(flags[i]);
         }
 
-        return @enum.And(flag).NotEqual(default);
+        return @enum.And(flag)
+            .NotEqual(default);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAllFlags<TEnum>(this TEnum @enum, TEnum flag)
         where TEnum : struct, Enum
     {
-        return @enum.And(flag).Equal(flag);
+        return @enum.And(flag)
+            .Equal(flag);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -239,15 +251,18 @@ public static class FlagsEnumExtensions
         where TEnum : struct, Enum
     {
         TEnum flag = flag1.Or(flag2);
-        return @enum.And(flag).Equal(flag);
+        return @enum.And(flag)
+            .Equal(flag);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasAllFlags<TEnum>(this TEnum @enum, TEnum flag1, TEnum flag2, TEnum flag3)
         where TEnum : struct, Enum
     {
-        TEnum flag = flag1.Or(flag2).Or(flag3);
-        return @enum.And(flag).Equal(flag);
+        TEnum flag = flag1.Or(flag2)
+            .Or(flag3);
+        return @enum.And(flag)
+            .Equal(flag);
     }
 
     public static bool HasAllFlags<TEnum>(this TEnum @enum, params TEnum[] flags)
@@ -259,6 +274,7 @@ public static class FlagsEnumExtensions
             flag.AddFlag(flags[i]);
         }
 
-        return @enum.And(flag).Equal(flag);
+        return @enum.And(flag)
+            .Equal(flag);
     }
 }

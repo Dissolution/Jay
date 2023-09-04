@@ -15,8 +15,8 @@ public sealed class DelegateInfo : IToCode,
 #endif
     IEquatable<DelegateInfo>
 {
-    public static bool operator ==(DelegateInfo? left, DelegateInfo? right) => Easy.Equal(left, right);
-    public static bool operator !=(DelegateInfo? left, DelegateInfo? right) => !Easy.Equal(left, right);
+    public static bool operator ==(DelegateInfo? left, DelegateInfo? right) => Easy.FastEqual(left, right);
+    public static bool operator !=(DelegateInfo? left, DelegateInfo? right) => !Easy.FastEqual(left, right);
 
     public static DelegateInfo For<TDelegate>(TDelegate? _ = null)
         where TDelegate : Delegate

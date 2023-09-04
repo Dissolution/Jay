@@ -15,7 +15,7 @@ public class TestProperties
             {
                 var srFieldValue = propertyInfo.GetValue(instance);
                 var jrFieldValue = propertyInfo.GetValue<object, object>(ref instance);
-                Assert.True(Easy.Equal(srFieldValue, jrFieldValue));
+                Assert.True(Easy.FastEqual(srFieldValue, jrFieldValue));
             }
         }
     }
@@ -33,8 +33,8 @@ public class TestProperties
                 var value = EntityGenerator.New(property.PropertyType);
                 property.SetValue<object, object>(ref instance, value);
                 var newValue = property.GetValue<object, object>(ref instance);
-                Assert.False(Easy.Equal(originalValue, newValue));
-                Assert.True(Easy.Equal(value, newValue));
+                Assert.False(Easy.FastEqual(originalValue, newValue));
+                Assert.True(Easy.FastEqual(value, newValue));
             }
         }
     }

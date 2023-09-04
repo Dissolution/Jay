@@ -46,19 +46,41 @@ public static class ListExtensions
         }
     }
 
-    public static bool TryRemoveAt<T>(this IList<T>? list, int index, out T? value)
+    public static bool TryRemoveAt<T>(this List<T> list, int index, [MaybeNullWhen(false)] out T? value)
     {
-        if (list is null ||
-            list.Count == 0 ||
-            index < 0 ||
-            index >= list.Count)
+        int count = list.Count;
+        if ((uint)index < count)
         {
-            value = default;
-            return false;
+            value = list[index];
+            list.RemoveAt(index);
+            return true;
         }
 
-        value = list[index];
-        list.RemoveAt(index);
-        return true;
+        value = default;
+        return false;
+    }
+    
+    public static bool TryRemoveAt<T>(this List<T> list, Index index, [MaybeNullWhen(false)] out T? value)
+    {
+        int count = list.Count;
+        int offset = index.GetOffset(count);
+        if ((uint)offset < count)
+        {
+            value = list[offset];
+            list.RemoveAt(offset);
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
+    public static void RemoveLast<T>(this List<T> list)
+    {
+        int end = list.Count - 1;
+        if (end >= 0)
+        {
+            list.RemoveAt(end);
+        }
     }
 }

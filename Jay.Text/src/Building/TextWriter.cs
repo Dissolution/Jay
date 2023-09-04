@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Jay.Utilities;
 // ReSharper disable MergeCastWithTypeCheck
 
@@ -29,7 +28,7 @@ public class TextWriter : IBuildingText
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _length;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal set => _length = value.Clamp(0, Capacity);
+        set => _length = value.Clamp(0, Capacity);
     }
 
     public int Capacity
@@ -52,47 +51,40 @@ public class TextWriter : IBuildingText
 
     public TextWriter()
     {
-        _chars = ArrayPool<char>.Shared.Rent(TextBuilderHelper.MinimumCapacity);
+        _chars = TextPool.Rent();
+        _length = 0;
+    }
+    
+    public TextWriter(int minCapacity)
+    {
+        _chars = TextPool.Rent(minCapacity);
         _length = 0;
     }
 
-    public TextWriter(int minCapacity)
+    public TextWriter(int literalLength, int formattedCount)
     {
-        _chars = ArrayPool<char>.Shared.Rent(TextBuilderHelper.GetGrowToCapacity(TextBuilderHelper.MinimumCapacity, minCapacity));
+        _chars = TextPool.Rent(literalLength, formattedCount);
         _length = 0;
     }
 
 #region Grow
-    /// <summary>
-    /// Grow the size of <see cref="_chars"/> to at least the specified <paramref name="minCapacity"/>.
-    /// </summary>
-    /// <param name="minCapacity">The minimum possible Capacity to grow to</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void GrowCore(int minCapacity)
+    private void GrowBy(int growCount)
     {
-        Debug.Assert(minCapacity > TextBuilderHelper.MinimumCapacity);
-        Debug.Assert(minCapacity > Capacity);
-
-        char[] newArray = ArrayPool<char>.Shared.Rent(minCapacity);
+        Debug.Assert(growCount > 0);
+        char[] newArray = TextPool.RentGrowBy(Capacity, growCount);
         TextHelper.CopyTo(_chars, newArray);
 
         char[] toReturn = _chars;
         _chars = newArray;
-        ArrayPool<char>.Shared.Return(toReturn);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void GrowBy(int addingCharCount)
-    {
-        Debug.Assert(addingCharCount > 0);
-        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, addingCharCount));
+        TextPool.Return(toReturn);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowThenCopy(char ch)
     {
         int index = _length;
-        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, 1));
+        GrowBy(1);
         TextHelper.Unsafe.CopyBlock(
             in ch,
             ref _chars[index],
@@ -105,7 +97,7 @@ public class TextWriter : IBuildingText
     {
         int index = _length;
         int len = text.Length;
-        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, len));
+        GrowBy(len);
         TextHelper.Unsafe.CopyBlock(text, _chars.AsSpan(index..), len);
         _length = index + len;
     }
@@ -115,7 +107,7 @@ public class TextWriter : IBuildingText
     {
         int index = _length;
         int len = text.Length;
-        GrowCore(TextBuilderHelper.GetGrowByCapacity(Capacity, len));
+        GrowBy(len);
         TextHelper.Unsafe.CopyBlock(
             in text.GetPinnableReference(),
             ref _chars[index],
@@ -347,7 +339,7 @@ public class TextWriter : IBuildingText
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, format, provider))
                 {
-                    GrowBy(TextBuilderHelper.MinimumCapacity);
+                    GrowBy(TextPool.MINIMUM_CAPACITY);
                 }
                 _length += charsWritten;
                 return;
@@ -378,7 +370,7 @@ public class TextWriter : IBuildingText
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(Available, out charsWritten, format, provider))
                 {
-                    GrowBy(TextBuilderHelper.MinimumCapacity);
+                    GrowBy(TextPool.MINIMUM_CAPACITY);
                 }
                 _length += charsWritten;
                 return;
@@ -488,12 +480,9 @@ public class TextWriter : IBuildingText
 #nullable disable
     public void Dispose()
     {
-        char[] toReturn = Interlocked.Exchange<char[]>(ref _chars, null);
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-        if (toReturn is not null)
-        {
-            ArrayPool<char>.Shared.Return(toReturn, true);
-        }
+        char[] toReturn = _chars;
+        _chars = null!;
+        TextPool.Return(toReturn);
     }
 #nullable enable
 

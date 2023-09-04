@@ -73,7 +73,6 @@ public readonly ref struct TextSplitList
             {
                 _currentRange = _ranges[index];
                 _currentSpan = _inputText[_currentRange];
-                return true;
             }
             else
             {
