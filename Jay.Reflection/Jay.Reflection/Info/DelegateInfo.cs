@@ -9,7 +9,7 @@ using System.Numerics;
 namespace Jay.Reflection.Info;
 
 
-public sealed class DelegateInfo : IToCode,
+public sealed class DelegateInfo : ICodePart,
 #if NET7_0_OR_GREATER
     IEqualityOperators<DelegateInfo, DelegateInfo, bool>,
 #endif
@@ -106,25 +106,25 @@ public sealed class DelegateInfo : IToCode,
         return hasher.ToHashCode();
     }
 
-    public void WriteCodeTo(CodeBuilder codeBuilder)
+    public void DeclareTo(CodeBuilder codeBuilder)
     {
-        codeBuilder.Append($"{ReturnType} Name (");
+        codeBuilder.Write($"{ReturnType} Name (");
         for (var i = 0; i < ParameterCount; i++)
         {
             if (i > 0) 
-                codeBuilder.Append(',');
+                codeBuilder.Write(',');
             var param = Parameters[i];
             var access = param.GetAccess(out var parameterType);
-            codeBuilder.Append(access.ToCode());
-            codeBuilder.Append(' ');
-            codeBuilder.Append(parameterType);
-            codeBuilder.Append(param.Name);
+            codeBuilder.Code(access);
+            codeBuilder.Write(' ');
+            codeBuilder.Code(parameterType);
+            codeBuilder.Write(param.Name);
             if (param.HasDefaultValue)
             {
-                codeBuilder.Append(" = ");
-                codeBuilder.Append(param.DefaultValue);
+                codeBuilder.Write(" = ");
+                codeBuilder.Code(param.DefaultValue);
             }
         }
-        codeBuilder.Append(')');
+        codeBuilder.Write(')');
     }
 }

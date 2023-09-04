@@ -25,9 +25,9 @@ partial record Arg
             // already on the stack
         }
         
-        public override void WriteCodeTo(CodeBuilder codeBuilder)
+        public override void DeclareTo(CodeBuilder codeBuilder)
         {
-            MemberInfoToCode.WriteCodeTo(this.Type, codeBuilder);
+            CodePart.DeclareTo(this.Type, codeBuilder);
         }
     }
 }

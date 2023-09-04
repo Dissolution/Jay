@@ -31,7 +31,7 @@ public class RuntimeMethodAdapter
         RuntimeDelegateBuilder = RuntimeBuilder.CreateRuntimeDelegateBuilder(delegateSig);
     }
 
-    private ReflectedException GetAdaptEx(InterpolatedCodeBuilder message,
+    private ReflectedException GetAdaptEx(InterpolatedCode message,
         Exception? innerException = null)
     {
         var ex = new ReflectedException(ref message, innerException)

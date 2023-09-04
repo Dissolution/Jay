@@ -96,7 +96,7 @@ public abstract class Signature : IEquatable<Signature>, ICodePart
         return Hasher.Combine(GetType(), Name, Visibility, Keywords);
     }
 
-    public abstract void DeclareTo(SourceCodeBuilder code);
+    public abstract void DeclareTo(CodeBuilder code);
 
     public sealed override string ToString() => this.ToDeclaration();
 }

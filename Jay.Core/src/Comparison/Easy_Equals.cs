@@ -145,6 +145,20 @@ public sealed partial class Easy :
         return SpanExtensions.SequenceEqual<T>(left, right);
     }
 
+    public static bool SeqEqual<T>(IReadOnlyList<T> left, IReadOnlyList<T> right)
+    {
+        if (right.Count != left.Count)
+            return false;
+
+        for (var i = 0; i < left.Count; i++)
+        {
+            if (!FastEqual(left[i], right[i]))
+                return false;
+        }
+
+        return true;
+    }
+
 #endif
 
 #region Text

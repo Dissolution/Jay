@@ -1,8 +1,6 @@
 ﻿// ReSharper disable UnusedParameter.Local
 
-using System.Runtime.CompilerServices;
-
-namespace Jay.SourceGen.CodeBuilding;
+namespace Jay.Reflection.CodeBuilding;
 
 [InterpolatedStringHandler]
 public ref struct InterpolatedCode
@@ -15,7 +13,7 @@ public ref struct InterpolatedCode
     // }
     //
 
-    private readonly SourceCodeBuilder _code;
+    private readonly CodeBuilder _code;
 
     public InterpolatedCode()
     {
@@ -27,7 +25,7 @@ public ref struct InterpolatedCode
         _code = new();
     }
 
-    public InterpolatedCode(int literalLength, int formattedCount, SourceCodeBuilder code)
+    public InterpolatedCode(int literalLength, int formattedCount, CodeBuilder code)
     {
         _code = code;
     }
@@ -64,7 +62,7 @@ public ref struct InterpolatedCode
 
     public void AppendFormatted<T>(T? value, string? format)
     {
-        _code.Code<T>(value, format);
+        _code.Format<T>(value, format);
     }
 
     public void Dispose()

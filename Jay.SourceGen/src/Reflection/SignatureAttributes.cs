@@ -41,7 +41,7 @@ public sealed class SignatureAttributes : IReadOnlyList<AttributeSignature>, ICo
             .GetEnumerator();
     }
 
-    public void DeclareTo(SourceCodeBuilder code)
+    public void DeclareTo(CodeBuilder code)
     {
         if (_attributes.Count == 0) return;
 

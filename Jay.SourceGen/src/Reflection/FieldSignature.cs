@@ -94,7 +94,7 @@ public sealed class FieldSignature : MemberSignature,
         return Hasher.Combine(GetType(), Name, Visibility, Keywords, FieldType);
     }
 
-    public override void DeclareTo(SourceCodeBuilder code)
+    public override void DeclareTo(CodeBuilder code)
     {
         code.Code(Attributes)
             .Code(Visibility)

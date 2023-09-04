@@ -5,7 +5,7 @@ using Jay.Reflection.Info;
 
 namespace Jay.Reflection.Builders;
 
-public class RuntimeDelegateBuilder : IToCode
+public class RuntimeDelegateBuilder : ICodePart
 {
     protected readonly DynamicMethod _dynamicMethod;
     protected readonly DelegateInfo _delegateInfo;
@@ -32,15 +32,17 @@ public class RuntimeDelegateBuilder : IToCode
 
     public Delegate CreateDelegate()
     {
-        //string il = CodeBuilder.Render(this.Emitter);
+        //string il = CodePart.ToDeclaration(this.Emitter);
         //Debugger.Break();
         return _dynamicMethod.CreateDelegate(_delegateInfo.DelegateType);
     }
 
-    public void WriteCodeTo(CodeBuilder codeBuilder)
+    public void DeclareTo(CodeBuilder codeBuilder)
     {
-        codeBuilder.Append("Building a ").Append(_delegateInfo).AppendLine(':')
-            .Append(_emitter);
+        codeBuilder.Write("Building a ")
+            .Code(_delegateInfo)
+            .WriteLine(':')
+            .Code(_emitter);
     }
 }
 
@@ -52,7 +54,7 @@ public class RuntimeDelegateBuilder<TDelegate> : RuntimeDelegateBuilder
 
     public new TDelegate CreateDelegate()
     {
-        string il = CodeBuilder.Render(this.Emitter);
+        string il = CodePart.ToDeclaration(this.Emitter);
         Debugger.Break();
         return _dynamicMethod.CreateDelegate<TDelegate>();
     }

@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace Jay.Reflection.Emitting;
 
-public abstract class Emission : IToCode,
+public abstract class Emission : ICodePart,
     #if NET7_0_OR_GREATER
     IEqualityOperators<Emission,Emission,bool>,
  #endif
@@ -89,7 +89,7 @@ public abstract class Emission : IToCode,
         return hasher.ToHashCode();
     }
 
-    public abstract void WriteCodeTo(CodeBuilder codeBuilder);
+    public abstract void DeclareTo(CodeBuilder codeBuilder);
 
-    public override string ToString() => CodeBuilder.Render(this);
+    public override string ToString() => CodePart.ToDeclaration(this);
 }

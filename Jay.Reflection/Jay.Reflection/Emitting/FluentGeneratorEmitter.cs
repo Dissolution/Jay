@@ -55,7 +55,7 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
         throw new ArgumentOutOfRangeException(
             nameof(emitLocal),
             emitLocal,
-            CodeBuilder.Render(emitLocal));
+            emitLocal.ToDeclaration());
     }
 
 #region Emit OpCode

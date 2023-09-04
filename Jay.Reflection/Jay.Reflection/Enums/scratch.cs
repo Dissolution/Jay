@@ -6,7 +6,7 @@
 //
 // public abstract class EnumTypeInfo : 
 //     IEquatable<EnumTypeInfo>,
-//     IToCode
+//     ICodePart
 // {
 //     protected readonly EnumMemberInfo[] _members;
 //     
@@ -52,12 +52,12 @@
 //         return this.EnumType.GetHashCode();
 //     }
 //
-//     public void WriteCodeTo(CodeBuilder codeBuilder)
+//     public void DeclareTo(CodeBuilder codeBuilder)
 //     {
 //         codeBuilder.Write(this.Name);
 //     }
 //
-//     public override string ToString() => CodeBuilder.Render(this);
+//     public override string ToString() => CodePart.ToDeclaration(this);
 // }
 //
 // public sealed class EnumTypeInfo<TEnum> : EnumTypeInfo,

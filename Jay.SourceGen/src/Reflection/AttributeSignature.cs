@@ -88,7 +88,7 @@ public sealed class AttributeSignature : Signature,
         return Hasher.Combine(AttributeType, Name, Arguments);
     }
 
-    public override void DeclareTo(SourceCodeBuilder code)
+    public override void DeclareTo(CodeBuilder code)
     {
         code.Write(Name);
         if (Arguments.Count > 0)

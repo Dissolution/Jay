@@ -4,7 +4,7 @@ using Jay.Reflection.Emitting;
 namespace Jay.Reflection.Adapters.Args;
 
 [Union]
-public partial record Arg : IToCode
+public partial record Arg : ICodePart
 {
     public static implicit operator Arg(Type? type) => new Arg.Stack { Type = type ?? typeof(void) };
     public static implicit operator Arg(EmitLocal local) => new Arg.Local(local) { Type = local.Type };
@@ -37,5 +37,5 @@ public partial record Arg : IToCode
     public abstract void EmitStore<TEmitter>(TEmitter emitter)
         where TEmitter : FluentEmitter<TEmitter>;
 
-    public abstract void WriteCodeTo(CodeBuilder codeBuilder);
+    public abstract void DeclareTo(CodeBuilder codeBuilder);
 }

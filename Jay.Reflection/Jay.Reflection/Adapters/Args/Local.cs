@@ -21,9 +21,9 @@ partial record Arg
             emitter.Stloc(this.EmitLocal);
         }
         
-        public override void WriteCodeTo(CodeBuilder codeBuilder)
+        public override void DeclareTo(CodeBuilder codeBuilder)
         {
-            this.EmitLocal.WriteCodeTo(codeBuilder);
+            this.EmitLocal.DeclareTo(codeBuilder);
         }
     }
 }

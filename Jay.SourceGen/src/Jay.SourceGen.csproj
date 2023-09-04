@@ -9,6 +9,8 @@
 
         <AssemblyName>Jay.SourceGen</AssemblyName>
         <RootNamespace>Jay.SourceGen</RootNamespace>
+
+        <PolySharpUsePublicAccessibilityForGeneratedTypes>true</PolySharpUsePublicAccessibilityForGeneratedTypes>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,7 +26,6 @@
         <Using Include="Jay.Utilities"/>
         <Using Include="Jay.Reflection"/>
         <Using Include="Jay.Reflection.Extensions"/>
-        <Using Include="Jay.SourceGen.CodeBuilding"/>
         <Using Include="Jay.SourceGen.Extensions"/>
         <Using Include="Jay.Reflection.CodeBuilding"/>
         
@@ -42,12 +43,16 @@
         <PackageReference Include="PolySharp" Version="1.13.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>        
+        </PackageReference>
     </ItemGroup>
     
     <ItemGroup>
       <ProjectReference Include="..\..\Jay.Core\src\Jay.Core.csproj" />
       <ProjectReference Include="..\..\Jay.Reflection\Jay.Reflection\Jay.Reflection.csproj" />
       <ProjectReference Include="..\..\Jay.Text\src\Jay.Text.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="CodeBuilding\" />
     </ItemGroup>
 </Project>

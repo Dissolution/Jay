@@ -105,7 +105,7 @@ public sealed class PropertySignature : MemberSignature,
         return Hasher.Combine(base.GetHashCode(), PropertyType, GetMethod, SetMethod);
     }
 
-    public override void DeclareTo(SourceCodeBuilder code)
+    public override void DeclareTo(CodeBuilder code)
     {
         code.Code(Attributes)
             .Code(Visibility)

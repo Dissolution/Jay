@@ -159,6 +159,7 @@ public sealed class DynamicReflection : DynamicObject
                     return false;
 
                 // Matches!
+                return true;
             })
             .ToList();
         method = methods.OneOrDefault();
@@ -173,7 +174,7 @@ public sealed class DynamicReflection : DynamicObject
             return RuntimeMethodAdapter.Adapt<ObjectInvoke>(method);
 
         // Nothing matches
-        Debug.WriteLine(CodeBuilder.Render($"Nothing found on {_targetType} when searching for {key}"));
+        Debug.WriteLine(CodePart.ToCode($"Nothing found on {_targetType} when searching for {key}"));
         Debugger.Break();
         return null;
     }
@@ -589,6 +590,6 @@ public sealed class DynamicReflection : DynamicObject
 
     public override string ToString()
     {
-        return CodeBuilder.Render($"dynamic<{_targetType}>");
+        return CodePart.ToCode($"dynamic<{_targetType}>");
     }
 }

@@ -10,7 +10,7 @@ namespace Jay.Reflection.Utilities;
 /// </summary>
 public class ArrayWrapper : 
     IEnumerable<object?>, IEnumerable,
-    IToCode
+    ICodePart
 {
     protected readonly Array _array;
 
@@ -115,13 +115,13 @@ public class ArrayWrapper :
         return hasher.ToHashCode();
     }
 
-    public void WriteCodeTo(CodeBuilder codeBuilder)
+    public void DeclareTo(CodeBuilder codeBuilder)
     {
         Debug.Assert(Rank > 0);
         // 1D array is much easier
         if (Rank == 1)
         {
-            codeBuilder.Append('[').DelimitAppend(", ", this).Append(']');
+            codeBuilder.Write('[').DelimitCode(", ", this).Write(']');
         }
         else
         {

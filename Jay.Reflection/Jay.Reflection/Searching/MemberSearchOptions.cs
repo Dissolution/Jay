@@ -1,6 +1,6 @@
 ﻿namespace Jay.Reflection.Searching;
 
-public sealed record class MemberSearchOptions : IToCode
+public sealed record class MemberSearchOptions : ICodePart
 {
     public Visibility Visibility { get; init; } = Visibility.Any;
 
@@ -193,32 +193,32 @@ public sealed record class MemberSearchOptions : IToCode
         throw new NotImplementedException();
     }
 
-    public void WriteCodeTo(CodeBuilder codeBuilder)
+    public void DeclareTo(CodeBuilder codeBuilder)
     {
         if (Visibility != Visibility.None)
         {
-            codeBuilder.Append(Visibility);
+            codeBuilder.Code(Visibility);
         }
         if (ReturnType != null)
         {
-            codeBuilder.Append(' ').Append(ReturnType);
+            codeBuilder.Write(' ').Code(ReturnType);
         }
         if (Name is not null)
         {
-            codeBuilder.Append($" \"{Name}\"");
+            codeBuilder.Write($" \"{Name}\"");
             if (NameMatch != NameMatchOptions.Exact)
             {
-                codeBuilder.Append($"({NameMatch})");
+                codeBuilder.Write($"({NameMatch})");
             }
         }
         if (ParameterTypes is not null)
         {
-            codeBuilder.Append(" (").DelimitAppend<Type>(", ", ParameterTypes);
+            codeBuilder.Write(" (").DelimitCode<Type>(", ", ParameterTypes);
         }
     }
 
     public override string ToString()
     {
-        return CodeBuilder.Render(this);
+        return CodePart.ToDeclaration(this);
     }
 }

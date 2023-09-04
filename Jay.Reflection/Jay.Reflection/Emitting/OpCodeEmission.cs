@@ -59,14 +59,12 @@ public sealed class OpCodeEmission : Emission
         this.OpCode = opCode;
     }
 
-    public override void WriteCodeTo(CodeBuilder codeBuilder)
+    public override void DeclareTo(CodeBuilder codeBuilder)
     {
-        codeBuilder.Append(Name);
-
-        if (HasArgs)
-        {
-            codeBuilder.Append("    ");
-            codeBuilder.Append(this.Arg);
-        }
+        codeBuilder
+            .Write(Name)
+            .If(HasArgs, cb => cb
+                .Write("    ")
+                .Code(this.Arg));
     }
 }

@@ -12,7 +12,7 @@ public readonly struct EmitLabel :
 #endif
         IEquatable<EmitLabel>,
         IEquatable<Label>,
-        IToCode
+        ICodePart
 {
     public static bool operator ==(EmitLabel left, EmitLabel right) => left.Equals(right);
 
@@ -67,14 +67,11 @@ public readonly struct EmitLabel :
         return Hasher.Combine(Name, Position);
     }
 
-    public void WriteCodeTo(CodeBuilder codeBuilder)
+    public void DeclareTo(CodeBuilder codeBuilder)
     {
-        codeBuilder.Append("0x");
-        codeBuilder.Append(this.Position, "X4");
-        codeBuilder.Append(" | ");
-        codeBuilder.Append(this.Name);
-        codeBuilder.Append(':');
+        codeBuilder
+            .Write($"0x{Position:X4} | {Name}:");
     }
 
-    public override string ToString() => CodeBuilder.Render(this);
+    public override string ToString() => CodePart.ToDeclaration(this);
 }

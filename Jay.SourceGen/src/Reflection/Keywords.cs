@@ -18,7 +18,7 @@ public enum Keywords
     Init = 1 << 13,
 }
 
-public static class KeysExtensions
+public static class KeywordExtensions
 {
     public static Keywords GetKeywords(this MemberInfo? member)
     {

@@ -15,7 +15,7 @@ public readonly struct EmitLocal :
     IEquatable<EmitLocal>, 
     IEquatable<LocalBuilder>,
     IEquatable<LocalVariableInfo>,
-    IToCode
+    ICodePart
 {
     public static bool operator ==(EmitLocal left, EmitLocal right) => left.Equals(right);
     public static bool operator !=(EmitLocal left, EmitLocal right) => !left.Equals(right);
@@ -100,19 +100,12 @@ public readonly struct EmitLocal :
         return Index;
     }
 
-    public void WriteCodeTo(CodeBuilder codeBuilder)
+    public void DeclareTo(CodeBuilder codeBuilder)
     {
-        codeBuilder.Append('[');
-        codeBuilder.Append(this.Index);
-        codeBuilder.Append("] ");
-        codeBuilder.Append(this.Type);
-        codeBuilder.Append(' ');
-        codeBuilder.Append(this.Name);
-        if (this.IsPinned)
-        {
-            codeBuilder.Append(" 📌");
-        }
+        codeBuilder
+            .Write($"[{Index}] {Type} {Name}")
+            .If(IsPinned, cb => cb.Write(" 📌"));
     }
 
-    public override string ToString() => CodeBuilder.Render(this);
+    public override string ToString() => CodePart.ToDeclaration(this);
 }

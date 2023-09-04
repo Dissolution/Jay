@@ -44,7 +44,7 @@ public class MemberDelegate : IEquatable<MemberDelegate>
     }
     public override string ToString()
     {
-        return CodeBuilder.Render($"{this.MemberInfo} - {this.DelegateInfo}");
+        return CodePart.ToCode($"{this.MemberInfo} - {this.DelegateInfo}");
     }
 }
 

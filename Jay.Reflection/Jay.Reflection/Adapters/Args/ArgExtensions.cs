@@ -8,7 +8,7 @@ public static class ArgExtensions
         string? info = null)
     {
         return new InvalidOperationException(
-            message: CodeBuilder.Render($"Cannot load {sourceArg} and store {destArg}: {info}"));
+            message: CodePart.ToCode($"Cannot load {sourceArg} and store {destArg}: {info}"));
     }
 
     public static Result CanCast(Arg sourceArg, Arg destArg)

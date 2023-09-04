@@ -17,7 +17,7 @@ public /* static */ partial class ReflectedException
                 Visibility.NonPublic | Visibility.Instance,
                 typeof(string)));
         _setExceptionMessage = RuntimeBuilder.EmitDelegate<Action<Exception, string?>>(
-            "Exception_set_Message",
+            $"Exception_set_Message",
             emitter =>
             {
                 emitter.Emit(OpCodes.Ldarg_0)
@@ -32,7 +32,7 @@ public /* static */ partial class ReflectedException
                 Visibility.NonPublic | Visibility.Instance,
                 typeof(Exception)));
         _setExceptionInnerException = RuntimeBuilder.EmitDelegate<Action<Exception, Exception?>>(
-            "Exception_set_InnerException",
+            $"Exception_set_InnerException",
             emitter =>
             {
                 emitter.Emit(OpCodes.Ldarg_0)
@@ -66,7 +66,7 @@ public partial class ReflectedException : Exception
     }
 
     public ReflectedException(
-        ref InterpolatedCodeBuilder message,
+        ref InterpolatedCode message,
         Exception? innerException = null)
         : base(message.ToStringAndDispose(), innerException)
     {
@@ -82,6 +82,6 @@ public partial class ReflectedException : Exception
 
     public override string ToString()
     {
-        return CodeBuilder.Render(this);
+        return CodePart.ToCode(this);
     }
 }

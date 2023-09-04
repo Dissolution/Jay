@@ -34,7 +34,7 @@ public static class RuntimeBuilder
         return name;
     }
     
-    private static string GetMemberName(MemberTypes memberType, InterpolatedCodeBuilder suggestion)
+    private static string GetMemberName(MemberTypes memberType, InterpolatedCode suggestion)
     {
         string sugg = suggestion.ToStringAndDispose();
         string name = MemberNaming.CreateMemberName(memberType, sugg);
@@ -43,7 +43,7 @@ public static class RuntimeBuilder
     
     public static DynamicMethod CreateDynamicMethod(
         DelegateInfo signature,
-        InterpolatedCodeBuilder name = default)
+        InterpolatedCode name = default)
     {
         return new DynamicMethod(
             // ensure we have a valid name
@@ -63,7 +63,7 @@ public static class RuntimeBuilder
 
     public static RuntimeDelegateBuilder CreateRuntimeDelegateBuilder(
         DelegateInfo delegateSig,
-        InterpolatedCodeBuilder name = default)
+        InterpolatedCode name = default)
     {
         var dynamicMethod = CreateDynamicMethod(delegateSig, name);
         return new RuntimeDelegateBuilder(dynamicMethod, delegateSig);
@@ -71,10 +71,10 @@ public static class RuntimeBuilder
 
     public static RuntimeDelegateBuilder CreateRuntimeDelegateBuilder(
         Type delegateType,
-        InterpolatedCodeBuilder name = default) => CreateRuntimeDelegateBuilder(DelegateInfo.For(delegateType), name);
+        InterpolatedCode name = default) => CreateRuntimeDelegateBuilder(DelegateInfo.For(delegateType), name);
 
     public static RuntimeDelegateBuilder<TDelegate> CreateRuntimeDelegateBuilder<TDelegate>(
-        InterpolatedCodeBuilder name = default)
+        InterpolatedCode name = default)
         where TDelegate : Delegate
     {
         var dynamicMethod = CreateDynamicMethod(DelegateInfo.For<TDelegate>(), name);
@@ -84,7 +84,7 @@ public static class RuntimeBuilder
 
     public static Delegate GenerateDelegate(
         DelegateInfo signature,
-        InterpolatedCodeBuilder name,
+        InterpolatedCode name,
         Action<ILGenerator> generateDelegate)
     {
         var method = CreateDynamicMethod(signature, name);
@@ -94,7 +94,7 @@ public static class RuntimeBuilder
     }
 
     public static TDelegate GenerateDelegate<TDelegate>(
-        InterpolatedCodeBuilder name,
+        InterpolatedCode name,
         Action<ILGenerator> generateDelegate)
         where TDelegate : Delegate
     {
@@ -106,7 +106,7 @@ public static class RuntimeBuilder
 
     public static Delegate BuildDelegate(
         DelegateInfo signature,
-        InterpolatedCodeBuilder name,
+        InterpolatedCode name,
         Action<RuntimeDelegateBuilder> buildDelegate)
     {
         var runtimeDelegateBuilder = CreateRuntimeDelegateBuilder(signature, name);
@@ -116,14 +116,14 @@ public static class RuntimeBuilder
 
     public static Delegate BuildDelegate(
         Type delegateType,
-        InterpolatedCodeBuilder name,
+        InterpolatedCode name,
         Action<RuntimeDelegateBuilder> buildDelegate) => BuildDelegate(
         DelegateInfo.For(delegateType),
         name,
         buildDelegate);
 
     public static TDelegate BuildDelegate<TDelegate>(
-        InterpolatedCodeBuilder name,
+        InterpolatedCode name,
         Action<RuntimeDelegateBuilder<TDelegate>> buildDelegate)
         where TDelegate : Delegate
     {
@@ -138,7 +138,7 @@ public static class RuntimeBuilder
     {
         return EmitDelegate(
             signature,
-            null,
+            default,
             emitDelegate);
     }
 
@@ -148,13 +148,13 @@ public static class RuntimeBuilder
     {
         return EmitDelegate(
             delegateType,
-            null,
+            default,
             emitDelegate);
     }
 
     public static Delegate EmitDelegate(
         DelegateInfo signature,
-        InterpolatedCodeBuilder name,
+        InterpolatedCode name,
         Action<FluentGeneratorEmitter> emitDelegate)
     {
         var runtimeMethod = CreateRuntimeDelegateBuilder(signature, name);
@@ -164,7 +164,7 @@ public static class RuntimeBuilder
 
     public static Delegate EmitDelegate(
         Type delegateType,
-        InterpolatedCodeBuilder name,
+        InterpolatedCode name,
         Action<FluentGeneratorEmitter> emitDelegate)
     {
         if (!delegateType.Implements<Delegate>())
@@ -179,11 +179,11 @@ public static class RuntimeBuilder
         Action<FluentGeneratorEmitter> emitDelegate)
         where TDelegate : Delegate
     {
-        return EmitDelegate<TDelegate>(null, emitDelegate);
+        return EmitDelegate<TDelegate>(default, emitDelegate);
     }
 
     public static TDelegate EmitDelegate<TDelegate>(
-        InterpolatedCodeBuilder name,
+        InterpolatedCode name,
         Action<FluentGeneratorEmitter> emitDelegate)
         where TDelegate : Delegate
     {
@@ -194,7 +194,7 @@ public static class RuntimeBuilder
 
     public static TypeBuilder DefineType(
         TypeAttributes typeAttributes,
-        InterpolatedCodeBuilder name = default)
+        InterpolatedCode name = default)
     {
         return ModuleBuilder.DefineType(
             MemberNaming.CreateMemberName(MemberTypes.TypeInfo, name.ToStringAndDispose()),

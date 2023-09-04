@@ -157,7 +157,7 @@ public sealed class MethodDeconstructor
                 }
                 catch (Exception ex)
                 {
-                    var info = CodeBuilder.Render(ex);
+                    var info = CodePart.ToCode(ex);
                     Debugger.Break();
                 }
                 
@@ -175,7 +175,7 @@ public sealed class MethodDeconstructor
                 }
                 catch (Exception ex)
                 {
-                    var info = CodeBuilder.Render(ex);
+                    var info = CodePart.ToCode(ex);
                     Debugger.Break();
                 }
                 try
@@ -184,7 +184,7 @@ public sealed class MethodDeconstructor
                 }
                 catch (Exception ex)
                 {
-                    var info = CodeBuilder.Render(ex);
+                    var info = CodePart.ToCode(ex);
                     Debugger.Break();
                 }
                 return member;

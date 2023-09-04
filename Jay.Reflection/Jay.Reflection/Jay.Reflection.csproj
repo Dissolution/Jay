@@ -22,6 +22,7 @@
 
         <!-- lambda expression issue -->
         <NoWarn>8622</NoWarn>
+        <PolySharpUsePublicAccessibilityForGeneratedTypes>true</PolySharpUsePublicAccessibilityForGeneratedTypes>
     </PropertyGroup>
 
     <!-- Global Usings -->
@@ -42,10 +43,6 @@
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
         <!-- Fix ImplicitUsings Issue -->
         <Using Remove="System.Net.Http"/>
-
-        <PackageReference Include="IndexRange" Version="1.0.2">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
         <PackageReference Include="System.Memory" Version="4.5.5">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -55,9 +52,6 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-        <PackageReference Include="IndexRange" Version="1.0.2">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
         <PackageReference Include="System.Memory" Version="4.5.5">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>

@@ -105,4 +105,9 @@ public sealed class TypeSignature : MemberSignature,
     {
         return Hasher.Combine(base.GetHashCode(), Kind, Namespace);
     }
+
+    public override void DeclareTo(CodeBuilder code)
+    {
+        code.Write(Name);
+    }
 }

@@ -4,7 +4,7 @@
 //
 // public abstract class EnumTypeInfo : 
 //     IEquatable<EnumTypeInfo>, IEquatable<Type>,
-//     IToCode
+//     ICodePart
 // {
 //     protected readonly EnumMemberInfo[] _enumMemberInfos;
 //     

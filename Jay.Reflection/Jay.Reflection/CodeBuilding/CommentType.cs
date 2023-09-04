@@ -1,4 +1,4 @@
-﻿namespace Jay.SourceGen.Coding;
+﻿namespace Jay.Reflection.CodeBuilding;
 
 public enum CommentType
 {

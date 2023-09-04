@@ -94,8 +94,9 @@ public sealed class AttributeArguments : Dictionary<string, object?>
     {
         return CodeBuilder
             .New
-            .AppendLine($"{Count} Attribute Arguments:")
-            .DelimitLines(this, (tb, pair) => tb.Append(pair.Key).Append(": ").Append(pair.Value))
+            .Write($"{Count} Attribute Arguments:")
+            .NewLine()
+            .LineDelimit(this, (tb, pair) => tb.Code(pair.Key).Write(": ").Code(pair.Value))
             .ToStringAndDispose();
     }
 }

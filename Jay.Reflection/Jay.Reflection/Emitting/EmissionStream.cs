@@ -2,7 +2,7 @@
 
 public readonly record struct EmissionLine(int? Offset, Emission Emission);
 
-public class EmissionStream : LinkedList<EmissionLine>, IToCode
+public class EmissionStream : LinkedList<EmissionLine>, ICodePart
 {
     public bool TryFindByOffset(int offset, out EmissionLine emissionLine)
     {
@@ -35,15 +35,16 @@ public class EmissionStream : LinkedList<EmissionLine>, IToCode
         }
     }
 
-    public void WriteCodeTo(CodeBuilder codeBuilder)
+    public void DeclareTo(CodeBuilder codeBuilder)
     {
         foreach (var node in this)
         {
-            codeBuilder.Append($"IL_{node.Offset:x4}: ");
-            codeBuilder.Append(node.Emission);
-            codeBuilder.NewLine();
+            codeBuilder
+                .Write($"IL_{node.Offset:x4}: ")
+                .Code(node.Emission)
+                .NewLine();
         }
     }
 
-    public override string ToString() => CodeBuilder.Render(this);
+    public override string ToString() => CodePart.ToDeclaration(this);
 }

@@ -19,6 +19,7 @@
         <IsPackable>false</IsPackable>
         <!-- Quiet Nuget warnings about xunit.testrunner for multitargetting -->
         <NoWarn>$(NoWarn);NU1701</NoWarn>
+        <PolySharpUsePublicAccessibilityForGeneratedTypes>true</PolySharpUsePublicAccessibilityForGeneratedTypes>
     </PropertyGroup>
 
     <!-- Global Usings -->
@@ -31,22 +32,16 @@
     
     <!-- NuGet Packages -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-        <PackageReference Include="IndexRange" Version="1.0.2">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
         <PackageReference Include="System.Memory" Version="4.5.5"/>
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-        <PackageReference Include="IndexRange" Version="1.0.2">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
         <PackageReference Include="System.Memory" Version="4.5.5"/>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Bogus" Version="34.0.2" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
         <PackageReference Include="xunit" Version="2.5.0" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -55,6 +50,10 @@
         <PackageReference Include="coverlet.collector" Version="6.0.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="PolySharp" Version="1.13.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
 

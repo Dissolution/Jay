@@ -18,17 +18,18 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <IsPackable>false</IsPackable>
+        <PolySharpUsePublicAccessibilityForGeneratedTypes>true</PolySharpUsePublicAccessibilityForGeneratedTypes>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Bogus" Version="34.0.2" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2"/>
-        <PackageReference Include="xunit" Version="2.4.2"/>
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+        <PackageReference Include="xunit" Version="2.5.0" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="coverlet.collector" Version="3.1.2">
+        <PackageReference Include="coverlet.collector" Version="6.0.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -57,10 +58,6 @@
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
         <!-- Fix ImplicitUsings Issue -->
         <Using Remove="System.Net.Http"/>
-
-        <PackageReference Include="IndexRange" Version="1.0.2">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
         <PackageReference Include="System.Memory" Version="4.5.5">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -70,7 +67,7 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-        <PackageReference Include="IndexRange" Version="1.0.2">
+        <PackageReference Include="IndexRange" Version="1.0.3">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="System.Memory" Version="4.5.5">

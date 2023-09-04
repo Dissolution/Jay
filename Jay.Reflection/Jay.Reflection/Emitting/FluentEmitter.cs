@@ -11,7 +11,7 @@ using Jay.Reflection.Validation;
 
 namespace Jay.Reflection.Emitting;
 
-public class FluentEmitter<TSelf> : IToCode
+public class FluentEmitter<TSelf> : ICodePart
     where TSelf : FluentEmitter<TSelf>
 {
     [return: NotNullIfNotNull(nameof(name))]
@@ -965,6 +965,7 @@ public class FluentEmitter<TSelf> : IToCode
                     var paramType = ctorParams[i].ParameterType;
                     if (!argType.Implements(paramType)) return false;
                 }
+                return true;
             })
             .ToList();
         Debugger.Break();
@@ -3005,13 +3006,13 @@ public class FluentEmitter<TSelf> : IToCode
 
     #endregion
     
-    public void WriteCodeTo(CodeBuilder codeBuilder)
+    public void DeclareTo(CodeBuilder codeBuilder)
     {
-        this.Emissions.WriteCodeTo(codeBuilder);
+        this.Emissions.DeclareTo(codeBuilder);
     }
 
     public override string ToString()
     {
-        return CodeBuilder.Render(this);
+        return CodePart.ToDeclaration(this);
     }
 }

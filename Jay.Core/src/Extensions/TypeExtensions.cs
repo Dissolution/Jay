@@ -20,6 +20,7 @@ public static class TypeExtensions
             // Check interface generic types
             // e.g. List<int> : IList<>
             if (type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == otherType))
+                return true;
         }
         return false;
     }

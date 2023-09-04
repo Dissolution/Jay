@@ -80,6 +80,7 @@ public static class GenericExtensions
         for (var i = 0; i < options.Length; i++)
         {
             if (EqualityComparer<T>.Default.Equals(value, options[i]))
+                return true;
         }
         return false;
     }
@@ -89,6 +90,7 @@ public static class GenericExtensions
         foreach (T? option in options)
         {
             if (EqualityComparer<T>.Default.Equals(value, option))
+                return true;
         }
         return false;
     }

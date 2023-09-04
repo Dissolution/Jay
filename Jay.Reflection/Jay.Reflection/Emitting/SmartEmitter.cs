@@ -83,7 +83,7 @@ public static class SmartEmitterExtensions
     }
 }
 
-public sealed class SmartEmitter : IToCode
+public sealed class SmartEmitter : ICodePart
 {
     private readonly FluentGeneratorEmitter _genEmitter;
 
@@ -279,8 +279,8 @@ public sealed class SmartEmitter : IToCode
     }
 
 
-    public void WriteCodeTo(CodeBuilder codeBuilder)
+    public void DeclareTo(CodeBuilder codeBuilder)
     {
-        this.Emissions.WriteCodeTo(codeBuilder);
+        this.Emissions.DeclareTo(codeBuilder);
     }
 }

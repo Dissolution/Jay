@@ -72,6 +72,6 @@ public class ArrayEnumerator : IEnumerator<object?>, IEnumerator
     {
         if (_indices is null)
             return "Enumeration has not started";
-        return CodeBuilder.Render($"{_indices}: {Current}");
+        return CodePart.ToCode($"{_indices}: {Current}");
     }
 }

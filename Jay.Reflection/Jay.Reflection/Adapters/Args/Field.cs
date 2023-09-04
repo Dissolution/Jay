@@ -5,7 +5,7 @@ namespace Jay.Reflection.Adapters.Args;
 
 partial record Arg
 {
-    partial record Field : IToCode
+    partial record Field : ICodePart
     {
         private void EmitLoadInstance<TEmitter>(TEmitter emitter)
             where TEmitter : FluentEmitter<TEmitter>
@@ -33,9 +33,9 @@ partial record Arg
             emitter.Stfld(this.FieldInfo);
         }
 
-        public override void WriteCodeTo(CodeBuilder codeBuilder)
+        public override void DeclareTo(CodeBuilder codeBuilder)
         {
-            MemberInfoToCode.WriteCodeTo(this.FieldInfo, codeBuilder);
+            CodePart.DeclareTo(this.FieldInfo, codeBuilder);
         }
     }
 }

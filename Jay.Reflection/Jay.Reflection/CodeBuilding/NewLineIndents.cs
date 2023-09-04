@@ -1,7 +1,7 @@
 ﻿using Jay.Text.Building;
 using Jay.Text.Utilities;
 
-namespace Jay.SourceGen.CodeBuilding;
+namespace Jay.Reflection.CodeBuilding;
 
 internal sealed class NewLineIndents : IDisposable
 {

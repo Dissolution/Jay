@@ -22,6 +22,8 @@
 
         <!-- lambda expression issue -->
         <NoWarn>8622</NoWarn>
+
+        <PolySharpUsePublicAccessibilityForGeneratedTypes>true</PolySharpUsePublicAccessibilityForGeneratedTypes>
     </PropertyGroup>
 
     <!-- Global Usings -->
@@ -35,17 +37,10 @@
     <!-- NuGet Packages -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
         <Using Remove="System.Net.Http"/>
-
-        <PackageReference Include="IndexRange" Version="1.0.2">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
         <PackageReference Include="System.Memory" Version="4.5.5"/>
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-        <PackageReference Include="IndexRange" Version="1.0.2">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
         <PackageReference Include="System.Memory" Version="4.5.5"/>
     </ItemGroup>
 
@@ -66,12 +61,5 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
-
-    <ItemGroup>
-        <!-- Expose my internals to the Tests library -->
-        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-            <_Parameter1>Jay.Tests</_Parameter1>
-        </AssemblyAttribute>
-    </ItemGroup>
-    
+        
 </Project>

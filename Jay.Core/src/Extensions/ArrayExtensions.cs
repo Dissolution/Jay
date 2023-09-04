@@ -28,6 +28,7 @@ public static class ArrayExtensions
         for (var i = 0; i < array.Length; i++)
         {
             if (predicate(array[i]))
+                return true;
         }
 
         return false;
@@ -50,6 +51,7 @@ public static class ArrayExtensions
         for (var i = 0; i < array.Length; i++)
         {
             if (EqualityComparer<T>.Default.Equals(array[i], item))
+                return true;
         }
 
         return false;
@@ -62,6 +64,7 @@ public static class ArrayExtensions
         for (var i = 0; i < array.Length; i++)
         {
             if (itemComparer.Equals(array[i], item))
+                return true;
         }
 
         return false;
