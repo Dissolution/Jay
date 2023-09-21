@@ -1,11 +1,8 @@
 ﻿using Jay.Collections;
-using Jay.Reflection.Searching;
 
 namespace Jay.Reflection.CodeBuilding;
 
-public delegate void WriteCode<in T>(T? value, CodeBuilder code);
-
-public static class CodePart
+public abstract class CodePart
 {
     private static readonly ConcurrentTypeMap<Delegate> _cache = new();
 
@@ -38,8 +35,6 @@ public static class CodePart
         Add(WriteString<Guid>(nameof(Guid)));
         // Add(WriteString<TimeOnly>(nameof(TimeOnly)));
         // Add(WriteString<DateOnly>(nameof(DateOnly)));
-
-
     }
 
     internal static void SetString<T>(string str)
@@ -48,7 +43,7 @@ public static class CodePart
     }
 
     private static WriteCode<T> WriteString<T>(string str) => (_, code) => code.Write(str);
-    
+
     internal static void SetString(Type type, string str)
     {
         // _cache.Set(type, Delegate.CreateDelegate(
@@ -62,7 +57,7 @@ public static class CodePart
         throw new NotImplementedException();
     }
     //internal static void SetToString<T>()
-    
+
     private static void Add<T>(WriteCode<T> writeCode) => _cache.Set<T>(writeCode);
     //private static void Add(Type type, WriteCode<object?> writeCode) => _cache.Set<T>(writeCode);
 
@@ -75,24 +70,29 @@ public static class CodePart
     {
         if (type == typeof(int))
             return WriteToString;
+
         // if (type == typeof(Type))
         //     return WriteType;
         throw new NotImplementedException();
+        // MemberInfo
+        // ParameterInfo
+        // Exception
+        // 
     }
-    
+
     private static WriteCode<T> GetWriteCode<T>()
     {
         return _cache.GetOrAdd<T>(static t => CreateWriteCode<T>(t))
-            .MustBe<WriteCode<T>>();
+            .AsValid<WriteCode<T>>();
     }
-    
-    
-    public static string ToDeclaration(this ICodePart codePart)
+
+    public static string ToDeclaration(ICodePart codePart)
     {
         return CodeBuilder.New
             .Invoke(codePart.DeclareTo)
             .ToStringAndDispose();
     }
+   
 
     public static void DeclareTo<T>(T? value, CodeBuilder code)
     {
@@ -103,7 +103,7 @@ public static class CodePart
     {
         return code.ToStringAndDispose();
     }
-    
+
     public static string ToCode<T>(T? value)
     {
         throw new NotImplementedException();

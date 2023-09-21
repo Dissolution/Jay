@@ -51,8 +51,4 @@
       <ProjectReference Include="..\..\Jay.Reflection\Jay.Reflection\Jay.Reflection.csproj" />
       <ProjectReference Include="..\..\Jay.Text\src\Jay.Text.csproj" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <Folder Include="CodeBuilding\" />
-    </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-﻿using Jay.Collections.Iteration;
+﻿using Jay.Memory;
 
 namespace Jay.Text.Tests.TextBuilderTests;
 
@@ -74,16 +74,16 @@ public class AlignTests
                 {
                     textBuilder.Align(testString, testWidth, alignment);
                     wrote = textBuilder.Written[^testWidth..];
-                    var reader = new SpanIterator<char>(wrote);
+                    var reader = new SpanReader<char>(wrote);
                     Assert.Equal(testWidth, reader.Remaining.Length);
                     
-                    reader.TakeWhile(static ch => ch == ' ', out var frontSpaces);
+                    var frontSpaces = reader.TakeWhile(static ch => ch == ' ');
                     
-                    reader.TakeUntil(' ', out var text);
+                    var text = reader.TakeUntil(' ');
                     Assert.Equal(len, text.Length);
                     Assert.True(text.SequenceEqual(testText));
                     
-                    reader.TakeWhile(static ch => ch == ' ', out var backSpaces);
+                    var backSpaces = reader.TakeWhile(static ch => ch == ' ');
                     Assert.Equal(0, reader.Remaining.Length);
 
                     Assert.Equal(spaces, (frontSpaces.Length + backSpaces.Length));

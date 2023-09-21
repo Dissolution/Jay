@@ -12,7 +12,7 @@ public sealed class GeneratorEmission : Emission
     }
 
     public static GeneratorEmission BeginExceptFilterBlock() => new();
-    public static GeneratorEmission BeginExceptionBlock(EmitLabel emitLabel) => new(emitLabel);
+    public static GeneratorEmission BeginExceptionBlock(EmitterLabel emitterLabel) => new(emitterLabel);
     public static GeneratorEmission EndExceptionBlock() => new();
     public static GeneratorEmission BeginFaultBlock() => new();
     public static GeneratorEmission BeginFinallyBlock() => new();
@@ -41,9 +41,9 @@ public sealed class GeneratorEmission : Emission
         return new(nameSpace);
     }
 
-    public static GeneratorEmission DeclareLocal(EmitLocal emitLocal) => new(emitLocal);
-    public static GeneratorEmission DefineLabel(EmitLabel emitLabel) => new(emitLabel);
-    public static GeneratorEmission MarkLabel(EmitLabel emitLabel) => new(emitLabel);
+    public static GeneratorEmission DeclareLocal(EmitterLocal emitterLocal) => new(emitterLocal);
+    public static GeneratorEmission DefineLabel(EmitterLabel emitterLabel) => new(emitterLabel);
+    public static GeneratorEmission MarkLabel(EmitterLabel emitterLabel) => new(emitterLabel);
 
     public static GeneratorEmission EmitCall(MethodInfo method, params Type[]? optionalParameterTypes)
     {
@@ -64,7 +64,7 @@ public sealed class GeneratorEmission : Emission
 
     public static GeneratorEmission WriteLine(string text) => new(text);
     public static GeneratorEmission WriteLine(FieldInfo field) => new(field);
-    public static GeneratorEmission WriteLine(EmitLocal emitLocal) => new(emitLocal);
+    public static GeneratorEmission WriteLine(EmitterLocal emitterLocal) => new(emitterLocal);
     public static GeneratorEmission ThrowException(Type exceptionType) => new(exceptionType);
 
     public override int Size => 0;

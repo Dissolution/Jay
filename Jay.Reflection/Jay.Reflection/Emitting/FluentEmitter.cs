@@ -19,6 +19,7 @@ public class FluentEmitter<TSelf> : ICodePart
     {
         if (string.IsNullOrWhiteSpace(name))
             return count.ToString();
+
         // Fix 'out var XYZ' having 'var XYZ' as a name
         var i = name!.LastIndexOf(' ');
         if (i >= 0)
@@ -30,8 +31,8 @@ public class FluentEmitter<TSelf> : ICodePart
 
 
     protected readonly TSelf _self;
-    protected readonly List<EmitLabel> _emitLabels;
-    protected readonly List<EmitLocal> _emitLocals;
+    protected readonly List<EmitterLabel> _emitLabels;
+    protected readonly List<EmitterLocal> _emitLocals;
 
     public EmissionStream Emissions { get; }
 
@@ -45,20 +46,20 @@ public class FluentEmitter<TSelf> : ICodePart
         this.Emissions = new();
     }
 
-    protected EmitLabel CreateEmitLabel(string? lblName)
+    protected EmitterLabel CreateEmitLabel(string? lblName)
     {
         int lblCount = _emitLabels.Count;
-        var emitLabel = new EmitLabel(
+        var emitLabel = new EmitterLabel(
             name: GetVariableName(lblName, lblCount),
             position: lblCount);
         _emitLabels.Add(emitLabel);
         return emitLabel;
     }
 
-    protected EmitLocal CreateEmitLocal(string? localName, Type type, bool isPinned = false)
+    protected EmitterLocal CreateEmitLocal(string? localName, Type type, bool isPinned = false)
     {
         int localCount = _emitLocals.Count;
-        var emitLocal = new EmitLocal(
+        var emitLocal = new EmitterLocal(
             name: GetVariableName(localName, localCount),
             index: (ushort)localCount,
             type: type,
@@ -149,9 +150,9 @@ public class FluentEmitter<TSelf> : ICodePart
     /// Emits an <see cref="OpCode"/> onto the stream and leaves space to include a <see cref="Label"/> when fixes are done.
     /// </summary>
     /// <param name="opCode">The MSIL instruction to be emitted onto the stream.</param>
-    /// <param name="emitLabel">The <see cref="Label"/> to branch from this location.</param>
+    /// <param name="emitterLabel">The <see cref="Label"/> to branch from this location.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.emit#System_Reflection_Emit_ILGenerator_Emit_System_Reflection_Emit_OpCode_System_Reflection_Emit_Label_"/>
-    public virtual TSelf Emit(OpCode opCode, EmitLabel emitLabel) => Emit(new OpCodeEmission(opCode, emitLabel));
+    public virtual TSelf Emit(OpCode opCode, EmitterLabel emitterLabel) => Emit(new OpCodeEmission(opCode, emitterLabel));
 
     /// <summary>
     /// Emits an <see cref="OpCode"/> onto the stream and leaves space to include a <see cref="Label"/> when fixes are done.
@@ -161,16 +162,16 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="ArgumentNullException">If <paramref name="emitLabels"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentNullException">If <paramref name="emitLabels"/> is empty.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.emit#System_Reflection_Emit_ILGenerator_Emit_System_Reflection_Emit_OpCode_System_Reflection_Emit_Label___"/>
-    public virtual TSelf Emit(OpCode opCode, params EmitLabel[] emitLabels) => Emit(new OpCodeEmission(opCode, emitLabels));
+    public virtual TSelf Emit(OpCode opCode, params EmitterLabel[] emitLabels) => Emit(new OpCodeEmission(opCode, emitLabels));
 
     /// <summary>
     /// Emits an <see cref="OpCode"/> onto the stream followed by the index of the given <see cref="LocalBuilder"/>.
     /// </summary>
     /// <param name="opCode">The MSIL instruction to be emitted onto the stream.</param>
-    /// <param name="emitLocal">The <see cref="LocalBuilder"/> to emit the index of.</param>
-    /// <exception cref="InvalidOperationException">If <paramref name="opCode"/> is a single-byte instruction and <paramref name="emitLocal"/> has an index greater than <see cref="byte.MaxValue"/>.</exception>
+    /// <param name="emitterLocal">The <see cref="LocalBuilder"/> to emit the index of.</param>
+    /// <exception cref="InvalidOperationException">If <paramref name="opCode"/> is a single-byte instruction and <paramref name="emitterLocal"/> has an index greater than <see cref="byte.MaxValue"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.emit#System_Reflection_Emit_ILGenerator_Emit_System_Reflection_Emit_OpCode_System_Reflection_Emit_LocalBuilder_"/>
-    public virtual TSelf Emit(OpCode opCode, EmitLocal emitLocal) => Emit(new OpCodeEmission(opCode, emitLocal));
+    public virtual TSelf Emit(OpCode opCode, EmitterLocal emitterLocal) => Emit(new OpCodeEmission(opCode, emitterLocal));
 
     /// <summary>
     /// Emits an <see cref="OpCode"/> onto the stream followed by the given <see cref="FieldInfo"/>.
@@ -223,17 +224,18 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <summary>
     /// Begins an exception block for a non-filtered exception.
     /// </summary>
-    /// <param name="emitLabel">
+    /// <param name="emitterLabel">
     /// The <see cref="Label"/> for the end of the block.
     /// This will leave you in the correct place to execute <see langword="finally"/> blocks or to finish the <see langword="try"/>.
     /// </param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.beginexceptionblock"/>
-    public virtual TSelf BeginExceptionBlock(out EmitLabel emitLabel,
-        [CallerArgumentExpression(nameof(emitLabel))]
+    public virtual TSelf BeginExceptionBlock(
+        out EmitterLabel emitterLabel,
+        [CallerArgumentExpression(nameof(emitterLabel))]
         string lblName = "")
     {
-        emitLabel = CreateEmitLabel(lblName);
-        return Emit(GeneratorEmission.BeginExceptionBlock(emitLabel));
+        emitterLabel = CreateEmitLabel(lblName);
+        return Emit(GeneratorEmission.BeginExceptionBlock(emitterLabel));
     }
 
     /// <summary>
@@ -254,8 +256,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="ArgumentException">The catch block is within a filtered exception.</exception>
     /// <exception cref="NotSupportedException">The stream being emitted is not currently in an exception block.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.begincatchblock"/>
-    public TSelf BeginCatchBlock<TException>() where TException : Exception
-        => BeginCatchBlock(typeof(TException));
+    public TSelf BeginCatchBlock<TException>() where TException : Exception => BeginCatchBlock(typeof(TException));
 
     /// <summary>
     /// Begins a <see langword="finally"/> block in the stream.
@@ -310,9 +311,9 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <summary>
     /// Starts a <c>try<c> block containing <paramref name="tryBlock"/>
     /// </summary>
-    public TCFEmitter<TSelf> Try(Action<TSelf> tryBlock)
+    public TryCatchFinallyEmitter<TSelf> Try(Action<TSelf> tryBlock)
     {
-        return new TCFEmitter<TSelf>(_self)
+        return new TryCatchFinallyEmitter<TSelf>(_self)
             .Try(tryBlock);
     }
 #endregion
@@ -360,10 +361,10 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.declarelocal#System_Reflection_Emit_ILGenerator_DeclareLocal_System_Type_"/>
     public TSelf DeclareLocal(
         Type type,
-        out EmitLocal emitLocal,
-        [CallerArgumentExpression(nameof(emitLocal))]
+        out EmitterLocal emitterLocal,
+        [CallerArgumentExpression(nameof(emitterLocal))]
         string localName = "")
-        => DeclareLocal(type, false, out emitLocal, localName);
+        => DeclareLocal(type, false, out emitterLocal, localName);
 
     /// <summary>
     /// Declares a <see cref="LocalBuilder"/> variable of the specified <see cref="Type"/>.
@@ -371,8 +372,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <typeparam name="T">The type of the <see cref="LocalBuilder"/>.</typeparam>
     /// <param name="local">Returns the declared <see cref="LocalBuilder"/>.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.declarelocal#System_Reflection_Emit_ILGenerator_DeclareLocal_System_Type_"/>
-    public TSelf DeclareLocal<T>(out EmitLocal local, [CallerArgumentExpression(nameof(local))] string localName = "")
-        => DeclareLocal(typeof(T), false, out local, localName);
+    public TSelf DeclareLocal<T>(out EmitterLocal local, [CallerArgumentExpression(nameof(local))] string localName = "") => DeclareLocal(typeof(T), false, out local, localName);
 
     /// <summary>
     /// Declares a <see cref="LocalBuilder"/> variable of the specified <see cref="Type"/>.
@@ -388,12 +388,12 @@ public class FluentEmitter<TSelf> : ICodePart
     public virtual TSelf DeclareLocal(
         Type type,
         bool isPinned,
-        out EmitLocal emitLocal,
-        [CallerArgumentExpression(nameof(emitLocal))]
+        out EmitterLocal emitterLocal,
+        [CallerArgumentExpression(nameof(emitterLocal))]
         string localName = "")
     {
-        emitLocal = CreateEmitLocal(localName, type, isPinned);
-        return Emit(GeneratorEmission.DeclareLocal(emitLocal));
+        emitterLocal = CreateEmitLocal(localName, type, isPinned);
+        return Emit(GeneratorEmission.DeclareLocal(emitterLocal));
     }
 
     /// <summary>
@@ -405,19 +405,22 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="InvalidOperationException">If the method body of the enclosing method was created with <see cref="M:MethodBuilder.CreateMethodBody"/>.</exception>
     /// <exception cref="NotSupportedException">If the method this <see cref="Emission.IILGenerator{TGenerator}"/> is associated with is not wrapping a <see cref="MethodBuilder"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.declarelocal#System_Reflection_Emit_ILGenerator_DeclareLocal_System_Type_System_Boolean_"/>
-    public TSelf DeclareLocal<T>(bool pinned, out EmitLocal emitLocal,
-        [CallerArgumentExpression(nameof(emitLocal))] string localName = "")
-        => DeclareLocal(typeof(T), pinned, out emitLocal, localName);
+    public TSelf DeclareLocal<T>(
+        bool pinned, out EmitterLocal emitterLocal,
+        [CallerArgumentExpression(nameof(emitterLocal))]
+        string localName = "")
+        => DeclareLocal(typeof(T), pinned, out emitterLocal, localName);
 #endregion
+
 #region Load
     /// <summary>
-    /// Loads the given <see cref="EmitLocal"/>'s value onto the stack.
+    /// Loads the given <see cref="EmitterLocal"/>'s value onto the stack.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloc"/>
     /// <seealso href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloc_s"/>
-    public TSelf Ldloc(EmitLocal emitLocal)
+    public TSelf Ldloc(EmitterLocal emitterLocal)
     {
-        switch (emitLocal.Index)
+        switch (emitterLocal.Index)
         {
             case 0:
                 return Emit(OpCodes.Ldloc_0);
@@ -429,77 +432,80 @@ public class FluentEmitter<TSelf> : ICodePart
                 return Emit(OpCodes.Ldloc_3);
             default:
             {
-                if (emitLocal.IsShortForm)
-                    return Emit(OpCodes.Ldloc_S, emitLocal);
-                return Emit(OpCodes.Ldloc, emitLocal);
+                if (emitterLocal.IsShortForm)
+                    return Emit(OpCodes.Ldloc_S, emitterLocal);
+
+                return Emit(OpCodes.Ldloc, emitterLocal);
             }
         }
     }
 
     /// <summary>
-    /// Loads the given short-form <see cref="EmitLocal"/>'s value onto the stack.
+    /// Loads the given short-form <see cref="EmitterLocal"/>'s value onto the stack.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="local"/> is not short-form.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloc_s"/>
-    public TSelf Ldloc_S(EmitLocal local) => Ldloc(local);
+    public TSelf Ldloc_S(EmitterLocal local) => Ldloc(local);
 
     /// <summary>
-    /// Loads the value of the <see cref="EmitLocal"/> variable at index 0 onto the stack.
+    /// Loads the value of the <see cref="EmitterLocal"/> variable at index 0 onto the stack.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloc_0"/>
     public TSelf Ldloc_0() => Emit(OpCodes.Ldloc_0);
 
     /// <summary>
-    /// Loads the value of the <see cref="EmitLocal"/> variable at index 1 onto the stack.
+    /// Loads the value of the <see cref="EmitterLocal"/> variable at index 1 onto the stack.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloc_1"/>
     public TSelf Ldloc_1() => Emit(OpCodes.Ldloc_1);
 
     /// <summary>
-    /// Loads the value of the <see cref="EmitLocal"/> variable at index 2 onto the stack.
+    /// Loads the value of the <see cref="EmitterLocal"/> variable at index 2 onto the stack.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloc_2"/>
     public TSelf Ldloc_2() => Emit(OpCodes.Ldloc_2);
 
     /// <summary>
-    /// Loads the value of the <see cref="EmitLocal"/> variable at index 3 onto the stack.
+    /// Loads the value of the <see cref="EmitterLocal"/> variable at index 3 onto the stack.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloc_3"/>
     public TSelf Ldloc_3() => Emit(OpCodes.Ldloc_3);
 
     /// <summary>
-    /// Loads the address of the given <see cref="EmitLocal"/> variable.
+    /// Loads the address of the given <see cref="EmitterLocal"/> variable.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloca"/>
     /// <seealso href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloca_s"/>
-    public TSelf Ldloca(EmitLocal local)
+    public TSelf Ldloca(EmitterLocal local)
     {
         if (local.IsShortForm)
             return Emit(OpCodes.Ldloca_S, local);
+
         return Emit(OpCodes.Ldloca, local);
     }
 
     /// <summary>
-    /// Loads the address of the given short-form <see cref="EmitLocal"/> variable.
+    /// Loads the address of the given short-form <see cref="EmitterLocal"/> variable.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="local"/> is not short-form.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloca_s"/>
-    public TSelf Ldloca_S(EmitLocal local)
+    public TSelf Ldloca_S(EmitterLocal local)
     {
         if (local.IsShortForm)
             return Emit(OpCodes.Ldloca_S, local);
+
         return Emit(OpCodes.Ldloca, local);
     }
 #endregion
 
 #region Store
     /// <summary>
-    /// Pops the value from the top of the stack and stores it in a the given <see cref="EmitLocal"/>.
+    /// Pops the value from the top of the stack and stores it in a the given <see cref="EmitterLocal"/>.
     /// </summary>
-    /// <param name="local">The <see cref="EmitLocal"/> to store the value in.</param>
+    /// <param name="local">The <see cref="EmitterLocal"/> to store the value in.</param>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stloc"/>
     /// <seealso href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stloc_s"/>
-    public TSelf Stloc(EmitLocal local)
+    public TSelf Stloc(EmitterLocal local)
     {
         switch (local.Index)
         {
@@ -515,38 +521,39 @@ public class FluentEmitter<TSelf> : ICodePart
             {
                 if (local.IsShortForm)
                     return Emit(OpCodes.Stloc_S, local);
+
                 return Emit(OpCodes.Stloc, local);
             }
         }
     }
 
     /// <summary>
-    /// Pops the value from the top of the stack and stores it in a the given short-form <see cref="EmitLocal"/>.
+    /// Pops the value from the top of the stack and stores it in a the given short-form <see cref="EmitterLocal"/>.
     /// </summary>
-    /// <param name="local">The short-form <see cref="EmitLocal"/> to store the value in.</param>
+    /// <param name="local">The short-form <see cref="EmitterLocal"/> to store the value in.</param>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stloc_s"/>
-    public TSelf Stloc_S(EmitLocal local) => Stloc(local);
+    public TSelf Stloc_S(EmitterLocal local) => Stloc(local);
 
     /// <summary>
-    /// Pops the value from the top of the stack and stores it in a the <see cref="EmitLocal"/> at index 0.
+    /// Pops the value from the top of the stack and stores it in a the <see cref="EmitterLocal"/> at index 0.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stloc_0"/>
     public TSelf Stloc_0() => Emit(OpCodes.Stloc_0);
 
     /// <summary>
-    /// Pops the value from the top of the stack and stores it in a the <see cref="EmitLocal"/> at index 1.
+    /// Pops the value from the top of the stack and stores it in a the <see cref="EmitterLocal"/> at index 1.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stloc_1"/>
     public TSelf Stloc_1() => Emit(OpCodes.Stloc_1);
 
     /// <summary>
-    /// Pops the value from the top of the stack and stores it in a the <see cref="EmitLocal"/> at index 2.
+    /// Pops the value from the top of the stack and stores it in a the <see cref="EmitterLocal"/> at index 2.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stloc_2"/>
     public TSelf Stloc_2() => Emit(OpCodes.Stloc_2);
 
     /// <summary>
-    /// Pops the value from the top of the stack and stores it in a the <see cref="EmitLocal"/> at index 3.
+    /// Pops the value from the top of the stack and stores it in a the <see cref="EmitterLocal"/> at index 3.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stloc_3"/>
     public TSelf Stloc_3() => Emit(OpCodes.Stloc_3);
@@ -557,25 +564,25 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <summary>
     /// Declares a new <see cref="Label"/>.
     /// </summary>
-    /// <param name="emitLabel">Returns the new <see cref="Label"/> that can be used for branching.</param>
+    /// <param name="emitterLabel">Returns the new <see cref="Label"/> that can be used for branching.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.definelabel"/>
     public virtual TSelf DefineLabel(
-        out EmitLabel emitLabel,
-        [CallerArgumentExpression(nameof(emitLabel))]
+        out EmitterLabel emitterLabel,
+        [CallerArgumentExpression(nameof(emitterLabel))]
         string lblName = "")
     {
-        emitLabel = CreateEmitLabel(lblName);
-        return Emit(GeneratorEmission.DefineLabel(emitLabel));
+        emitterLabel = CreateEmitLabel(lblName);
+        return Emit(GeneratorEmission.DefineLabel(emitterLabel));
     }
 
     /// <summary>
     /// Marks the stream's current position with the given <see cref="Label"/>.
     /// </summary>
     /// <param name="emitterLabelsee cref="Label"/> for which to set an index.</param>
-    /// <exception cref="ArgumentException">If the <paramref name="emitLabel an invalid index.</exception>
-    /// <exception cref="ArgumentException">If the <paramref name="emitLabel already been marked.</exception>
+    /// <exception cref="ArgumentException">If the <paramref name="emitterLabel an invalid index.</exception>
+    /// <exception cref="ArgumentException">If the <paramref name="emitterLabel already been marked.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.marklabel"/>
-    public virtual TSelf MarkLabel(EmitLabel emitLabel) => Emit(GeneratorEmission.MarkLabel(emitLabel));
+    public virtual TSelf MarkLabel(EmitterLabel emitterLabel) => Emit(GeneratorEmission.MarkLabel(emitterLabel));
 
     /// <summary>
     /// Implements a jump table.
@@ -583,15 +590,17 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="labels">The labels for the jumptable.</param>
     /// <exception cref="ArgumentNullException">If <paramref name="labels"/> is <see langword="null"/> or empty.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.switch"/>
-    public TSelf Switch(params EmitLabel[] labels)
+    public TSelf Switch(params EmitterLabel[] labels)
     {
         if (labels is null || labels.Length == 0)
             throw new ArgumentNullException(nameof(labels));
+
         return Emit(OpCodes.Switch, labels);
     }
 
-    public TSelf DefineAndMarkLabel(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
-        => DefineLabel(out label, lblName).MarkLabel(label);
+    public TSelf DefineAndMarkLabel(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .MarkLabel(label);
 #endregion
 
 #region Method Calling
@@ -602,8 +611,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="optionalParameterTypes">The types of the Option arguments if the method is a <see langword="varargs"/> method; otherwise, <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException">If <paramref name="methodInfo"/> is <see langword="null"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.emitcall"/>
-    public virtual TSelf EmitCall(MethodInfo methodInfo, Type[]? optionalParameterTypes) =>
-        Emit(GeneratorEmission.EmitCall(methodInfo, optionalParameterTypes));
+    public virtual TSelf EmitCall(MethodInfo methodInfo, Type[]? optionalParameterTypes) => Emit(GeneratorEmission.EmitCall(methodInfo, optionalParameterTypes));
 
     /// <summary>
     /// Puts a <see cref="OpCodes.Calli"/> instruction onto the stream, specifying an unmanaged calling convention for the indirect call.
@@ -626,8 +634,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="parameterTypes">The types of the required arguments to the instruction.</param>
     /// <exception cref="ArgumentNullException">If <paramref name="returnType"/> is <see langword="null"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.emitcalli#System_Reflection_Emit_ILGenerator_EmitCalli_System_Reflection_Emit_OpCode_System_Runtime_InteropServices_CallingConvention_System_Type_System_Type___"/>
-    public virtual TSelf EmitCalli(CallingConvention callingConvention, Type? returnType, Type[]? parameterTypes)
-        => Emit(GeneratorEmission.EmitCalli(callingConvention, returnType, parameterTypes));
+    public virtual TSelf EmitCalli(CallingConvention callingConvention, Type? returnType, Type[]? parameterTypes) => Emit(GeneratorEmission.EmitCalli(callingConvention, returnType, parameterTypes));
 
     /// <summary>
     /// Calls the given <see cref="MethodInfo"/>.
@@ -726,6 +733,7 @@ public class FluentEmitter<TSelf> : ICodePart
     {
         if (index < 0 || index > short.MaxValue)
             throw new ArgumentOutOfRangeException(nameof(index), index, $"Argument index must be between 0 and {short.MaxValue}");
+
         if (index == 0)
             return Emit(OpCodes.Ldarg_0);
         if (index == 1)
@@ -736,6 +744,7 @@ public class FluentEmitter<TSelf> : ICodePart
             return Emit(OpCodes.Ldarg_3);
         if (index <= byte.MaxValue)
             return Emit(OpCodes.Ldarg_S, (byte)index);
+
         return Emit(OpCodes.Ldarg, (short)index);
     }
 
@@ -784,8 +793,10 @@ public class FluentEmitter<TSelf> : ICodePart
     {
         if (index < 0 || index > short.MaxValue)
             throw new ArgumentOutOfRangeException(nameof(index), index, $"Argument index must be between 0 and {short.MaxValue}");
+
         if (index <= byte.MaxValue)
             return Emit(OpCodes.Ldarga_S, (byte)index);
+
         return Emit(OpCodes.Ldarga, (short)index);
     }
 
@@ -799,6 +810,7 @@ public class FluentEmitter<TSelf> : ICodePart
 
     public TSelf Ldarga(ParameterInfo parameter) => Ldarga(parameter.Position);
 #endregion
+
 #region Starg
     /// <summary>
     /// Stores the value on top of the stack in the argument at the given <paramref name="index"/>.
@@ -809,8 +821,10 @@ public class FluentEmitter<TSelf> : ICodePart
     {
         if (index < 0 || index > short.MaxValue)
             throw new ArgumentOutOfRangeException(nameof(index), index, $"Argument index must be between 0 and {short.MaxValue}");
+
         if (index <= byte.MaxValue)
             return Emit(OpCodes.Starg_S, (byte)index);
+
         return Emit(OpCodes.Starg, (short)index);
     }
 
@@ -922,14 +936,11 @@ public class FluentEmitter<TSelf> : ICodePart
 
         var ctor = MemberSearch.OneOrDefault<ConstructorInfo>(
             exceptionType,
-            new()
-            {
-                Visibility = Visibility.Instance,
-                ParameterTypes = Type.EmptyTypes,
-            });
+            new() { Visibility = Visibility.Instance, ParameterTypes = Type.EmptyTypes, });
         if (ctor is not null)
         {
-            return Newobj(ctor).Throw();
+            return Newobj(ctor)
+                .Throw();
         }
         else
         {
@@ -944,7 +955,8 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <typeparam name="TException">The <see cref="Type"/> of <see cref="Exception"/> to throw.</typeparam>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.throwexception?view=netcore-3.0"/>
     public TSelf ThrowException<TException>()
-        where TException : Exception, new() => ThrowException(typeof(TException));
+        where TException : Exception, new()
+        => ThrowException(typeof(TException));
 
     public TSelf ThrowException<TException>(params object?[] exceptionArgs)
         where TException : Exception
@@ -954,19 +966,23 @@ public class FluentEmitter<TSelf> : ICodePart
         // Find the ctor we can call with these args
         var validCtors = typeof(TException)
             .GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Where(ctor =>
-            {
-                var ctorParams = ctor.GetParameters();
-                int ctorParamsCount = ctorParams.Length;
-                if (ctorParamsCount != exceptionArgTypes.Length) return false;
-                for (var i = 0; i < ctorParamsCount; i++)
+            .Where(
+                ctor =>
                 {
-                    var argType = exceptionArgTypes[i];
-                    var paramType = ctorParams[i].ParameterType;
-                    if (!argType.Implements(paramType)) return false;
-                }
-                return true;
-            })
+                    var ctorParams = ctor.GetParameters();
+                    int ctorParamsCount = ctorParams.Length;
+                    if (ctorParamsCount != exceptionArgTypes.Length)
+                        return false;
+
+                    for (var i = 0; i < ctorParamsCount; i++)
+                    {
+                        var argType = exceptionArgTypes[i];
+                        var paramType = ctorParams[i].ParameterType;
+                        if (!argType.Implements(paramType))
+                            return false;
+                    }
+                    return true;
+                })
             .ToList();
         Debugger.Break();
         var ctor = validCtors[0];
@@ -974,7 +990,8 @@ public class FluentEmitter<TSelf> : ICodePart
         {
             this.LoadValue(arg);
         }
-        this.Newobj(ctor).Throw();
+        this.Newobj(ctor)
+            .Throw();
 
         var il = this.ToString();
         Debugger.Break();
@@ -1124,10 +1141,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.br?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.br_s?view=netcore-3.0"/>
-    public TSelf Br(EmitLabel label)
+    public TSelf Br(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Br_S, label);
+
         return Emit(OpCodes.Br, label);
     }
 
@@ -1137,10 +1155,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.br_s?view=netcore-3.0"/>
-    public TSelf Br_S(EmitLabel label) => Br(label);
+    public TSelf Br_S(EmitterLabel label) => Br(label);
 
-    public TSelf Br(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Br(label);
+    public TSelf Br(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Br(label);
 
     /// <summary>
     /// Exits the current method and jumps to the given <see cref="MethodInfo"/>.
@@ -1156,10 +1175,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.leave"/>
     /// <seealso href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.leave_s"/>
-    public TSelf Leave(EmitLabel label)
+    public TSelf Leave(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Leave_S, label);
+
         return Emit(OpCodes.Leave, label);
     }
 
@@ -1169,10 +1189,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> is not short-form.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.leave_s"/>
-    public TSelf Leave_S(EmitLabel label) => Leave(label);
+    public TSelf Leave_S(EmitterLabel label) => Leave(label);
 
-    public TSelf Leave(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Leave(label);
+    public TSelf Leave(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Leave(label);
 
     /// <summary>
     /// Returns from the current method, pushing a return value (if present) from the callee's evaluation stack onto the caller's evaluation stack.
@@ -1187,10 +1208,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.brtrue?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.brtrue_s?view=netcore-3.0"/>
-    public TSelf Brtrue(EmitLabel label)
+    public TSelf Brtrue(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Brtrue_S, label);
+
         return Emit(OpCodes.Brtrue, label);
     }
 
@@ -1200,11 +1222,13 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form<see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.brtrue_s?view=netcore-3.0"/>
-    public TSelf Brtrue_S(EmitLabel label) => Brtrue(label);
+    public TSelf Brtrue_S(EmitterLabel label) => Brtrue(label);
 
-    public TSelf Brtrue(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Brtrue(label);
+    public TSelf Brtrue(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Brtrue(label);
 #endregion
+
 #region False
     /// <summary>
     /// Transfers control to the given <see cref="Label"/> if value is <see langword="false"/>, <see langword="null"/>, or zero.
@@ -1212,10 +1236,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.brfalse?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.brfalse_s?view=netcore-3.0"/>
-    public TSelf Brfalse(EmitLabel label)
+    public TSelf Brfalse(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Brfalse_S, label);
+
         return Emit(OpCodes.Brfalse, label);
     }
 
@@ -1225,11 +1250,13 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form<see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.brfalse_s?view=netcore-3.0"/>
-    public TSelf Brfalse_S(EmitLabel label) => Brfalse(label);
+    public TSelf Brfalse_S(EmitterLabel label) => Brfalse(label);
 
-    public TSelf Brfalse(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Brfalse(label);
+    public TSelf Brfalse(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Brfalse(label);
 #endregion
+
 #region ==
     /// <summary>
     /// Transfers control to the given <see cref="Label"/> if two values are equal.
@@ -1237,10 +1264,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.beq?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.beq_s?view=netcore-3.0"/>
-    public TSelf Beq(EmitLabel label)
+    public TSelf Beq(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Beq_S, label);
+
         return Emit(OpCodes.Beq, label);
     }
 
@@ -1250,11 +1278,13 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.beq_s?view=netcore-3.0"/>
-    public  TSelf Beq_S(EmitLabel label) => Beq(label);
+    public TSelf Beq_S(EmitterLabel label) => Beq(label);
 
-    public  TSelf Beq(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Beq(label);
+    public TSelf Beq(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Beq(label);
 #endregion
+
 #region !=
     /// <summary>
     /// Transfers control to the given <see cref="Label"/> if two unsigned or unordered values are not equal (<see langword="!="/>).
@@ -1262,10 +1292,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bne_un?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bne_un_s?view=netcore-3.0"/>
-    public  TSelf Bne_Un(EmitLabel label)
+    public TSelf Bne_Un(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Bne_Un_S, label);
+
         return Emit(OpCodes.Bne_Un, label);
     }
 
@@ -1275,11 +1306,13 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bne_un_s?view=netcore-3.0"/>
-    public  TSelf Bne_Un_S(EmitLabel label) => Bne_Un(label);
+    public TSelf Bne_Un_S(EmitterLabel label) => Bne_Un(label);
 
-    public  TSelf Bne_Un(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Bne_Un(label);
+    public TSelf Bne_Un(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Bne_Un(label);
 #endregion
+
 #region >=
     /// <summary>
     /// Transfers control to the given <see cref="Label"/> if the first value is greater than or equal to (<see langword="&gt;="/>) the second value.
@@ -1287,10 +1320,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bge?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bge_s?view=netcore-3.0"/>
-    public  TSelf Bge(EmitLabel label)
+    public TSelf Bge(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Bge_S, label);
+
         return Emit(OpCodes.Bge, label);
     }
 
@@ -1300,10 +1334,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bge_s?view=netcore-3.0"/>
-    public  TSelf Bge_S(EmitLabel label) => Bge(label);
+    public TSelf Bge_S(EmitterLabel label) => Bge(label);
 
-    public  TSelf Bge(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Bge(label);
+    public TSelf Bge(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Bge(label);
 
 
     /// <summary>
@@ -1312,10 +1347,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bge_un?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bge_un_s?view=netcore-3.0"/>
-    public  TSelf Bge_Un(EmitLabel label)
+    public TSelf Bge_Un(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Bge_Un_S, label);
+
         return Emit(OpCodes.Bge_Un, label);
     }
 
@@ -1325,11 +1361,13 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bge_un_s?view=netcore-3.0"/>
-    public  TSelf Bge_Un_S(EmitLabel label) => Bge_Un(label);
+    public TSelf Bge_Un_S(EmitterLabel label) => Bge_Un(label);
 
-    public  TSelf Bge_Un(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Bge_Un(label);
+    public TSelf Bge_Un(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Bge_Un(label);
 #endregion
+
 #region >
     /// <summary>
     /// Transfers control to the given <see cref="Label"/> if the first value is greater than (<see langword="&gt;"/>) the second value.
@@ -1337,10 +1375,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bgt?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bgt_s?view=netcore-3.0"/>
-    public  TSelf Bgt(EmitLabel label)
+    public TSelf Bgt(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Bgt_S, label);
+
         return Emit(OpCodes.Bgt, label);
     }
 
@@ -1350,10 +1389,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bgt_s?view=netcore-3.0"/>
-    public  TSelf Bgt_S(EmitLabel label) => Bgt(label);
+    public TSelf Bgt_S(EmitterLabel label) => Bgt(label);
 
-    public  TSelf Bgt(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Bgt(label);
+    public TSelf Bgt(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Bgt(label);
 
 
     /// <summary>
@@ -1362,10 +1402,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bgt_un?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bgt_un_s?view=netcore-3.0"/>
-    public  TSelf Bgt_Un(EmitLabel label)
+    public TSelf Bgt_Un(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Bgt_Un_S, label);
+
         return Emit(OpCodes.Bgt_Un, label);
     }
 
@@ -1375,11 +1416,13 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.bgt_un_s?view=netcore-3.0"/>
-    public  TSelf Bgt_Un_S(EmitLabel label) => Bgt_Un(label);
+    public TSelf Bgt_Un_S(EmitterLabel label) => Bgt_Un(label);
 
-    public  TSelf Bgt_Un(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Bgt_Un(label);
+    public TSelf Bgt_Un(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Bgt_Un(label);
 #endregion
+
 #region <=
     /// <summary>
     /// Transfers control to the given <see cref="Label"/> if the first value is less than or equal to (<see langword="&lt;="/>) the second value.
@@ -1387,10 +1430,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ble?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ble_s?view=netcore-3.0"/>
-    public  TSelf Ble(EmitLabel label)
+    public TSelf Ble(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Ble_S, label);
+
         return Emit(OpCodes.Ble, label);
     }
 
@@ -1400,10 +1444,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ble_s?view=netcore-3.0"/>
-    public  TSelf Ble_S(EmitLabel label) => Ble(label);
+    public TSelf Ble_S(EmitterLabel label) => Ble(label);
 
-    public  TSelf Ble(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Ble(label);
+    public TSelf Ble(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Ble(label);
 
 
     /// <summary>
@@ -1412,10 +1457,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ble_un?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ble_un_s?view=netcore-3.0"/>
-    public  TSelf Ble_Un(EmitLabel label)
+    public TSelf Ble_Un(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Ble_Un_S, label);
+
         return Emit(OpCodes.Ble_Un, label);
     }
 
@@ -1425,11 +1471,13 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ble_un_s?view=netcore-3.0"/>
-    public  TSelf Ble_Un_S(EmitLabel label) => Ble_Un(label);
+    public TSelf Ble_Un_S(EmitterLabel label) => Ble_Un(label);
 
-    public  TSelf Ble_Un(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Ble_Un(label);
+    public TSelf Ble_Un(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Ble_Un(label);
 #endregion
+
 #region <
     /// <summary>
     /// Transfers control to the given <see cref="Label"/> if the first value is less than (<see langword="&lt;"/>) the second value.
@@ -1437,10 +1485,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.blt?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.blt_s?view=netcore-3.0"/>
-    public  TSelf Blt(EmitLabel label)
+    public TSelf Blt(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Blt_S, label);
+
         return Emit(OpCodes.Blt, label);
     }
 
@@ -1450,10 +1499,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.blt_s?view=netcore-3.0"/>
-    public  TSelf Blt_S(EmitLabel label) => Blt(label);
+    public TSelf Blt_S(EmitterLabel label) => Blt(label);
 
-    public  TSelf Blt(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Blt(label);
+    public TSelf Blt(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Blt(label);
 
 
     /// <summary>
@@ -1462,10 +1512,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The <see cref="Label"/> to transfer to.</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.blt_un?view=netcore-3.0"/>
     /// <seealso href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.blt_un_s?view=netcore-3.0"/>
-    public  TSelf Blt_Un(EmitLabel label)
+    public TSelf Blt_Un(EmitterLabel label)
     {
         if (label.IsShortForm)
             return Emit(OpCodes.Blt_Un_S, label);
+
         return Emit(OpCodes.Blt_Un, label);
     }
 
@@ -1475,10 +1526,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="label">The short-form <see cref="Label"/> to transfer to.</param>
     /// <exception cref="ArgumentOutOfRangeException">If the <paramref name="label"/> does not qualify for short-form instructions.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.blt_un_s?view=netcore-3.0"/>
-    public  TSelf Blt_Un_S(EmitLabel label) => Blt_Un(label);
+    public TSelf Blt_Un_S(EmitterLabel label) => Blt_Un(label);
 
-    public  TSelf Blt_Un(out EmitLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "") =>
-        DefineLabel(out label, lblName).Blt_Un(label);
+    public TSelf Blt_Un(out EmitterLabel label, [CallerArgumentExpression(nameof(label))] string lblName = "")
+        => DefineLabel(out label, lblName)
+            .Blt_Un(label);
 #endregion
 #endregion
 
@@ -1495,8 +1547,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// </summary>
     /// <typeparam name="T">The <see cref="Type"/> of value that is to be boxed.</typeparam>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.box"/>
-    public TSelf Box<T>()
-        => Emit(OpCodes.Box, typeof(T));
+    public TSelf Box<T>() => Emit(OpCodes.Box, typeof(T));
 
     /// <summary>
     /// Converts the boxed representation (<see cref="object"/>) of a <see langword="struct"/> to a value-type pointer.
@@ -1505,7 +1556,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="ArgumentNullException">If <paramref name="valueType"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">If <paramref name="valueType"/> is not a value type.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.unbox"/>
-    public  TSelf Unbox(Type valueType)
+    public TSelf Unbox(Type valueType)
     {
         ValidateType.IsValueType(valueType);
         return Emit(OpCodes.Unbox, valueType);
@@ -1516,7 +1567,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// </summary>
     /// <typeparam name="T">The value type that is to be unboxed.</typeparam>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.unbox"/>
-    public  TSelf Unbox<T>()
+    public TSelf Unbox<T>()
         where T : struct
         => Unbox(typeof(T));
 
@@ -1541,7 +1592,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="ArgumentNullException">If <paramref name="classType"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">If <paramref name="classType"/> is not a <see langword="class"/> type.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.castclass"/>
-    public  TSelf Castclass(Type classType)
+    public TSelf Castclass(Type classType)
     {
         ValidateType.IsClassOrInterfaceType(classType);
         return Emit(OpCodes.Castclass, classType);
@@ -1570,8 +1621,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// </summary>
     /// <typeparam name="T">The <see cref="Type"/> of <see langword="class"/> to cast to.</typeparam>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.isinst"/>
-    public TSelf Isinst<T>()
-        => Emit(OpCodes.Isinst, typeof(T));
+    public TSelf Isinst<T>() => Emit(OpCodes.Isinst, typeof(T));
 #endregion
 
 #region Conv
@@ -1594,6 +1644,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.conv_ovf_i_un?view=netcore-3.0"/>
     public TSelf Conv_Ovf_I_Un() => Emit(OpCodes.Conv_Ovf_I_Un);
 #endregion
+
 #region sbyte
     /// <summary>
     /// Converts the value on the stack to a <see cref="sbyte"/>, then pads/extends it to an <see cref="int"/>.
@@ -1613,6 +1664,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.conv_ovf_i1_un?view=netcore-3.0"/>
     public TSelf Conv_Ovf_I1_Un() => Emit(OpCodes.Conv_Ovf_I1_Un);
 #endregion
+
 #region short
     /// <summary>
     /// Converts the value on the stack to a <see cref="short"/>, then pads/extends it to an <see cref="int"/>.
@@ -1632,6 +1684,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.conv_ovf_i2_un?view=netcore-3.0"/>
     public TSelf Conv_Ovf_I2_Un() => Emit(OpCodes.Conv_Ovf_I2_Un);
 #endregion
+
 #region int
     /// <summary>
     /// Converts the value on the stack to an <see cref="int"/>.
@@ -1651,6 +1704,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.conv_ovf_i4_un?view=netcore-3.0"/>
     public TSelf Conv_Ovf_I4_Un() => Emit(OpCodes.Conv_Ovf_I4_Un);
 #endregion
+
 #region long
     /// <summary>
     /// Converts the value on the stack to a <see cref="long"/>.
@@ -1690,6 +1744,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.conv_ovf_u_un?view=netcore-3.0"/>
     public TSelf Conv_Ovf_U_Un() => Emit(OpCodes.Conv_Ovf_U_Un);
 #endregion
+
 #region byte
     /// <summary>
     /// Converts the value on the stack to a <see cref="byte"/>, then pads/extends it to an <see cref="int"/>.
@@ -1709,6 +1764,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.conv_ovf_u1_un?view=netcore-3.0"/>
     public TSelf Conv_Ovf_U1_Un() => Emit(OpCodes.Conv_Ovf_U1_Un);
 #endregion
+
 #region uushort
     /// <summary>
     /// Converts the value on the stack to a <see cref="ushort"/>, then pads/extends it to an <see cref="int"/>.
@@ -1728,6 +1784,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.conv_ovf_u2_un?view=netcore-3.0"/>
     public TSelf Conv_Ovf_U2_Un() => Emit(OpCodes.Conv_Ovf_U2_Un);
 #endregion
+
 #region uuint
     /// <summary>
     /// Converts the value on the stack to an <see cref="uint"/>, then extends it to an <see cref="int"/>.
@@ -1747,6 +1804,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.conv_ovf_u4_un?view=netcore-3.0"/>
     public TSelf Conv_Ovf_U4_Un() => Emit(OpCodes.Conv_Ovf_U4_Un);
 #endregion
+
 #region uulong
     /// <summary>
     /// Converts the value on the stack to a <see cref="ulong"/>, then extends it to an <see cref="long"/>.
@@ -1766,6 +1824,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.conv_ovf_u8_un?view=netcore-3.0"/>
     public TSelf Conv_Ovf_U8_Un() => Emit(OpCodes.Conv_Ovf_U8_Un);
 #endregion
+
 #region float / double
     /// <summary>
     /// Converts the unsigned value on the stack to a <see cref="float"/>.
@@ -1806,10 +1865,13 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.cgt_un?view=netcore-3.0"/>
     public TSelf Cgt_Un() => Emit(OpCodes.Cgt_Un);
 
-    public TSelf Cge() => Clt().Not();
+    public TSelf Cge()
+        => Clt()
+            .Not();
 
-    public TSelf Cge_Un() => Clt_Un().Not();
-
+    public TSelf Cge_Un()
+        => Clt_Un()
+            .Not();
 
 
     /// <summary>
@@ -1824,9 +1886,13 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.clt_un?view=netcore-3.0"/>
     public TSelf Clt_Un() => Emit(OpCodes.Clt_Un);
 
-    public TSelf Cle() => Cgt().Not();
+    public TSelf Cle()
+        => Cgt()
+            .Not();
 
-    public TSelf Cle_Un() => Cgt_Un().Not();
+    public TSelf Cle_Un()
+        => Cgt_Un()
+            .Not();
 #endregion
 
 #region byte*  /  byte[]  /  ref byte
@@ -1920,7 +1986,9 @@ public class FluentEmitter<TSelf> : ICodePart
 
     public TSelf PopIf(Type? stackType)
     {
-        if (stackType == null || stackType == typeof(void)) return _self;
+        if (stackType == null || stackType == typeof(void))
+            return _self;
+
         return _self.Pop();
     }
 #endregion
@@ -1956,6 +2024,7 @@ public class FluentEmitter<TSelf> : ICodePart
             return Emit(OpCodes.Ldc_I4_8);
         if (value >= sbyte.MinValue && value <= sbyte.MaxValue)
             return Emit(OpCodes.Ldc_I4_S, (sbyte)value);
+
         return Emit(OpCodes.Ldc_I4, value);
     }
 
@@ -2143,7 +2212,8 @@ public class FluentEmitter<TSelf> : ICodePart
         }
         if (value is ulong ul)
         {
-            Ldc_I8((long)ul).Conv_U();
+            Ldc_I8((long)ul)
+                .Conv_U();
             return true;
         }
         if (value is float f)
@@ -2166,13 +2236,14 @@ public class FluentEmitter<TSelf> : ICodePart
             LoadType(type);
             return true;
         }
-        if (value is EmitLocal local)
+        if (value is EmitterLocal local)
         {
             Ldloc(local);
             return true;
         }
 
         return false;
+
         throw new NotImplementedException();
     }
 
@@ -2187,6 +2258,7 @@ public class FluentEmitter<TSelf> : ICodePart
     {
         if (!TryLoadValue<T>(value))
             throw new InvalidOperationException();
+
         return _self;
     }
 
@@ -2195,6 +2267,7 @@ public class FluentEmitter<TSelf> : ICodePart
         return Ldtoken(type)
             .Call(MemberCache.Methods.Type_GetTypeFromHandle);
     }
+
     public TSelf LoadType<T>() => LoadType(typeof(T));
 
 
@@ -2214,6 +2287,7 @@ public class FluentEmitter<TSelf> : ICodePart
         // Anything else defaults to null
         return Ldnull();
     }
+
     public TSelf LoadDefault<T>() => LoadDefault(typeof(T));
 
     public TSelf LoadDefaultAddress(Type type)
@@ -2236,7 +2310,9 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <summary>
     /// Loads a <c>null</c> reference onto the stack
     /// </summary>
-    public TSelf Ldnulla() => Ldc_I4_0().Conv_U();
+    public TSelf Ldnulla()
+        => Ldc_I4_0()
+            .Conv_U();
 #endregion
 
 #region Arrays
@@ -2281,6 +2357,7 @@ public class FluentEmitter<TSelf> : ICodePart
             return Emit(OpCodes.Ldelem_R8);
         if (type == typeof(object))
             return Emit(OpCodes.Ldelem_Ref);
+
         return Emit(OpCodes.Ldelem, type);
     }
 
@@ -2319,7 +2396,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="short"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelem_i2"/>
-    public  TSelf Ldelem_I2() => Emit(OpCodes.Ldelem_I2);
+    public TSelf Ldelem_I2() => Emit(OpCodes.Ldelem_I2);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as a <see cref="int"/>.
@@ -2328,7 +2405,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="int"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelem_i4"/>
-    public  TSelf Ldelem_I4() => Emit(OpCodes.Ldelem_I4);
+    public TSelf Ldelem_I4() => Emit(OpCodes.Ldelem_I4);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as a <see cref="long"/>.
@@ -2337,7 +2414,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="long"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelem_i8"/>
-    public  TSelf Ldelem_I8() => Emit(OpCodes.Ldelem_I8);
+    public TSelf Ldelem_I8() => Emit(OpCodes.Ldelem_I8);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as a <see cref="byte"/>.
@@ -2346,7 +2423,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="byte"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelem_u1"/>
-    public  TSelf Ldelem_U1() => Emit(OpCodes.Ldelem_U1);
+    public TSelf Ldelem_U1() => Emit(OpCodes.Ldelem_U1);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as a <see cref="ushort"/>.
@@ -2355,7 +2432,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="ushort"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelem_u2"/>
-    public  TSelf Ldelem_U2() => Emit(OpCodes.Ldelem_U2);
+    public TSelf Ldelem_U2() => Emit(OpCodes.Ldelem_U2);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as a <see cref="uint"/>.
@@ -2364,7 +2441,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="uint"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelem_u4"/>
-    public  TSelf Ldelem_U4() => Emit(OpCodes.Ldelem_U4);
+    public TSelf Ldelem_U4() => Emit(OpCodes.Ldelem_U4);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as a <see cref="float"/>.
@@ -2373,7 +2450,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="float"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelem_r4"/>
-    public  TSelf Ldelem_R4() => Emit(OpCodes.Ldelem_R4);
+    public TSelf Ldelem_R4() => Emit(OpCodes.Ldelem_R4);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as a <see cref="double"/>.
@@ -2382,7 +2459,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="double"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelem_r8"/>
-    public  TSelf Ldelem_R8() => Emit(OpCodes.Ldelem_R8);
+    public TSelf Ldelem_R8() => Emit(OpCodes.Ldelem_R8);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as a <see cref="object"/>.
@@ -2391,7 +2468,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="object"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelem_ref"/>
-    public  TSelf Ldelem_Ref() => Emit(OpCodes.Ldelem_Ref);
+    public TSelf Ldelem_Ref() => Emit(OpCodes.Ldelem_Ref);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as an address to a value of the given <see cref="Type"/>.
@@ -2402,7 +2479,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold elements of the given <paramref name="type"/>.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelema"/>
-    public  TSelf Ldelema(Type type) => Emit(OpCodes.Ldelema, type);
+    public TSelf Ldelema(Type type) => Emit(OpCodes.Ldelema, type);
 
     /// <summary>
     /// Loads the element from an array index onto the stack as an address to a value of the given <see cref="Type"/>.
@@ -2412,8 +2489,9 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold elements of the given <see cref="Type"/>.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldelema"/>
-    public  TSelf Ldelema<T>() => Emit(OpCodes.Ldelema, typeof(T));
+    public TSelf Ldelema<T>() => Emit(OpCodes.Ldelema, typeof(T));
 #endregion
+
 #region Store Element
     /// <summary>
     /// Replaces the <see cref="Array"/> element at a given index with the value on the stack with the given <see cref="Type"/>.
@@ -2424,7 +2502,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold elements of the given <paramref name="type"/>.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem"/>
-    public  TSelf Stelem(Type type)
+    public TSelf Stelem(Type type)
     {
         if (type == typeof(IntPtr))
             return Emit(OpCodes.Stelem_I);
@@ -2442,6 +2520,7 @@ public class FluentEmitter<TSelf> : ICodePart
             return Emit(OpCodes.Stelem_R8);
         if (type == typeof(object))
             return Emit(OpCodes.Stelem_Ref);
+
         return Emit(OpCodes.Stelem, type);
     }
 
@@ -2453,7 +2532,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold elements of the given <see cref="Type"/>.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem"/>
-    public  TSelf Stelem<T>() => Stelem(typeof(T));
+    public TSelf Stelem<T>() => Stelem(typeof(T));
 
     /// <summary>
     /// Replaces the <see cref="Array"/> element at a given index with the <see cref="IntPtr"/> value on the stack.
@@ -2462,7 +2541,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="IntPtr"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem_i"/>
-    public  TSelf Stelem_I() => Emit(OpCodes.Stelem_I);
+    public TSelf Stelem_I() => Emit(OpCodes.Stelem_I);
 
     /// <summary>
     /// Replaces the <see cref="Array"/> element at a given index with the <see cref="sbyte"/> value on the stack.
@@ -2471,7 +2550,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="sbyte"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem_i1"/>
-    public  TSelf Stelem_I1() => Emit(OpCodes.Stelem_I1);
+    public TSelf Stelem_I1() => Emit(OpCodes.Stelem_I1);
 
     /// <summary>
     /// Replaces the <see cref="Array"/> element at a given index with the <see cref="short"/> value on the stack.
@@ -2480,7 +2559,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="short"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem_i2"/>
-    public  TSelf Stelem_I2() => Emit(OpCodes.Stelem_I2);
+    public TSelf Stelem_I2() => Emit(OpCodes.Stelem_I2);
 
     /// <summary>
     /// Replaces the <see cref="Array"/> element at a given index with the <see cref="int"/> value on the stack.
@@ -2489,7 +2568,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="int"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem_i4"/>
-    public  TSelf Stelem_I4() => Emit(OpCodes.Stelem_I4);
+    public TSelf Stelem_I4() => Emit(OpCodes.Stelem_I4);
 
     /// <summary>
     /// Replaces the <see cref="Array"/> element at a given index with the <see cref="long"/> value on the stack.
@@ -2498,7 +2577,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="long"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem_i8"/>
-    public  TSelf Stelem_I8() => Emit(OpCodes.Stelem_I8);
+    public TSelf Stelem_I8() => Emit(OpCodes.Stelem_I8);
 
     /// <summary>
     /// Replaces the <see cref="Array"/> element at a given index with the <see cref="float"/> value on the stack.
@@ -2507,7 +2586,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="float"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem_r4"/>
-    public  TSelf Stelem_R4() => Emit(OpCodes.Stelem_R4);
+    public TSelf Stelem_R4() => Emit(OpCodes.Stelem_R4);
 
     /// <summary>
     /// Replaces the <see cref="Array"/> element at a given index with the <see cref="double"/> value on the stack.
@@ -2516,7 +2595,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="double"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem_r8"/>
-    public  TSelf Stelem_R8() => Emit(OpCodes.Stelem_R8);
+    public TSelf Stelem_R8() => Emit(OpCodes.Stelem_R8);
 
     /// <summary>
     /// Replaces the <see cref="Array"/> element at a given index with the <see cref="object"/> value on the stack.
@@ -2525,7 +2604,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="IndexOutOfRangeException">If the index on the stack is negative or larger than the upper bound of the <see cref="Array"/>.</exception>
     /// <exception cref="ArrayTypeMismatchException">If the <see cref="Array"/> does not hold <see cref="object"/> elements.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stelem_ref"/>
-    public  TSelf Stelem_Ref() => Emit(OpCodes.Stelem_Ref);
+    public TSelf Stelem_Ref() => Emit(OpCodes.Stelem_Ref);
 #endregion
 
     /// <summary>
@@ -2534,21 +2613,21 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="type">The type of values that can be stored in the array.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="type"/> is <see langword="null"/>.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.newarr"/>
-    public  TSelf Newarr(Type type) => Emit(OpCodes.Newarr, type);
+    public TSelf Newarr(Type type) => Emit(OpCodes.Newarr, type);
 
     /// <summary>
     /// Pushes an <see cref="object"/> reference to a new zero-based, one-dimensional <see cref="Array"/> whose elements are the given <see cref="Type"/> onto the stack.
     /// </summary>
     /// <typeparam name="T">The <see cref="Type"/> of values that can be stored in the array.</typeparam>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.newarr"/>
-    public  TSelf Newarr<T>() => Emit(OpCodes.Newarr, typeof(T));
+    public TSelf Newarr<T>() => Emit(OpCodes.Newarr, typeof(T));
 
     /// <summary>
     /// Specifies that the subsequent array address operation performs no type check at run time, and that it returns a managed pointer whose mutability is restricted.
     /// </summary>
     /// <remarks>This instruction can only appear before a <see cref="Ldelema"/> instruction.</remarks>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.readonly"/>
-    public  TSelf Readonly() => Emit(OpCodes.Readonly);
+    public TSelf Readonly() => Emit(OpCodes.Readonly);
 #endregion
 
 #region Fields
@@ -2560,10 +2639,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="MissingFieldException">If <paramref name="field"/> is not found in metadata.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldfld"/>
     /// <seealso href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldsfld"/>
-    public  TSelf Ldfld(FieldInfo field)
+    public TSelf Ldfld(FieldInfo field)
     {
         if (field.IsStatic)
             return Emit(OpCodes.Ldsfld, field);
+
         return Emit(OpCodes.Ldfld, field);
     }
 
@@ -2585,10 +2665,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="MissingFieldException">If <paramref name="field"/> is not found in metadata.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldflda"/>
     /// <seealso href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldsflda"/>
-    public  TSelf Ldflda(FieldInfo field)
+    public TSelf Ldflda(FieldInfo field)
     {
         if (field.IsStatic)
             return Emit(OpCodes.Ldsflda, field);
+
         return Emit(OpCodes.Ldflda, field);
     }
 
@@ -2600,7 +2681,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="ArgumentException">If <paramref name="field"/> is not <see langword="static"/>.</exception>
     /// <exception cref="MissingFieldException">If <paramref name="field"/> is not found in metadata.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldsflda"/>
-    public  TSelf Ldsflda(FieldInfo field) => Ldflda(field);
+    public TSelf Ldsflda(FieldInfo field) => Ldflda(field);
 
     /// <summary>
     /// Replaces the value stored in the given <see cref="FieldInfo"/> with the value on the stack.
@@ -2611,10 +2692,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="MissingFieldException">If <paramref name="field"/> is not found in metadata.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stfld"/>
     /// <seealso href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stsfld"/>
-    public  TSelf Stfld(FieldInfo field)
+    public TSelf Stfld(FieldInfo field)
     {
         if (field.IsStatic)
             return Emit(OpCodes.Stsfld, field);
+
         return Emit(OpCodes.Stfld, field);
     }
 
@@ -2627,7 +2709,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="NullReferenceException">If the instance value/pointer on the stack is <see langword="null"/> and the <paramref name="field"/> is not <see langword="static"/>.</exception>
     /// <exception cref="MissingFieldException">If <paramref name="field"/> is not found in metadata.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stsfld"/>
-    public  TSelf Stsfld(FieldInfo field) => Stfld(field);
+    public TSelf Stsfld(FieldInfo field) => Stfld(field);
 #endregion
 
 #region Load / Store via Address
@@ -2660,6 +2742,7 @@ public class FluentEmitter<TSelf> : ICodePart
             return Ldind_R8();
         if (type == typeof(object) || type.IsClass)
             return Ldind_Ref();
+
         return Emit(OpCodes.Ldobj, type);
     }
 
@@ -2676,91 +2759,91 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="NullReferenceException">If <paramref name="type"/> is <see langword="null"/>.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldobj"/>
     /// <remarks>This is just an alias for Ldobj</remarks>
-    public  TSelf Ldind(Type type) => Ldobj(type);
+    public TSelf Ldind(Type type) => Ldobj(type);
 
     /// <summary>
     /// Loads a value from an address onto the stack.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldobj"/>
     /// <remarks>This is just an alias for Ldobj</remarks>
-    public  TSelf Ldind<T>() => Ldobj<T>();
+    public TSelf Ldind<T>() => Ldobj<T>();
 
     /// <summary>
     /// Loads a <see cref="IntPtr"/> value from an address onto the stack.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_i"/>
-    public  TSelf Ldind_I() => Emit(OpCodes.Ldind_I);
+    public TSelf Ldind_I() => Emit(OpCodes.Ldind_I);
 
     /// <summary>
     /// Loads a <see cref="sbyte"/> value from an address onto the stack as an <see cref="int"/>.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_i1"/>
-    public  TSelf Ldind_I1() => Emit(OpCodes.Ldind_I1);
+    public TSelf Ldind_I1() => Emit(OpCodes.Ldind_I1);
 
     /// <summary>
     /// Loads a <see cref="short"/> value from an address onto the stack as an <see cref="int"/>.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_i2"/>
-    public  TSelf Ldind_I2() => Emit(OpCodes.Ldind_I2);
+    public TSelf Ldind_I2() => Emit(OpCodes.Ldind_I2);
 
     /// <summary>
     /// Loads a <see cref="int"/> value from an address onto the stack.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_i4"/>
-    public  TSelf Ldind_I4() => Emit(OpCodes.Ldind_I4);
+    public TSelf Ldind_I4() => Emit(OpCodes.Ldind_I4);
 
     /// <summary>
     /// Loads a <see cref="long"/> value from an address onto the stack.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_i8"/>
-    public  TSelf Ldind_I8() => Emit(OpCodes.Ldind_I8);
+    public TSelf Ldind_I8() => Emit(OpCodes.Ldind_I8);
 
     /// <summary>
     /// Loads a <see cref="byte"/> value from an address onto the stack as an <see cref="int"/>.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_u1"/>
-    public  TSelf Ldind_U1() => Emit(OpCodes.Ldind_U1);
+    public TSelf Ldind_U1() => Emit(OpCodes.Ldind_U1);
 
     /// <summary>
     /// Loads a <see cref="ushort"/> value from an address onto the stack as an <see cref="int"/>.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_u2"/>
-    public  TSelf Ldind_U2() => Emit(OpCodes.Ldind_U2);
+    public TSelf Ldind_U2() => Emit(OpCodes.Ldind_U2);
 
     /// <summary>
     /// Loads a <see cref="uint"/> value from an address onto the stack onto the stack as an <see cref="int"/>.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_u4"/>
-    public  TSelf Ldind_U4() => Emit(OpCodes.Ldind_U4);
+    public TSelf Ldind_U4() => Emit(OpCodes.Ldind_U4);
 
     /// <summary>
     /// Loads a <see cref="float"/> value from an address onto the stack.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_r4"/>
-    public  TSelf Ldind_R4() => Emit(OpCodes.Ldind_R4);
+    public TSelf Ldind_R4() => Emit(OpCodes.Ldind_R4);
 
     /// <summary>
     /// Loads a <see cref="double"/> value from an address onto the stack.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_r8"/>
-    public  TSelf Ldind_R8() => Emit(OpCodes.Ldind_R8);
+    public TSelf Ldind_R8() => Emit(OpCodes.Ldind_R8);
 
     /// <summary>
     /// Loads a <see cref="object"/> value from an address onto the stack.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldind_ref"/>
-    public  TSelf Ldind_Ref() => Emit(OpCodes.Ldind_Ref);
+    public TSelf Ldind_Ref() => Emit(OpCodes.Ldind_Ref);
 #endregion
 
     /// <summary>
@@ -2769,7 +2852,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="ArgumentNullException">If <paramref name="type"/> is <see langword="null"/>.</exception>
     /// <exception cref="TypeLoadException">If <paramref name="type"/> cannot be found.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stobj"/>
-    public  TSelf Stobj(Type type)
+    public TSelf Stobj(Type type)
     {
         if (type == typeof(IntPtr))
             return Stind_I();
@@ -2787,6 +2870,7 @@ public class FluentEmitter<TSelf> : ICodePart
             return Stind_R8();
         if (type == typeof(object) || type.IsClass)
             return Stind_Ref();
+
         return Emit(OpCodes.Stobj, type);
     }
 
@@ -2795,7 +2879,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// </summary>
     /// <exception cref="TypeLoadException">If the given <see cref="Type"/> cannot be found.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stobj"/>
-    public  TSelf Stobj<T>() => Stobj(typeof(T));
+    public TSelf Stobj<T>() => Stobj(typeof(T));
 
 #region Stind
     /// <summary>
@@ -2813,63 +2897,63 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="TypeLoadException">If the given <see cref="Type"/> cannot be found.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stobj"/>
     /// <remarks>This is just an alias for Stobj</remarks>
-    public  TSelf Stind<T>() => Stobj(typeof(T));
+    public TSelf Stind<T>() => Stobj(typeof(T));
 
     /// <summary>
     /// Stores a <see cref="IntPtr"/> value in a supplied address.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stind_i"/>
-    public  TSelf Stind_I() => Emit(OpCodes.Stind_I);
+    public TSelf Stind_I() => Emit(OpCodes.Stind_I);
 
     /// <summary>
     /// Stores a <see cref="sbyte"/> value in a supplied address.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stind_i1"/>
-    public  TSelf Stind_I1() => Emit(OpCodes.Stind_I1);
+    public TSelf Stind_I1() => Emit(OpCodes.Stind_I1);
 
     /// <summary>
     /// Stores a <see cref="short"/> value in a supplied address.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stind_i2"/>
-    public  TSelf Stind_I2() => Emit(OpCodes.Stind_I2);
+    public TSelf Stind_I2() => Emit(OpCodes.Stind_I2);
 
     /// <summary>
     /// Stores a <see cref="int"/> value in a supplied address.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stind_i4"/>
-    public  TSelf Stind_I4() => Emit(OpCodes.Stind_I4);
+    public TSelf Stind_I4() => Emit(OpCodes.Stind_I4);
 
     /// <summary>
     /// Stores a <see cref="long"/> value in a supplied address.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stind_i8"/>
-    public  TSelf Stind_I8() => Emit(OpCodes.Stind_I8);
+    public TSelf Stind_I8() => Emit(OpCodes.Stind_I8);
 
     /// <summary>
     /// Stores a <see cref="float"/> value in a supplied address.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stind_r4"/>
-    public  TSelf Stind_R4() => Emit(OpCodes.Stind_R4);
+    public TSelf Stind_R4() => Emit(OpCodes.Stind_R4);
 
     /// <summary>
     /// Stores a <see cref="double"/> value in a supplied address.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stind_r8"/>
-    public  TSelf Stind_R8() => Emit(OpCodes.Stind_R8);
+    public TSelf Stind_R8() => Emit(OpCodes.Stind_R8);
 
     /// <summary>
     /// Stores a <see cref="object"/> value in a supplied address.
     /// </summary>
     /// <exception cref="NullReferenceException">If an invalid address is detected.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stind_ref"/>
-    public  TSelf Stind_Ref() => Emit(OpCodes.Stind_Ref);
+    public TSelf Stind_Ref() => Emit(OpCodes.Stind_Ref);
 #endregion
 
 
@@ -2880,10 +2964,11 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="alignment">Specifies the generated code should assume the address is <see cref="byte"/>, double-<see cref="byte"/>, or quad-<see cref="byte"/> aligned.</param>
     /// <exception cref="ArgumentOutOfRangeException">If <paramref name="alignment"/> is not 1, 2, or 4.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.unaligned"/>
-    public  TSelf Unaligned(int alignment)
+    public TSelf Unaligned(int alignment)
     {
         if (alignment != 1 && alignment != 2 && alignment != 4)
             throw new ArgumentOutOfRangeException(nameof(alignment), alignment, "Alignment can only be 1, 2, or 4");
+
         return Emit(OpCodes.Unaligned, (byte)alignment);
     }
 
@@ -2891,7 +2976,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// Indicates that an address currently on the stack might be volatile, and the results of reading that location cannot be cached or that multiple stores to that location cannot be suppressed.
     /// </summary>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.volatile"/>
-    public  TSelf Volatile() => Emit(OpCodes.Volatile);
+    public TSelf Volatile() => Emit(OpCodes.Volatile);
 #endregion
 
 #region Upon Type
@@ -2901,15 +2986,14 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="type">The <see cref="Type"/> of reference to push.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="type"/> is <see langword="null"/>.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.mkrefany"/>
-    public  TSelf Mkrefany(Type type) => Emit(OpCodes.Mkrefany, type);
+    public TSelf Mkrefany(Type type) => Emit(OpCodes.Mkrefany, type);
 
     /// <summary>
     /// Pushes a typed reference to an instance of a given <see cref="Type"/> onto the stack.
     /// </summary>
     /// <typeparam name="T">The <see cref="Type"/> of reference to push.</typeparam>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.mkrefany"/>
-    public TSelf Mkrefany<T>()
-        => Emit(OpCodes.Mkrefany, typeof(T));
+    public TSelf Mkrefany<T>() => Emit(OpCodes.Mkrefany, typeof(T));
 
     /// <summary>
     /// Retrieves the type token embedded in a typed reference.
@@ -2925,7 +3009,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="InvalidCastException">If <paramref name="type"/> is not the same as the <see cref="Type"/> of the reference.</exception>
     /// <exception cref="TypeLoadException">If <paramref name="type"/> cannot be found.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.refanyval"/>
-    public  TSelf Refanyval(Type type) => Emit(OpCodes.Refanyval, type);
+    public TSelf Refanyval(Type type) => Emit(OpCodes.Refanyval, type);
 
     /// <summary>
     /// Retrieves the address (<see langword="&amp;"/>) embedded in a typed reference.
@@ -2934,7 +3018,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="InvalidCastException">If <typeparamref name="T"/> is not the same as the <see cref="Type"/> of the reference.</exception>
     /// <exception cref="TypeLoadException">If <typeparamref name="T"/> cannot be found.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.refanyval"/>
-    public  TSelf Refanyval<T>() => Emit(OpCodes.Refanyval, typeof(T));
+    public TSelf Refanyval<T>() => Emit(OpCodes.Refanyval, typeof(T));
 
     /// <summary>
     /// Pushes the size, in <see cref="byte"/>s, of a given <see cref="Type"/> onto the stack.
@@ -2942,7 +3026,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="type">The <see cref="Type"/> to get the size of.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="type"/> is null.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.sizeof"/>
-    public  TSelf Sizeof(Type type)
+    public TSelf Sizeof(Type type)
     {
         ValidateType.IsValueType(type);
         return Emit(OpCodes.Sizeof, type);
@@ -2954,13 +3038,12 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <typeparam name="T">The <see cref="Type"/> to get the size of.</typeparam>
     /// <exception cref="ArgumentNullException">Thrown if the given <see cref="Type"/> is <see langword="null"/>.</exception>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.sizeof"/>
-    public  TSelf Sizeof<T>()
+    public TSelf Sizeof<T>()
         where T : unmanaged
         => Emit(OpCodes.Sizeof, typeof(T));
 #endregion
 
-    #region Advanced
-   
+#region Advanced
     public TSelf EmitParamsCountCheck(ParameterInfo paramsParameter, int requiredCount)
     {
         return _self
@@ -2970,13 +3053,11 @@ public class FluentEmitter<TSelf> : ICodePart
             .Beq(out var lblLengthEqual)
             .Ldstr($"{requiredCount} parameters are required in the params array")
             .Ldstr(paramsParameter.Name)
-            .Newobj(MemberSearch.One<ArgumentException, ConstructorInfo>(new() {
-                ParameterTypes = new[]{typeof(string), typeof(string)},
-                }))
+            .Newobj(MemberSearch.One<ArgumentException, ConstructorInfo>(new() { ParameterTypes = new[] { typeof(string), typeof(string) }, }))
             .Throw()
             .MarkLabel(lblLengthEqual);
     }
-    
+
     public TSelf EmitLoadParams(ParameterInfo paramsParameter, ReadOnlySpan<ParameterInfo> destParameters)
     {
         int len = destParameters.Length;
@@ -2985,7 +3066,9 @@ public class FluentEmitter<TSelf> : ICodePart
             return _self;
 
         // Params -> Params?
-        if (len == 1 && destParameters[0].IsParams())
+        if (len == 1
+            && destParameters[0]
+                .IsParams())
         {
             _self.Ldarg(paramsParameter);
         }
@@ -3003,9 +3086,8 @@ public class FluentEmitter<TSelf> : ICodePart
         // Everything will be loaded!
         return _self;
     }
+#endregion
 
-    #endregion
-    
     public void DeclareTo(CodeBuilder codeBuilder)
     {
         this.Emissions.DeclareTo(codeBuilder);

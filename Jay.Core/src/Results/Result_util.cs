@@ -11,7 +11,8 @@ partial struct Result
     /// A failed <see cref="Result" /> with the caught <see cref="Exception" /> attached if not.
     /// </returns>
     public static Result TryInvoke(
-        [AllowNull] [NotNullWhen(true)] Action? action)
+        [AllowNull, NotNullWhen(true)] 
+        Action? action)
     {
         if (action is null)
         {
@@ -24,7 +25,7 @@ partial struct Result
         }
         catch (Exception ex)
         {
-            return ex;
+            return Error(ex);
         }
     }
 
@@ -39,8 +40,10 @@ partial struct Result
     /// A failed <see cref="Result" /> with the caught <see cref="Exception" /> attached if not.
     /// </returns>
     public static Result TryInvoke<T>(
-        [AllowNull] [NotNullWhen(true)] Func<T>? func,
-        [MaybeNullWhen(false)] out T output)
+        [AllowNull,NotNullWhen(true)] 
+        Func<T>? func,
+        [MaybeNullWhen(false)] 
+        out T output)
     {
         if (func is null)
         {
@@ -55,7 +58,7 @@ partial struct Result
         catch (Exception ex)
         {
             output = default;
-            return ex;
+            return Error(ex);
         }
     }
 
@@ -68,7 +71,8 @@ partial struct Result
     /// a failing <see cref="Result{T}" /> containing the captured <see cref="_error" />.
     /// </returns>
     public static Result<T> TryInvoke<T>(
-        [AllowNull] [NotNullWhen(true)] Func<T>? func)
+        [AllowNull,NotNullWhen(true)] 
+        Func<T>? func)
     {
         if (func is null)
         {
@@ -76,11 +80,11 @@ partial struct Result
         }
         try
         {
-            return func.Invoke();
+            return Result<T>.Ok(func.Invoke());
         }
         catch (Exception ex)
         {
-            return ex;
+            return Result<T>.Error(ex);
         }
     }
 
@@ -121,18 +125,20 @@ partial struct Result
         return Ok;
     }
 
-    public static Result[] InvokeAll(params Action?[]? actions)
+    public static Result InvokeUntilError(IEnumerable<Action?>? actions)
     {
-        if (actions is null) return Array.Empty<Result>();
-        int count = actions.Length;
-        var results = new Result[count];
-        for (var i = 0; i < count; i++)
-        {
-            results[i] = TryInvoke(actions[i]);
-        }
-        return results;
-    }
+        if (actions is null)
+            return Ok;
 
+        Result result;
+        foreach (var action in actions)
+        {
+            result = TryInvoke(action);
+            if (!result)
+                return result;
+        }
+        return Ok;
+    }
 
 #region Dispose
     /// <summary>

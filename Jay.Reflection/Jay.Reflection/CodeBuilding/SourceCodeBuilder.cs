@@ -141,6 +141,7 @@ public class CodeBuilder : IBuildingText
                 catch (Exception ex)
                 {
                     Debugger.Break();
+                    Console.WriteLine(ex);
                     throw;
                 }
                 return Code<SCBA>(scba);

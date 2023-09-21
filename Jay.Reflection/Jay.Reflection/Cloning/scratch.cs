@@ -1,16 +1,13 @@
 ﻿using System.Diagnostics;
 using Jay.Collections;
-using Jay.Reflection.Adapters.Args;
 using Jay.Reflection.Builders;
 using Jay.Reflection.Emitting;
+using Jay.Reflection.Emitting.Args;
 using Jay.Reflection.Searching;
 using Jay.Reflection.Utilities;
 using Jay.Utilities;
 
 namespace Jay.Reflection.Cloning;
-
-[return: NotNullIfNotNull(nameof(value))]
-public delegate T? DeepClone<T>(T? value);
 
 public static class Cloner
 {
@@ -116,7 +113,7 @@ public static class Cloner
     {
         return _valueDeepCloneCache
             .GetOrAdd<T>(static t => CreateValueDeepClone(t))
-            .MustBe<DeepClone<T>>();
+            .AsValid<DeepClone<T>>();
     }
 
     private static DeepClone<object?> GetDeepClone(Type type)

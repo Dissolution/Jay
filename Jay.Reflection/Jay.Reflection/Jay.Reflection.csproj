@@ -37,6 +37,7 @@
         <Using Include="Jay.Reflection.Extensions"/>
         <Using Include="Jay.Text"/>
         <Using Include="Jay.Text.Extensions"/>
+        <Using Include="Jay.Validation"/>
     </ItemGroup>
 
     <!-- NuGet Packages -->
@@ -98,6 +99,8 @@
       <ProjectReference Include="..\..\Jay.Core\src\Jay.Core.csproj" />
       <ProjectReference Include="..\..\Jay.Text\src\Jay.Text.csproj" />
     </ItemGroup>
+
+
 
 
 </Project>

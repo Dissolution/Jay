@@ -6,18 +6,15 @@
 /// <see cref="Ok" /> - A completed operation<br />
 /// <see cref="Error" /> - A failed operation with an <see cref="Exception" />
 /// </summary>
+/// <remarks>
+/// Heavily inspired by Rust's Result
+/// </remarks>
 public readonly partial struct Result :
     IEquatable<Result>,
     IEquatable<bool>,
     IEquatable<Exception>
 {
-    /* This is heavily inspired by Rust's Result discriminated union
-     *
-     * The user should never use default(Result), but if they do, we want to treat it as a failure.
-     * As default(bool) == false
-     * This means we do not get an Exception, so we'll try to capture one as soon as we can
-     */
-
+    // default(Result) == (default(bool), default(Exception)
     internal readonly bool _ok;
     internal readonly Exception? _error;
 
@@ -48,15 +45,18 @@ public readonly partial struct Result :
         }
     }
 
+    /// <summary>
+    /// Is this an <see cref="Ok"/> <see cref="Result"/>?
+    /// </summary>
+    /// <returns></returns>
     public bool IsOk()
     {
         return _ok;
     }
 
     /// <summary>
-    /// Is this a failed <see cref="Result" />?
+    /// Is this an <see cref="Error"/> <see cref="Result"/>?
     /// </summary>
-    /// <returns>true if this is a failed result; otherwise, false</returns>
     public bool IsError()
     {
         return !_ok;
@@ -65,8 +65,10 @@ public readonly partial struct Result :
     /// <summary>
     /// Is this a failed <see cref="Result" />?
     /// </summary>
-    /// <param name="error">If this is a failed <see cref="Result" />, the attached (or a new) <see cref="Exception" />; otherwise <see langword="null" /></param>
-    /// <returns>true if this is a failed result; otherwise, false</returns>
+    /// <param name="error">
+    /// If this is <see cref="Error"/>, the attached <see cref="Exception"/>;<br/>
+    /// otherwise <see langword="null" /></param>
+    /// <returns><c>true</c> if this is an <see cref="Error"/>; otherwise, <c>false</c></returns>
     public bool IsError([NotNullWhen(true)] out Exception? error)
     {
         if (_ok)
@@ -91,18 +93,6 @@ public readonly partial struct Result :
         }
     }
 
-    public void Match(Action<None> ok, Action<Exception> error)
-    {
-        if (_ok)
-        {
-            ok(default);
-        }
-        else
-        {
-            error(GetError());
-        }
-    }
-
     public TReturn Match<TReturn>(Func<TReturn> ok, Func<Exception, TReturn> error)
     {
         if (_ok)
@@ -111,29 +101,17 @@ public readonly partial struct Result :
         }
         return error(GetError());
     }
-
-    public TReturn Match<TReturn>(Func<None, TReturn> ok, Func<Exception, TReturn> error)
-    {
-        if (_ok)
-        {
-            return ok(default);
-        }
-        return error(GetError());
-    }
-
-    /// <inheritdoc cref="IEquatable{T}" />
+    
     public bool Equals(Result result)
     {
         return result._ok == _ok;
     }
-
-    /// <inheritdoc cref="IEquatable{T}" />
+    
     public bool Equals(bool ok)
     {
         return ok == _ok;
     }
-
-    /// <inheritdoc cref="IEquatable{T}" />
+    
     public bool Equals(Exception? _)
     {
         return !_ok;
@@ -158,7 +136,7 @@ public readonly partial struct Result :
     public override string ToString()
     {
         return Match(
-            _ => nameof(Ok),
+            () => nameof(Ok),
             error => $"Error({error.GetType().Name}): {error.Message}");
     }
 }

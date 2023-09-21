@@ -16,16 +16,16 @@ public static class ListExtensions
         return true;
     }
 
-    public static int IndexOf<T>(this IReadOnlyList<T> list,
-        T value)
-    {
-        for (var i = 0; i < list.Count; i++)
-        {
-            if (EqualityComparer<T>.Default.Equals(list[i], value))
-                return i;
-        }
-        return -1;
-    }
+    // public static int IndexOf<T>(this IReadOnlyList<T> list,
+    //     T value)
+    // {
+    //     for (var i = 0; i < list.Count; i++)
+    //     {
+    //         if (EqualityComparer<T>.Default.Equals(list[i], value))
+    //             return i;
+    //     }
+    //     return -1;
+    // }
 
     public static IEnumerable<T> Reversed<T>(this IReadOnlyList<T>? readOnlyList)
     {

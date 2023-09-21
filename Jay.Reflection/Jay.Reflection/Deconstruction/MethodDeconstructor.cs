@@ -1,252 +1,238 @@
 ﻿using System.Diagnostics;
+using Jay.Memory;
 using Jay.Reflection.Emitting;
-using Jay.Reflection.Exceptions;
-using Jay.Validation;
 
 namespace Jay.Reflection.Deconstruction;
 
-internal sealed class ThisParameter : ParameterInfo
-{
-    public ThisParameter(MemberInfo member)
-    {
-        MemberImpl = member;
-        ClassImpl = member.DeclaringType;
-        NameImpl = "this";
-        PositionImpl = 0;
-    }
-}
-
-public sealed class MethodDeconstructor
+public class MethodDeconstructor
 {
     private static readonly OpCode[] _oneByteOpCodes;
     private static readonly OpCode[] _twoByteOpCodes;
-    
+
     static MethodDeconstructor()
     {
-        _oneByteOpCodes = new OpCode[0xE1];
-        _twoByteOpCodes = new OpCode[0x1F];
+        _oneByteOpCodes = new OpCode[225];
+        _twoByteOpCodes = new OpCode[31];
 
-        var fields = typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static);
-        foreach (var field in fields)
+        var opCodesFields = typeof(OpCodes)
+            .GetFields(BindingFlags.Public | BindingFlags.Static);
+        foreach (var field in opCodesFields)
         {
-            var opCode = (OpCode)field.GetValue(null)!;
-            if (opCode.OpCodeType == OpCodeType.Nternal)
-                continue;
+            var fieldValue = field.GetValue(null);
+            if (fieldValue.Is<OpCode>(out var opCode))
+            {
+                if (opCode.OpCodeType == OpCodeType.Nternal)
+                {
+                    Debugger.Break();
+                    continue;
+                }
 
-            if (opCode.Size == 1)
-                _oneByteOpCodes[opCode.Value] = opCode;
-            else
-                _twoByteOpCodes[opCode.Value & 0xFF] = opCode;
+                if (opCode.Size == 1)
+                {
+                    _oneByteOpCodes[opCode.Value] = opCode;
+                }
+                else
+                {
+                    Debug.Assert(opCode.Size == 2);
+                    _twoByteOpCodes[opCode.Value & 0xFF] = opCode;
+                }
+            }
         }
     }
 
-    public static EmissionStream ReadEmissions(MethodBase method)
+    private static OpCode ReadOpCode(ref SpanReader<byte> ilBytes)
     {
-        return new MethodDeconstructor(method).GetEmissions();
-    }
-    
-    
-    private readonly Type[] _methodGenericArguments;
-    private readonly Type[] _declaringTypeGenericArguments;
-
-    private readonly byte[] _ilBytes;
-    
-    public Module Module => Method.Module;
-    public MethodBase Method { get; }
-    public ParameterInfo[] Parameters { get; }
-    public IList<LocalVariableInfo> Locals { get; }
-    
-    private MethodDeconstructor(MethodBase methodBase)
-    {
-        Validate.IsNotNull(methodBase);
-        this.Method = methodBase;
-        MethodBody body = methodBase.GetMethodBody() ?? throw new ArgumentException("Method has no Body", nameof(methodBase));
-        this.Locals = body.LocalVariables;
-        _ilBytes = body.GetILAsByteArray() ?? throw new ArgumentException("Method Body has no IL Bytes", nameof(methodBase));
+        // Check the first byte
+        if (!ilBytes.TryTake(out byte op))
+            throw new InvalidOperationException("Could not read the first OpCode byte");
         
-        // We need to get all parameters, including the implicit This for instance methods
-        if (methodBase.IsStatic)
-        {
-            Parameters = methodBase.GetParameters();
-        }
-        else
-        {
-            var methodParams = methodBase.GetParameters();
-            Parameters = new ParameterInfo[methodParams.Length + 1];
-            Parameters[0] = new ThisParameter(methodBase);
-            Easy.CopyTo(methodParams, Parameters.AsSpan(1));
-        }
-        
-        _methodGenericArguments = methodBase.IsGenericMethod ? methodBase.GetGenericArguments() : Type.EmptyTypes;
-        
-        var ownerType = methodBase.OwnerType();
-        _declaringTypeGenericArguments = ownerType.IsGenericType ? ownerType.GetGenericArguments() : Type.EmptyTypes;
-    }
-    
-    private OpCode ReadOpCode(ByteArrayReader ilBytes)
-    {
-        if (!ilBytes.TryRead(out byte op))
-        {
-            throw new ReflectedException("Unable to read the first byte of an OpCode");
-        }
-        // Is not two-byte opcode signifier
-        if (op != 0XFE)
+        // Check for two-byte signifier
+        if (op != 0xFE)
         {
             return _oneByteOpCodes[op];
         }
-        if (!ilBytes.TryRead(out op))
-        {
-            throw new ReflectedException("Unable to read the second byte of an OpCode");
-        }
+        
+        // Need the second byte
+        if (!ilBytes.TryTake(out op))
+            throw new InvalidOperationException("Could not read the second OpCode byte");
+
         return _twoByteOpCodes[op];
     }
-    
-    private object GetVariable(OpCode opCode, int index)
+
+    private static object? ReadOperand(MethodDeconstruction methodDeconstruction, OpCode opCode, ref SpanReader<byte> ilBytes)
     {
-        if (opCode.Name!.Contains("loc"))
+        var module = methodDeconstruction.Method.Module;
+        switch (opCode.OperandType)
         {
-            return Locals[index];
-        }
-        else
-        {
-            return Parameters[index];
-        }
-    }
-    
-    private object? ReadOperand(OpCode opcode, ByteArrayReader ilBytes)
-    {
-        switch (opcode.OperandType)
-        {
-            case OperandType.InlineSwitch:
-                int length = ilBytes.Read<int>();
-                int baseOffset = ilBytes.Position + (4 * length);
-                int[] branches = new int[length];
-                for (int i = 0; i < length; i++)
-                {
-                    branches[i] = ilBytes.Read<int>() + baseOffset;
-                }
-                return branches;
-            case OperandType.ShortInlineBrTarget:
-                return (ilBytes.Read<sbyte>() + ilBytes.Position);
-            case OperandType.InlineBrTarget:
-                return ilBytes.Read<int>() + ilBytes.Position;
-            case OperandType.ShortInlineI:
-                if (opcode == OpCodes.Ldc_I4_S)
-                    return ilBytes.Read<sbyte>();
-                else
-                    return ilBytes.Read();
+            case OperandType.InlineField:
+            {
+                int metadataToken = ilBytes.Read<int>();
+                FieldInfo? field = module.ResolveField(metadataToken);
+                return field;
+            }
+            case OperandType.InlineMethod:
+            {
+                int metadataToken = ilBytes.Read<int>();
+                MethodBase? method = module.ResolveMethod(metadataToken);
+                return method;
+            }
+            case OperandType.InlineTok:
+            {
+                int metadataToken = ilBytes.Read<int>();
+                MemberInfo? member = module.ResolveMember(metadataToken);
+                return member;
+            }
+            case OperandType.InlineType:
+            {
+                int metadataToken = ilBytes.Read<int>();
+                Type type = module.ResolveType(metadataToken);
+                return type;
+            }
+            case OperandType.InlineSig:
+            {
+                int metadataToken = ilBytes.Read<int>();
+                byte[] signature = module.ResolveSignature(metadataToken);
+                return signature;
+            }
+            case OperandType.InlineString:
+            {
+                int metadataToken = ilBytes.Read<int>();
+                string str = module.ResolveString(metadataToken);
+                return str;
+            }
+            case OperandType.InlineVar:
+            {
+                short index = ilBytes.Read<short>();
+                var variable = GetVariable(methodDeconstruction, opCode, index);
+                return variable;
+            }
+            case OperandType.ShortInlineVar:
+            {
+                sbyte index = ilBytes.Read<sbyte>();
+                var variable = GetVariable(methodDeconstruction, opCode, index);
+                return variable;
+            }
             case OperandType.InlineI:
                 return ilBytes.Read<int>();
+            case OperandType.ShortInlineI:
+                return ilBytes.Read<sbyte>();
+            case OperandType.InlineI8:
+                return ilBytes.Read<long>();
             case OperandType.ShortInlineR:
                 return ilBytes.Read<float>();
             case OperandType.InlineR:
                 return ilBytes.Read<double>();
-            case OperandType.InlineI8:
-                return ilBytes.Read<long>();
-            case OperandType.InlineSig:
-                return Module.ResolveSignature(ilBytes.Read<int>());
-            case OperandType.InlineString:
-                return Module.ResolveString(ilBytes.Read<int>());
-            case OperandType.InlineField:
+            case OperandType.InlineBrTarget:
+                return ilBytes.Read<int>() + ilBytes.Position;
+            case OperandType.ShortInlineBrTarget:
+                return ilBytes.Read<sbyte>() + ilBytes.Position;
+            case OperandType.InlineSwitch:
             {
-                int metadataToken = ilBytes.Read<int>();
-                FieldInfo? field = null;
-                try
+                int count = ilBytes.Read<int>();
+                int offset = ilBytes.Position + (4 * count);
+                int[] branches = new int[count];
+                for (var i = 0; i < count; i++)
                 {
-                    field = Module.ResolveField(metadataToken);
+                    branches[i] = ilBytes.Read<int>() + offset;
                 }
-                catch (Exception ex)
-                {
-                    var info = CodePart.ToCode(ex);
-                    Debugger.Break();
-                }
-                
-                return field;
+                return branches;
             }
-            case OperandType.InlineTok:
-            case OperandType.InlineType:
-            case OperandType.InlineMethod:
-            {
-                int metadataToken = ilBytes.Read<int>();
-                MemberInfo? member = null;
-                try
-                {
-                    member = Module.ResolveMember(metadataToken, _declaringTypeGenericArguments, _methodGenericArguments);
-                }
-                catch (Exception ex)
-                {
-                    var info = CodePart.ToCode(ex);
-                    Debugger.Break();
-                }
-                try
-                {
-                    member = Module.ResolveMember(metadataToken);
-                }
-                catch (Exception ex)
-                {
-                    var info = CodePart.ToCode(ex);
-                    Debugger.Break();
-                }
-                return member;
-            }
-            case OperandType.ShortInlineVar:
-                return GetVariable(opcode, ilBytes.Read());
-            case OperandType.InlineVar:
-                return GetVariable(opcode, ilBytes.Read<short>());
             case OperandType.InlineNone:
             default:
+            {
+                // No operand
                 return null;
+            }
+        }
+    }
+
+    private static object GetVariable(MethodDeconstruction methodDeconstruction, OpCode opCode, int index)
+    {
+        if (opCode.Name!.Contains("loc"))
+        {
+            return methodDeconstruction.Locals[index];
+        }
+        else
+        {
+            return methodDeconstruction.Parameters[index];
         }
     }
     
-    public EmissionStream GetEmissions()
+    public static MethodDeconstruction Deconstruct(MethodBase method)
     {
-        var emissionStream = new EmissionStream();
-        ByteArrayReader ilBytes = new ByteArrayReader(_ilBytes);
-        while (ilBytes.AvailableByteCount > 0)
+        MethodBody? body = method.GetMethodBody();
+        if (body is null)
+            throw new ArgumentException("Cannot get MethodBody", nameof(method));
+        byte[]? ilBytes = body.GetILAsByteArray();
+        if (ilBytes is null)
+            throw new ArgumentException("Cannot get IL Bytes", nameof(method));
+        ParameterInfo[] parameters;
+        if (method.IsStatic)
         {
-            int pos = ilBytes.Position;
-            var opCode = ReadOpCode(ilBytes);
-            object? operand = ReadOperand(opCode, ilBytes);
+            parameters = method.GetParameters();
+        }
+        else
+        {
+            var methodParameters = method.GetParameters();
+            parameters = new ParameterInfo[methodParameters.Length + 1];
+            parameters[0] = new ThisParameter(method);
+            Easy.CopyTo(methodParameters, parameters.AsSpan(1));
+        }
+        var locals = body.LocalVariables;
+
+        var methodDeconstruction = new MethodDeconstruction(method, body, ilBytes, parameters, locals.ToList());
+
+        SpanReader<byte> ilReader = new(ilBytes);
+        var emissions = new EmissionStream();
+        
+        // Read all of our emissions
+        while (ilReader.RemainingLength > 0)
+        {
+            int pos = ilReader.Position;
+            var opCode = ReadOpCode(ref ilReader);
+            object? operand = ReadOperand(methodDeconstruction, opCode, ref ilReader);
             var emission = new OpCodeEmission(opCode, operand);
             var line = new EmissionLine(pos, emission);
-            emissionStream.AddLast(line);
+            emissions.AddLast(line);
         }
         
-        // Resolve branches
-        foreach (var opInstruction in emissionStream
-            .SelectWhere((EmissionLine line, out OpCodeEmission opCodeEmission) => line.Emission.Is(out opCodeEmission!)))
+        // Now we resolve our branches
+        var branchEmissions = emissions
+            .SelectWhere((EmissionLine line, out OpCodeEmission opCodeEmission) => line.Emission.Is(out opCodeEmission!))
+            .Where(emission => emission.OpCode.OperandType.HasAnyFlags(OperandType.ShortInlineBrTarget, OperandType.InlineBrTarget, OperandType.InlineSwitch))
+            .ToList();
+        foreach (var opEmission in branchEmissions)
         {
-            switch (opInstruction.OpCode.OperandType)
+            if (opEmission.OpCode.OperandType == OperandType.ShortInlineBrTarget)
             {
-                case OperandType.ShortInlineBrTarget:
-                case OperandType.InlineBrTarget:
+                sbyte offset = opEmission.Arg.AsValid<sbyte>();
+                if (!emissions.TryFindByOffset(offset, out var line))
+                    throw new InvalidOperationException();
+                opEmission.Arg = line.Emission;
+            }
+            else if (opEmission.OpCode.OperandType == OperandType.InlineBrTarget)
+            {
+                int offset = opEmission.Arg.AsValid<int>();
+                if (!emissions.TryFindByOffset(offset, out var line))
+                    throw new InvalidOperationException();
+                opEmission.Arg = line.Emission;
+            }
+            else if (opEmission.OpCode.OperandType == OperandType.InlineSwitch)
+            {
+                int[] offsets = opEmission.Arg.AsValid<int[]>();
+                var branches = new Emission[offsets.Length];
+                for (int i = 0; i < offsets.Length; i++)
                 {
-                    if (!opInstruction.Arg.Is<int>(out var offset))
+                    if (!emissions.TryFindByOffset(offsets[i], out var line))
                         throw new InvalidOperationException();
-                    if (!emissionStream.TryFindByOffset(offset, out var line))
-                        throw new InvalidOperationException();
-                    opInstruction.Arg = line.Emission;
-                    break;
+                    branches[i] = line.Emission;
                 }
-                case OperandType.InlineSwitch:
-                {
-                    if (!opInstruction.Arg.Is<int[]>(out var offsets))
-                        throw new InvalidOperationException();
-                    var branches = new Emission[offsets.Length];
-                    for (int i = 0; i < offsets.Length; i++)
-                    {
-                        if (!emissionStream.TryFindByOffset(offsets[i], out var line))
-                            throw new InvalidOperationException();
-                        branches[i] = line.Emission;
-                    }
-                    opInstruction.Arg = branches;
-                    break;
-                }
+                opEmission.Arg = branches;
+                break;
             }
         }
-        
-        // fin
-        return emissionStream;
+
+        methodDeconstruction.Emissions = emissions;
+        return methodDeconstruction;
     }
 }

@@ -56,35 +56,4 @@ public static class ObjectExtensions
         value = default;
         return obj is null && typeof(T).CanContainNull();
     }
-
-    /// <summary>
-    /// Is this <see cref="object" /> <c>null</c>, <see cref="None" />, or <see cref="DBNull" />?
-    /// </summary>
-    public static bool IsNone([NotNullWhen(false)] this object? obj)
-    {
-        return obj is null or None or DBNull;
-    }
-
-    /// <summary>
-    /// Returns this <see cref="object"/> as a <typeparamref name="TOut"/> or throw an <see cref="ArgumentException"/>
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <param name="exceptionMessage"></param>
-    /// <param name="valueName"></param>
-    /// <typeparam name="TOut"></typeparam>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    [return: NotNull]
-    public static TOut MustBe<TOut>(
-        this object? obj,
-        string? exceptionMessage = null,
-        [CallerArgumentExpression(nameof(obj))]
-        string? valueName = null)
-    {
-        if (obj is TOut output)
-            return output;
-        throw new ArgumentException(
-            exceptionMessage ?? $"The given {obj?.GetType().Name} value is not a {typeof(TOut).Name} instance",
-            valueName);
-    }
 }

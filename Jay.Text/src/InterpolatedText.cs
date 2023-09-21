@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.ComponentModel;
+using Jay.Maths;
 using Jay.Text.Building;
 using Jay.Utilities;
 

@@ -5,7 +5,7 @@ namespace Jay.Text;
 
 public static class StringBuilderExtensions
 {
-#if NETSTANDARD2_0
+#if NET48 || NETSTANDARD2_0
     public static StringBuilder Append(this StringBuilder builder, ReadOnlySpan<char> text)
     {
         unsafe
@@ -48,7 +48,7 @@ public static class StringBuilderExtensions
     /// Returns this <see cref="StringBuilder"/> instance to <see cref="StringBuilderPool"/>.<see cref="StringBuilderPool.Shared"/>
     /// and then returns the <see cref="string"/> it built.
     /// </summary>
-    public static string ReturnToString(this StringBuilder builder)
+    public static string ToStringAndReturn(this StringBuilder builder)
     {
         var str = builder.ToString();
         StringBuilderPool.Shared.Return(builder);

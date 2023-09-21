@@ -1,8 +1,9 @@
-﻿using Jay.Reflection.Adapters.Args;
-using Jay.Reflection.Builders;
+﻿using Jay.Reflection.Builders;
 using Jay.Reflection.Emitting;
+using Jay.Reflection.Emitting.Args;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Info;
+using Argument = Jay.Reflection.Emitting.Args.Argument;
 
 namespace Jay.Reflection.Adapters;
 
@@ -64,7 +65,7 @@ public class RuntimeMethodAdapter
             }
             
             // Did they mark an instance attribute?
-            if (instanceParameter.GetCustomAttribute<InstanceAttribute>() is not null)
+            if (instanceParameter!.GetCustomAttribute<InstanceAttribute>() is not null)
             {
                 offset = 1;
             }
@@ -97,9 +98,9 @@ public class RuntimeMethodAdapter
         int d = delegateParamOffset;
         while (m < methParams.Length && d < delParams.Length)
         {
-            Arg delArg = delParams[d];
-            Arg methArg = methParams[m];
-            result = Emitter.TryEmitCast(delArg, methArg);
+            Argument delArgument = delParams[d];
+            Argument methArgument = methParams[m];
+            result = Emitter.TryEmitCast(delArgument, methArgument);
             if (!result)
             {
                 Emitter.Emissions.RemoveAfter(lastInstructionNode);
@@ -123,7 +124,7 @@ public class RuntimeMethodAdapter
             result = HasInstanceParam(out int dOffset);
             if (result)
             {
-                // If the first required arg is the instance, maybe we should load it
+                // If the first required argument is the instance, maybe we should load it
                 if (MethodSig.ParameterCount >= 1 && 
                     CanAdaptType(MethodSig.Parameters[0], Method.OwnerType()) &&
                     DelegateSig.ParameterCount > 0 &&
@@ -141,7 +142,7 @@ public class RuntimeMethodAdapter
                     }
 
                     // We know we had an instance param
-                    Arg instance = DelegateSig.Parameters[0];
+                    Argument instance = DelegateSig.Parameters[0];
                     result = Emitter.TryEmitCast(instance, MethodSig.Parameters[0]);
                     if (result)
                     {
@@ -184,8 +185,8 @@ public class RuntimeMethodAdapter
             return GetAdaptEx($"There must be an instance argument for instance Methods");
         if (!Method.TryGetInstanceType(out var instanceType))
             return GetAdaptEx($"Could not find Instance Type for Method");
-        Arg instanceArg = DelegateSig.Parameters[0];
-        result = Emitter.TryEmitCast(instanceArg, instanceType);
+        Argument instanceArgument = DelegateSig.Parameters[0];
+        result = Emitter.TryEmitCast(instanceArgument, instanceType);
         if (!result) return result;
         
         // Check for Params
@@ -211,8 +212,8 @@ public class RuntimeMethodAdapter
             return result;
         // Call the original method
         adapter.Emitter.Call(method);
-        Arg methodReturn = method.ReturnType();
-        Arg delReturn = delegateSig.ReturnType;
+        Argument methodReturn = method.ReturnType();
+        Argument delReturn = delegateSig.ReturnType;
         result = adapter.Emitter.TryEmitCast(methodReturn, delReturn);
         if (!result) return result;
         adapter.Emitter.Ret();
@@ -243,9 +244,9 @@ public class RuntimeMethodAdapter
         return del!;
     }
 
-    public static bool CanAdaptType(Arg input, Arg output)
+    public static bool CanAdaptType(Argument input, Argument output)
     {
-        return ArgExtensions.CanCast(input, output);
+        return ArgumentExtensions.CanCast(input, output);
     }
     
     public static bool CanAdaptTypes(Type[] inputTypes, Type[] outputTypes)
@@ -261,9 +262,9 @@ public class RuntimeMethodAdapter
         
         for (var i = 0; i < len; i++)
         {
-            Arg input = inputTypes[i];
-            Arg output = outputTypes[i];
-            if (!ArgExtensions.CanCast(input, output))
+            Argument input = inputTypes[i];
+            Argument output = outputTypes[i];
+            if (!ArgumentExtensions.CanCast(input, output))
                 return false;
         }
         

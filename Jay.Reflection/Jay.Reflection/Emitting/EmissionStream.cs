@@ -1,7 +1,5 @@
 ﻿namespace Jay.Reflection.Emitting;
 
-public readonly record struct EmissionLine(int? Offset, Emission Emission);
-
 public class EmissionStream : LinkedList<EmissionLine>, ICodePart
 {
     public bool TryFindByOffset(int offset, out EmissionLine emissionLine)

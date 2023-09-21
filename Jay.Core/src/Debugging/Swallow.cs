@@ -21,7 +21,7 @@ public static class Swallow
         {
             yield break;
         }
-
+       
         while (true)
         {
             // Move next

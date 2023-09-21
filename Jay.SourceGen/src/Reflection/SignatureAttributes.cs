@@ -50,5 +50,5 @@ public sealed class SignatureAttributes : IReadOnlyList<AttributeSignature>, ICo
             .Write(']');
     }
 
-    public override string ToString() => this.ToDeclaration();
+    public override string ToString() => CodePart.ToDeclaration(this);
 }

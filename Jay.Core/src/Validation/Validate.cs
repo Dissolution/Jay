@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Jay.Validation;
+﻿namespace Jay.Validation;
 
 /// <summary>
 /// A utility class for all sort of Validation
@@ -94,6 +92,60 @@ public static class Validate
             throw new ArgumentOutOfRangeException(valueName, value, $"Value must be lesser than or equal to {inclusiveMaximum}");
     }
 
+    
+    public static void IsPositiveI16(
+        short value,
+        [CallerArgumentExpression(nameof(value))]
+        string? valueName = null)
+    {
+        if (value >= 0)
+            return;
+
+        throw new ArgumentException(
+            $"{valueName} '{value}' must be a positive Int16 value [0..{short.MaxValue}]",
+            valueName);
+    }
+    
+    public static void IsPositiveI16(
+        int value,
+        [CallerArgumentExpression(nameof(value))]
+        string? valueName = null)
+    {
+        if (value is >= 0 and <= short.MaxValue)
+            return;
+
+        throw new ArgumentException(
+            $"{valueName} '{value}' must be a positive Int16 value [0..{short.MaxValue}]",
+            valueName);
+    }
+    
+    public static short AsI16(
+        int value,
+        [CallerArgumentExpression(nameof(value))]
+        string? valueName = null)
+    {
+        if (value is >= short.MinValue and <= short.MaxValue) 
+            return (short)value;
+
+        throw new ArgumentException(
+            $"{valueName} '{value}' must be an Int16 value [{short.MinValue}..{short.MaxValue}]",
+            valueName);
+    }
+    
+    public static short AsPositiveI16(
+        int value,
+        [CallerArgumentExpression(nameof(value))]
+        string? valueName = null)
+    {
+        if (value is >= 0 and <= short.MaxValue) 
+            return (short)value;
+
+        throw new ArgumentException(
+            $"{valueName} '{value}' must be a positive Int16 value [0..{short.MaxValue}]",
+            valueName);
+    }
+    
+    
 
     /// <summary>
     /// Validates that the <paramref name="index" /> fits in <paramref name="available" />

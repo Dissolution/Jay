@@ -101,7 +101,7 @@ public abstract class MemberSignature : Signature,
         this.Attributes = new(symbol);
     }
 
-    protected MemberSignature(MemberInfo member) : base(member.Name, member.GetVisibility(), member.GetKeywords())
+    protected MemberSignature(MemberInfo member) : base(member.Name, member.Visibility(), member.GetKeywords())
     {
         this.ParentType = TypeSignature.Create(member.ReflectedType ?? member.DeclaringType);
         this.Attributes = new(member);

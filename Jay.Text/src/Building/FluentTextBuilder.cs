@@ -4,13 +4,7 @@ using Jay.Utilities;
 
 namespace Jay.Text.Building;
 
-public delegate void TBA<in TBuilder>(TBuilder builder)
-    where TBuilder : TextWriter;
-
 public delegate void TBA<in TBuilder, in T>(TBuilder builder, T value)
-    where TBuilder : TextWriter;
-
-public delegate void TBAI<in TBuilder, in T>(TBuilder builder, T value, int index)
     where TBuilder : TextWriter;
 
 public abstract class FluentTextBuilder<TBuilder> : TextWriter

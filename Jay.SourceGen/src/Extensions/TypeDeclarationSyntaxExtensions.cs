@@ -1,6 +1,4 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
-
-namespace Jay.SourceGen.Extensions;
+﻿namespace Jay.SourceGen.Extensions;
 
 public static class TypeDeclarationSyntaxExtensions
 {

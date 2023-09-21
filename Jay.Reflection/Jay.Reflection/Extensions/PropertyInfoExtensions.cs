@@ -68,7 +68,7 @@ public static class PropertyInfoExtensions
                                   inst.OpCode == OpCodes.Ldsfld || inst.OpCode == OpCodes.Ldsflda)
                               .SelectWhere((Instruction inst, [NotNullWhen(true)] out FieldInfo? fld) =>
                               {
-                                  if (inst.Arg.Is(out fld) &&
+                                  if (inst.Argument.Is(out fld) &&
                                       fld.DeclaringType == owner &&
                                       fld.FieldType == propertyInfo.PropertyType)
                                   {
@@ -92,7 +92,7 @@ public static class PropertyInfoExtensions
                               .Where(inst => inst.OpCode == OpCodes.Stfld || inst.OpCode == OpCodes.Stsfld)
                               .SelectWhere((Instruction inst, [NotNullWhen(true)] out FieldInfo? fld) =>
                               {
-                                  if (inst.Arg.Is(out fld) &&
+                                  if (inst.Argument.Is(out fld) &&
                                       fld.DeclaringType == owner &&
                                       fld.FieldType == propertyInfo.PropertyType)
                                   {

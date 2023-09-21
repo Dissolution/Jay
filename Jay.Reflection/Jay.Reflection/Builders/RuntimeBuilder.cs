@@ -5,12 +5,13 @@ using Jay.Reflection.Info;
 using Jay.Reflection.Searching;
 using Jay.Reflection.Text;
 using Jay.Reflection.Validation;
+using Jay.Utilities;
 
 namespace Jay.Reflection.Builders;
 
 public static class RuntimeBuilder
 {
-    private static readonly ConcurrentDictionary<string, None> _memberNames = new(Environment.ProcessorCount, 0);
+    private static readonly ConcurrentDictionary<string, Nothing> _memberNames = new(Environment.ProcessorCount, 0);
     
     public static AssemblyBuilder AssemblyBuilder { get; }
 

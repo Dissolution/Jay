@@ -15,6 +15,7 @@ public sealed class OpCodeEmission : Emission
                 {
                     if (!(Arg is Emission[] instructions))
                         throw new InvalidOperationException();
+
                     size += (1 + instructions.Length) * 4;
                     break;
                 }
@@ -29,6 +30,7 @@ public sealed class OpCodeEmission : Emission
                 case OperandType.InlineString:
                 case OperandType.InlineTok:
                 case OperandType.InlineType:
+                case OperandType.InlineSig:
                 case OperandType.ShortInlineR:
                     size += 4;
                     break;
@@ -40,8 +42,6 @@ public sealed class OpCodeEmission : Emission
                 case OperandType.ShortInlineVar:
                     size += 1;
                     break;
-                default:
-                    break;
             }
             return size;
         }
@@ -52,7 +52,7 @@ public sealed class OpCodeEmission : Emission
     {
         this.OpCode = opCode;
     }
-    
+
     public OpCodeEmission(OpCode opCode, object? arg)
         : base(opCode.Name!, arg)
     {
@@ -63,8 +63,9 @@ public sealed class OpCodeEmission : Emission
     {
         codeBuilder
             .Write(Name)
-            .If(HasArgs, cb => cb
-                .Write("    ")
-                .Code(this.Arg));
+            .If(
+                HasArgs, cb => cb
+                    .Write("    ")
+                    .Code(this.Arg));
     }
 }

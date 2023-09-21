@@ -184,12 +184,12 @@ public static class MemberSearch
 
     public static ConstructorInfo? GetConstructor(Type instanceType, params object[] arguments)
     {
-        return GetConstructor(instanceType, Array.ConvertAll(arguments, arg => arg.GetType()));
+        return GetConstructor(instanceType, Array.ConvertAll(arguments, argument => argument.GetType()));
     }
 
     public static ConstructorInfo FindConstructor(Type instanceType, params object[] arguments)
     {
-        return FindConstructor(instanceType, Array.ConvertAll(arguments, arg => arg.GetType()));
+        return FindConstructor(instanceType, Array.ConvertAll(arguments, argument => argument.GetType()));
     }
 
     public static ConstructorInfo FindConstructor<TInstance>(params object[] arguments) => FindConstructor(typeof(TInstance), arguments);

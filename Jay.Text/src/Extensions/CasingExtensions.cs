@@ -2,15 +2,6 @@
 
 namespace Jay.Text.Extensions;
 
-public enum Casing
-{
-    Lower,
-    Upper,
-    Camel,
-    Pascal,
-    Title,
-}
-
 public static class CasingExtensions
 {
     public static string ToCasedString(this string? text, Casing casing, CultureInfo? culture = null)

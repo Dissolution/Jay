@@ -1,87 +1,8 @@
-﻿using Dunet;
-using Jay.Reflection.Adapters.Args;
-using Jay.Reflection.Caching;
+﻿using Jay.Reflection.Caching;
+using Jay.Reflection.Emitting.Args;
+using Argument = Jay.Reflection.Emitting.Args.Argument;
 
 namespace Jay.Reflection.Emitting;
-
-public static class SmartEmitterExtensions
-{
-    public static TEmitter LoadInstanceFor<TEmitter>(
-        this TEmitter emitter,
-        Arg arg, MemberInfo member)
-        where TEmitter : FluentEmitter<TEmitter>
-    {
-        if (member.TryGetInstanceType(out var instanceType))
-        {
-            // Do we need a value type's instance?
-            if (instanceType.IsValueType)
-            {
-                // We need a reference to the value
-
-                // We have a T?
-                if (arg.RootType == instanceType)
-                {
-                    if (arg.IsByRef)
-                    {
-                        arg.EmitLoad(emitter);
-                    }
-                    else
-                    {
-                        arg.EmitLoadAddress(emitter);
-                    }
-                    return emitter;
-                }
-
-                // We have an object?
-                if (arg.RootType == typeof(object))
-                {
-                    arg.EmitLoad(emitter);
-                    // ref object?
-                    if (arg.IsByRef)
-                    {
-                        emitter.Ldind_Ref();
-                    }
-                    return emitter.Unbox(instanceType);
-                }
-
-                // cannot
-                throw new InvalidOperationException();
-            }
-            // we just need a non-value
-            else
-            {
-                // We have a T?
-                if (arg.RootType == instanceType)
-                {
-                    arg.EmitLoad(emitter);
-                    if (arg.IsByRef)
-                    {
-                        emitter.Ldind(arg.RootType);
-                    }
-                    return emitter;
-                }
-
-                // source is object or implements instance type
-                if (arg.RootType == typeof(object) ||
-                    arg.RootType.Implements(instanceType))
-                {
-                    arg.EmitLoad(emitter);
-                    // ref object?
-                    if (arg.IsByRef)
-                    {
-                        emitter.Ldobj(arg.RootType);
-                    }
-                    return emitter.Castclass(instanceType);
-                }
-
-                // cannot
-                throw new InvalidOperationException();
-            }
-        }
-        // no instance to load, ok!
-        return emitter;
-    }
-}
 
 public sealed class SmartEmitter : ICodePart
 {
@@ -99,15 +20,15 @@ public sealed class SmartEmitter : ICodePart
         throw new NotImplementedException();
     }
 
-    public SmartEmitter Load(Arg arg)
+    public SmartEmitter Load(Argument argument)
     {
-        arg.EmitLoad(_genEmitter);
+        argument.EmitLoad(_genEmitter);
         return this;
     }
 
-    public SmartEmitter LoadAddress(Arg arg)
+    public SmartEmitter LoadAddress(Argument argument)
     {
-        arg.EmitLoadAddress(_genEmitter);
+        argument.EmitLoadAddress(_genEmitter);
         return this;
     }
 
@@ -163,7 +84,7 @@ public sealed class SmartEmitter : ICodePart
             //     return Load(field);
             case ParameterInfo parameter:
                 return Load(parameter);
-            case EmitLocal local:
+            case EmitterLocal local:
                 return Load(local);
             default:
                 throw new NotImplementedException();
@@ -177,7 +98,7 @@ public sealed class SmartEmitter : ICodePart
         return this;
     }
 
-    public SmartEmitter Store(EmitLocal local)
+    public SmartEmitter Store(EmitterLocal local)
     {
         _genEmitter.Stloc(local);
         return this;
@@ -191,16 +112,16 @@ public sealed class SmartEmitter : ICodePart
 
     public SmartEmitter Cast(Type sourceType, Type destType)
     {
-        ArgExtensions.EmitCast(
+        ArgumentExtensions.EmitCast(
             _genEmitter,
             sourceType,
             destType);
         return this;
     }
 
-    public SmartEmitter Cast(Arg source, Type destType)
+    public SmartEmitter Cast(Argument source, Type destType)
     {
-        ArgExtensions.EmitCast(
+        ArgumentExtensions.EmitCast(
             _genEmitter,
             source.Type,
             destType);
@@ -220,61 +141,61 @@ public sealed class SmartEmitter : ICodePart
     }
 
     public SmartEmitter DeclareLocal<T>(
-        out EmitLocal emitLocal,
-        [CallerArgumentExpression(nameof(emitLocal))]
+        out EmitterLocal emitterLocal,
+        [CallerArgumentExpression(nameof(emitterLocal))]
         string localName = "") => DeclareLocal(
         typeof(T),
         false,
-        out emitLocal,
+        out emitterLocal,
         localName);
 
     public SmartEmitter DeclareLocal<T>(
         bool isPinned,
-        out EmitLocal emitLocal,
-        [CallerArgumentExpression(nameof(emitLocal))]
+        out EmitterLocal emitterLocal,
+        [CallerArgumentExpression(nameof(emitterLocal))]
         string localName = "") => DeclareLocal(
         typeof(T),
         isPinned,
-        out emitLocal,
+        out emitterLocal,
         localName);
 
     public SmartEmitter DeclareLocal(
         Type type,
-        out EmitLocal emitLocal,
-        [CallerArgumentExpression(nameof(emitLocal))]
+        out EmitterLocal emitterLocal,
+        [CallerArgumentExpression(nameof(emitterLocal))]
         string localName = "") => DeclareLocal(
         type,
         false,
-        out emitLocal,
+        out emitterLocal,
         localName);
 
     public SmartEmitter DeclareLocal(
         Type type,
         bool isPinned,
-        out EmitLocal emitLocal,
-        [CallerArgumentExpression(nameof(emitLocal))]
+        out EmitterLocal emitterLocal,
+        [CallerArgumentExpression(nameof(emitterLocal))]
         string localName = "")
     {
         _genEmitter.DeclareLocal(
             type,
             isPinned,
-            out emitLocal,
+            out emitterLocal,
             localName);
         return this;
     }
 
     public SmartEmitter Define(
-        out EmitLabel emitLabel,
-        [CallerArgumentExpression(nameof(emitLabel))]
+        out EmitterLabel emitterLabel,
+        [CallerArgumentExpression(nameof(emitterLabel))]
         string lblName = "")
     {
-        _genEmitter.DefineLabel(out emitLabel, lblName);
+        _genEmitter.DefineLabel(out emitterLabel, lblName);
         return this;
     }
 
-    public SmartEmitter Mark(EmitLabel emitLabel)
+    public SmartEmitter Mark(EmitterLabel emitterLabel)
     {
-        _genEmitter.MarkLabel(emitLabel);
+        _genEmitter.MarkLabel(emitterLabel);
         return this;
     }
 

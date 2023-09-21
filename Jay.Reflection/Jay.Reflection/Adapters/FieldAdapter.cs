@@ -1,10 +1,13 @@
-﻿using Jay.Reflection.Adapters.Args;
-using Jay.Reflection.Builders;
+﻿using Jay.Reflection.Builders;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Emitting;
+using Jay.Reflection.Emitting.Args;
 
 namespace Jay.Reflection.Adapters;
 
+/// <summary>
+/// An adapter for interactions with <see cref="FieldInfo"/>s
+/// </summary>
 public static class FieldAdapter
 {
     private static GetValue<TInstance, TValue> CreateGetValueDelegate<TInstance, TValue>(FieldInfo field)

@@ -1,6 +1,5 @@
 ﻿
 using Jay.Text.Utilities;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace Jay.SourceGen.Extensions;
 

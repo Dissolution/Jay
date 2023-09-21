@@ -1,5 +1,4 @@
 ﻿using Jay.SourceGen.Collections;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Jay.SourceGen.Extensions;
 

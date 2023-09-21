@@ -98,5 +98,5 @@ public abstract class Signature : IEquatable<Signature>, ICodePart
 
     public abstract void DeclareTo(CodeBuilder code);
 
-    public sealed override string ToString() => this.ToDeclaration();
+    public sealed override string ToString() => CodePart.ToDeclaration(this);
 }

@@ -6,7 +6,6 @@ namespace Jay;
 public readonly partial struct Option<T> :
     IEquatable<Option<T>>,
     IEquatable<T>,
-    //IEquatable<None>,
     IEnumerable<T>
 {
     private readonly bool _some;
@@ -37,18 +36,7 @@ public readonly partial struct Option<T> :
             none();
         }
     }
-
-    public void Match(Action<T> some, Action<None> none)
-    {
-        if (_some)
-        {
-            some(_value);
-        }
-        else
-        {
-            none(default);
-        }
-    }
+    
 
     public TReturn Match<TReturn>(Func<T, TReturn> some, Func<TReturn> none)
     {
@@ -57,15 +45,6 @@ public readonly partial struct Option<T> :
             return some(_value);
         }
         return none();
-    }
-
-    public TReturn Match<TReturn>(Func<T, TReturn> some, Func<None, TReturn> none)
-    {
-        if (_some)
-        {
-            return some(_value);
-        }
-        return none(default);
     }
 
     public Result<T> AsResult(Exception? error = null)
@@ -111,14 +90,9 @@ public readonly partial struct Option<T> :
         return _some && EqualityComparer<T?>.Default.Equals(_value, value);
     }
 
-    public bool Equals(None _) => IsNone();
-
     public override bool Equals(object? obj)
     {
-        if (obj.CanBe<T>(out var value))
-            return Equals(value);
-        if (obj is null or None _) return IsNone();
-        return false;
+        return obj.CanBe<T>(out var value) && Equals(value);
     }
 
     public override int GetHashCode()

@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using InlineIL;
+using Jay.Maths;
 using Jay.Utilities;
 using static InlineIL.IL;
 
@@ -93,7 +94,7 @@ public static class FlagsEnumExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TEnum ShiftedLeft<TEnum>(this TEnum @enum, int count)
+    public static TEnum ShiftLeft<TEnum>(this TEnum @enum, int count)
         where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
@@ -103,7 +104,7 @@ public static class FlagsEnumExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TEnum ShiftedRight<TEnum>(this TEnum @enum, int count)
+    public static TEnum ShiftRight<TEnum>(this TEnum @enum, int count)
         where TEnum : struct, Enum
     {
         Emit.Ldarg(nameof(@enum));
@@ -118,7 +119,7 @@ public static class FlagsEnumExtensions
     {
         Emit.Ldarg(nameof(@enum));
         Emit.Conv_U8();
-        Emit.Call(MethodRef.Method(typeof(Maths), nameof(Maths.PopCount), typeof(ulong)));
+        Emit.Call(MethodRef.Method(typeof(MathHelper), nameof(MathHelper.PopCount), typeof(ulong)));
         return Return<int>();
     }
 

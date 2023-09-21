@@ -20,9 +20,9 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
         _locals = new(0);
     }
 
-    private EmitLabel CreateEmitLabel(string? lblName, Label label)
+    private EmitterLabel CreateEmitLabel(string? lblName, Label label)
     {
-        var emitLabel = new EmitLabel(
+        var emitLabel = new EmitterLabel(
             name: GetVariableName(lblName, _labels.Count),
             label: label);
         _labels.Add(label);
@@ -30,16 +30,16 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
         return emitLabel;
     }
 
-    private Label GetLabel(EmitLabel emitLabel)
+    private Label GetLabel(EmitterLabel emitterLabel)
     {
         return _labels
-            .Where(emitLabel.Equals)
+            .Where(emitterLabel.Equals)
             .One();
     }
 
-    private EmitLocal CreateEmitLocal(string? localName, LocalBuilder localBuilder)
+    private EmitterLocal CreateEmitLocal(string? localName, LocalBuilder localBuilder)
     {
-        var emitLocal = new EmitLocal(
+        var emitLocal = new EmitterLocal(
             name: GetVariableName(localName, _locals.Count),
             localBuilder: localBuilder);
         _locals.Add(localBuilder);
@@ -47,15 +47,15 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
         return emitLocal;
     }
 
-    private LocalBuilder GetLocalBuilder(EmitLocal emitLocal)
+    private LocalBuilder GetLocalBuilder(EmitterLocal emitterLocal)
     {
-        int index = emitLocal.Index;
+        int index = emitterLocal.Index;
         if ((uint)index < _locals.Count)
             return _locals[index];
         throw new ArgumentOutOfRangeException(
-            nameof(emitLocal),
-            emitLocal,
-            emitLocal.ToDeclaration());
+            nameof(emitterLocal),
+            emitterLocal,
+            CodePart.ToDeclaration(emitterLocal));
     }
 
 #region Emit OpCode
@@ -114,25 +114,25 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
         return base.Emit(opCode, str);
     }
 
-    public override FluentGeneratorEmitter Emit(OpCode opCode, EmitLabel emitLabel)
+    public override FluentGeneratorEmitter Emit(OpCode opCode, EmitterLabel emitterLabel)
     {
-        var label = GetLabel(emitLabel);
+        var label = GetLabel(emitterLabel);
         _ilGenerator.Emit(opCode, label);
-        return base.Emit(opCode, emitLabel);
+        return base.Emit(opCode, emitterLabel);
     }
 
-    public override FluentGeneratorEmitter Emit(OpCode opCode, params EmitLabel[] emitLabels)
+    public override FluentGeneratorEmitter Emit(OpCode opCode, params EmitterLabel[] emitLabels)
     {
         var labels = Array.ConvertAll(emitLabels, el => GetLabel(el));
         _ilGenerator.Emit(opCode, labels);
         return base.Emit(opCode, emitLabels);
     }
 
-    public override FluentGeneratorEmitter Emit(OpCode opCode, EmitLocal emitLocal)
+    public override FluentGeneratorEmitter Emit(OpCode opCode, EmitterLocal emitterLocal)
     {
-        var local = GetLocalBuilder(emitLocal);
+        var local = GetLocalBuilder(emitterLocal);
         _ilGenerator.Emit(opCode, local);
-        return base.Emit(opCode, emitLocal);
+        return base.Emit(opCode, emitterLocal);
     }
 
     public override FluentGeneratorEmitter Emit(OpCode opCode, FieldInfo field)
@@ -170,13 +170,13 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
 #region Try/Catch/Finally
 
     public override FluentGeneratorEmitter BeginExceptionBlock(
-        out EmitLabel emitLabel,
-        [CallerArgumentExpression(nameof(emitLabel))]
+        out EmitterLabel emitterLabel,
+        [CallerArgumentExpression(nameof(emitterLabel))]
         string lblName = "")
     {
         var label = _ilGenerator.BeginExceptionBlock();
-        emitLabel = CreateEmitLabel(lblName, label);
-        return Emit(GeneratorEmission.BeginExceptionBlock(emitLabel));
+        emitterLabel = CreateEmitLabel(lblName, label);
+        return Emit(GeneratorEmission.BeginExceptionBlock(emitterLabel));
     }
 
     public override FluentGeneratorEmitter BeginCatchBlock(Type exceptionType)
@@ -238,13 +238,13 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
     public override FluentGeneratorEmitter DeclareLocal(
         Type type,
         bool isPinned,
-        out EmitLocal emitLocal,
-        [CallerArgumentExpression(nameof(emitLocal))]
+        out EmitterLocal emitterLocal,
+        [CallerArgumentExpression(nameof(emitterLocal))]
         string localName = "")
     {
         var localBuilder = _ilGenerator.DeclareLocal(type, isPinned);
-        emitLocal = CreateEmitLocal(localName, localBuilder);
-        return Emit(GeneratorEmission.DeclareLocal(emitLocal));
+        emitterLocal = CreateEmitLocal(localName, localBuilder);
+        return Emit(GeneratorEmission.DeclareLocal(emitterLocal));
     }
 
 #endregion
@@ -252,20 +252,20 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
 #region Labels
 
     public override FluentGeneratorEmitter DefineLabel(
-        out EmitLabel emitLabel,
-        [CallerArgumentExpression(nameof(emitLabel))]
+        out EmitterLabel emitterLabel,
+        [CallerArgumentExpression(nameof(emitterLabel))]
         string lblName = "")
     {
         var label = _ilGenerator.DefineLabel();
-        emitLabel = CreateEmitLabel(lblName, label);
-        return Emit(GeneratorEmission.DefineLabel(emitLabel));
+        emitterLabel = CreateEmitLabel(lblName, label);
+        return Emit(GeneratorEmission.DefineLabel(emitterLabel));
     }
 
-    public override FluentGeneratorEmitter MarkLabel(EmitLabel emitLabel)
+    public override FluentGeneratorEmitter MarkLabel(EmitterLabel emitterLabel)
     {
-        var label = GetLabel(emitLabel);
+        var label = GetLabel(emitterLabel);
         _ilGenerator.MarkLabel(label);
-        return Emit(GeneratorEmission.MarkLabel(emitLabel));
+        return Emit(GeneratorEmission.MarkLabel(emitterLabel));
     }
 
 #endregion
@@ -321,11 +321,11 @@ public sealed class FluentGeneratorEmitter : FluentEmitter<FluentGeneratorEmitte
         return Emit(GeneratorEmission.WriteLine(fieldInfo));
     }
 
-    public FluentGeneratorEmitter WriteLine(EmitLocal emitLocal)
+    public FluentGeneratorEmitter WriteLine(EmitterLocal emitterLocal)
     {
-        var local = GetLocalBuilder(emitLocal);
+        var local = GetLocalBuilder(emitterLocal);
         _ilGenerator.EmitWriteLine(local);
-        return Emit(GeneratorEmission.WriteLine(emitLocal));
+        return Emit(GeneratorEmission.WriteLine(emitterLocal));
     }
 
     public override FluentGeneratorEmitter ThrowException(Type exceptionType)

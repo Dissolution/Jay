@@ -4,6 +4,14 @@ namespace Jay.Extensions;
 
 public static class ArrayExtensions
 {
+#if NET48 || NETSTANDARD2_0
+    public static Span<T> AsSpan<T>(this T[]? array, Range range)
+    {
+        (int offset, int length) = range.GetOffsetAndLength(array?.Length ?? 0);
+        return array.AsSpan(offset, length);
+    }
+#endif
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T[]? array)
     {
@@ -97,7 +105,6 @@ public static class ArrayExtensions
         return new ArrayEnumerator<T>(array);
     }
 
-
     public static int FirstIndexOf<T>(this T[] array, T value)
     {
         for (var i = 0; i < array.Length; i++)
@@ -147,7 +154,7 @@ public static class ArrayExtensions
     }
 
     /// <summary>
-    /// Initializes each element of this <paramref name="array" /> to the <paramref name="@default" /> value.
+    /// Initializes each element of this <paramref name="array" /> to the given <paramref name="value"/>
     /// </summary>
     public static void Initialize<T>(this T[] array, T value)
     {
@@ -178,7 +185,9 @@ public static class ArrayExtensions
         }
     }
 
-    internal sealed class ArrayEnumerator<T> : IEnumerator<T>, IEnumerator,
+    internal sealed class ArrayEnumerator<T> : 
+        IEnumerator<T>, 
+        IEnumerator,
         IDisposable
     {
         private readonly IEnumerator _arrayEnumerator;

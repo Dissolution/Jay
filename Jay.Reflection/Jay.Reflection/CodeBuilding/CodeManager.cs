@@ -11,7 +11,7 @@ public static class CodeManager
     {
         return _writeCodeCache
             .GetOrAdd<T>(static t => CreateWriteCode<T>(t))
-            .MustBe<Action<T?, TextWriter>>();
+            .AsValid<Action<T?, TextWriter>>();
     }
     
     private static Action<T?, TextWriter> CreateWriteCode<T>(Type type)

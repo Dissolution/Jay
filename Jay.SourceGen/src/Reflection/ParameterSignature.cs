@@ -49,11 +49,11 @@ public sealed class ParameterSignature :
         this.ParameterType = new TypeSignature(parameterSymbol.Type);
         if (parameterSymbol.HasExplicitDefaultValue)
         {
-            this.DefaultValue = Option.Some(parameterSymbol.ExplicitDefaultValue);
+            this.DefaultValue = Option.Some<object?>(parameterSymbol.ExplicitDefaultValue);
         }
         else
         {
-            this.DefaultValue = Option.None();
+            this.DefaultValue = Option.None<object?>();
         }
         this.IsThis = parameterSymbol.IsThis;
         this.IsParams = parameterSymbol.IsParams;
@@ -78,7 +78,7 @@ public sealed class ParameterSignature :
         }
         else
         {
-            this.DefaultValue = Option.None();
+            this.DefaultValue = Option.None<object?>();
         }
         this.IsThis = parameterInfo.Member.HasAttribute<ExtensionAttribute>();
         this.IsParams = parameterInfo.GetCustomAttribute<ParamArrayAttribute>() != null;

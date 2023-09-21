@@ -22,6 +22,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.SourceGen.Neo", "Jay.Im
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.Reflection.Tests", "Jay.Reflection\Tests\Jay.Reflection.Tests.csproj", "{FE4BBEA8-2925-4853-9B36-19AB8DFD3775}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.Terminals", "Jay.Terminals\Jay.Terminals\Jay.Terminals.csproj", "{5DC186CC-279C-4EE8-992D-F95F8A170277}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.Geometry", "Jay.Geometry\Jay.Geometry\Jay.Geometry.csproj", "{6294C4E5-1B0C-4508-9A2E-447A19F40363}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +76,13 @@ Global
 		{FE4BBEA8-2925-4853-9B36-19AB8DFD3775}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE4BBEA8-2925-4853-9B36-19AB8DFD3775}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE4BBEA8-2925-4853-9B36-19AB8DFD3775}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DC186CC-279C-4EE8-992D-F95F8A170277}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DC186CC-279C-4EE8-992D-F95F8A170277}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DC186CC-279C-4EE8-992D-F95F8A170277}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DC186CC-279C-4EE8-992D-F95F8A170277}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6294C4E5-1B0C-4508-9A2E-447A19F40363}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6294C4E5-1B0C-4508-9A2E-447A19F40363}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6294C4E5-1B0C-4508-9A2E-447A19F40363}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6294C4E5-1B0C-4508-9A2E-447A19F40363}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

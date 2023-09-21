@@ -61,6 +61,6 @@ public sealed class EnumeratorItem<T> : IEquatable<T>
 
     public override string ToString()
     {
-        return $"[{Index}/{SourceLength.ToNonNullString("?")}] {Value}";
+        return $"[{Index}/{SourceLength}] {Value}";
     }
 }

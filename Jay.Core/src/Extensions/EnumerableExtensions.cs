@@ -115,9 +115,7 @@ public static class EnumerableExtensions
         yield return firstValue;
         yield return secondValue;
     }
-
-   
-
+    
     public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source)
     {
         return source.Where(value => value is not null)!;
@@ -229,28 +227,22 @@ public static class EnumerableExtensions
         }
     }
 
+    public static IEnumerable<T> OrderBy<T>(
+        this IEnumerable<T> enumerable,
+        T[] itemOrder)
+        where T : IEquatable<T>
+    {
+        return enumerable.OrderBy(item => itemOrder.FirstIndexOf(item));
+    }
+
     public static IEnumerable<T> OrderBy<T, TSub>(this IEnumerable<T> enumerable,
         Func<T, TSub> selectSub,
-        params TSub[] order)
+        TSub[] subItemOrder)
         where TSub : IEquatable<TSub>
     {
-
-        int getIndex(TSub value)
-        {
-            for (var i = 0; i < order.Length; i++)
-            {
-                if (order[i].Equals(value)) return i;
-            }
-            return order.Length;
-        }
-
         return enumerable
-            .OrderBy(selectSub, Comparer<TSub>.Create((x, y) =>
-            {
-                if (x is null) return y is null ? 0 : -1;
-                if (y is null) return 1;
-                return getIndex(x).CompareTo(getIndex(y));
-            }));
+            .OrderBy(selectSub, Comparer<TSub>.Create((x, y) => 
+                subItemOrder.FirstIndexOf(x).CompareTo(subItemOrder.FirstIndexOf(y))));
     }
 
     public static void Consume<T>(this IEnumerable<T> enumerable, Action<T> perItem)

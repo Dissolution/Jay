@@ -441,24 +441,3 @@ public static class ExpressionExtensions
         return expression.ExtractValues<TMember>().OneOrDefault();
     }
 }
-
-public abstract class ExpressionVisitorBase : ExpressionVisitor
-{
-    protected static readonly IReadOnlyDictionary<ExpressionType, string> _operators;
-
-    static ExpressionVisitorBase()
-    {
-        _operators = new Dictionary<ExpressionType, string>
-        {
-            { ExpressionType.Not, "!" },
-            { ExpressionType.Equal, "==" },
-            { ExpressionType.NotEqual, "!=" },
-            { ExpressionType.AndAlso, "&&" },
-            { ExpressionType.OrElse, "||" },
-            { ExpressionType.LessThan, "<" },
-            { ExpressionType.LessThanOrEqual, "<=" },
-            { ExpressionType.GreaterThan, ">" },
-            { ExpressionType.GreaterThanOrEqual, ">=" }
-        };
-    }
-}

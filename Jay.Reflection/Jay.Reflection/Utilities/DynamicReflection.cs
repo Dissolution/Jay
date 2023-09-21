@@ -2,14 +2,12 @@
 using System.Dynamic;
 using System.Linq.Expressions;
 using Jay.Reflection.Adapters;
-using Jay.Reflection.Adapters.Args;
+using Jay.Reflection.Emitting.Args;
 using Jay.Reflection.Searching;
 using Jay.Reflection.Validation;
 using Jay.Utilities;
 
 namespace Jay.Reflection.Utilities;
-
-internal delegate object? ObjectInvoke([Instance] object? instance, params object?[] args);
 
 public sealed class DynamicReflection : DynamicObject
 {
@@ -108,7 +106,7 @@ public sealed class DynamicReflection : DynamicObject
 
             // Fallthrough for Method check
         }
-        // 1 arg
+        // 1 argument
         else if (key.ParameterTypes?.Length == 1)
         {
             // might be field.set, property.set
@@ -151,7 +149,7 @@ public sealed class DynamicReflection : DynamicObject
                     return false;
 
                 // Has to have a compat return type
-                if (!ArgExtensions.CanCast(meth.ReturnType, key.ReturnType))
+                if (!ArgumentExtensions.CanCast(meth.ReturnType, key.ReturnType))
                     return false;
 
                 // Has to have a compat parameter sig
@@ -400,9 +398,9 @@ public sealed class DynamicReflection : DynamicObject
     }
 
 
-    public override bool TryBinaryOperation(BinaryOperationBinder binder, object arg, out object? result)
+    public override bool TryBinaryOperation(BinaryOperationBinder binder, object argument, out object? result)
     {
-        var key = GetKey(binder.Operation, binder.ReturnType, _targetType, arg.GetType());
+        var key = GetKey(binder.Operation, binder.ReturnType, _targetType, argument.GetType());
         BindingFlags flags = Reflect.Flags.Static;
 
         Debugger.Break();
@@ -411,7 +409,7 @@ public sealed class DynamicReflection : DynamicObject
                 k => _targetType.GetMethod(k.Name!, flags),
                 out var objectInvoke))
         {
-            result = objectInvoke(_target, arg);
+            result = objectInvoke(_target, argument);
             return true;
         }
 

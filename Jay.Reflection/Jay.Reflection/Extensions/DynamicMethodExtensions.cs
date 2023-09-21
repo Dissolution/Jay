@@ -1,6 +1,4 @@
-﻿using System.Reflection.Emit;
-
-namespace Jay.Reflection.Extensions;
+﻿namespace Jay.Reflection.Extensions;
 
 public static class DynamicMethodExtensions
 {

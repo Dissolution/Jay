@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using Jay.Maths;
 
 namespace Jay.Utilities;
 
@@ -45,22 +46,22 @@ public ref struct Hasher
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint Round(uint hash, uint input)
     {
-        return Maths.RotateLeft(hash + input * Prime2, 13) * Prime1;
+        return MathHelper.RotateLeft(hash + input * Prime2, 13) * Prime1;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint QueueRound(uint hash, uint queuedValue)
     {
-        return Maths.RotateLeft(hash + queuedValue * Prime3, 17) * Prime4;
+        return MathHelper.RotateLeft(hash + queuedValue * Prime3, 17) * Prime4;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint MixState(uint v1, uint v2, uint v3, uint v4)
     {
-        return Maths.RotateLeft(v1, 1)
-            + Maths.RotateLeft(v2, 7)
-            + Maths.RotateLeft(v3, 12)
-            + Maths.RotateLeft(v4, 18);
+        return MathHelper.RotateLeft(v1, 1)
+            + MathHelper.RotateLeft(v2, 7)
+            + MathHelper.RotateLeft(v3, 12)
+            + MathHelper.RotateLeft(v4, 18);
     }
 
     private static uint MixEmptyState()
