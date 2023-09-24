@@ -9,7 +9,7 @@
             net7.0;net6.0;netcoreapp3.1;
             <!-- Both net standard versions, as Source Generators are stuck on 2.0 -->
             netstandard2.1;netstandard2.0;
-            <!-- .Net Framework -->
+            <!-- .Net Framework Latest -->
             net48
         </TargetFrameworks>
         <LangVersion>latest</LangVersion>
@@ -17,7 +17,7 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-        <Version>0.1.0</Version>
+        <Version>0.2.0</Version>
         <Authors>TimothyJay</Authors>
 
         <!-- lambda expression issue -->
@@ -37,15 +37,21 @@
     <!-- NuGet Packages -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
         <Using Remove="System.Net.Http"/>
-        <PackageReference Include="System.Memory" Version="4.5.5"/>
+        <PackageReference Include="System.Memory" Version="4.5.5">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-        <PackageReference Include="System.Memory" Version="4.5.5"/>
+        <PackageReference Include="System.Memory" Version="4.5.5">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0"/>
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>

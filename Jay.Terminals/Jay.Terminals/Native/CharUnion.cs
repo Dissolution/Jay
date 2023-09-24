@@ -25,19 +25,16 @@ public struct CharUnion : IEquatable<CharUnion>, IEquatable<char>
         this.UnicodeChar = unicodeChar;
     }
 
-    /// <inheritdoc />
     public bool Equals(CharUnion charUnion)
     {
         return charUnion.UnicodeChar == this.UnicodeChar;
     }
 
-    /// <inheritdoc />
     public bool Equals(char ch)
     {
         return ch == this.UnicodeChar;
     }
 
-    /// <inheritdoc />
     public override bool Equals(object? obj)
     {
         if (obj is CharUnion charUnion) return charUnion.UnicodeChar == this.UnicodeChar;
@@ -45,7 +42,6 @@ public struct CharUnion : IEquatable<CharUnion>, IEquatable<char>
         return false;
     }
 
-    /// <inheritdoc />
     public override int GetHashCode() => (int)UnicodeChar;
     
     public override string ToString()

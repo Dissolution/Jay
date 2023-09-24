@@ -16,7 +16,7 @@
 ///     - Keeping checked out instances for long durations is _ok_, but it reduces the usefulness of pooling.<br/>
 ///     - Not returning instances to the pool in not detrimental to its work, but is a bad practice.<br/>
 ///     - If there is no intent to return or re-use the instance, do not use a pool.<br/>
-/// - When this pool is <see cref="Dispose"/>d, all instances will also be disposed.<br/>
+/// - When this pool is Disposed, all instances will also be disposed.<br/>
 ///     - Any further returned instances will be cleaned, disposed, and discarded.<br/>
 /// </remarks>
 public interface IObjectPool<T> : IDisposable
@@ -25,7 +25,7 @@ public interface IObjectPool<T> : IDisposable
     /// <summary>
     /// Gets the maximum number of instances this pool can store
     /// </summary>
-    int Capacity { get; }
+    int MaxCapacity { get; }
 
     /// <summary>
     /// Gets the current number of instances in this pool
@@ -38,22 +38,22 @@ public interface IObjectPool<T> : IDisposable
     T Rent();
 
     /// <summary>
-    /// Returns a <see cref="Rent"/>ed <typeparamref name="T" /> instance to the pool to be cleaned and re-used.
+    /// Returns a <see cref="Rent"/>ed <typeparamref name="T" /> instance to the pool to be cleaned and re-used
     /// </summary>
     void Return(T? instance);
 
 
     /// <summary>
     /// Borrows a <typeparamref name="T" /> <paramref name="instance" />
-    /// that will be <see cref="Return"/>ed when the returned <see cref="IDisposable" /> is disposed.
+    /// that will be <see cref="Return"/>ed when the returned <see cref="IDisposable" /> is disposed
     /// </summary>
     /// <param name="instance">
     /// A <see cref="M:Borrow"/>ed <typeparamref name="T" /> instance,
-    /// it will be returned to its origin <see cref="IObjectPool{T}" /> when disposed.
+    /// it will be returned to its origin <see cref="IObjectPool{T}" /> when disposed
     /// </param>
-    /// <returns>An <see cref="IDisposable" /> that will return the <paramref name="instance" />.</returns>
+    /// <returns>An <see cref="IDisposable" /> that will return the <paramref name="instance" /></returns>
     /// <remarks>
-    /// <paramref name="instance" /> must not be used after this is disposed.
+    /// <paramref name="instance" /> must not be used after this is disposed
     /// </remarks>
     IDisposable GetInstance(out T instance);
 
@@ -79,7 +79,7 @@ public interface IObjectPool<T> : IDisposable
     /// <see cref="Return"/>s it to this pool,
     /// and then returns the result of the <paramref name="instanceFunc"/>
     /// </summary>
-    /// <param name="instanceAction">
+    /// <param name="instanceFunc">
     /// The <see cref="Func{T, TResult}" /> perform on the rented instance and get the result of
     /// </param>
     TResult Borrow<TResult>(Func<T, TResult> instanceFunc);

@@ -75,7 +75,6 @@ internal struct COLORREF
         return (int)Value;
     }
 
-    /// <inheritdoc />
     public override string ToString()
     {
         // 0xAABBGGRR

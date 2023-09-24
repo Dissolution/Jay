@@ -96,7 +96,6 @@ public static unsafe class Scary
 #endregion
 
 #region CopyTo
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CopyTo<T>(in T source, void* destination)
     {

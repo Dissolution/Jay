@@ -25,7 +25,7 @@ public abstract class CodePart
         Add(WriteString<decimal>("decimal"));
         Add(WriteString<string>("string"));
         Add(WriteString<object>("object"));
-        _cache.Set(typeof(void), WriteString<object>("void"));
+        _cache.AddOrUpdate(typeof(void), WriteString<object>("void"));
         //Add(WriteString<void>("void"));
         Add(WriteString<nint>("nint"));
         Add(WriteString<nuint>("nuint"));
@@ -39,7 +39,7 @@ public abstract class CodePart
 
     internal static void SetString<T>(string str)
     {
-        _cache.Set<T>((WriteCode<T>)((_, code) => code.Write(str)));
+        _cache.AddOrUpdate<T>((WriteCode<T>)((_, code) => code.Write(str)));
     }
 
     private static WriteCode<T> WriteString<T>(string str) => (_, code) => code.Write(str);
@@ -58,7 +58,7 @@ public abstract class CodePart
     }
     //internal static void SetToString<T>()
 
-    private static void Add<T>(WriteCode<T> writeCode) => _cache.Set<T>(writeCode);
+    private static void Add<T>(WriteCode<T> writeCode) => _cache.AddOrUpdate<T>(writeCode);
     //private static void Add(Type type, WriteCode<object?> writeCode) => _cache.Set<T>(writeCode);
 
     private static void WriteToString<T>(T? value, CodeBuilder code)

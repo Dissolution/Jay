@@ -8,16 +8,13 @@ using System.Collections;
 using System.Reflection;
 using Jay.Collections;
 
-// ReSharper disable once CheckNamespace
-namespace Jay;
+namespace Jay.Comparison;
 
-public sealed partial class Easy :
-    IComparer<object?>,
-    IComparer
+public sealed class ComparerCache : IComparer<object?>, IComparer
 {
     private static readonly ConcurrentTypeMap<IComparer> _comparers = new();
 
-    internal static IComparer FindComparer(Type type)
+    private static IComparer FindComparer(Type type)
     {
         return typeof(IComparer<>)
             .MakeGenericType(type)
@@ -26,13 +23,15 @@ public sealed partial class Easy :
             .GetValue(null)
             .AsValid<IComparer>();
     }
-
-    internal static IComparer<T> FindComparer<T>()
-        => Comparer<T>.Default;
-
-    public static IComparer GetDefaultComparer(Type type)
+    
+    public static IComparer Default(Type type)
     {
         return _comparers.GetOrAdd(type, FindComparer);
+    }
+
+    public static IComparer<T> Default<T>()
+    {
+        return _comparers.GetOrAdd<T>(_ => Comparer<T>.Default).AsValid<IComparer<T>>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -40,22 +39,23 @@ public sealed partial class Easy :
     {
         return Comparer<T>.Default.Compare(left, right);
     }
-
-
-    int IComparer<object?>.Compare(object? x, object? y) => ObjCompare(x, y);
-    int IComparer.Compare(object? x, object? y) => ObjCompare(x, y);
-
-    public static int ObjCompare(object? left, object? right)
+    
+    public static int Compare(object? left, object? right)
     {
         if (ReferenceEquals(left, right)) return 0;
         if (left is not null)
         {
-            return GetDefaultComparer(left.GetType()).Compare(left, right);
+            return Default(left.GetType()).Compare(left, right);
         }
         if (right is not null)
         {
-            return GetDefaultComparer(right.GetType()).Compare(left, right);
+            return Default(right.GetType()).Compare(left, right);
         }
         return 0; // they're both null
     }
+
+    public static IComparer<T> Create<T>(Comparison<T> compare) => Comparer<T>.Create(compare);
+    
+    int IComparer<object?>.Compare(object? x, object? y) => Compare(x, y);
+    int IComparer.Compare(object? x, object? y) => Compare(x, y);
 }

@@ -16,7 +16,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
 
     /// <summary>
     /// Optional instance disposal action
-    /// Performed on any instance dropped by this pool (due to <see cref="Capacity"/>
+    /// Performed on any instance dropped by this pool (due to <see cref="MaxCapacity"/>
     /// and when this pool is disposed
     /// </summary>
     private readonly PoolInstanceDispose<T>? _disposeItem;
@@ -32,25 +32,49 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// The first instance is stored in a dedicated field because we expect to be able to
     /// satisfy most requests from it
     /// </summary>
-    protected T? _firstItem;
+    private T? _firstItem;
     
     /// <summary>
     /// Storage for the extra pool instances
     /// </summary>
-    protected Item[]? _items;
+    private Item[]? _items;
+    
+    public int MaxCapacity
+    {
+        get
+        {
+            if (_items is null) return 0; // We've been disposed
+            return _items.Length + 1;
+        }
+    }
+
+    public int Count
+    {
+        get
+        {
+            var count = 0;
+            if (_firstItem is not null) count++;
+            if (_items is null) return count;
+            for (var i = 0; i < _items.Length; i++)
+            {
+                if (_items[i].Value is not null) count++;
+            }
+            return count;
+        }
+    }
     
     /// <summary>
-    /// Creates a new <see cref="ObjectPool{T}" /> for classes.
+    /// Creates a new <see cref="ObjectPool{T}" /> for classes
     /// </summary>
     /// <typeparam name="T">An instance class</typeparam>
     /// <param name="factory">
-    /// A function to create a new <typeparamref name="T" /> instance.
+    /// A function to create a new <typeparamref name="T" /> instance
     /// </param>
     /// <param name="clean">
-    /// An optional action to perform on a <typeparamref name="T" /> when it is returned.
+    /// An optional action to perform on a <typeparamref name="T" /> when it is returned
     /// </param>
     /// <param name="dispose">
-    /// An optional action to perform on a <typeparamref name="T" /> if it is disposed.
+    /// An optional action to perform on a <typeparamref name="T" /> if it is disposed
     /// </param>
     public ObjectPool(
         PoolInstanceFactory<T> factory,
@@ -75,12 +99,12 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         PoolInstanceClean<T>? clean = null,
         PoolInstanceDispose<T>? dispose = null)
     {
-        if (capacity < 1 || capacity > Pool.MaxCapacity)
+        if (capacity is < 1 or > Pool.MAX_CAPACITY)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(capacity),
                 capacity,
-                $"Pool Capacity must be between 1 and {Pool.MaxCapacity}");
+                $"Pool Capacity must be between 1 and {Pool.MAX_CAPACITY}");
         }
 
         _itemFactory = factory ?? throw new ArgumentNullException(nameof(factory));
@@ -91,51 +115,19 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         _items = new Item[capacity - 1];
     }
     
-    /// <inheritdoc />
-    public int Capacity
-    {
-        get
-        {
-            if (_items is null) return 0;
-            return _items.Length + 1;
-        }
-    }
-
-    /// <inheritdoc />
-    public int Count
-    {
-        get
-        {
-            var count = 0;
-            if (_firstItem is not null) count++;
-            if (_items is null) return count;
-            for (var i = 0; i < _items.Length; i++)
-            {
-                if (_items[i].Value is not null) count++;
-            }
-            return count;
-        }
-    }
+   
 
     /// <summary>
     /// Rent a <typeparamref name="T" /> instance that should be <see cref="Return" />ed.
     /// </summary>
-    /// <remarks>
-    /// Search strategy is a simple linear probing which is chosen for it cache-friendliness.
-    /// Note that Rent will try to store recycled objects close to the start
-    /// thus statistically reducing how far we will typically search.
-    /// </remarks>
     public T Rent()
     {
         // Always check if we've been disposed
         if (_items is null)
             throw new ObjectDisposedException("This Object Pool has been disposed");
 
-        /* PERF: Examine the first element.
-         * If that fails, AllocateSlow will look at the remaining elements.
-         * Note that the initial read is optimistically not synchronized. That is intentional. 
-         * We will interlock only when we have a candidate.
-         * In a worst case we may miss some recently returned objects. Not a big deal.
+        /* Check the first element, if we can use it we can return right away,
+         * otherwise we have have to take the slow path.
          */
         T? instance = _firstItem;
         if (instance is null || instance != Interlocked.CompareExchange(ref _firstItem, null, instance))
@@ -148,11 +140,6 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     /// <summary>
     /// Returns a <typeparamref name="T" /> instance to the pool to be cleaned and re-used.
     /// </summary>
-    /// <remarks>
-    /// Search strategy is a simple linear probing which is chosen for it cache-friendliness.
-    /// Note that Free will try to store recycled objects close to the start thus statistically
-    /// reducing how far we will typically search in Allocate.
-    /// </remarks>
     public void Return(T? instance)
     {
         if (instance is null) return;
@@ -200,14 +187,12 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         return new PoolInstance<T>(this, instance);
     }
 
-    /// <inheritdoc />
     public IPoolInstance<T> GetInstance()
     {
         T instance = Rent();
         return new PoolInstance<T>(this, instance);
     }
 
-    /// <inheritdoc />
     public void Borrow(Action<T> instanceAction)
     {
         Validate.IsNotNull(instanceAction);
@@ -216,7 +201,6 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         Return(instance);
     }
 
-    /// <inheritdoc />
     public TResult Borrow<TResult>(Func<T, TResult> instanceFunc)
     {
         Validate.IsNotNull(instanceFunc);
@@ -259,10 +243,6 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
         T? instance;
         for (var i = 0; i < items!.Length; i++)
         {
-            /* Note that the initial read is optimistically not synchronized.
-             * That is intentional. 
-             * We will interlock only when we have a candidate.
-             * In a worst case we may miss some recently returned objects. Not a big deal. */
             instance = items[i].Value;
             if (instance != null)
             {
@@ -302,11 +282,11 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     }
 
     /// <summary>
-    /// A <c>struct</c> holder for a <typeparamref name="T" /> value
+    /// A <c>struct</c> holder for a <c>T</c> value
     /// </summary>
     [DebuggerDisplay("{" + nameof(Value) + ",nq}")]
-    protected struct Item
+    private struct Item
     {
-        internal T? Value;
+        public T? Value;
     }
 }

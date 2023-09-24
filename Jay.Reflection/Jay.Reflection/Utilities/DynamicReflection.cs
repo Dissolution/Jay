@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Dynamic;
 using System.Linq.Expressions;
+using Jay.Comparison;
 using Jay.Reflection.Adapters;
 using Jay.Reflection.Emitting.Args;
 using Jay.Reflection.Searching;
@@ -18,7 +19,7 @@ public sealed class DynamicReflection : DynamicObject
     private readonly Type _targetType;
     private readonly Dictionary<MemberSearchOptions, ObjectInvoke?> _delegateCache;
     
-    private DynamicReflection(object obj)
+    private DynamicReflection(object? obj)
     {
         if (obj is null)
             throw new ArgumentNullException(nameof(obj));
@@ -577,7 +578,7 @@ public sealed class DynamicReflection : DynamicObject
         return b;
     }
 
-    public int CompareTo(object? other) => Easy.Compare(_target, other);
+    public int CompareTo(object? other) => ComparerCache.Compare(_target, other);
 
     public override bool Equals(object? obj) => Easy.ObjEqual(_target, obj);
 

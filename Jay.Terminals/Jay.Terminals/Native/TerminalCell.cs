@@ -33,18 +33,14 @@ public struct TerminalCell : IEquatable<TerminalCell>, IEqualityOperators<Termin
         this.Colors.Background = backColor;
     }
 
-    /// <inheritdoc />
     public bool Equals(TerminalCell cell) => Value == cell.Value;
 
-    /// <inheritdoc />
     public override bool Equals(object? obj)
     {
         return obj is TerminalCell cell && Value == cell.Value;
     }
 
-    /// <inheritdoc />
     public override int GetHashCode() => Value;
 
-    /// <inheritdoc />
     public override string ToString() => Char.ToString();
 }

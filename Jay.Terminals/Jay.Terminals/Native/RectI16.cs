@@ -82,7 +82,6 @@ public struct RectI16 :
         this.Bottom = bottom;
     }
 
-    /// <inheritdoc />
     public bool Equals(RectI16 rectI16)
     {
         return rectI16.Left == this.Left &&
