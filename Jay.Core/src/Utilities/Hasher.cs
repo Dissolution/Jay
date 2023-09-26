@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using Jay.Maths;
 
 namespace Jay.Utilities;
 
 /// <summary>
-/// Hasher is a near-copy of <see cref="HashCode" /> for use in
+/// Hasher is a near-copy of <c>System.HashCode</c> for use in
 /// netstandard2.0 and net48 environments.<br />
 /// It also has more methods to ease hashcode generation.
 /// </summary>
@@ -14,11 +13,11 @@ public ref struct Hasher
 {
     private static readonly uint _seed = CreateSeed();
 
-    private const uint Prime1 = 2_654_435_761U;
-    private const uint Prime2 = 2_246_822_519U;
-    private const uint Prime3 = 3_266_489_917U;
-    private const uint Prime4 = 668_265_263U;
-    private const uint Prime5 = 374_761_393U;
+    private const uint PRIME1 = 2_654_435_761U;
+    private const uint PRIME2 = 2_246_822_519U;
+    private const uint PRIME3 = 3_266_489_917U;
+    private const uint PRIME4 = 668_265_263U;
+    private const uint PRIME5 = 374_761_393U;
 
     private static uint CreateSeed()
     {
@@ -37,22 +36,22 @@ public ref struct Hasher
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void Initialize(out uint v1, out uint v2, out uint v3, out uint v4)
     {
-        v1 = _seed + Prime1 + Prime2;
-        v2 = _seed + Prime2;
+        v1 = _seed + PRIME1 + PRIME2;
+        v2 = _seed + PRIME2;
         v3 = _seed;
-        v4 = _seed - Prime1;
+        v4 = _seed - PRIME1;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint Round(uint hash, uint input)
     {
-        return MathHelper.RotateLeft(hash + input * Prime2, 13) * Prime1;
+        return MathHelper.RotateLeft(hash + input * PRIME2, 13) * PRIME1;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint QueueRound(uint hash, uint queuedValue)
     {
-        return MathHelper.RotateLeft(hash + queuedValue * Prime3, 17) * Prime4;
+        return MathHelper.RotateLeft(hash + queuedValue * PRIME3, 17) * PRIME4;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,16 +65,16 @@ public ref struct Hasher
 
     private static uint MixEmptyState()
     {
-        return _seed + Prime5;
+        return _seed + PRIME5;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint MixFinal(uint hash)
     {
         hash ^= hash >> 15;
-        hash *= Prime2;
+        hash *= PRIME2;
         hash ^= hash >> 13;
-        hash *= Prime3;
+        hash *= PRIME3;
         hash ^= hash >> 16;
         return hash;
     }
@@ -380,17 +379,13 @@ public ref struct Hasher
     private uint _queue1, _queue2, _queue3;
     private uint _length;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddHash(int value)
     {
-        var val = (uint)value;
-
-        // Storing the value of _length locally shaves of quite a few bytes
-        // in the resulting machine code.
+        uint val = (uint)value;
         uint previousLength = _length++;
         uint position = previousLength % 4;
-
-        // Switch can't be inlined.
-
+        
         if (position == 0)
             _queue1 = val;
         else if (position == 1)

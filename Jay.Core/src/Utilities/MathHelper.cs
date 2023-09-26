@@ -5,7 +5,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 #endif
 
-namespace Jay.Maths;
+namespace Jay.Utilities;
 
 /// <summary>
 /// Math and number related utilities

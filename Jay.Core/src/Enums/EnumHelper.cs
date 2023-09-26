@@ -17,19 +17,12 @@ public static class EnumHelper
         @enum = default;
         if (string.IsNullOrEmpty(str))
             return false;
-        if (Enum.TryParse<TEnum>(
-            str,
-            true,
-            out @enum))
+        if (Enum.TryParse<TEnum>(str, true, out @enum))
             return true;
-
         var split = str!.Split(_splitChars, StringSplitOptions.RemoveEmptyEntries);
         foreach (var segment in split)
         {
-            if (Enum.TryParse<TEnum>(
-                segment,
-                true,
-                out var flag))
+            if (Enum.TryParse<TEnum>(segment, true, out var flag))
             {
                 @enum.AddFlag(flag);
             }
@@ -41,5 +34,19 @@ public static class EnumHelper
             }
         }
         return true;
+    }
+
+    public static bool TryParse<TEnum>(
+        int value,
+        out TEnum @enum)
+        where TEnum : struct, Enum
+    {
+        if (Enum.IsDefined(typeof(TEnum), value))
+        {
+            @enum = EnumExtensions.From<int, TEnum>(value);
+            return true;
+        }
+        @enum = default;
+        return false;
     }
 }

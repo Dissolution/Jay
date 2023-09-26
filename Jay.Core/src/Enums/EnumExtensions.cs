@@ -95,6 +95,7 @@ public static class EnumExtensions
             return -1;
         if (GreaterThan(@enum, other))
             return 1;
+
         return 0;
     }
 
@@ -125,9 +126,28 @@ public static class EnumExtensions
         return Return<ulong>();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TEnum FromUInt64<TEnum>(ulong value)
     {
         Emit.Ldarg(nameof(value));
+        return Return<TEnum>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T To<TEnum, T>(TEnum @enum)
+        where TEnum : struct, Enum
+        where T : unmanaged
+    {
+        Emit.Ldarg(nameof(@enum));
+        return Return<T>();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TEnum From<T, TEnum>(T input)
+        where T : unmanaged
+        where TEnum : struct, Enum
+    {
+        Emit.Ldarg(nameof(input));
         return Return<TEnum>();
     }
 }

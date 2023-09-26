@@ -2,6 +2,7 @@
 using System.Runtime.Serialization;
 using InlineIL;
 using static InlineIL.IL;
+// ReSharper disable EntityNameCapturedOnly.Global
 
 namespace Jay.Utilities;
 
@@ -364,7 +365,6 @@ public static unsafe class Scary
     public static ref T UnboxToRef<T>(object box)
         where T : struct
     {
-        //Push(box);
         Emit.Ldarg(nameof(box));
         Emit.Unbox<T>();
         return ref ReturnRef<T>();

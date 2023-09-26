@@ -6,7 +6,7 @@ namespace Jay.Memory;
 /// <summary>
 /// A <see cref="SpanReader{T}"/> wraps a <see cref="ReadOnlySpan{T}"/>
 /// and provides methods to Peek, Skip, and Take <typeparamref name="T"/> value(s) from it
-/// in forward only reads
+/// in forward-only reads
 /// </summary>
 /// <typeparam name="T">
 /// <see cref="Type"/>s of values stored in the <see cref="ReadOnlySpan{T}"/>

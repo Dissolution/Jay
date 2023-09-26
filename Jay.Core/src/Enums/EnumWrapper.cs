@@ -15,19 +15,13 @@ public readonly struct EnumWrapper<TEnum>
     where TEnum : struct, Enum
 {
     public static implicit operator TEnum(EnumWrapper<TEnum> enumWrapper) => enumWrapper._enum;
-
     public static implicit operator EnumWrapper<TEnum>(TEnum @enum) => new(@enum);
 
     public static bool operator ==(EnumWrapper<TEnum> left, TEnum right) => EnumExtensions.Equal(left._enum, right);
-
     public static bool operator !=(EnumWrapper<TEnum> left, TEnum right) => EnumExtensions.NotEqual(left._enum, right);
-
     public static bool operator >(EnumWrapper<TEnum> left, TEnum right) => EnumExtensions.GreaterThan(left._enum, right);
-
     public static bool operator >=(EnumWrapper<TEnum> left, TEnum right) => EnumExtensions.GreaterThanOrEqual(left._enum, right);
-
     public static bool operator <(EnumWrapper<TEnum> left, TEnum right) => EnumExtensions.LessThan(left._enum, right);
-
     public static bool operator <=(EnumWrapper<TEnum> left, TEnum right) => EnumExtensions.LessThanOrEqual(left._enum, right);
 
     private readonly TEnum _enum;

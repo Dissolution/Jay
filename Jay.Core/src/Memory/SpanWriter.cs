@@ -187,8 +187,8 @@ public ref struct SpanWriter<T>
         text.Append(written[0]);
         for (var i = 1; i < writtenCount; i++)
         {
-            text.Append(delimiter);
-            text.Append(written[i]);
+            text.Append(delimiter)
+                .Append(written[i]);
         }
 
         return text.ToStringAndReturn();

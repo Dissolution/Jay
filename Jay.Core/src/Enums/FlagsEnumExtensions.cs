@@ -2,7 +2,6 @@
 
 using System.Diagnostics;
 using InlineIL;
-using Jay.Maths;
 using Jay.Utilities;
 using static InlineIL.IL;
 
