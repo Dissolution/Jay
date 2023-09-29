@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Diagnostics;
+using Jay.Debugging;
 using Jay.Text.Building;
 using Jay.Text.Splitting;
-using Jay.Validation;
 using TextWriter = Jay.Text.Building.TextWriter;
 // ReSharper disable InconsistentNaming
 // ReSharper disable IdentifierTypo
@@ -42,13 +42,13 @@ public class CodeBuilder : IBuildingText
         return new NewLineIndents(written.Slice(finalNewlineIndex));
     }
 
-    public CodeBuilder Invoke(SCBA scba)
+    public CodeBuilder Invoke(Scba scba)
     {
         scba(this);
         return this;
     }
 
-    public CodeBuilder If(bool predicate, SCBA? ifTrue, SCBA? ifFalse = default)
+    public CodeBuilder If(bool predicate, Scba? ifTrue, Scba? ifFalse = default)
     {
         if (predicate)
         {
@@ -129,14 +129,14 @@ public class CodeBuilder : IBuildingText
         {
             case null:
                 return Write("null");
-            case SCBA scba:
+            case Scba scba:
                 return IndentCapturedAction(scba);
             case Delegate del:
             {
-                SCBA scba;
+                Scba scba;
                 try
                 {
-                    scba = (SCBA)Delegate.CreateDelegate(typeof(SCBA), del.Target, del.Method);
+                    scba = (Scba)Delegate.CreateDelegate(typeof(Scba), del.Target, del.Method);
                 }
                 catch (Exception ex)
                 {
@@ -144,7 +144,7 @@ public class CodeBuilder : IBuildingText
                     Console.WriteLine(ex);
                     throw;
                 }
-                return Code<SCBA>(scba);
+                return Code<Scba>(scba);
             }
 
             // Shouldn't get here
@@ -161,6 +161,7 @@ public class CodeBuilder : IBuildingText
             }
             case IEnumerable enumerable:
             {
+                Hold.Onto(enumerable);
                 Debugger.Break();
                 return this;
             }
@@ -192,7 +193,7 @@ public class CodeBuilder : IBuildingText
         return this;
     }
 
-    internal CodeBuilder IndentCapturedAction(SCBA scba)
+    internal CodeBuilder IndentCapturedAction(Scba scba)
     {
         var knownIndent = _newLineIndents;
         using var currentIndent = GetPositionNewLineIndents();
@@ -215,7 +216,7 @@ public class CodeBuilder : IBuildingText
         return this;
     }
 
-    public CodeBuilder BracketBlock(SCBA buildBlock)
+    public CodeBuilder BracketBlock(Scba buildBlock)
     {
         //throw new NotImplementedException();
 
@@ -235,7 +236,7 @@ public class CodeBuilder : IBuildingText
     #region Enumerate
     public CodeBuilder Enumerate(
         TextSplitEnumerable splitEnumerable,
-        SCBTA perSplitSection)
+        Scbta perSplitSection)
     {
         foreach (var splitSection in splitEnumerable)
         {
@@ -253,7 +254,7 @@ public class CodeBuilder : IBuildingText
         return this;
     }
 
-    public CodeBuilder Iterate<T>(IEnumerable<T> values, SCBIA<T> perValueIndex)
+    public CodeBuilder Iterate<T>(IEnumerable<T> values, Scbia<T> perValueIndex)
     {
         if (values is IList<T> list)
         {
@@ -284,7 +285,7 @@ public class CodeBuilder : IBuildingText
     public CodeBuilder Delimit(
         ReadOnlySpan<char> delimiter,
         TextSplitEnumerable splitEnumerable,
-        SCBTA perSplitSection)
+        Scbta perSplitSection)
     {
         var splitEnumerator = splitEnumerable.GetEnumerator();
         if (!splitEnumerator.MoveNext()) return this;
@@ -297,7 +298,7 @@ public class CodeBuilder : IBuildingText
         return this;
     }
 
-    public CodeBuilder Delimit<T>(SCBA delimit, IEnumerable<T> values, SCBA<T> perValue)
+    public CodeBuilder Delimit<T>(Scba delimit, IEnumerable<T> values, SCBA<T> perValue)
     {
         if (values is IList<T> list)
         {
@@ -329,7 +330,7 @@ public class CodeBuilder : IBuildingText
         return this;
     }
 
-    public CodeBuilder Delimit<T>(SCBA delimit, IEnumerable<T> values, SCBIA<T> perValueIndex)
+    public CodeBuilder Delimit<T>(Scba delimit, IEnumerable<T> values, Scbia<T> perValueIndex)
     {
         if (values is IList<T> list)
         {
@@ -368,7 +369,7 @@ public class CodeBuilder : IBuildingText
         return Delimit(w => w.Code(delimiter), values, perValue);
     }
 
-    public CodeBuilder Delimit<T>(string delimiter, IEnumerable<T> values, SCBIA<T> perValueIndex)
+    public CodeBuilder Delimit<T>(string delimiter, IEnumerable<T> values, Scbia<T> perValueIndex)
     {
         return Delimit(w => w.Code(delimiter), values, perValueIndex);
     }
@@ -383,7 +384,7 @@ public class CodeBuilder : IBuildingText
         return Delimit(static w => w.NewLine(), values, perValue);
     }
 
-    public CodeBuilder LineDelimit<T>(IEnumerable<T> values, SCBIA<T> perValueIndex)
+    public CodeBuilder LineDelimit<T>(IEnumerable<T> values, Scbia<T> perValueIndex)
     {
         return Delimit(static w => w.NewLine(), values, perValueIndex);
     }
@@ -402,7 +403,7 @@ public class CodeBuilder : IBuildingText
         }
 
         WriteLine("// <auto-generated>");
-        foreach (var line in comment.TextSplit(NewLineIndents.DEFAULT_NEWLINE))
+        foreach (var line in comment.TextSplit(NewLineIndents._defaultNewline))
         {
             Write("// ").WriteLine(line);
         }
@@ -473,7 +474,7 @@ public class CodeBuilder : IBuildingText
 
     public CodeBuilder Namespace(
         string @namespace,
-        SCBA namespaceBlock)
+        Scba namespaceBlock)
     {
         Validate.IsNotNullOrWhiteSpace(@namespace);
         return Write("namespace ")
@@ -492,7 +493,7 @@ public class CodeBuilder : IBuildingText
          * But we do want to watch out for newline characters to turn
          * this into a multi-line comment */
 
-        var comments = comment.TextSplit(NewLineIndents.DEFAULT_NEWLINE)
+        var comments = comment.TextSplit(NewLineIndents._defaultNewline)
             .GetEnumerator();
         if (!comments.MoveNext())
         {
@@ -520,7 +521,7 @@ public class CodeBuilder : IBuildingText
 
     public CodeBuilder Comment(string? comment, CommentType commentType)
     {
-        var splitEnumerable = comment.TextSplit(NewLineIndents.DEFAULT_NEWLINE);
+        var splitEnumerable = comment.TextSplit(NewLineIndents._defaultNewline);
         switch (commentType)
         {
             case CommentType.SingleLine:
@@ -543,7 +544,7 @@ public class CodeBuilder : IBuildingText
             }
             case CommentType.MultiLine:
             {
-                var comments = comment.TextSplit(NewLineIndents.DEFAULT_NEWLINE)
+                var comments = comment.TextSplit(NewLineIndents._defaultNewline)
                     .GetEnumerator();
                 if (!comments.MoveNext())
                 {

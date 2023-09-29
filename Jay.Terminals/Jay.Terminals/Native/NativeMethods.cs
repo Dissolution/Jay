@@ -63,7 +63,7 @@ internal static partial class NativeMethods
         [FieldOffset(8)]
         public TerminalColors Colors;
         [FieldOffset(9)] 
-        public CommonLVB CommonLvb;
+        public CommonLvb CommonLvb;
         [FieldOffset(10)]
         public RectI16 Window;
         [FieldOffset(18)]

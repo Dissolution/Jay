@@ -73,7 +73,9 @@ public sealed record class MemberSearchOptions : ICodePart
             if (NameMatch.HasFlag(NameMatchOptions.Contains))
                 return memberName.Contains(Name, StringComparison.OrdinalIgnoreCase);
             if (NameMatch.HasFlag(NameMatchOptions.StartsWith) && memberName.StartsWith(Name, StringComparison.OrdinalIgnoreCase))
+                return true;
             if (NameMatch.HasFlag(NameMatchOptions.EndsWith) && memberName.EndsWith(Name, StringComparison.OrdinalIgnoreCase))
+                return true;
             return string.Equals(
                 memberName,
                 Name,

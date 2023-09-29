@@ -1,7 +1,7 @@
 ﻿namespace Jay.Terminals.Native;
 
 [Flags]
-public enum CommonLVB : byte
+public enum CommonLvb : byte
 {
     LeadingByte       = 0b00000001,
     TrailingByte      = 0b00000010,

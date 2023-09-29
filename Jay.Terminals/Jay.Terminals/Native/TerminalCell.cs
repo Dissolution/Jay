@@ -22,7 +22,7 @@ public struct TerminalCell : IEquatable<TerminalCell>, IEqualityOperators<Termin
     public TerminalColors Colors;
 
     [FieldOffset(3)] 
-    public CommonLVB CommonLvb;
+    public CommonLvb CommonLvb;
 
     [SkipLocalsInit]
     public TerminalCell(char unicodeChar, TerminalColor foreColor, TerminalColor backColor)

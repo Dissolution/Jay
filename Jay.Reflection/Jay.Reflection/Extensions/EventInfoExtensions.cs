@@ -47,7 +47,7 @@ public static class EventInfoExtensions
     /// </summary>
     /// <param name="eventInfo"></param>
     /// <returns></returns>
-    /// <see cref="https://stackoverflow.com/questions/9847424/is-the-backing-field-of-a-compiler-generated-event-always-guaranteed-to-use-the"/>
+    /// <see href="https://stackoverflow.com/questions/9847424/is-the-backing-field-of-a-compiler-generated-event-always-guaranteed-to-use-the"/>
     /// <remarks>
     /// This is **NOT** guaranteed to consistently work if the compiler team changes their minds.
     /// </remarks>

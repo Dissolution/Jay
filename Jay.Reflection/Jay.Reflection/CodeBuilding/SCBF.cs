@@ -1,3 +1,3 @@
 ﻿namespace Jay.Reflection.CodeBuilding;
 
-public delegate TResult SCBF<out TResult>(CodeBuilder builder);
+public delegate TResult Scbf<out TResult>(CodeBuilder builder);

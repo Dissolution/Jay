@@ -46,6 +46,7 @@ public static class Pool
     public static IObjectPool<T> Create<T>(
         PoolInstanceClean<T>? clean = null,
         PoolInstanceDispose<T>? dispose = null, 
+        // ReSharper disable once InvalidXmlDocComment
         Constraints.IsNew<T> _ = default)
         where T : class, new()
     {
@@ -62,6 +63,7 @@ public static class Pool
     public static IObjectPool<T> Create<T>(
         PoolInstanceFactory<T> factory,
         PoolInstanceClean<T>? clean = null, 
+        // ReSharper disable once InvalidXmlDocComment
         Constraints.IsDisposable<T> _ = default)
         where T : class, IDisposable
     {
@@ -76,6 +78,7 @@ public static class Pool
     /// <returns>A new <see cref="ObjectPool{T}" /> instance.</returns>
     public static IObjectPool<T> Create<T>(
         PoolInstanceClean<T>? clean = null, 
+        // ReSharper disable once InvalidXmlDocComment
         Constraints.IsNewDisposable<T> _ = default)
         where T : class, IDisposable, new()
     {

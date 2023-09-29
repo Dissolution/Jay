@@ -2,8 +2,8 @@
 using Jay.Text.Building;
 using var _ = OnlyApplication.Acquire();
 
-DoThing("blah");
-DoThing($"fblah");
+doThing("blah");
+doThing($"fblah");
 
 
 Console.WriteLine("Press Enter to exit the application");
@@ -11,7 +11,7 @@ Console.ReadLine();
 return;
 
 
-void DoThing(InterpolatedTextWriter text)
+void doThing(InterpolatedTextWriter text)
 {
     string str = text.ToStringAndDispose();
     Console.WriteLine(str);

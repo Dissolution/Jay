@@ -27,18 +27,19 @@ public static class ValidationExtensions
     /// </exception>
     [return: NotNull]
     public static T ThrowIfNull<T>(
-        [AllowNull] [NotNull] this T? value,
+        [AllowNull, NotNull] this T? value,
         string? exceptionMessage = null,
         [CallerArgumentExpression(nameof(value))]
         string? valueName = null)
     {
         if (value is not null)
             return value;
+
         throw new ArgumentNullException(
             valueName,
             exceptionMessage ?? $"The given {typeof(T).ToCode()} value must not be null");
     }
-    
+
     /// <summary>
     /// Returns this <see cref="object"/> as a <typeparamref name="TOut"/> or throw an <see cref="ArgumentException"/>
     /// </summary>
@@ -57,6 +58,7 @@ public static class ValidationExtensions
     {
         if (obj is TOut output)
             return output;
+
         throw new ArgumentException(
             exceptionMessage ?? $"The given {obj?.GetType().ToCode()} value is not a {typeof(TOut).ToCode()} instance",
             valueName);

@@ -54,7 +54,7 @@ public static class DecimalExtensions
     public static byte Scale(this decimal number)
     {
         int[] bits = decimal.GetBits(number);
-        var scale = (byte)(bits[3] >> 16 & 0x7F);
+        var scale = (byte)((bits[3] >> 16) & 0x7F);
         return scale;
     }
 

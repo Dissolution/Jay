@@ -76,7 +76,7 @@ public static class WaitHandleExtensions
         var localVariableInitLock = new object();
         lock (localVariableInitLock)
         {
-            CancellationTokenRegistration cancellationRegistration = default;
+            CancellationTokenRegistration cancellationRegistration;
             cancellationRegistration = token.Register(() => taskCompletionSource.SetCanceled());
             RegisteredWaitHandle? registeredWaitHandle = null;
             registeredWaitHandle = ThreadPool.RegisterWaitForSingleObject(

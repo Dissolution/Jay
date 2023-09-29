@@ -22,7 +22,7 @@ public static class MemberCache
             Type_GetTypeFromHandle = MemberSearch.One<Type, MethodInfo>(nameof(Type.GetTypeFromHandle));
             Delegate_GetInvocationList = MemberSearch.One<Delegate, MethodInfo>(nameof(Delegate.GetInvocationList));
             RuntimeHelpers_GetUninitializedObject = MemberSearch.One<MethodInfo>(typeof(RuntimeHelpers), nameof(Scary.GetUninitializedObject));
-            Object_GetType = MemberSearch.One<object, MethodInfo>(nameof(object.GetType));
+            Object_GetType = MemberSearch.One<object, MethodInfo>(nameof(GetType));
         }
     }
 }

@@ -269,7 +269,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// Begins an exception block for a filtered exception.
     /// </summary>
     /// <exception cref="NotSupportedException">The stream being emitted is not currently in an exception block.</exception>
-    /// <exception cref="NotSupportedException">This <see cref="Emission.IILGenerator{TGenerator}"/> belongs to a <see cref="DynamicMethod"/>.</exception>
+    /// <exception cref="NotSupportedException">This ILGenerator belongs to a <see cref="DynamicMethod"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.beginexceptfilterblock"/>
     public virtual TSelf BeginExceptFilterBlock() => Emit(GeneratorEmission.BeginExceptFilterBlock());
 
@@ -277,7 +277,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// Begins an exception fault block in the stream.
     /// </summary>
     /// <exception cref="NotSupportedException">The stream being emitted is not currently in an exception block.</exception>
-    /// <exception cref="NotSupportedException">This <see cref="Emission.IILGenerator{TGenerator}"/> belongs to a <see cref="DynamicMethod"/>.</exception>
+    /// <exception cref="NotSupportedException">This ILGenerator belongs to a <see cref="DynamicMethod"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.beginfaultblock"/>
     public virtual TSelf BeginFaultBlock() => Emit(GeneratorEmission.BeginFaultBlock());
 
@@ -309,7 +309,7 @@ public class FluentEmitter<TSelf> : ICodePart
     public TSelf Endfinally() => Emit(OpCodes.Endfinally);
 
     /// <summary>
-    /// Starts a <c>try<c> block containing <paramref name="tryBlock"/>
+    /// Starts a <c>try</c> block containing <paramref name="tryBlock"/>
     /// </summary>
     public TryCatchFinallyEmitter<TSelf> Try(Action<TSelf> tryBlock)
     {
@@ -322,14 +322,14 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <summary>
     /// Begins a lexical scope.
     /// </summary>
-    /// <exception cref="NotSupportedException">This <see cref="IILGenerator{T}"/> belongs to a <see cref="DynamicMethod"/>.</exception>
+    /// <exception cref="NotSupportedException">This ILGenerator belongs to a <see cref="DynamicMethod"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.beginscope?view=netcore-3.0"/>
     public virtual TSelf BeginScope() => Emit(GeneratorEmission.BeginScope());
 
     /// <summary>
     /// Ends a lexical scope.
     /// </summary>
-    /// <exception cref="NotSupportedException">If this <see cref="IILGenerator{T}"/> belongs to a <see cref="DynamicMethod"/>.</exception>
+    /// <exception cref="NotSupportedException">If this ILGenerator belongs to a <see cref="DynamicMethod"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.endscope?view=netcore-3.0"/>
     public virtual TSelf EndScope() => Emit(GeneratorEmission.EndScope());
 
@@ -344,7 +344,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// </summary>
     /// <param name="nameSpace">The namespace to be used in evaluating locals and watches for the current active lexical scope.</param>
     /// <exception cref="ArgumentNullException">If <paramref name="nameSpace"/> is <see langword="null"/> or has a Length of 0.</exception>
-    /// <exception cref="NotSupportedException">If this <see cref="IILGenerator{T}"/> belongs to a <see cref="DynamicMethod"/>.</exception>
+    /// <exception cref="NotSupportedException">If this ILGenerator belongs to a <see cref="DynamicMethod"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.usingnamespace?view=netcore-3.0"/>
     public virtual TSelf UsingNamespace(string nameSpace) => Emit(GeneratorEmission.UsingNamespace(nameSpace));
 #endregion
@@ -355,7 +355,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// Declares a <see cref="LocalBuilder"/> variable of the specified <see cref="Type"/>.
     /// </summary>
     /// <param name="type">The type of the <see cref="LocalBuilder"/>.</param>
-    /// <param name="emitterLocalns the declared <see cref="LocalBuilder"/>.</param>
+    /// <param name="emitterLocal">ns the declared <see cref="LocalBuilder"/>.</param>
     /// <exception cref="ArgumentNullException">If <paramref name="type"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">If <paramref name="type"/> was created with <see cref="TypeBuilder.CreateType"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.declarelocal#System_Reflection_Emit_ILGenerator_DeclareLocal_System_Type_"/>
@@ -383,7 +383,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <exception cref="ArgumentNullException">If <paramref name="type"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">If <paramref name="type"/> was created with <see cref="TypeBuilder.CreateType"/>.</exception>
     /// <exception cref="InvalidOperationException">If the method body of the enclosing method was created with <see cref="M:MethodBuilder.CreateMethodBody"/>.</exception>
-    /// <exception cref="NotSupportedException">If the method this <see cref="Emission.IILGenerator{TGenerator}"/> is associated with is not wrapping a <see cref="MethodBuilder"/>.</exception>
+    /// <exception cref="NotSupportedException">If the method this ILGenerator is associated with is not wrapping a <see cref="MethodBuilder"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.declarelocal#System_Reflection_Emit_ILGenerator_DeclareLocal_System_Type_System_Boolean_"/>
     public virtual TSelf DeclareLocal(
         Type type,
@@ -403,7 +403,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="pinned">Whether or not the <see cref="LocalBuilder"/> should be pinned in memory.</param>
     /// <param name="emitterLocalns the declared <see cref="LocalBuilder"/>.</param>
     /// <exception cref="InvalidOperationException">If the method body of the enclosing method was created with <see cref="M:MethodBuilder.CreateMethodBody"/>.</exception>
-    /// <exception cref="NotSupportedException">If the method this <see cref="Emission.IILGenerator{TGenerator}"/> is associated with is not wrapping a <see cref="MethodBuilder"/>.</exception>
+    /// <exception cref="NotSupportedException">If the method this ILGenerator is associated with is not wrapping a <see cref="MethodBuilder"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.declarelocal#System_Reflection_Emit_ILGenerator_DeclareLocal_System_Type_System_Boolean_"/>
     public TSelf DeclareLocal<T>(
         bool pinned, out EmitterLocal emitterLocal,

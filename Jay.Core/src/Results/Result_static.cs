@@ -1,8 +1,4 @@
-﻿#if NET7_0_OR_GREATER
-using System.Numerics;
-#endif
-
-namespace Jay;
+﻿namespace Jay;
 
 /* Static stuff
  *
@@ -21,7 +17,7 @@ public readonly partial struct Result
       IBitwiseOperators<Result, bool, bool>
 #endif
 {
-    internal const string DefaultErrorMessage = "Operation Failed";
+    internal const string DEFAULT_ERROR_MESSAGE = "Operation Failed";
 
     /// <summary>
     /// Maps a <see cref="bool"/> <paramref name="ok"/> into a <see cref="Result"/>
@@ -82,6 +78,6 @@ public readonly partial struct Result
     /// </returns>
     public static Result Error(Exception? error)
     {
-        return new(false, error ?? new Exception(DefaultErrorMessage));
+        return new(false, error ?? new Exception(DEFAULT_ERROR_MESSAGE));
     }
 }

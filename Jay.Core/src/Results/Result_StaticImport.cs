@@ -1,6 +1,6 @@
 ﻿namespace Jay;
 
-public static class Result_StaticImport
+public static class ResultStaticImport
 {
     public static Result Ok() => Result.Ok;
     public static Result<T> Ok<T>(T value) => Result<T>.Ok(value);

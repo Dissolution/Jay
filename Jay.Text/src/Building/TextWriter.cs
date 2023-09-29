@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Jay.Maths;
 using Jay.Utilities;
 // ReSharper disable MergeCastWithTypeCheck
 

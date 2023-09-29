@@ -1,8 +1,4 @@
-﻿#if NET7_0_OR_GREATER
-using System.Numerics;
-#endif
-
-namespace Jay.Debugging;
+﻿namespace Jay.Debugging;
 
 /// <summary>
 /// Unique Instance Identifier

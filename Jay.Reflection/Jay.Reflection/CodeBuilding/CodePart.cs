@@ -4,7 +4,7 @@ namespace Jay.Reflection.CodeBuilding;
 
 public abstract class CodePart
 {
-    private static readonly ConcurrentTypeMap<Delegate> _cache = new();
+    private static readonly ConcurrentTypeMap<Delegate> _cache;
 
     static CodePart()
     {

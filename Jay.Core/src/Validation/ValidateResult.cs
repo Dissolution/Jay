@@ -1,4 +1,4 @@
-﻿using static Jay.Result_StaticImport;
+﻿using static Jay.ResultStaticImport;
 
 namespace Jay.Validation;
 

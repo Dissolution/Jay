@@ -89,13 +89,13 @@ partial struct Result
     }
 
     /// <summary>
-    /// Invokes the <paramref name="func" /> and returns its result.
-    /// If the <paramref name="func" /> throws an <see cref="Exception" />, <paramref name="fallback" /> is returned instead.
+    /// Invokes a <paramref name="func"/> and returns its result <br/>
+    /// If the function throws an <see cref="Exception"/>, a <paramref name="fallback"/> value will be returned instead
     /// </summary>
-    /// <typeparam name="T">The <see cref="Type" /> of <paramref name="output" /> the <paramref name="func" /> produces</typeparam>
-    /// <param name="func">The <see cref="Func{T}" /> to <see cref="Func{T}.Invoke" /></param>
-    /// <param name="fallback">The value to return if invocation fails.</param>
-    /// <returns><paramref name="func" />'s result or <paramref name="fallback" /></returns>
+    /// <param name="func">The <see cref="Func{TResult}"/> to invoke</param>
+    /// <param name="fallback">The value to return if <paramref name="func"/> throws an <see cref="Exception"/></param>
+    /// <typeparam name="T">The <see cref="Type"/> of value to be returned</typeparam>
+    /// <returns>The result of <paramref name="func"/> or <paramref name="fallback"/></returns>
     [return: NotNullIfNotNull(nameof(fallback))]
     public static T? InvokeOrDefault<T>(Func<T>? func, T? fallback = default)
     {

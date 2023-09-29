@@ -1,32 +1,19 @@
 ﻿// ReSharper disable UnusedTypeParameter
-
-#if NET7_0_OR_GREATER
-using System.Numerics;
-#endif
-
 namespace Jay.Utilities;
 
-/*
-public static T DoThing<T>(T value, IsStruct<T> _ = default) where T : struct
-{
-    throw new NotImplementedException();
-}
-public static T DoThing<T>(T value, IsClass<T> _ = default) where T : class
-{
-    throw new NotImplementedException();
-}
-*/
-
 /// <summary>
-/// Constraints are used to allow coexisting constrained generic methods<br />
-/// Normally, if you had:<br />
-/// public T DoThing&lt;T&gt;(T value) where T : struct;<br />
-/// public T DoThing&lt;T&gt;(T value) where T : class;<br />
+/// Constraints are added to generic methods so that generic type constraints can co-exist without compiler error<br />
+/// <br/>
+/// Usually, if you had:<br />
+/// <c>public T DoThing&lt;T&gt;(T value) where T : struct;</c><br />
+/// <c>public T DoThing&lt;T&gt;(T value) where T : class;</c><br />
+/// <br/>
 /// The compiler will have an error: 'member with the same signature is already declared'<br />
 /// <br />
-/// We can use <see cref="Constraints" /> to fix it:<br />
-/// public static T DoThing&lt;T&gt;(T value, IsStruct&lt;T&gt; _ = default) where T : struct<br />
-/// public static T DoThing&lt;T&gt;(T value, IsClass&lt;T&gt; _ = default) where T : class<br />
+/// You can use <see cref="Constraints" /> to fix it:<br />
+/// <c>public static T DoThing&lt;T&gt;(T value, IsStruct&lt;T&gt; _ = default) where T : struct</c><br />
+/// <c>public static T DoThing&lt;T&gt;(T value, IsClass&lt;T&gt; _ = default) where T : class</c><br />
+/// <br/>
 /// </summary>
 public static class Constraints
 {

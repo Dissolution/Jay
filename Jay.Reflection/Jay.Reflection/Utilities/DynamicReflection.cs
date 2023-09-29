@@ -584,6 +584,7 @@ public sealed class DynamicReflection : DynamicObject
 
     public override int GetHashCode()
     {
+        // ReSharper disable once NonReadonlyMemberInGetHashCode
         return Hasher.Combine(_target, _targetType);
     }
 

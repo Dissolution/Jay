@@ -1,5 +1,6 @@
 ﻿// ReSharper disable UnassignedReadonlyField
 // ReSharper disable UnassignedGetOnlyAutoProperty
+// ReSharper disable UnusedMember.Local
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 #pragma warning disable CS0169 // Field is never used

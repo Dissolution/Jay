@@ -1,9 +1,4 @@
 ﻿// ReSharper disable InvokeAsExtensionMethod
-
-#if NET7_0_OR_GREATER
-using System.Numerics;
-#endif
-
 namespace Jay.Enums;
 
 public readonly struct EnumWrapper<TEnum>

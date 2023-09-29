@@ -104,6 +104,7 @@
 //     }
 
 using System.Diagnostics;
+using Jay.Debugging;
 using Jay.Reflection.Builders;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Emitting.Args;
@@ -258,6 +259,7 @@ public static class EventAdapter
                         .Ret();
 
                     string il = builder.Emitter.ToString()!;
+                    Hold.Onto(il);
                     Debugger.Break();
                 });
         }

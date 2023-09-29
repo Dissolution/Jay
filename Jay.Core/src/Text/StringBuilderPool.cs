@@ -6,34 +6,28 @@ namespace Jay.Text;
 /// <summary>
 /// A pool of <see cref="StringBuilder" /> instances that can be reused
 /// </summary>
-public sealed class StringBuilderPool : ObjectPool<StringBuilder>
+public static class StringBuilderPool
 {
-    public static StringBuilderPool Shared { get; } = new();
+    private static readonly ObjectPool<StringBuilder> _pool;
 
-    public StringBuilderPool()
-        : base(
-            factory: static () => new(),
-            clean: static builder => builder.Clear())
+    static StringBuilderPool()
     {
+        _pool = new ObjectPool<StringBuilder>(
+            factory: static () => new StringBuilder(),
+            clean: static builder => builder.Clear(),
+            dispose: null);
     }
 
-    /// <summary>
-    /// Returns the <see cref="StringBuilder"/> instance to this pool and then
-    /// returns the <see cref="string"/> it built.
-    /// </summary>
-    public string ReturnToString(StringBuilder builder)
-    {
-        var str = builder.ToString();
-        Return(builder);
-        return str;
-    }
+    public static StringBuilder Rent() => _pool.Rent();
     
-    public new string Borrow(Action<StringBuilder> instanceAction)
+    public static void Return(StringBuilder? builder) => _pool.Return(builder);
+
+    public static string Borrow(Action<StringBuilder> build)
     {
-        StringBuilder sb = Rent();
-        instanceAction.Invoke(sb);
-        var str = sb.ToString();
-        Return(sb);
+        var builder = _pool.Rent();
+        build(builder);
+        string str = builder.ToString();
+        _pool.Return(builder);
         return str;
     }
 }

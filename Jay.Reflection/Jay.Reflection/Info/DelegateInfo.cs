@@ -36,7 +36,7 @@ public sealed class DelegateInfo : ICodePart,
     }
 
     private readonly MethodBase _invokeMethod;
-    private Type? _delegateType = null;
+    private Type? _delegateType;
 
     public Type DelegateType => _delegateType ??= 
         ReturnType == typeof(void)

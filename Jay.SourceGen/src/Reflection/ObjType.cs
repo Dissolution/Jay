@@ -9,7 +9,7 @@ public enum ObjType
 
     Record = 1 << 2,
     
-    Interface = 1 << 3 | Class,
+    Interface = (1 << 3) | Class,
 
-    Delegate = 1 << 4 | Class,
+    Delegate = (1 << 4) | Class,
 }

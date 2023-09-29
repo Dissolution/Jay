@@ -19,13 +19,11 @@ public sealed class TypeHelper
 
     public static int Size(Type type) => GetTypeHelper(type)._size;
     
-    private readonly Type _type;
     private readonly bool _isReferenceOrContainsReferences;
     private readonly int _size;
 
     private TypeHelper(Type type)
     {
-        _type = type;
         if (!type.IsValueType)
         {
             _isReferenceOrContainsReferences = true;

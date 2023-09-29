@@ -1,18 +1,6 @@
 ﻿namespace Jay.Utilities;
 
-#if !(NET48 || NETSTANDARD2_0)
-public static partial class Disposable
-{
-    public static IAsyncDisposable NoneAsync => _unDisposable;
-
-    public static IAsyncDisposable FromTask(Func<Task>? asyncAction)
-    {
-        return new ActionAsyncDisposable(asyncAction);
-    }
-}
-#endif
-
-public static partial class Disposable
+public static class Disposable
 {
     private static readonly UnDisposable _unDisposable = new();
 
@@ -26,10 +14,17 @@ public static partial class Disposable
         return new ActionDisposable(action);
     }
 
+#if !(NET48 || NETSTANDARD2_0)
+    public static IAsyncDisposable NoneAsync => _unDisposable;
 
+    public static IAsyncDisposable FromTask(Func<Task>? asyncAction)
+    {
+        return new ActionAsyncDisposable(asyncAction);
+    }
+#endif
 
     /// <summary>
-    /// An <see cref="IDisposable" /> / <see cref="IAsyncDisposable" /> that doesn't do anything.
+    /// An <see cref="IDisposable" /> / <c>IAsyncDisposable</c> that doesn't do anything.
     /// </summary>
     internal sealed class UnDisposable : IDisposable
 #if !(NET48 || NETSTANDARD2_0)
@@ -40,7 +35,7 @@ public static partial class Disposable
             return default; // == ValueTask.CompletedTask;
         }
 #else
-        {
+    {
 #endif
         public void Dispose()
         {

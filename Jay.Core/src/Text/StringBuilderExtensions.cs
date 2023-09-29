@@ -45,13 +45,13 @@ public static class StringBuilderExtensions
     
     
     /// <summary>
-    /// Returns this <see cref="StringBuilder"/> instance to <see cref="StringBuilderPool"/>.<see cref="StringBuilderPool.Shared"/>
+    /// Returns this <see cref="StringBuilder"/> instance to the <see cref="StringBuilderPool"/>
     /// and then returns the <see cref="string"/> it built.
     /// </summary>
     public static string ToStringAndReturn(this StringBuilder builder)
     {
         var str = builder.ToString();
-        StringBuilderPool.Shared.Return(builder);
+        StringBuilderPool.Return(builder);
         return str;
     }
 }

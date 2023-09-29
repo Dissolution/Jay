@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Jay.Debugging;
 using Jay.Reflection.Emitting;
 using Jay.Reflection.Info;
 
@@ -55,6 +56,7 @@ public class RuntimeDelegateBuilder<TDelegate> : RuntimeDelegateBuilder
     public new TDelegate CreateDelegate()
     {
         string il = CodePart.ToDeclaration(this.Emitter);
+        Hold.Onto(il);
         Debugger.Break();
         return _dynamicMethod.CreateDelegate<TDelegate>();
     }

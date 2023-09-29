@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿#if !NETSTANDARD2_0
+using System.Runtime.InteropServices;
+#endif
 using Jay.Reflection.Validation;
 
 namespace Jay.Reflection.Emitting;

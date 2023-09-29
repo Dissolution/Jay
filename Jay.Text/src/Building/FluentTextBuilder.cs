@@ -274,7 +274,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
     protected void WriteFormatLine(ReadOnlySpan<char> format, object?[] args)
     {
         // Undocumented exclusive limits on the range for Argument Hole Index
-        const int IndexLimit = 1_000_000; // Note:            0 <= ArgIndex < IndexLimit
+        const int INDEX_LIMIT = 1_000_000; // Note:            0 <= ArgIndex < IndexLimit
 
         // Repeatedly find the next hole and process it.
         int pos = 0;
@@ -349,7 +349,7 @@ public abstract class FluentTextBuilder<TBuilder> : TextWriter
             if (ch != '}')
             {
                 // Continue consuming optional additional digits.
-                while (ch.IsAsciiDigit() && index < IndexLimit)
+                while (ch.IsAsciiDigit() && index < INDEX_LIMIT)
                 {
                     // Shift by power of 10
                     index = index * 10 + (ch - '0');

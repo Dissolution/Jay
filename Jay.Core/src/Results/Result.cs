@@ -30,7 +30,7 @@ public readonly partial struct Result :
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Exception GetError()
     {
-        return _error ?? new Exception(DefaultErrorMessage);
+        return _error ?? new Exception(DEFAULT_ERROR_MESSAGE);
     }
 
     /// <summary>
@@ -43,6 +43,21 @@ public readonly partial struct Result :
         {
             throw GetError();
         }
+    }
+
+    public TReturn ThrowIfError<TReturn>(TReturn returnValue)
+    {
+        return _ok ? returnValue : throw GetError();
+    }
+    
+    public Span<T> ThrowIfError<T>(Span<T> returnSpan)
+    {
+        return _ok ? returnSpan : throw GetError();
+    }
+    
+    public ReadOnlySpan<T> ThrowIfError<T>(ReadOnlySpan<T> returnSpan)
+    {
+        return _ok ? returnSpan : throw GetError();
     }
 
     /// <summary>

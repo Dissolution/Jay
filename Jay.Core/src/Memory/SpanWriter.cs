@@ -38,137 +38,137 @@ public ref struct SpanWriter<T>
         _position = 0;
     }
 
-    public bool TryWrite(T item)
+    public Result TryWrite(T item)
     {
         int index = _position;
-        if (index < Capacity)
+        var span = _span;
+        if (index < span.Length)
         {
-            _span[index] = item;
+            span[index] = item;
             _position = index + 1;
             return true;
         }
-        return false;
+        return new InvalidOperationException("Cannot add another item: No remaining capacity");
     }
     
-    public bool TryWrite(params T[]? items)
+    public Result TryWrite(params T[]? items)
     {
-        if (items is null)
-            return true;
-        return TryWrite((ReadOnlySpan<T>)items);
-    }
-    
-    public bool TryWrite(ReadOnlySpan<T> items)
-    {
-        if (items.TryCopyTo(RemainingSpan))
+        if (items is null) return false;
+        int itemsLen = items.Length;
+        if (itemsLen == 0) return true;
+        int index = _position;
+        int newIndex = index + itemsLen;
+        var span = _span;
+        if (newIndex <= span.Length)
         {
-            _position += items.Length;
+            Easy.CopyTo(items, span[index..]);
+            _position = newIndex;
             return true;
         }
-        return false;
+        return new InvalidOperationException($"Cannot add {itemsLen} items: Only a capacity of {span.Length - index} remains");
+    }
+    
+    public Result TryWrite(ReadOnlySpan<T> items)
+    {
+        int index = _position;
+        int newIndex = index + items.Length;
+        var span = _span;
+        if (newIndex <= span.Length)
+        {
+            Easy.CopyTo(items, span[index..]);
+            _position = newIndex;
+            return true;
+        }
+        return new InvalidOperationException($"Cannot add {items.Length} items: Only a capacity of {span.Length - index} remains");
     }
 
-    public bool TryWrite(IEnumerable<T> items)
+    public Result TryWrite(IEnumerable<T> items)
     {
         int pos = _position;
         var remaining = _span[pos..];
-        if (items is IReadOnlyList<T> readOnlyList)
+        switch (items)
         {
-            int itemsCount = readOnlyList.Count;
-            int newPos = pos + itemsCount;
-            if (newPos > remaining.Length)
-                return false;
-            for (var i = 0; i < itemsCount; i++)
+            case IReadOnlyList<T> readOnlyList:
             {
-                remaining[i] = readOnlyList[i];
+                int itemsCount = readOnlyList.Count;
+                int newPos = pos + itemsCount;
+                if (newPos > remaining.Length)
+                    return false;
+                for (var i = 0; i < itemsCount; i++)
+                {
+                    remaining[i] = readOnlyList[i];
+                }
+                _position = newPos;
+                return true;
             }
-            _position = newPos;
-            return true;
-        }
-        else if (items is IList<T> list)
-        {
-            int itemsCount = list.Count;
-            int newPos = pos + itemsCount;
-            if (newPos > remaining.Length)
-                return false;
-            for (var i = 0; i < itemsCount; i++)
+            case IList<T> list:
             {
-                remaining[i] = list[i];
+                int itemsCount = list.Count;
+                int newPos = pos + itemsCount;
+                if (newPos > remaining.Length)
+                    return false;
+                for (var i = 0; i < itemsCount; i++)
+                {
+                    remaining[i] = list[i];
+                }
+                _position = newPos;
+                return true;
             }
-            _position = newPos;
-            return true;
-        }
-        else if (items is IReadOnlyCollection<T> readOnlyCollection)
-        {
-            int itemsCount = readOnlyCollection.Count;
-            int newPos = pos + itemsCount;
-            if (newPos > remaining.Length)
-                return false;
+            case IReadOnlyCollection<T> readOnlyCollection:
+            {
+                int itemsCount = readOnlyCollection.Count;
+                int newPos = pos + itemsCount;
+                if (newPos > remaining.Length)
+                    return false;
 
-            int r = 0;
-            foreach (var item in readOnlyCollection)
-            {
-                remaining[r++] = item;
+                int r = 0;
+                foreach (var item in readOnlyCollection)
+                {
+                    remaining[r++] = item;
+                }
+                _position = newPos;
+                return true;
             }
-            _position = newPos;
-            return true;
-        }
-        else if (items is ICollection<T> collection)
-        {
-            int itemsCount = collection.Count;
-            int newPos = pos + itemsCount;
-            if (newPos > remaining.Length)
-                return false;
+            case ICollection<T> collection:
+            {
+                int itemsCount = collection.Count;
+                int newPos = pos + itemsCount;
+                if (newPos > remaining.Length)
+                    return false;
 
-            int r = 0;
-            foreach (var item in collection)
-            {
-                remaining[r++] = item;
+                int r = 0;
+                foreach (var item in collection)
+                {
+                    remaining[r++] = item;
+                }
+                _position = newPos;
+                return true;
             }
-            _position = newPos;
-            return true;
-        }
-        else
-        {
-            // We cannot write something we don't know the length of
-            return false;
+            default:
+                // We cannot write something we don't know the length of
+                return new InvalidOperationException("Cannot try to add an unknown number of items");
         }
     }
 
-    public void Write(T item)
-    {
-        if (!TryWrite(item))
-            throw new InvalidOperationException($"Cannot write {item}: capacity is {RemainingSpan.Length}");
-    }
+    public void Write(T item) => TryWrite(item).ThrowIfError();
+
+    public void Write(params T[]? items) => TryWrite(items).ThrowIfError();
     
-    public void Write(params T[]? items)
-    {
-        if (!TryWrite(items))
-            throw new InvalidOperationException($"Cannot write {items?.Length} items: capacity is {RemainingSpan.Length}");
-    }
+    public void Write(ReadOnlySpan<T> items) => TryWrite(items).ThrowIfError();
     
-    public void Write(ReadOnlySpan<T> items)
-    {
-        if (!TryWrite(items))
-            throw new InvalidOperationException($"Cannot write {items.Length} items: capacity is {RemainingSpan.Length}");
-    }
+    public void Write(IEnumerable<T> items) => TryWrite(items).ThrowIfError();
     
-    public void Write(IEnumerable<T> items)
-    {
-        if (!TryWrite(items))
-            throw new InvalidOperationException($"Cannot write items: capacity is {RemainingSpan.Length}");
-    }
-
-    public bool TryAllocate(int count, out Span<T> allocated)
+    public Result TryAllocate(int count, out Span<T> allocated)
     {
         var remaining = this.RemainingSpan;
-        if ((uint)count > remaining.Length)
+        if ((uint)count <= remaining.Length)
         {
-            allocated = default;
-            return false;
+            allocated = remaining[..count];
+            _position += count;
+            return true;
         }
-        allocated = remaining[..count];
-        _position += count;
-        return true;
+        allocated = default;
+        return new InvalidOperationException($"Cannot allocate {count} items: Only a capacity of {remaining.Length} remains");
     }
 
     public override string ToString()
@@ -176,9 +176,9 @@ public ref struct SpanWriter<T>
         var written = this.WrittenSpan;
         var writtenCount = written.Length;
         if (writtenCount == 0)
-            return "";
+            return string.Empty;
         
-        var text = StringBuilderPool.Shared.Rent();
+        var text = StringBuilderPool.Rent();
         
         // We do not want to delimit Span<char>
         var delimiter = typeof(T) == typeof(char) ? "" : ",";

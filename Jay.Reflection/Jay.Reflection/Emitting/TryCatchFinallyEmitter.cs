@@ -13,7 +13,7 @@ public sealed class TryCatchFinallyEmitter<TEmitter>
     /// <summary>
     /// Gets the <see cref="EmitterLabel"/> that marks the end of this try/catch block
     /// </summary>
-    public EmitterLabel? EndTryLabel { get; private set; }
+    public EmitterLabel? EndTryLabel => _endTryLabel;
     
     internal TryCatchFinallyEmitter(TEmitter emitter)
     {
@@ -22,7 +22,7 @@ public sealed class TryCatchFinallyEmitter<TEmitter>
     }
     
     /// <summary>
-    /// Starts a <c>try<c> block containing <paramref name="tryBlock"/>
+    /// Starts a <c>try</c> block containing <paramref name="tryBlock"/>
     /// </summary>
     internal TryCatchFinallyEmitter<TEmitter> Try(Action<TEmitter> tryBlock)
     {

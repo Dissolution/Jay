@@ -511,15 +511,13 @@ public ref struct Hasher
 
 #pragma warning disable CS0809
     [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.",
-        true)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+         true),EditorBrowsable(EditorBrowsableState.Never)]
     public override int GetHashCode()
     {
         throw new NotSupportedException();
     }
 
-    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes.", true)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes.", true),EditorBrowsable(EditorBrowsableState.Never)]
     public override bool Equals(object? obj)
     {
         throw new NotSupportedException();

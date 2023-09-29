@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace Jay.Enums;
+﻿namespace Jay.Enums;
 
 public readonly struct FlagsEnumWrapper<TEnum> : 
     IEquatable<TEnum>, IEquatable<FlagsEnumWrapper<TEnum>>,

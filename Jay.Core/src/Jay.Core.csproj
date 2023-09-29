@@ -33,6 +33,9 @@
         <Using Include="Jay.Validation"/>
         <Using Include="Jay.Extensions"/>
     </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' Or '$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0'">
+        <Using Include="System.Numerics"/>
+    </ItemGroup>    
 
     <!-- NuGet Packages -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">

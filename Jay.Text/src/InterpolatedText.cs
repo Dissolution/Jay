@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.ComponentModel;
-using Jay.Maths;
 using Jay.Text.Building;
 using Jay.Utilities;
 
@@ -96,21 +95,7 @@ public ref struct InterpolatedText
     }
 
 #region Grow
-    /// <summary>
-    /// Grow the size of <see cref="_chars"/> to at least the specified <paramref name="minCapacity"/>.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void GrowCore(int minCapacity)
-    {
-        char[] newArray = TextPool.Rent(minCapacity);
-        Written.CopyTo(newArray);
-
-        char[]? toReturn = _charArray;
-        _chars = _charArray = newArray;
-        TextPool.Return(toReturn);
-    }
-    
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowBy(int growCount)
     {
         char[] newArray = TextPool.RentGrowBy(Capacity, growCount);
@@ -163,8 +148,7 @@ public ref struct InterpolatedText
 #region Interpolated String Handler implementations
     /// <summary>Writes the specified string to the handler.</summary>
     /// <param name="text">The string to write.</param>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [EditorBrowsable(EditorBrowsableState.Never),MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AppendLiteral(string text)
     {
         if (text.Length == 1)

@@ -10,8 +10,8 @@ public static class EntityGenerator
         typeof(TestReadonlyStruct),
         typeof(TestStruct),
     };
-    
-    private static readonly Faker _faker = new Faker("en");
+
+    private static readonly Faker _faker = new();
     private static readonly HashSet<Type> _generatableTypes = new()
     {
         typeof(int),

@@ -38,12 +38,12 @@ public static class AttributeExtensions
         return ret;
     }
 
-    public static AttributeData? FindByFQN(this ImmutableArray<AttributeData> attributes, string? attributeFQN)
+    public static AttributeData? FindByFqn(this ImmutableArray<AttributeData> attributes, string? attributeFqn)
     {
         for (int i = 0; i < attributes.Length; i++)
         {
-            string? attrFQN = attributes[i].AttributeClass?.GetFullName();
-            if (string.Equals(attrFQN, attributeFQN, StringComparison.Ordinal))
+            string? attrFqn = attributes[i].AttributeClass?.GetFullName();
+            if (string.Equals(attrFqn, attributeFqn, StringComparison.Ordinal))
                 return attributes[i];
         }
         return null;

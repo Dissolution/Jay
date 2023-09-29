@@ -1,6 +1,4 @@
-﻿using InlineIL;
-
-namespace Jay.Reflection;
+﻿namespace Jay.Reflection;
 
 /// <summary>
 /// The main utility library for reflection
@@ -39,7 +37,6 @@ public static class Reflect
             catch
             {
                 // Ignore this assembly
-                IL.Emit.Nop();
             }
         }
         return allTypes;
@@ -61,7 +58,6 @@ public static class Reflect
             catch
             {
                 // Ignore this assembly
-                IL.Emit.Nop();
             }
         }
         return allTypes;

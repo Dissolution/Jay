@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Jay.Collections;
+using Jay.Debugging;
 
 namespace Jay.Reflection.CodeBuilding;
 
@@ -98,6 +99,7 @@ public static class CodePartManager
         if (type.IsGenericParameter)
         {
             var constraints = type.GetGenericParameterConstraints();
+            Hold.Onto(constraints);
             Debugger.Break();
         }
 

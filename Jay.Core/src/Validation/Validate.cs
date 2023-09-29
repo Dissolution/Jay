@@ -45,7 +45,7 @@ public static class Validate
     /// Thrown if <paramref name="value" /> is <c>null</c>
     /// </exception>
     public static void IsNotNull<T>(
-        [AllowNull] [NotNull] T value,
+        [AllowNull,NotNull]  T value,
         string? exMessage = null,
         [CallerArgumentExpression(nameof(value))]
         string? valueName = null)

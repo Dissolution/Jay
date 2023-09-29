@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Jay.Collections;
+using Jay.Debugging;
 using Jay.Text;
 
 namespace Jay.Reflection;
@@ -79,7 +80,7 @@ public static class TypeNames
         }
 
         // After this point, we're building up the name
-        var name = StringBuilderPool.Shared.Rent();
+        var name = StringBuilderPool.Rent();
 
         // Nested Type?
         if (type.IsNested && !type.IsGenericParameter)
@@ -104,6 +105,7 @@ public static class TypeNames
         if (type.IsGenericParameter)
         {
             var constraints = type.GetGenericParameterConstraints();
+            Hold.Onto(constraints);
             Debugger.Break();
         }
 

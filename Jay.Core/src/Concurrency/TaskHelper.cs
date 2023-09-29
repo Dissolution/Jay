@@ -1,7 +1,7 @@
 ﻿namespace Jay.Concurrency;
 
 /// <summary>
-/// Utilities for working with <see cref="ValueTask" /> and <see cref="ValueTask{T}" />
+/// Utilities for working with <see cref="Task"/> and <c>ValueTask</c>
 /// </summary>
 public static class TaskHelper
 {

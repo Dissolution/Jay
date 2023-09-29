@@ -65,13 +65,13 @@ public enum Naming
     ///// </remarks>
     //Title,
 
-    /// <summary>
-    /// Snake Case
-    /// </summary>
-    /// <remarks>
-    /// "MemberName" => "member_name"
-    /// "NameOfFBI" => "name_of_fbi"
-    /// </remarks>
+    ///// <summary>
+    ///// Snake Case
+    ///// </summary>
+    ///// <remarks>
+    ///// "MemberName" => "member_name"
+    ///// "NameOfFBI" => "name_of_fbi"
+    ///// </remarks>
     //Snake,
 
     /// <summary>

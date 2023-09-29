@@ -46,8 +46,7 @@ public class SplitTests
         }
     }
 
-    [Theory]
-    [MemberData(nameof(CanSplitData))]
+    [Theory,MemberData(nameof(CanSplitData))]
     public void CanSplitText(string? input, string? separator, TextSplitOptions splitOptions)
     {
         // We're comparing to (string)input.Split(separator, splitOptions);
@@ -56,9 +55,9 @@ public class SplitTests
         input ??= "";
         separator ??= "";
 
-        #if !NET6_0_OR_GREATER
+#if !NET6_0_OR_GREATER
         if ((int)splitOptions >= 2) return;
-        #endif
+#endif
         
 #if NETSTANDARD2_0 || NET48
 

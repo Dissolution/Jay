@@ -1,8 +1,4 @@
-﻿#if NET7_0_OR_GREATER
-using System.Numerics;
-#endif
-
-namespace Jay;
+﻿namespace Jay;
 
 public readonly partial struct Result<T>
 #if NET7_0_OR_GREATER
@@ -128,6 +124,6 @@ public readonly partial struct Result<T>
     /// <returns>A failed <see cref="Result{T}" />.</returns>
     public static Result<T> Error(Exception? error = null)
     {
-        return new(false, default, error ?? new Exception(Result.DefaultErrorMessage));
+        return new(false, default, error ?? new Exception(Result.DEFAULT_ERROR_MESSAGE));
     }
 }

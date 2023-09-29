@@ -1,8 +1,4 @@
-﻿#if NET7_0_OR_GREATER
-using System.Numerics;
-#endif
-
-namespace Jay;
+﻿namespace Jay;
 
 partial struct Option<T>
 #if NET7_0_OR_GREATER

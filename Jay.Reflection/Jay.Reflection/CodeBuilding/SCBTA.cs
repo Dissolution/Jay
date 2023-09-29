@@ -1,3 +1,3 @@
 ﻿namespace Jay.Reflection.CodeBuilding;
 
-public delegate void SCBTA(CodeBuilder builder, ReadOnlySpan<char> text);
+public delegate void Scbta(CodeBuilder builder, ReadOnlySpan<char> text);

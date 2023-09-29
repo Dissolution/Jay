@@ -1,7 +1,4 @@
-﻿#if NETCOREAPP3_1_OR_GREATER
-using System.Numerics;
-
-#else
+﻿#if !NETCOREAPP3_1_OR_GREATER
 using System.Runtime.InteropServices;
 #endif
 
@@ -38,20 +35,20 @@ public static class MathHelper
             // Using deBruijn sequence, k=2, n=5 (2^5=32) : 0b_0000_0111_1100_0100_1010_1100_1101_1101u
             ref MemoryMarshal.GetReference(Log2DeBruijn),
             // uint|long -> IntPtr cast on 32-bit platforms does expensive overflow checks not needed here
-            (IntPtr)(value * 0x07C4ACDDu >> 27));
+            (IntPtr)((value * 0x07C4ACDDu) >> 27));
     }
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint RotateLeft(uint value, int offset)
     {
-        return value << offset | value >> 32 - offset;
+        return (value << offset) | (value >> (32 - offset));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong RotateLeft(ulong value, int offset)
     {
-        return value << offset | value >> 64 - offset;
+        return (value << offset) | (value >> (64 - offset));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -140,7 +137,7 @@ public static class MathHelper
     {
         if (value == 1UL)
             return 1UL;
-        return 1UL << 64 - LeadingZeroCount(value - 1UL);
+        return 1UL << (64 - LeadingZeroCount(value - 1UL));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,7 +145,7 @@ public static class MathHelper
     {
         if (value == 1U)
             return 1U;
-        return 1U << 32 - LeadingZeroCount(value - 1U);
+        return 1U << (32 - LeadingZeroCount(value - 1U));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

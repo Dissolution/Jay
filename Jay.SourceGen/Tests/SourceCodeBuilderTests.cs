@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Jay.Debugging;
 using Jay.Reflection.CodeBuilding;
 using Xunit;
 
@@ -36,6 +37,7 @@ public class SourceCodeBuilderTests
             .NewLine();
 
         string str = code.ToString();
+        Hold.Onto(str);
         Debugger.Break();
         Assert.True(true);
     }

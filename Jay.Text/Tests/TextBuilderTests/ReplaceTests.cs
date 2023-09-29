@@ -6,12 +6,12 @@ public class ReplaceTests
     public void ReplaceChar()
     {
         using var text = new TextBuilder();
-        text.Append(TestData.LoremIpsum);
-        Assert.Equal(TestData.LoremIpsum.Length, text.Length);
+        text.Append(TestData.LOREM_IPSUM);
+        Assert.Equal(TestData.LOREM_IPSUM.Length, text.Length);
         Assert.Equal(4, text.Written.CountInstances('o'));
         Assert.Equal(1, text.Written.CountInstances('.'));
         text.Replace('o', '.');
-        Assert.Equal(TestData.LoremIpsum.Length, text.Length);
+        Assert.Equal(TestData.LOREM_IPSUM.Length, text.Length);
         Assert.Equal(0, text.Written.CountInstances('o'));
         Assert.Equal(5, text.Written.CountInstances('.'));
     }
@@ -22,12 +22,12 @@ public class ReplaceTests
     public void ReplaceStringExact()
     {
         using var text = new TextBuilder();
-        text.Append(TestData.LoremIpsum);
-        Assert.Equal(TestData.LoremIpsum.Length, text.Length);
+        text.Append(TestData.LOREM_IPSUM);
+        Assert.Equal(TestData.LOREM_IPSUM.Length, text.Length);
         Assert.Equal(4, text.Written.CountInstances('o'));
         Assert.Equal(1, text.Written.CountInstances('.'));
         text.Replace("o", ".");
-        Assert.Equal(TestData.LoremIpsum.Length, text.Length);
+        Assert.Equal(TestData.LOREM_IPSUM.Length, text.Length);
         Assert.Equal(0, text.Written.CountInstances('o'));
         Assert.Equal(5, text.Written.CountInstances('.'));
 
@@ -48,13 +48,13 @@ public class ReplaceTests
     public void ReplaceStringShrink()
     {
         using var text = new TextBuilder();
-        text.Append(TestData.Stutter);
-        Assert.Equal(TestData.Stutter.Length, text.Length);
+        text.Append(TestData.STUTTER);
+        Assert.Equal(TestData.STUTTER.Length, text.Length);
         int thCount = TestExtensions.CountInstances(text.Written, "th");
         Assert.Equal(3, thCount);
 
         text.Replace("th", "d");
-        Assert.Equal(TestData.Stutter.Length - 3, text.Length);
+        Assert.Equal(TestData.STUTTER.Length - 3, text.Length);
         thCount = TestExtensions.CountInstances(text.Written, "th");
         Assert.Equal(0, thCount);
     }
@@ -63,13 +63,13 @@ public class ReplaceTests
     public void ReplaceStringShrinkIgnoreCase()
     {
         using var text = new TextBuilder();
-        text.Append(TestData.Stutter);
-        Assert.Equal(TestData.Stutter.Length, text.Length);
+        text.Append(TestData.STUTTER);
+        Assert.Equal(TestData.STUTTER.Length, text.Length);
         int thCount = TestExtensions.CountInstances(text.Written, "TH", StringComparison.OrdinalIgnoreCase);
         Assert.Equal(4, thCount);
 
         text.Replace("th", "d", StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(TestData.Stutter.Length - 4, text.Length);
+        Assert.Equal(TestData.STUTTER.Length - 4, text.Length);
         thCount = TestExtensions.CountInstances(text.Written, "TH", StringComparison.OrdinalIgnoreCase);
         Assert.Equal(0, thCount);
     }
@@ -78,13 +78,13 @@ public class ReplaceTests
     public void ReplaceStringGrow()
     {
         using var text = new TextBuilder();
-        text.Append(TestData.Stutter);
-        Assert.Equal(TestData.Stutter.Length, text.Length);
+        text.Append(TestData.STUTTER);
+        Assert.Equal(TestData.STUTTER.Length, text.Length);
         int thCount = TestExtensions.CountInstances(text.Written, "th");
         Assert.Equal(3, thCount);
 
         text.Replace("th", "bgi");
-        Assert.Equal(TestData.Stutter.Length + 3, text.Length);
+        Assert.Equal(TestData.STUTTER.Length + 3, text.Length);
         thCount = TestExtensions.CountInstances(text.Written, "th");
         Assert.Equal(0, thCount);
     }
@@ -93,13 +93,13 @@ public class ReplaceTests
     public void ReplaceStringGrowIgnoreCase()
     {
         using var text = new TextBuilder();
-        text.Append(TestData.Stutter);
-        Assert.Equal(TestData.Stutter.Length, text.Length);
+        text.Append(TestData.STUTTER);
+        Assert.Equal(TestData.STUTTER.Length, text.Length);
         int thCount = TestExtensions.CountInstances(text.Written, "th", StringComparison.OrdinalIgnoreCase);
         Assert.Equal(4, thCount);
 
         text.Replace("th", "bgi", StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(TestData.Stutter.Length + 4, text.Length);
+        Assert.Equal(TestData.STUTTER.Length + 4, text.Length);
         thCount = TestExtensions.CountInstances(text.Written, "th");
         Assert.Equal(0, thCount);
     }

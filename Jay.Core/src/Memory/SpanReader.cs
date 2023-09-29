@@ -55,7 +55,7 @@ public ref struct SpanReader<T>
     }
 
 #region Peek
-    public bool TryPeek([MaybeNullWhen(false)] out T item)
+    public Result TryPeek([MaybeNullWhen(false)] out T item)
     {
         if (_position < Length)
         {
@@ -63,10 +63,10 @@ public ref struct SpanReader<T>
             return true;
         }
         item = default;
-        return false;
+        return new InvalidOperationException("Cannot peek an item: No items remain");
     }
 
-    public bool TryPeek(int count, out ReadOnlySpan<T> items)
+    public Result TryPeek(int count, out ReadOnlySpan<T> items)
     {
         if ((_position + (uint)count) <= Length)
         {
@@ -74,16 +74,16 @@ public ref struct SpanReader<T>
             return true;
         }
         items = default;
-        return false;
+        return new InvalidOperationException($"Cannot peek {count} items: Only {RemainingLength} items remain");
     }
 
-    public T Peek() => TryPeek(out var item) ? item : throw new InvalidOperationException("No more items");
+    public T Peek() => TryPeek(out var item).ThrowIfError(item)!;
 
-    public ReadOnlySpan<T> Peek(int count) => TryPeek(count, out var items) ? items : throw new InvalidOperationException("No more items");
+    public ReadOnlySpan<T> Peek(int count) => TryPeek(count, out var items).ThrowIfError(items)!;
 #endregion
 
 #region Skip
-    public bool TrySkip()
+    public Result TrySkip()
     {
         int index = _position;
         if (index < Length)
@@ -91,10 +91,10 @@ public ref struct SpanReader<T>
             _position = index + 1;
             return true;
         }
-        return false;
+        return new InvalidOperationException("Cannot skip an item: No items remain");
     }
 
-    public bool TrySkip(int count)
+    public Result TrySkip(int count)
     {
         if (count <= 0)
             return true;
@@ -106,27 +106,19 @@ public ref struct SpanReader<T>
             _position = newIndex;
             return true;
         }
-        return false;
+        return new InvalidOperationException($"Cannot skip {count} items: Only {RemainingLength} items remain");
     }
 
-    public void Skip()
-    {
-        if (!TrySkip())
-            throw new InvalidOperationException("No more items");
-    }
+    public void Skip() => TrySkip().ThrowIfError();
 
-    public void Skip(int count)
-    {
-        if (!TrySkip(count))
-            throw new InvalidOperationException("No more items");
-    }
+    public void Skip(int count) => TrySkip(count).ThrowIfError();
 
     public void SkipWhile(Func<T, bool> itemPredicate)
     {
         var span = _span;
         int start = _position;
         int index = start;
-        int len = Length;
+        int len = span.Length;
         while (index < len && itemPredicate(span[index]))
         {
             index += 1;
@@ -148,7 +140,7 @@ public ref struct SpanReader<T>
 #endregion
 
 #region Take
-    public bool TryTake([MaybeNullWhen(false)] out T taken)
+    public Result TryTake([MaybeNullWhen(false)] out T taken)
     {
         int index = _position;
         if (index < Length)
@@ -159,10 +151,10 @@ public ref struct SpanReader<T>
         }
 
         taken = default;
-        return false;
+        return new InvalidOperationException("Cannot take an item: No items remain");
     }
 
-    public bool TryTake(int count, out ReadOnlySpan<T> taken)
+    public Result TryTake(int count, out ReadOnlySpan<T> taken)
     {
         if (count <= 0)
         {
@@ -180,12 +172,12 @@ public ref struct SpanReader<T>
         }
 
         taken = default;
-        return false;
+        return new InvalidOperationException($"Cannot take {count} items: Only {RemainingLength} items remain");
     }
 
-    public T Take() => TryTake(out var taken) ? taken : throw new InvalidOperationException("No more items");
+    public T Take() => TryTake(out var taken).ThrowIfError(taken)!;
 
-    public ReadOnlySpan<T> Take(int count) => TryTake(count, out var taken) ? taken : throw new InvalidOperationException("No more items");
+    public ReadOnlySpan<T> Take(int count) => TryTake(count, out var taken).ThrowIfError(taken)!;
 
     public ReadOnlySpan<T> TakeWhile(Func<T, bool> itemPredicate)
     {
@@ -225,65 +217,83 @@ public ref struct SpanReader<T>
     public override string ToString()
     {
         /* We want to show our position in the source span like this:
-         * ...abcdef|ghijkl...
+         * ...a,b,c⌖d,e,f...
+         * For Span<char>, we have special handling to treat it like text and capture more characters
          */
 
-        var builder = StringBuilderPool.Shared.Rent();
+        string delimiter;
+        int capture;
+        if (typeof(T) == typeof(char))
+        {
+            delimiter = string.Empty;
+            capture = 16;
+        }
+        else
+        {
+            delimiter = ",";
+            capture = 4;
+        }
+        
+        var text = StringBuilderPool.Rent();
+        
         int index = _position;
         var span = _span;
 
-        // We do not want to delimit Span<char>
-        var delimiter = typeof(T) == typeof(char) ? "" : ",";
-
-        // previous characters
-        int prev = index - 16;
-        if (prev > 0)
+        // Previously read items
+        int prevIndex = index - capture;
+        // If we have more before this, indicate with ellipsis
+        if (prevIndex > 0)
         {
-            builder.Append('…');
+            text.Append('…');
         }
+        // Otherwise, cap at a min zero
         else
         {
-            prev = 0;
+            prevIndex = 0;
         }
-        for (var i = prev; i < index; i++)
+        
+        for (var i = prevIndex; i < index; i++)
         {
-            if (i > prev)
+            if (i > prevIndex)
             {
-                builder.Append(delimiter);
+                text.Append(delimiter);
             }
-            builder.Append<T>(span[i]);
+            text.Append<T>(span[i]);
         }
 
         // position indicator
-        builder.Append('|');
+        text.Append('⌖');
 
-        // next characters
-        var end = span.Length;
-        int next = index + 16;
-        bool postpend;
-        if (next < end)
+        // items yet to be read
+        int nextIndex = index + capture;
+        
+        // if we have more after, we're going to end with an ellipsis
+        bool postpendEllipsis;
+        // but we also need to cap at capacity
+        if (nextIndex < span.Length)
         {
-            postpend = true;
+            postpendEllipsis = true;
         }
         else
         {
-            postpend = false;
-            next = end;
+            postpendEllipsis = false;
+            nextIndex = span.Length;
         }
-
-        for (var i = index; i < next; i++)
+        
+        for (var i = index; i < nextIndex; i++)
         {
             if (i > index)
             {
-                builder.Append(delimiter);
+                text.Append(delimiter);
             }
-            builder.Append<T>(span[i]);
+            text.Append<T>(span[i]);
         }
-        if (postpend)
+        
+        if (postpendEllipsis)
         {
-            builder.Append('…');
+            text.Append('…');
         }
 
-        return builder.ToStringAndReturn();
+        return text.ToStringAndReturn();
     }
 }

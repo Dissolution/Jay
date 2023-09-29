@@ -5,17 +5,17 @@ namespace Jay.Reflection.CodeBuilding;
 
 internal sealed class NewLineIndents : IDisposable
 {
-    public static readonly string DEFAULT_NEWLINE = Environment.NewLine;
+    public static readonly string _defaultNewline = Environment.NewLine;
     public const string DEFAULT_INDENT = "    "; // 4 spaces
     
     private readonly List<string> _indents;
     private char[] _totalString;
     private int _length;
 
-    public string NewLine { get; internal set; } = DEFAULT_NEWLINE;
+    public string NewLine { get; internal set; }
     public string Indent { get; internal set; } = DEFAULT_INDENT;
 
-    public NewLineIndents() : this(DEFAULT_NEWLINE) { }
+    public NewLineIndents() : this(_defaultNewline) { }
 
     public NewLineIndents(scoped ReadOnlySpan<char> newline)
     {

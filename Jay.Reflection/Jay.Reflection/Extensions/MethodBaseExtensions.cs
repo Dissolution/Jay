@@ -46,7 +46,7 @@ public static class MethodBaseExtensions
     /// <summary>
     /// Is this <paramref name="method"/> <c>override</c>able?
     /// </summary>
-    /// <see cref="https://stackoverflow.com/questions/38078948/check-if-a-classes-property-or-method-is-declared-as-sealed"/>
+    /// <see href="https://stackoverflow.com/questions/38078948/check-if-a-classes-property-or-method-is-declared-as-sealed"/>
     public static bool IsOverridable(this MethodBase method) => method.IsVirtual && !method.IsFinal;
     
     /// <summary>

@@ -7,6 +7,7 @@ public interface ILabelsEmissions<out Self>
     /// Declares a new <see cref="Label"/>.
     /// </summary>
     /// <param name="label">Returns the new <see cref="Label"/> that can be used for branching.</param>
+    /// <param name="labelName">The name for the label, defaults to the name of the out variable</param>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.definelabel"/>
     Self DefineLabel(
         out EmitterLabel label,
@@ -17,8 +18,8 @@ public interface ILabelsEmissions<out Self>
     /// Marks the stream's current position with the given <see cref="Label"/>.
     /// </summary>
     /// <param name="label"> <see cref="Label"/> for which to set an index.</param>
-    /// <exception cref="ArgumentException">If the <paramref name="label an invalid index.</exception>
-    /// <exception cref="ArgumentException">If the <paramref name="label already been marked.</exception>
+    /// <exception cref="ArgumentException">If the <paramref name="label"/> has an invalid index.</exception>
+    /// <exception cref="ArgumentException">If the <paramref name="label"/> has already been marked.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.marklabel"/>
     Self MarkLabel(EmitterLabel label);
 

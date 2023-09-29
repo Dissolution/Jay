@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using Jay.Maths;
 using Jay.Utilities;
 
 namespace Jay.Text.Building;

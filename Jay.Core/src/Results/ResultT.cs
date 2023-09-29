@@ -35,7 +35,7 @@ public readonly partial struct Result<T> :
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Exception GetError()
     {
-        return _error ?? new Exception(Result.DefaultErrorMessage);
+        return _error ?? new Exception(Result.DEFAULT_ERROR_MESSAGE);
     }
 
     public T ValueOrThrow()

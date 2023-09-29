@@ -1,9 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text;
-using Jay.Concurrency;
-using Jay.Terminals.Colors;
 using Jay.Terminals.Native;
 using Jay.Utilities;
 

@@ -1,8 +1,4 @@
-﻿#if NET7_0_OR_GREATER
-using System.Numerics;
-#endif
-
-namespace Jay;
+﻿namespace Jay;
 
 public readonly partial struct Result<T, E>
 #if NET7_0_OR_GREATER

@@ -1,8 +1,12 @@
-﻿using System.Runtime.InteropServices;
+﻿// ReSharper disable EntityNameCapturedOnly.Global
+
+using System.Runtime.InteropServices;
+#if NET48 || NETSTANDARD2_0
 using System.Runtime.Serialization;
+#endif
+
 using InlineIL;
 using static InlineIL.IL;
-// ReSharper disable EntityNameCapturedOnly.Global
 
 namespace Jay.Utilities;
 
