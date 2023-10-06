@@ -5,7 +5,7 @@ using Jay.Text.Utilities;
 namespace Jay.Reflection.Text;
 
 /// <summary>
-/// Methods to assist with the naming of <see cref="dynamic"/> and Runtime members
+/// Methods to assist with the naming of <c>dynamic</c> and Runtime members
 /// </summary>
 public static class MemberNaming
 {
@@ -17,7 +17,7 @@ public static class MemberNaming
     /// <param name="ch">The <see cref="char"/> to validate.</param>
     /// <param name="firstChar">Whether or not you're validating the first character in a Member Name.</param>
     /// <returns><c>true</c> if <paramref name="ch"/> is valid; otherwise <c>false</c></returns>
-    /// <see cref="https://stackoverflow.com/questions/950616/what-characters-are-allowed-in-c-sharp-class-name"/>
+    /// <see href="https://stackoverflow.com/questions/950616/what-characters-are-allowed-in-c-sharp-class-name"/>
     public static bool IsValidNameCharacter(char ch, bool firstChar = false)
     {
         // Fast allow underscore always

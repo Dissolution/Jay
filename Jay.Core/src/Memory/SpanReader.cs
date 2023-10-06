@@ -77,9 +77,19 @@ public ref struct SpanReader<T>
         return new InvalidOperationException($"Cannot peek {count} items: Only {RemainingLength} items remain");
     }
 
-    public T Peek() => TryPeek(out var item).ThrowIfError(item)!;
+    public T Peek()
+    {
+        var result = TryPeek(out var value);
+        result.ThrowIfError();
+        return value!;
+    }
 
-    public ReadOnlySpan<T> Peek(int count) => TryPeek(count, out var items).ThrowIfError(items)!;
+    public ReadOnlySpan<T> Peek(int count)
+    {
+        var result = TryPeek(count, out var values);
+        result.ThrowIfError();
+        return values;
+    }
 #endregion
 
 #region Skip
@@ -175,9 +185,19 @@ public ref struct SpanReader<T>
         return new InvalidOperationException($"Cannot take {count} items: Only {RemainingLength} items remain");
     }
 
-    public T Take() => TryTake(out var taken).ThrowIfError(taken)!;
+    public T Take()
+    {
+        var result = TryTake(out var value);
+        result.ThrowIfError();
+        return value!;
+    }
 
-    public ReadOnlySpan<T> Take(int count) => TryTake(count, out var taken).ThrowIfError(taken)!;
+    public ReadOnlySpan<T> Take(int count)
+    {
+        var result = TryPeek(count, out var values);
+        result.ThrowIfError();
+        return values;
+    }
 
     public ReadOnlySpan<T> TakeWhile(Func<T, bool> itemPredicate)
     {
@@ -233,9 +253,9 @@ public ref struct SpanReader<T>
             delimiter = ",";
             capture = 4;
         }
-        
+
         var text = StringBuilderPool.Rent();
-        
+
         int index = _position;
         var span = _span;
 
@@ -251,7 +271,7 @@ public ref struct SpanReader<T>
         {
             prevIndex = 0;
         }
-        
+
         for (var i = prevIndex; i < index; i++)
         {
             if (i > prevIndex)
@@ -266,7 +286,7 @@ public ref struct SpanReader<T>
 
         // items yet to be read
         int nextIndex = index + capture;
-        
+
         // if we have more after, we're going to end with an ellipsis
         bool postpendEllipsis;
         // but we also need to cap at capacity
@@ -279,7 +299,7 @@ public ref struct SpanReader<T>
             postpendEllipsis = false;
             nextIndex = span.Length;
         }
-        
+
         for (var i = index; i < nextIndex; i++)
         {
             if (i > index)
@@ -288,7 +308,7 @@ public ref struct SpanReader<T>
             }
             text.Append<T>(span[i]);
         }
-        
+
         if (postpendEllipsis)
         {
             text.Append('…');

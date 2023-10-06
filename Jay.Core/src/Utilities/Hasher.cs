@@ -79,7 +79,7 @@ public ref struct Hasher
         return hash;
     }
     
-    public static int Combine<T1>(T1? value1)
+    public static int GetHashCode<T1>(T1? value1)
     {
         var hc1 = (uint)(value1?.GetHashCode() ?? 0);
 
@@ -259,7 +259,7 @@ public ref struct Hasher
         switch (span.Length)
         {
             case 0: return 0;
-            case 1: return Combine(span[0]);
+            case 1: return GetHashCode(span[0]);
             case 2: return Combine(span[0], span[1]);
             case 3: return Combine(span[0], span[1], span[2]);
             case 4: return Combine(span[0], span[1], span[2], span[3]);
@@ -295,7 +295,7 @@ public ref struct Hasher
         switch (array.Length)
         {
             case 0: return 0;
-            case 1: return Combine(array[0]);
+            case 1: return GetHashCode(array[0]);
             case 2: return Combine(array[0], array[1]);
             case 3: return Combine(array[0], array[1], array[2]);
             case 4: return Combine(array[0], array[1], array[2], array[3]);

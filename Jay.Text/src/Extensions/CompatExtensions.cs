@@ -1,4 +1,6 @@
-﻿using Jay.Utilities;
+﻿#if NET48 || NETSTANDARD2_0 || NETSTANDARD2_1
+using Jay.Utilities;
+#endif
 #if NET6_0_OR_GREATER
 using System.Runtime.InteropServices;
 #endif

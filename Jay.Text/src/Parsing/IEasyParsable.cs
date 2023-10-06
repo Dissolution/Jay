@@ -1,5 +1,5 @@
 ﻿#if NET7_0_OR_GREATER
-namespace Jay.Text.Utilities;
+namespace Jay.Text.Parsing;
 
 /// <summary>
 /// An interface collecting together <see cref="ISpanParsable{TSelf}"/> and <see cref="IParsable{TSelf}"/>

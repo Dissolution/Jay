@@ -21,7 +21,7 @@ partial struct Result
         try
         {
             action.Invoke();
-            return Ok;
+            return Ok();
         }
         catch (Exception ex)
         {
@@ -53,7 +53,7 @@ partial struct Result
         try
         {
             output = func.Invoke();
-            return Ok;
+            return Ok();
         }
         catch (Exception ex)
         {
@@ -68,7 +68,7 @@ partial struct Result
     /// <param name="func">The function to try to execute.</param>
     /// <returns>
     /// A passing <see cref="Result{T}" /> containing <paramref name="func" />'s return value or
-    /// a failing <see cref="Result{T}" /> containing the captured <see cref="_error" />.
+    /// a failing <see cref="Result{T}" /> containing the captured <see cref="Exception" />.
     /// </returns>
     public static Result<T> TryInvoke<T>(
         [AllowNull,NotNullWhen(true)] 
@@ -85,6 +85,37 @@ partial struct Result
         catch (Exception ex)
         {
             return Result<T>.Error(ex);
+        }
+    }
+
+    public delegate bool Try<TValue>(out TValue value);
+    public delegate Result TryResult<TValue>(out TValue value);
+
+    public static Result<TValue> Wrap<TValue>(Try<TValue> tryFunc)
+    {
+        try
+        {
+            bool ok = tryFunc(out TValue value);
+            if (ok)
+                return value;
+            return default;
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
+    }
+    
+    public static Result<TValue> Wrap<TValue>(TryResult<TValue> tryFunc)
+    {
+        try
+        {
+            Result result = tryFunc(out TValue value);
+            return new Result<TValue>(result._ok, value, result._exception);
+        }
+        catch (Exception ex)
+        {
+            return ex;
         }
     }
 
@@ -115,20 +146,20 @@ partial struct Result
 
     public static Result InvokeUntilError(params Action?[]? actions)
     {
-        if (actions is null) return Ok;
+        if (actions is null) return Ok();
         Result result;
         for (var i = 0; i < actions.Length; i++)
         {
             result = TryInvoke(actions[i]);
             if (!result) return result;
         }
-        return Ok;
+        return Ok();
     }
 
     public static Result InvokeUntilError(IEnumerable<Action?>? actions)
     {
         if (actions is null)
-            return Ok;
+            return Ok();
 
         Result result;
         foreach (var action in actions)
@@ -137,7 +168,7 @@ partial struct Result
             if (!result)
                 return result;
         }
-        return Ok;
+        return Ok();
     }
 
 #region Dispose

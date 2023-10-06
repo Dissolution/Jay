@@ -98,7 +98,7 @@ public readonly partial struct Option<T> :
     public override int GetHashCode()
     {
         if (!_some) return 0;
-        return Hasher.Combine(_value);
+        return Hasher.GetHashCode(_value);
     }
 
     public override string ToString()

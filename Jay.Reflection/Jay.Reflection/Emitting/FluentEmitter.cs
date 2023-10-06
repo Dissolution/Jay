@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Jay.Debugging;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Searching;
 using Jay.Reflection.Validation;
@@ -379,7 +380,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// </summary>
     /// <param name="type">The type of the <see cref="LocalBuilder"/>.</param>
     /// <param name="isPinned">Whether or not the <see cref="LocalBuilder"/> should be pinned in memory.</param>
-    /// <param name="emitterLocalns the declared <see cref="LocalBuilder"/>.</param>
+    /// <param name="emitterLocal">ns the declared <see cref="LocalBuilder"/>.</param>
     /// <exception cref="ArgumentNullException">If <paramref name="type"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">If <paramref name="type"/> was created with <see cref="TypeBuilder.CreateType"/>.</exception>
     /// <exception cref="InvalidOperationException">If the method body of the enclosing method was created with <see cref="M:MethodBuilder.CreateMethodBody"/>.</exception>
@@ -401,7 +402,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// </summary>
     /// <typeparam name="T">The type of the <see cref="LocalBuilder"/>.</typeparam>
     /// <param name="pinned">Whether or not the <see cref="LocalBuilder"/> should be pinned in memory.</param>
-    /// <param name="emitterLocalns the declared <see cref="LocalBuilder"/>.</param>
+    /// <param name="emitterLocal">ns the declared <see cref="LocalBuilder"/>.</param>
     /// <exception cref="InvalidOperationException">If the method body of the enclosing method was created with <see cref="M:MethodBuilder.CreateMethodBody"/>.</exception>
     /// <exception cref="NotSupportedException">If the method this ILGenerator is associated with is not wrapping a <see cref="MethodBuilder"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.declarelocal#System_Reflection_Emit_ILGenerator_DeclareLocal_System_Type_System_Boolean_"/>
@@ -578,9 +579,9 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <summary>
     /// Marks the stream's current position with the given <see cref="Label"/>.
     /// </summary>
-    /// <param name="emitterLabelsee cref="Label"/> for which to set an index.</param>
-    /// <exception cref="ArgumentException">If the <paramref name="emitterLabel an invalid index.</exception>
-    /// <exception cref="ArgumentException">If the <paramref name="emitterLabel already been marked.</exception>
+    /// <param name="emitterLabel"><see cref="Label"/> for which to set an index.</param>
+    /// <exception cref="ArgumentException">If the <paramref name="emitterLabel"/> an invalid index.</exception>
+    /// <exception cref="ArgumentException">If the <paramref name="emitterLabel"/> already been marked.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.marklabel"/>
     public virtual TSelf MarkLabel(EmitterLabel emitterLabel) => Emit(GeneratorEmission.MarkLabel(emitterLabel));
 
@@ -994,6 +995,7 @@ public class FluentEmitter<TSelf> : ICodePart
             .Throw();
 
         var il = this.ToString();
+        Hold.Onto(il);
         Debugger.Break();
 
         return this.Nop();
@@ -2242,7 +2244,7 @@ public class FluentEmitter<TSelf> : ICodePart
             return true;
         }
 
-        return false;
+        //return false;
 
         throw new NotImplementedException();
     }

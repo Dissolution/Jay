@@ -63,8 +63,7 @@ public readonly ref struct TextSplitList
             _currentRange = default;
             _currentSpan = default;
         }
-
-        /// <inheritdoc cref="IEnumerator"/>
+        
         public bool MoveNext()
         {
             var index = _position + 1;
@@ -82,8 +81,7 @@ public readonly ref struct TextSplitList
                 return false;
             }
         }
-
-        /// <inheritdoc cref="IEnumerator"/>
+        
         public void Reset()
         {
             _position = -1;

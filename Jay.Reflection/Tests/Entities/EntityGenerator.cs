@@ -53,7 +53,7 @@ public static class EntityGenerator
         var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         foreach (var field in fields)
         {
-            object fieldValue = GetRandomValue(field.FieldType).ValueOrThrow();
+            object fieldValue = GetRandomValue(field.FieldType).OkValueOrThrowError();
             field.SetValue(obj, fieldValue);
         }
         return obj;

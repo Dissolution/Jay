@@ -48,8 +48,7 @@ public ref struct TextSplitEnumerator
         _splitOptions = splitOptions;
         _stringComparison = stringComparison;
     }
-
-    /// <inheritdoc cref="IEnumerator"/>
+    
     public bool MoveNext()
     {
         int inputTextLen = _inputText.Length;
@@ -150,8 +149,7 @@ public ref struct TextSplitEnumerator
             // _position has been updated, start the next scan
         }
     }
-
-    /// <inheritdoc cref="IEnumerator"/>
+    
     public void Reset()
     {
         _position = 0;

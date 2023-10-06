@@ -14,7 +14,7 @@ public interface ILocalsEmissions<out Self>
     /// If <paramref name="type"/> is <see langword="null"/>
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// If <paramref name="type"/> was created with <see cref="TypeBuilder.CreateType"/>
+    /// If <paramref name="type"/> was created with <see cref="M:TypeBuilder.CreateType"/>
     /// </exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.declarelocal#System_Reflection_Emit_ILGenerator_DeclareLocal_System_Type_"/>
     Self DeclareLocal(
@@ -46,7 +46,7 @@ public interface ILocalsEmissions<out Self>
     /// If <paramref name="type"/> is <see langword="null"/>
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// If <paramref name="type"/> was created with <see cref="TypeBuilder.CreateType"/>
+    /// If <paramref name="type"/> was created with <see cref="M:TypeBuilder.CreateType"/>
     /// </exception>
     /// <exception cref="InvalidOperationException">
     /// If the method body of the enclosing method was created with <see cref="M:MethodBuilder.CreateMethodBody"/>
@@ -70,7 +70,7 @@ public interface ILocalsEmissions<out Self>
     /// <param name="local">Outputs the declared local variable</param>
     /// <param name="localName">The name of the local variable</param>
     /// <exception cref="InvalidOperationException">
-    /// If <typeparamref name="T"/> was created with <see cref="TypeBuilder.CreateType"/>
+    /// If <typeparamref name="T"/> was created with <see cref="M:TypeBuilder.CreateType"/>
     /// </exception>
     /// <exception cref="InvalidOperationException">
     /// If the method body of the enclosing method was created with <see cref="M:MethodBuilder.CreateMethodBody"/>
@@ -173,7 +173,7 @@ public interface ILocalsEmissions<out Self>
     /// <summary>
     /// Pops the value from the top of the stack and stores it in a the given <see cref="EmitterLocal"/>.
     /// </summary>
-    /// <param name="local">The <see cref="EmitterLocal"/> to store the value in.</param>
+    /// <param name="index">The <see cref="EmitterLocal"/> to store the value in.</param>
     /// <see href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stloc"/>
     /// <seealso href="http://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.stloc_s"/>
     Self Stloc(int index);

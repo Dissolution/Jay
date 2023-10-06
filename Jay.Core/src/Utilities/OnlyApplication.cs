@@ -7,13 +7,13 @@ namespace Jay.Utilities;
 /// Use <see cref="Acquire"/> or <see cref="TryAcquire"/> to obtain the <see cref="OnlyApplication"/><br/>
 /// Dispose of it at the end of your application's execution with a <c>using</c>:<br/>
 /// <c>using var only = OnlyApplication.Acquire();</c><br/>
-/// <c>using var only = OnlyApplication.TryAcquire(TimeSpan.FromMinutes(1)).ValueOrThrow();</c>
+/// <c>using var only = OnlyApplication.TryAcquire(TimeSpan.FromMinutes(1)).OkValueOrThrowError();</c>
 /// </summary>
 public sealed class OnlyApplication : IDisposable
 {
     private static string GetAppName() => Assembly.GetExecutingAssembly().GetName().FullName;
 
-    public static OnlyApplication Acquire() => TryAcquire().ValueOrThrow();
+    public static OnlyApplication Acquire() => TryAcquire().OkValueOrThrowError();
     
     public static Result<OnlyApplication> TryAcquire(TimeSpan? timeout = null, CancellationToken token = default)
     {

@@ -18,7 +18,7 @@ internal static partial class NativeMethods
         nint hConsoleOutput,
         ref ConsoleScreenBufferInfo lpConsoleScreenBufferInfo);
 
-    /// <seealso cref="https://learn.microsoft.com/en-us/windows/console/writeconsoleoutput"/>
+    /// <see href="https://learn.microsoft.com/en-us/windows/console/writeconsoleoutput"/>
     [LibraryImport("kernel32.dll", EntryPoint = "WriteConsoleOutputW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool WriteConsoleOutput(

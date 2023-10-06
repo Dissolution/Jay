@@ -72,7 +72,7 @@ public static class TestExtensions
     {
         int instances = 0;
         int offset = 0;
-        int i = 0;
+        int i;
         while ((i = text.Slice(offset).IndexOf(occurence, comparison)) >= 0)
         {
             instances++;

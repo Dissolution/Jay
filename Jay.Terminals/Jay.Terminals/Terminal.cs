@@ -1,4 +1,11 @@
-﻿/*
+﻿namespace Jay.Terminals;
+
+public static class Terminal
+{
+    
+}
+
+/*
     #region Properties
     /// <summary>
     /// Gets or sets the foreground <see cref="System.Drawing.Color"/> of the <see cref="Terminal"/>.

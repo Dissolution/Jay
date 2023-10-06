@@ -10,7 +10,7 @@ namespace Jay.Terminals.Native;
 /// <summary>
 /// Win32/GDI Color Structure
 /// </summary>
-/// <see cref="https://docs.microsoft.com/en-us/windows/win32/gdi/colorref"/>
+/// <see href="https://docs.microsoft.com/en-us/windows/win32/gdi/colorref"/>
 [StructLayout(LayoutKind.Explicit, Size = 4)]
 internal struct COLORREF
 {

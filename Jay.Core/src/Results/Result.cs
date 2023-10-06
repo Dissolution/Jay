@@ -1,89 +1,121 @@
-﻿namespace Jay;
+﻿using Jay.Reflection;
+
+namespace Jay;
 
 /// <summary>
-/// <b>Result</b><br />
-/// Represents the result of an <c>action</c> as either of:<br />
-/// <see cref="Ok" /> - A completed operation<br />
-/// <see cref="Error" /> - A failed operation with an <see cref="Exception" />
+/// Represents the result of an operation as either:<br/>
+/// <c>Ok</c><br/>
+/// <c>Error(<see cref="Exception"/>)</c>
 /// </summary>
-/// <remarks>
-/// Heavily inspired by Rust's Result
-/// </remarks>
 public readonly partial struct Result :
-    IEquatable<Result>,
-    IEquatable<bool>,
-    IEquatable<Exception>
+#if NET7_0_OR_GREATER
+    IEqualityOperators<Result, Result, bool>,
+    IEqualityOperators<Result, bool, bool>,
+    IBitwiseOperators<Result, Result, bool>,
+    IBitwiseOperators<Result, bool, bool>,
+#endif
+    IEquatable<Result>
 {
-    // default(Result) == (default(bool), default(Exception)
-    internal readonly bool _ok;
-    internal readonly Exception? _error;
+    public static implicit operator Result(bool isOk) => isOk ? Ok() : Error(null);
+    public static implicit operator Result(Exception? error) => Error(error);
+    public static implicit operator bool(Result result) => result._ok;
 
-    /// <remarks>
-    /// We never let a consumer create a Result directly. They must use the implicit casts or the methods.
-    /// </remarks>
-    internal Result(bool ok, Exception? error)
+    public static bool operator true(Result result) => result._ok;
+    public static bool operator false(Result result) => !result._ok;
+    public static bool operator !(Result result) => !result._ok;
+
+    public static bool operator ~(Result _)
+    {
+        throw new NotSupportedException("Cannot apply ~ to a Result");
+    }
+
+    public static bool operator ==(Result left, Result right) => left.Equals(right);
+    public static bool operator ==(Result result, Exception? error) => result.Equals(error);
+    public static bool operator ==(Result result, bool pass) => result.Equals(pass);
+    public static bool operator ==(Exception? error, Result result) => result.Equals(error);
+    public static bool operator ==(bool pass, Result result) => result.Equals(pass);
+
+    public static bool operator !=(Result left, Result right) => !left.Equals(right);
+    public static bool operator !=(Result result, Exception? error) => !result.Equals(error);
+    public static bool operator !=(Result result, bool pass) => !result.Equals(pass);
+    public static bool operator !=(Exception? error, Result result) => !result.Equals(error);
+    public static bool operator !=(bool pass, Result result) => !result.Equals(pass);
+
+    public static bool operator |(Result left, Result right) => left.IsOk() || right.IsOk();
+    public static bool operator |(Result result, bool pass) => pass || result.IsOk();
+    public static bool operator |(bool pass, Result result) => pass || result.IsOk();
+
+    public static bool operator &(Result left, Result right) => left.IsOk() && right.IsOk();
+    public static bool operator &(Result result, bool pass) => pass && result.IsOk();
+    public static bool operator &(bool pass, Result result) => pass && result.IsOk();
+
+    public static bool operator ^(Result left, Result right) => left.IsOk() ^ right.IsOk();
+    public static bool operator ^(Result result, bool pass) => pass ^ result.IsOk();
+    public static bool operator ^(bool pass, Result result) => pass ^ result.IsOk();
+
+    /// <summary>
+    /// Returns a passing <see cref="Result" />
+    /// </summary>
+    public static Result Ok()
+    {
+        return new(true, null);
+    }
+
+    /// <summary>
+    /// Returns a failing <see cref="Result" /> with the given <paramref name="error" />.
+    /// </summary>
+    /// <param name="error">The failing <see cref="_exception" />.</param>
+    /// <returns>A failed <see cref="Result" />.</returns>
+    public static Result Error(Exception? error)
+    {
+        return new(false, error);
+    }
+
+
+    private readonly bool _ok;
+    private readonly Exception? _exception;
+
+    internal Result(bool ok, Exception? exception)
     {
         _ok = ok;
-        _error = error;
+        _exception = exception;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Exception GetError()
+    private Exception GetException()
     {
-        return _error ?? new Exception(DEFAULT_ERROR_MESSAGE);
+        return _exception ?? new Exception();
     }
-
+    
     /// <summary>
-    /// Throws the attached <see cref="Exception" /> if this is a failed <see cref="Result" />
+    /// If this <see cref="Result{TValue}"/> is <c>Error(Exception)</c>, <c>throw Exception</c>
     /// </summary>
-    /// <exception cref="Exception">The attached exception.</exception>
+    /// <exception cref="Exception">
+    /// The Exception from <c>Error(Exception)</c>
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ThrowIfError()
     {
         if (!_ok)
-        {
-            throw GetError();
-        }
+            throw GetException();
     }
 
-    public TReturn ThrowIfError<TReturn>(TReturn returnValue)
-    {
-        return _ok ? returnValue : throw GetError();
-    }
-    
-    public Span<T> ThrowIfError<T>(Span<T> returnSpan)
-    {
-        return _ok ? returnSpan : throw GetError();
-    }
-    
-    public ReadOnlySpan<T> ThrowIfError<T>(ReadOnlySpan<T> returnSpan)
-    {
-        return _ok ? returnSpan : throw GetError();
-    }
-
-    /// <summary>
-    /// Is this an <see cref="Ok"/> <see cref="Result"/>?
-    /// </summary>
-    /// <returns></returns>
-    public bool IsOk()
-    {
-        return _ok;
-    }
-
-    /// <summary>
-    /// Is this an <see cref="Error"/> <see cref="Result"/>?
-    /// </summary>
-    public bool IsError()
-    {
-        return !_ok;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsOk() => _ok;
 
     /// <summary>
     /// Is this a failed <see cref="Result" />?
     /// </summary>
-    /// <param name="error">
-    /// If this is <see cref="Error"/>, the attached <see cref="Exception"/>;<br/>
-    /// otherwise <see langword="null" /></param>
-    /// <returns><c>true</c> if this is an <see cref="Error"/>; otherwise, <c>false</c></returns>
+    /// <returns>true if this is a failed result; otherwise, false</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsError() => !_ok;
+
+    /// <summary>
+    /// Is this a failed <see cref="Result" />?
+    /// </summary>
+    /// <param name="error">If this is a failed <see cref="Result" />, the attached <see cref="Exception" />; otherwise <see langword="null" /></param>
+    /// <returns>true if this is a failed result; otherwise, false</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsError([NotNullWhen(true)] out Exception? error)
     {
         if (_ok)
@@ -92,66 +124,57 @@ public readonly partial struct Result :
             return false;
         }
 
-        error = GetError();
+        error = GetException();
         return true;
     }
 
-    public void Match(Action ok, Action<Exception> error)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Match(Action onOk, Action<Exception> onError)
     {
         if (_ok)
         {
-            ok();
+            onOk();
         }
         else
         {
-            error(GetError());
+            onError(GetException());
         }
     }
 
-    public TReturn Match<TReturn>(Func<TReturn> ok, Func<Exception, TReturn> error)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TReturn Match<TReturn>(Func<TReturn> onOk, Func<Exception, TReturn> onError)
     {
         if (_ok)
         {
-            return ok();
+            return onOk();
         }
-        return error(GetError());
+        else
+        {
+            return onError(GetException());
+        }
     }
     
-    public bool Equals(Result result)
-    {
-        return result._ok == _ok;
-    }
-    
-    public bool Equals(bool ok)
-    {
-        return ok == _ok;
-    }
-    
-    public bool Equals(Exception? _)
-    {
-        return !_ok;
-    }
+    public bool Equals(Result result) => _ok == result.IsOk();
+    public bool Equals(Exception? _) => !_ok;
+    public bool Equals(bool isOk) => _ok == isOk;
 
     public override bool Equals(object? obj)
     {
         return obj switch
         {
             Result result => Equals(result),
-            bool ok => Equals(ok),
             Exception ex => Equals(ex),
+            bool isOk => Equals(isOk),
             _ => false,
         };
     }
 
-    public override int GetHashCode()
-    {
-        return _ok ? 1 : 0;
-    }
+    public override int GetHashCode() => _ok ? 1 : 0;
 
     public override string ToString()
     {
         return Match(
-            () => nameof(Ok),
-            error => $"Error({error.GetType().Name}): {error.Message}");
+            () => "Ok()",
+            error => $"Error({error.GetType().ToCode()}): {error.Message})");
     }
 }
