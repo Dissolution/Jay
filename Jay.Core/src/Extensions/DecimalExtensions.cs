@@ -3,7 +3,7 @@
 namespace Jay.Extensions;
 
 /// <summary>
-/// Extensions for <see cref="decimal" />
+/// Extensions for <see cref="decimal"/>
 /// </summary>
 public static class DecimalExtensions
 {
@@ -23,7 +23,7 @@ public static class DecimalExtensions
     }
 
     /// <summary>
-    /// Rounds a <see cref="decimal" /> value to the specified number of places.
+    /// Rounds a <see cref="decimal"/> value to the specified number of places.
     /// </summary>
     /// <param name="number"></param>
     /// <param name="places"></param>

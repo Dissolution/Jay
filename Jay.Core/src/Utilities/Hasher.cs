@@ -79,9 +79,15 @@ public ref struct Hasher
         return hash;
     }
     
-    public static int GetHashCode<T1>(T1? value1)
+    /// <summary>
+    /// Gets the hash code for a single <paramref name="value"/>
+    /// </summary>
+    /// <param name="value"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static int GetHashCode<T>(T? value)
     {
-        var hc1 = (uint)(value1?.GetHashCode() ?? 0);
+        var hc1 = (uint)(value?.GetHashCode() ?? 0);
 
         uint hash = MixEmptyState();
         hash += 4;
@@ -92,6 +98,7 @@ public ref struct Hasher
         return (int)hash;
     }
 
+    
     public static int Combine<T1, T2>(T1? value1, T2? value2)
     {
         var hc1 = (uint)(value1?.GetHashCode() ?? 0);
@@ -347,32 +354,7 @@ public ref struct Hasher
         }
         return hasher.ToHashCode();
     }
-
-    public static int Combine(params object?[]? objects)
-    {
-        if (objects is null) return 0;
-        switch (objects.Length)
-        {
-            case 0: return 0;
-            case 1: return Combine(objects[0]);
-            case 2: return Combine(objects[0], objects[1]);
-            case 3: return Combine(objects[0], objects[1], objects[2]);
-            case 4: return Combine(objects[0], objects[1], objects[2], objects[3]);
-            case 5: return Combine(objects[0], objects[1], objects[2], objects[3], objects[4]);
-            case 6: return Combine(objects[0], objects[1], objects[2], objects[3], objects[4], objects[5]);
-            case 7: return Combine(objects[0], objects[1], objects[2], objects[3], objects[4], objects[5], objects[6]);
-            case 8: return Combine(objects[0], objects[1], objects[2], objects[3], objects[4], objects[5], objects[6], objects[7]);
-            default:
-            {
-                var hasher = new Hasher();
-                for (var i = 0; i < objects.Length; i++)
-                {
-                    hasher.Add<object?>(objects[i]);
-                }
-                return hasher.ToHashCode();
-            }
-        }
-    }
+    
 
     // Instance Methods
     private uint _v1, _v2, _v3, _v4;
@@ -437,7 +419,7 @@ public ref struct Hasher
         if (values is null) return;
         for (var i = 0; i < values.Length; i++)
         {
-            Add(values[i]);
+            Add<T>(values[i]);
         }
     }
 
@@ -446,7 +428,7 @@ public ref struct Hasher
         if (values is null) return;
         for (var i = 0; i < values.Length; i++)
         {
-            Add(values[i], comparer);
+            Add<T>(values[i], comparer);
         }
     }
 
@@ -455,7 +437,7 @@ public ref struct Hasher
         if (values is null) return;
         foreach (T? value in values)
         {
-            Add(value);
+            Add<T>(value);
         }
     }
 
@@ -464,7 +446,7 @@ public ref struct Hasher
         if (values is null) return;
         foreach (T? value in values)
         {
-            Add(value, comparer);
+            Add<T>(value, comparer);
         }
     }
 

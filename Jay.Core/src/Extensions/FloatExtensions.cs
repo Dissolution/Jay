@@ -1,7 +1,7 @@
 ﻿namespace Jay.Extensions;
 
 /// <summary>
-/// Extensions for <see cref="float" />
+/// Extensions for <see cref="float"/>
 /// </summary>
 public static class FloatExtensions
 {

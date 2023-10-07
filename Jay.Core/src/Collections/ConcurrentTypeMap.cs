@@ -6,7 +6,7 @@ namespace Jay.Collections;
 /// A <see cref="ConcurrentDictionary{TKey,TValue}"/> where <c>TKey</c> is <see cref="Type"/>
 /// </summary>
 /// <typeparam name="TValue">
-/// The <see cref="Type"/> of values associated with the <see cref="Type"/> key
+/// The <see cref="Type"/> of values associated with the <see cref="Type"/> keys
 /// </typeparam>
 public class ConcurrentTypeMap<TValue> : ConcurrentDictionary<Type, TValue>
 {

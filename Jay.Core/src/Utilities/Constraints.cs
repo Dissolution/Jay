@@ -10,7 +10,7 @@ namespace Jay.Utilities;
 /// <br/>
 /// The compiler will have an error: 'member with the same signature is already declared'<br />
 /// <br />
-/// You can use <see cref="Constraints" /> to fix it:<br />
+/// You can use <see cref="Constraints"/> to fix it:<br />
 /// <c>public static T DoThing&lt;T&gt;(T value, IsStruct&lt;T&gt; _ = default) where T : struct</c><br />
 /// <c>public static T DoThing&lt;T&gt;(T value, IsClass&lt;T&gt; _ = default) where T : class</c><br />
 /// <br/>

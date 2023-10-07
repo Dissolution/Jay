@@ -26,12 +26,14 @@ public sealed class EqualityComparerCache : IEqualityComparer<object?>, IEqualit
 
     public static IEqualityComparer Default(Type type)
     {
-        return _equalityComparers.GetOrAdd(type, FindEqualityComparer);
+        return _equalityComparers
+            .GetOrAdd(type, static t => FindEqualityComparer(t));
     }
 
     public static IEqualityComparer<T> Default<T>()
     {
-        return _equalityComparers.GetOrAdd<T>(_ => EqualityComparer<T>.Default)
+        return _equalityComparers
+            .GetOrAdd<T>(static _ => EqualityComparer<T>.Default)
             .AsValid<IEqualityComparer<T>>();
     }
 
@@ -43,19 +45,18 @@ public sealed class EqualityComparerCache : IEqualityComparer<object?>, IEqualit
 
     public new static bool Equals(object? left, object? right)
     {
-        if (ReferenceEquals(left, right)) return true;
+        if (ReferenceEquals(left, right)) 
+            return true;
 
         if (left is not null)
         {
             return Default(left.GetType())
                 .Equals(left, right);
         }
-        if (right is not null)
-        {
-            return Default(right.GetType())
-                .Equals(right, left);
-        }
-        return true; // they're both null
+        
+        // right cannot be null
+        return Default(right!.GetType())
+            .Equals(right, left);
     }
 
     public static int GetHashCode(object? obj)

@@ -69,7 +69,7 @@ public class ListSet<T> :
         {
             if (comparer.Equals(items[i], item))
             {
-                Easy.CopyTo(items[(i+1)..], items[i..]);
+                items.RemoveAt(i);
                 _count = count - 1;
                 return true;
             }

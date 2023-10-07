@@ -26,12 +26,15 @@ public sealed class ComparerCache : IComparer<object?>, IComparer
     
     public static IComparer Default(Type type)
     {
-        return _comparers.GetOrAdd(type, FindComparer);
+        return _comparers
+            .GetOrAdd(type, static t => FindComparer(t));
     }
 
     public static IComparer<T> Default<T>()
     {
-        return _comparers.GetOrAdd<T>(_ => Comparer<T>.Default).AsValid<IComparer<T>>();
+        return _comparers
+            .GetOrAdd<T>(static _ => Comparer<T>.Default)
+            .AsValid<IComparer<T>>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,11 +50,8 @@ public sealed class ComparerCache : IComparer<object?>, IComparer
         {
             return Default(left.GetType()).Compare(left, right);
         }
-        if (right is not null)
-        {
-            return Default(right.GetType()).Compare(left, right);
-        }
-        return 0; // they're both null
+        // Right cannot be null, we checked refequals
+        return Default(right!.GetType()).Compare(left, right);
     }
 
     public static IComparer<T> Create<T>(Comparison<T> compare) => Comparer<T>.Create(compare);

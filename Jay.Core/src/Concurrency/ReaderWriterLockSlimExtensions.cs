@@ -1,7 +1,7 @@
 ﻿namespace Jay.Concurrency;
 
 /// <summary>
-/// Extensions on <see cref="ReaderWriterLockSlim" />
+/// Extensions on <see cref="ReaderWriterLockSlim"/>
 /// </summary>
 public static class ReaderWriterLockSlimExtensions
 {
@@ -28,7 +28,7 @@ public static class ReaderWriterLockSlimExtensions
     }
     
     /// <summary>
-    /// Gets an <see cref="IDisposable" /> Read Lock for this <see cref="ReaderWriterLockSlim" />.
+    /// Gets an <see cref="IDisposable"/> Read Lock for this <see cref="ReaderWriterLockSlim"/>.
     /// </summary>
     public static IDisposable GetReadLock(this ReaderWriterLockSlim slimLock)
     {
@@ -36,7 +36,7 @@ public static class ReaderWriterLockSlimExtensions
     }
     
     /// <summary>
-    /// Gets an <see cref="IDisposable" /> Write Lock for this <see cref="ReaderWriterLockSlim" />.
+    /// Gets an <see cref="IDisposable"/> Write Lock for this <see cref="ReaderWriterLockSlim"/>.
     /// </summary>
     public static IDisposable GetWriteLock(this ReaderWriterLockSlim slimLock)
     {

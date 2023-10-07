@@ -37,7 +37,7 @@ public static class TypeExtensions
     }
 
     /// <summary>
-    /// Is this <see cref="Type" /> a <see cref="Nullable{T}" />?
+    /// Is this <see cref="Type"/> a <see cref="Nullable{T}"/>?
     /// </summary>
     public static bool IsNullable(this Type? type)
     {

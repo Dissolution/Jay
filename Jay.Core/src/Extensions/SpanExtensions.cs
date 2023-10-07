@@ -12,6 +12,22 @@ public static class SpanExtensions
         }
     }
     
+    public static void RemoveAt<T>(this Span<T> span, int index)
+    {
+        Validate.Index(span.Length, index);
+        var leftSide = span.Slice(index);
+        var rightSide = span.Slice(index + 1);
+        rightSide.CopyTo(leftSide);
+    }
+
+    public static void RemoveRange<T>(this Span<T> span, Range range)
+    {
+        var (offset, length) = Validate.RangeResolveOffsetLength(span.Length, range);
+        var leftSide = span.Slice(offset);
+        var rightSide = span.Slice(offset + length);
+        rightSide.CopyTo(leftSide);
+    }
+    
     
 #if !NET6_0_OR_GREATER
     public static bool SequenceEqual<T>(this Span<T> first, Span<T> second, IEqualityComparer<T>? itemComparer = null)

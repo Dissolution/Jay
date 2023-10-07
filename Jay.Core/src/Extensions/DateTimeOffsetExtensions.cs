@@ -1,12 +1,12 @@
 ﻿namespace Jay.Extensions;
 
 /// <summary>
-/// Extensions for <see cref="DateTimeOffset" />
+/// Extensions for <see cref="DateTimeOffset"/>
 /// </summary>
 public static class DateTimeOffsetExtensions
 {
     /// <summary>
-    /// How much time has elapsed since this <see cref="DateTimeOffset" /> occured?
+    /// How much time has elapsed since this <see cref="DateTimeOffset"/> occured?
     /// </summary>
     /// <param name="dateTimeOffset"></param>
     /// <returns></returns>
@@ -105,7 +105,7 @@ public static class DateTimeOffsetExtensions
 
 #region Rounding
     /// <summary>
-    /// Drop this <see cref="DateTimeOffset" /> to the earliest <see cref="TimeSpan" /> precision floor.
+    /// Drop this <see cref="DateTimeOffset"/> to the earliest <see cref="TimeSpan"/> precision floor.
     /// </summary>
     /// <param name="dateTimeOffset"></param>
     /// <param name="precision"></param>
@@ -117,7 +117,7 @@ public static class DateTimeOffsetExtensions
     }
 
     /// <summary>
-    /// Round this <see cref="DateTimeOffset" /> to the specified <see cref="TimeSpan" /> precision.
+    /// Round this <see cref="DateTimeOffset"/> to the specified <see cref="TimeSpan"/> precision.
     /// </summary>
     /// <param name="dateTimeOffset"></param>
     /// <param name="precision"></param>
@@ -132,7 +132,7 @@ public static class DateTimeOffsetExtensions
 
 
     /// <summary>
-    /// Raise this <see cref="DateTimeOffset" /> to the latest <see cref="TimeSpan" /> precision ceiling.
+    /// Raise this <see cref="DateTimeOffset"/> to the latest <see cref="TimeSpan"/> precision ceiling.
     /// </summary>
     /// <param name="dateTimeOffset"></param>
     /// <param name="precision"></param>

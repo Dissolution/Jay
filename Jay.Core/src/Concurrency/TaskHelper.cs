@@ -8,7 +8,7 @@ public static class TaskHelper
     /// <summary>
     /// Synchronously consume a <see cref="Task"/>
     /// </summary>
-    public static void Consume(Task task)
+    public static void Consume(this Task task)
     {
         if (task.IsCompleted)
             return;
@@ -18,7 +18,7 @@ public static class TaskHelper
     /// <summary>
     /// Synchronously consume a <see cref="Task{TResult}"/>
     /// </summary>
-    public static TResult Consume<TResult>(Task<TResult> task)
+    public static TResult Consume<TResult>(this Task<TResult> task)
     {
         if (task.IsCompleted)
             return task.Result;
@@ -26,14 +26,14 @@ public static class TaskHelper
     }
     
 #if !(NET48 || NETSTANDARD2_0)
-    public static void Consume(ValueTask valueTask)
+    public static void Consume(this ValueTask valueTask)
     {
         if (valueTask.IsCompleted)
             return;
         valueTask.AsTask().GetAwaiter().GetResult();
     }
 
-    public static TResult Consume<TResult>(ValueTask<TResult> valueTask)
+    public static TResult Consume<TResult>(this ValueTask<TResult> valueTask)
     {
         if (valueTask.IsCompleted)
             return valueTask.Result;

@@ -6,7 +6,7 @@
 public static class Swallow
 {
     /// <summary>
-    /// A deep wrapper for <see cref="IEnumerable{T}" /> that ignores all thrown exceptions
+    /// A deep wrapper for <see cref="IEnumerable{T}"/> that ignores all thrown exceptions
     /// at every level of enumeration, only returning values that could be acquired without error
     /// </summary>
     public static IEnumerable<T> Swallowed<T>(this IEnumerable<T>? enumerable)

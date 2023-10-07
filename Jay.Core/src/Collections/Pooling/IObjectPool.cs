@@ -33,54 +33,54 @@ public interface IObjectPool<T> : IDisposable
     int Count { get; }
 
     /// <summary>
-    /// Rents a <typeparamref name="T" /> instance that should be <see cref="Return"/>ed
+    /// Rents a <typeparamref name="T"/> instance that should be <see cref="Return"/>ed
     /// </summary>
     T Rent();
 
     /// <summary>
-    /// Returns a <see cref="Rent"/>ed <typeparamref name="T" /> instance to the pool to be cleaned and re-used
+    /// Returns a <see cref="Rent"/>ed <typeparamref name="T"/> instance to the pool to be cleaned and re-used
     /// </summary>
     void Return(T? instance);
 
 
     /// <summary>
-    /// Borrows a <typeparamref name="T" /> <paramref name="instance" />
-    /// that will be <see cref="Return"/>ed when the returned <see cref="IDisposable" /> is disposed
+    /// Borrows a <typeparamref name="T"/> <paramref name="instance"/>
+    /// that will be <see cref="Return"/>ed when the returned <see cref="IDisposable"/> is disposed
     /// </summary>
     /// <param name="instance">
-    /// A <see cref="M:Borrow"/>ed <typeparamref name="T" /> instance,
-    /// it will be returned to its origin <see cref="IObjectPool{T}" /> when disposed
+    /// A <see cref="M:Borrow"/>ed <typeparamref name="T"/> instance,
+    /// it will be returned to its origin <see cref="IObjectPool{T}"/> when disposed
     /// </param>
-    /// <returns>An <see cref="IDisposable" /> that will return the <paramref name="instance" /></returns>
+    /// <returns>An <see cref="IDisposable"/> that will return the <paramref name="instance"/></returns>
     /// <remarks>
-    /// <paramref name="instance" /> must not be used after this is disposed
+    /// <paramref name="instance"/> must not be used after this is disposed
     /// </remarks>
     IDisposable GetInstance(out T instance);
 
     /// <summary>
-    /// Gets a new <see cref="IPoolInstance{T}" />
+    /// Gets a new <see cref="IPoolInstance{T}"/>
     /// </summary>
     IPoolInstance<T> GetInstance();
 
 
     /// <summary>
-    /// <see cref="Rent"/>s a <typeparamref name="T" /> instance,
-    /// performs <paramref name="instanceAction" /> on it,
+    /// <see cref="Rent"/>s a <typeparamref name="T"/> instance,
+    /// performs <paramref name="instanceAction"/> on it,
     /// and then <see cref="Return"/>s it to this pool
     /// </summary>
     /// <param name="instanceAction">
-    /// The <see cref="Action{T}" /> perform on the rented instance
+    /// The <see cref="Action{T}"/> perform on the rented instance
     /// </param>
     void Borrow(Action<T> instanceAction);
 
     /// <summary>
-    /// <see cref="Rent"/>s a <typeparamref name="T" /> instance,
-    /// performs <paramref name="instanceFunc" /> on it,
+    /// <see cref="Rent"/>s a <typeparamref name="T"/> instance,
+    /// performs <paramref name="instanceFunc"/> on it,
     /// <see cref="Return"/>s it to this pool,
     /// and then returns the result of the <paramref name="instanceFunc"/>
     /// </summary>
     /// <param name="instanceFunc">
-    /// The <see cref="Func{T, TResult}" /> perform on the rented instance and get the result of
+    /// The <see cref="Func{T, TResult}"/> perform on the rented instance and get the result of
     /// </param>
     TResult Borrow<TResult>(Func<T, TResult> instanceFunc);
 }

@@ -2,23 +2,20 @@
 
 public static class EnumHelper
 {
-    private static readonly char[] _splitChars = new char[3]
-    {
-        ' ',
-        ',',
-        '|',
-    };
-    
+    private static readonly char[] _splitChars = new char[3] { ' ', ',', '|', };
+
     public static bool TryParse<TEnum>(
         [AllowNull, NotNullWhen(true)] string? str,
         out TEnum @enum)
-    where TEnum : struct, Enum
+        where TEnum : struct, Enum
     {
         @enum = default;
         if (string.IsNullOrEmpty(str))
             return false;
         if (Enum.TryParse<TEnum>(str, true, out @enum))
             return true;
+
+        @enum = default;
         var split = str!.Split(_splitChars, StringSplitOptions.RemoveEmptyEntries);
         foreach (var segment in split)
         {

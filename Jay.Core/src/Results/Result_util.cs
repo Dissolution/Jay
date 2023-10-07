@@ -1,93 +1,10 @@
-﻿namespace Jay;
+﻿using Jay.Utilities;
 
+namespace Jay;
+
+/* Static Utilities involving Result, Result<T>, and Result<V,E> */
 partial struct Result
 {
-    /// <summary>
-    /// Tries to invoke the <paramref name="action" /> and returns a <see cref="Result" />
-    /// </summary>
-    /// <param name="action">The <see cref="Action" /> to <see cref="Action.Invoke" /></param>
-    /// <returns>
-    /// A successful <see cref="Result" /> if the <paramref name="action" /> invokes without throwing an <see cref="Exception" />.
-    /// A failed <see cref="Result" /> with the caught <see cref="Exception" /> attached if not.
-    /// </returns>
-    public static Result TryInvoke(
-        [AllowNull, NotNullWhen(true)] 
-        Action? action)
-    {
-        if (action is null)
-        {
-            return new ArgumentNullException(nameof(action));
-        }
-        try
-        {
-            action.Invoke();
-            return Ok();
-        }
-        catch (Exception ex)
-        {
-            return Error(ex);
-        }
-    }
-
-    /// <summary>
-    /// Tries to invoke the <paramref name="func" />, setting <paramref name="output" /> and returning a <see cref="Result" />
-    /// </summary>
-    /// <typeparam name="T">The <see cref="Type" /> of <paramref name="output" /> the <paramref name="func" /> produces</typeparam>
-    /// <param name="func">The <see cref="Func{T}" /> to <see cref="Func{T}.Invoke" /></param>
-    /// <param name="output">The result of invoking <paramref name="func" /> or <see langword="default{TResult}" /> on failure.</param>
-    /// <returns>
-    /// A successful <see cref="Result" /> if the <paramref name="func" /> invokes without throwing an <see cref="Exception" />.
-    /// A failed <see cref="Result" /> with the caught <see cref="Exception" /> attached if not.
-    /// </returns>
-    public static Result TryInvoke<T>(
-        [AllowNull,NotNullWhen(true)] 
-        Func<T>? func,
-        [MaybeNullWhen(false)] 
-        out T output)
-    {
-        if (func is null)
-        {
-            output = default;
-            return new ArgumentNullException(nameof(func));
-        }
-        try
-        {
-            output = func.Invoke();
-            return Ok();
-        }
-        catch (Exception ex)
-        {
-            output = default;
-            return Error(ex);
-        }
-    }
-
-    /// <summary>
-    /// Try to execute the given <paramref name="func" /> and return a <see cref="Result{T}" />.
-    /// </summary>
-    /// <param name="func">The function to try to execute.</param>
-    /// <returns>
-    /// A passing <see cref="Result{T}" /> containing <paramref name="func" />'s return value or
-    /// a failing <see cref="Result{T}" /> containing the captured <see cref="Exception" />.
-    /// </returns>
-    public static Result<T> TryInvoke<T>(
-        [AllowNull,NotNullWhen(true)] 
-        Func<T>? func)
-    {
-        if (func is null)
-        {
-            return new ArgumentNullException(nameof(func));
-        }
-        try
-        {
-            return Result<T>.Ok(func.Invoke());
-        }
-        catch (Exception ex)
-        {
-            return Result<T>.Error(ex);
-        }
-    }
-
     public delegate bool Try<TValue>(out TValue value);
     public delegate Result TryResult<TValue>(out TValue value);
 
@@ -119,38 +36,13 @@ partial struct Result
         }
     }
 
-    /// <summary>
-    /// Invokes a <paramref name="func"/> and returns its result <br/>
-    /// If the function throws an <see cref="Exception"/>, a <paramref name="fallback"/> value will be returned instead
-    /// </summary>
-    /// <param name="func">The <see cref="Func{TResult}"/> to invoke</param>
-    /// <param name="fallback">The value to return if <paramref name="func"/> throws an <see cref="Exception"/></param>
-    /// <typeparam name="T">The <see cref="Type"/> of value to be returned</typeparam>
-    /// <returns>The result of <paramref name="func"/> or <paramref name="fallback"/></returns>
-    [return: NotNullIfNotNull(nameof(fallback))]
-    public static T? InvokeOrDefault<T>(Func<T>? func, T? fallback = default)
-    {
-        if (func is null)
-        {
-            return fallback;
-        }
-        try
-        {
-            return func();
-        }
-        catch
-        {
-            return fallback;
-        }
-    }
-
     public static Result InvokeUntilError(params Action?[]? actions)
     {
         if (actions is null) return Ok();
         Result result;
         for (var i = 0; i < actions.Length; i++)
         {
-            result = TryInvoke(actions[i]);
+            result = actions[i].TryInvoke();
             if (!result) return result;
         }
         return Ok();
@@ -164,7 +56,7 @@ partial struct Result
         Result result;
         foreach (var action in actions)
         {
-            result = TryInvoke(action);
+            result = action.TryInvoke();
             if (!result)
                 return result;
         }
@@ -173,9 +65,9 @@ partial struct Result
 
 #region Dispose
     /// <summary>
-    /// Tries to dispose of <paramref name="value" />.
+    /// Tries to dispose of <paramref name="value"/>.
     /// </summary>
-    /// <typeparam name="T">The <see cref="Type" /> of <paramref name="value" /> to dispose</typeparam>
+    /// <typeparam name="T">The <see cref="Type"/> of <paramref name="value"/> to dispose</typeparam>
     /// <param name="value">The value to dispose.</param>
     public static void Dispose<T>(T? value)
     {

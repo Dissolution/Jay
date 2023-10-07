@@ -117,7 +117,7 @@ public static class ArrayExtensions
     }
 
     /// <summary>
-    /// Converts an array of <see cref="object" />s to an array of their <see cref="Type" />s.
+    /// Converts an array of <see cref="object"/>s to an array of their <see cref="Type"/>s.
     /// </summary>
     public static Type?[] ToTypeArray(this object?[]? objectArray)
     {
@@ -154,7 +154,7 @@ public static class ArrayExtensions
     }
 
     /// <summary>
-    /// Initializes each element of this <paramref name="array" /> to the given <paramref name="value"/>
+    /// Initializes each element of this <paramref name="array"/> to the given <paramref name="value"/>
     /// </summary>
     public static void Initialize<T>(this T[] array, T value)
     {

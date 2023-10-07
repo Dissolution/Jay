@@ -5,7 +5,7 @@ namespace Jay.Extensions;
 public static class CharExtensions
 {
     /// <summary>
-    /// Converts this <see cref="char" /> into a <see cref="ReadOnlySpan{T}" />
+    /// Converts this <see cref="char"/> into a <see cref="ReadOnlySpan{T}"/>
     /// </summary>
     /// <param name="ch"></param>
     /// <returns></returns>
@@ -29,7 +29,7 @@ public static class CharExtensions
     }
 
     /// <summary>
-    /// Is this <see cref="char" /> a digit?
+    /// Is this <see cref="char"/> a digit?
     /// </summary>
     /// <param name="c"></param>
     /// <returns></returns>
@@ -39,7 +39,7 @@ public static class CharExtensions
     }
 
     /// <summary>
-    /// Is this <see cref="char" /> considered white-space?
+    /// Is this <see cref="char"/> considered white-space?
     /// </summary>
     public static bool IsWhiteSpace(this char c)
     {
@@ -47,7 +47,7 @@ public static class CharExtensions
     }
 
     /// <summary>
-    /// Converts this <see cref="char" /> into its UpperCase equivalent.
+    /// Converts this <see cref="char"/> into its UpperCase equivalent.
     /// </summary>
     /// <param name="c"></param>
     /// <returns></returns>
@@ -57,7 +57,7 @@ public static class CharExtensions
     }
 
     /// <summary>
-    /// Converts this <see cref="char" /> into its UpperCase equivalent.
+    /// Converts this <see cref="char"/> into its UpperCase equivalent.
     /// </summary>
     /// <param name="c"></param>
     /// <param name="culture"></param>
@@ -68,7 +68,7 @@ public static class CharExtensions
     }
 
     /// <summary>
-    /// Converts this <see cref="char" /> into its LowerCase equivalent.
+    /// Converts this <see cref="char"/> into its LowerCase equivalent.
     /// </summary>
     /// <param name="c"></param>
     /// <returns></returns>
@@ -78,7 +78,7 @@ public static class CharExtensions
     }
 
     /// <summary>
-    /// Converts this <see cref="char" /> into its LowerCase equivalent.
+    /// Converts this <see cref="char"/> into its LowerCase equivalent.
     /// </summary>
     /// <param name="c"></param>
     /// <param name="culture"></param>

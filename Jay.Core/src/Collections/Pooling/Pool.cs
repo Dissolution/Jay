@@ -3,7 +3,7 @@
 namespace Jay.Collections.Pooling;
 
 /// <summary>
-/// Static methods for creating <see cref="IObjectPool{T}" /> instances
+/// Static methods for creating <see cref="IObjectPool{T}"/> instances
 /// </summary>
 public static class Pool
 {
@@ -19,13 +19,13 @@ public static class Pool
 
 
     /// <summary>
-    /// Creates a new <see cref="IObjectPool{T}" />
+    /// Creates a new <see cref="IObjectPool{T}"/>
     /// </summary>
     /// <typeparam name="T">An instance class type</typeparam>
-    /// <param name="factory">A function to create a new <typeparamref name="T" /> instance</param>
-    /// <param name="clean">An optional action to perform on a <typeparamref name="T" /> when it is returned</param>
-    /// <param name="dispose">An optional action to perform on a <typeparamref name="T" /> if it is discarded</param>
-    /// <returns>A new <see cref="IObjectPool{T}" /></returns>
+    /// <param name="factory">A function to create a new <typeparamref name="T"/> instance</param>
+    /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned</param>
+    /// <param name="dispose">An optional action to perform on a <typeparamref name="T"/> if it is discarded</param>
+    /// <returns>A new <see cref="IObjectPool{T}"/></returns>
     public static IObjectPool<T> Create<T>(
         PoolInstanceFactory<T> factory,
         PoolInstanceClean<T>? clean = null,
@@ -37,12 +37,12 @@ public static class Pool
 
 
     /// <summary>
-    /// Creates a new <see cref="ObjectPool{T}" /> for classes with default constructors.
+    /// Creates a new <see cref="ObjectPool{T}"/> for classes with default constructors.
     /// </summary>
     /// <typeparam name="T">A class with a default constructor.</typeparam>
-    /// <param name="clean">An optional action to perform on a <typeparamref name="T" /> when it is returned.</param>
-    /// <param name="dispose">An optional action to perform on a <typeparamref name="T" /> if it is disposed.</param>
-    /// <returns>A new <see cref="ObjectPool{T}" /> instance.</returns>
+    /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
+    /// <param name="dispose">An optional action to perform on a <typeparamref name="T"/> if it is disposed.</param>
+    /// <returns>A new <see cref="ObjectPool{T}"/> instance.</returns>
     public static IObjectPool<T> Create<T>(
         PoolInstanceClean<T>? clean = null,
         PoolInstanceDispose<T>? dispose = null, 
@@ -54,12 +54,12 @@ public static class Pool
     }
 
     /// <summary>
-    /// Creates a new <see cref="ObjectPool{T}" /> for <see cref="IDisposable" /> classes.
+    /// Creates a new <see cref="ObjectPool{T}"/> for <see cref="IDisposable"/> classes.
     /// </summary>
-    /// <typeparam name="T">An <see cref="IDisposable" /> class.</typeparam>
-    /// <param name="factory">A function to create a new <typeparamref name="T" /> instance.</param>
-    /// <param name="clean">An optional action to perform on a <typeparamref name="T" /> when it is returned.</param>
-    /// <returns>A new <see cref="ObjectPool{T}" /> instance.</returns>
+    /// <typeparam name="T">An <see cref="IDisposable"/> class.</typeparam>
+    /// <param name="factory">A function to create a new <typeparamref name="T"/> instance.</param>
+    /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
+    /// <returns>A new <see cref="ObjectPool{T}"/> instance.</returns>
     public static IObjectPool<T> Create<T>(
         PoolInstanceFactory<T> factory,
         PoolInstanceClean<T>? clean = null, 
@@ -71,11 +71,11 @@ public static class Pool
     }
 
     /// <summary>
-    /// Creates a new <see cref="ObjectPool{T}" /> for <see cref="IDisposable" /> classes with a default constructor.
+    /// Creates a new <see cref="ObjectPool{T}"/> for <see cref="IDisposable"/> classes with a default constructor.
     /// </summary>
-    /// <typeparam name="T">An <see cref="IDisposable" /> class with a default constructor.</typeparam>
-    /// <param name="clean">An optional action to perform on a <typeparamref name="T" /> when it is returned.</param>
-    /// <returns>A new <see cref="ObjectPool{T}" /> instance.</returns>
+    /// <typeparam name="T">An <see cref="IDisposable"/> class with a default constructor.</typeparam>
+    /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
+    /// <returns>A new <see cref="ObjectPool{T}"/> instance.</returns>
     public static IObjectPool<T> Create<T>(
         PoolInstanceClean<T>? clean = null, 
         // ReSharper disable once InvalidXmlDocComment

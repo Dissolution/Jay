@@ -1,12 +1,12 @@
 ﻿namespace Jay.Extensions;
 
 /// <summary>
-/// Extensions for <see cref="bool" />s and <see cref="Nullable" />&lt;<see cref="bool" />&gt;s.
+/// Extensions for <see cref="bool"/>s and <see cref="Nullable"/>&lt;<see cref="bool"/>&gt;s.
 /// </summary>
 public static class BooleanExtensions
 {
     /// <summary>
-    /// Convert this <see cref="bool" /> to a <see cref="char" /> representation.
+    /// Convert this <see cref="bool"/> to a <see cref="char"/> representation.
     /// </summary>
     /// <param name="b"></param>
     /// <param name="trueCharacter">The character to return if the value is true.</param>
@@ -18,7 +18,7 @@ public static class BooleanExtensions
     }
 
     /// <summary>
-    /// Convert this <see cref="Nullable" />&lt;<see cref="bool" />&gt; to a <see cref="char" /> representation.
+    /// Convert this <see cref="Nullable"/>&lt;<see cref="bool"/>&gt; to a <see cref="char"/> representation.
     /// </summary>
     /// <param name="b"></param>
     /// <param name="trueCharacter">The character to return if the value is true.</param>
@@ -31,7 +31,7 @@ public static class BooleanExtensions
     }
 
     /// <summary>
-    /// Convert this <see cref="bool" /> to a <see cref="string" /> representation.
+    /// Convert this <see cref="bool"/> to a <see cref="string"/> representation.
     /// </summary>
     /// <param name="b"></param>
     /// <param name="trueString">The string to return if the value is true.</param>
@@ -43,7 +43,7 @@ public static class BooleanExtensions
     }
 
     /// <summary>
-    /// Convert this <see cref="Nullable" />&lt;<see cref="bool" />&gt; to a <see cref="string" /> representation.
+    /// Convert this <see cref="Nullable"/>&lt;<see cref="bool"/>&gt; to a <see cref="string"/> representation.
     /// </summary>
     /// <param name="b"></param>
     /// <param name="trueString">The string to return if the value is true.</param>

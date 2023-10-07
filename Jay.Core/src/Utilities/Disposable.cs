@@ -5,7 +5,7 @@ public static class Disposable
     private static readonly UnDisposable _unDisposable = new();
 
     /// <summary>
-    /// An <see cref="IDisposable" /> that does nothing when <see cref="M:IDisposable.Dispose" /> is called.
+    /// An <see cref="IDisposable"/> that does nothing when <see cref="M:IDisposable.Dispose"/> is called.
     /// </summary>
     public static IDisposable None => _unDisposable;
 
@@ -24,7 +24,7 @@ public static class Disposable
 #endif
 
     /// <summary>
-    /// An <see cref="IDisposable" /> / <c>IAsyncDisposable</c> that doesn't do anything.
+    /// An <see cref="IDisposable"/> / <c>IAsyncDisposable</c> that doesn't do anything.
     /// </summary>
     internal sealed class UnDisposable : IDisposable
 #if !(NET48 || NETSTANDARD2_0)

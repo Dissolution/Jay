@@ -18,7 +18,7 @@ namespace Jay.Enums;
 public static class FlagsEnumExtensions
 {
     /// <summary>
-    /// Returns a bitwise NOT (<c>~</c>) of this <paramref name="enum" />
+    /// Returns a bitwise NOT (<c>~</c>) of this <paramref name="enum"/>
     /// </summary>
     /// <remarks>
     /// Also known as the inverse or bitwise complement
@@ -33,14 +33,14 @@ public static class FlagsEnumExtensions
     }
 
     /// <summary>
-    /// Returns a bitwise AND (<c>&amp;</c>) of the <paramref name="enum" /> and the <paramref name="flag" />
+    /// Returns a bitwise AND (<c>&amp;</c>) of the <paramref name="enum"/> and the <paramref name="flag"/>
     /// </summary>
-    /// <typeparam name="TEnum">The <see cref="Type" /> of <see langword="enum" /> being AND'd</typeparam>
-    /// <param name="enum">The first <typeparamref name="TEnum" /> to AND</param>
-    /// <param name="flag">The second <typeparamref name="TEnum" /> to AND</param>
-    /// <returns>The two <see langword="enum" />s AND'd together</returns>
+    /// <typeparam name="TEnum">The <see cref="Type"/> of <see langword="enum"/> being AND'd</typeparam>
+    /// <param name="enum">The first <typeparamref name="TEnum"/> to AND</param>
+    /// <param name="flag">The second <typeparamref name="TEnum"/> to AND</param>
+    /// <returns>The two <see langword="enum"/>s AND'd together</returns>
     /// <remarks>
-    /// <c>return (<paramref name="enum" /> &amp; <paramref name="flag" />);</c>
+    /// <c>return (<paramref name="enum"/> &amp; <paramref name="flag"/>);</c>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TEnum And<TEnum>(this TEnum @enum, TEnum flag)
@@ -53,14 +53,14 @@ public static class FlagsEnumExtensions
     }
 
     /// <summary>
-    /// Returns a bitwise OR (<c>|</c>) of the <paramref name="enum" /> and the <paramref name="flag" />
+    /// Returns a bitwise OR (<c>|</c>) of the <paramref name="enum"/> and the <paramref name="flag"/>
     /// </summary>
-    /// <typeparam name="TEnum">The <see cref="Type" /> of <see langword="enum" /> being OR'd</typeparam>
-    /// <param name="enum">The first <typeparamref name="TEnum" /> to OR</param>
-    /// <param name="flag">The second <typeparamref name="TEnum" /> to OR</param>
-    /// <returns>The two <see langword="enum" />s OR'd together</returns>
+    /// <typeparam name="TEnum">The <see cref="Type"/> of <see langword="enum"/> being OR'd</typeparam>
+    /// <param name="enum">The first <typeparamref name="TEnum"/> to OR</param>
+    /// <param name="flag">The second <typeparamref name="TEnum"/> to OR</param>
+    /// <returns>The two <see langword="enum"/>s OR'd together</returns>
     /// <remarks>
-    /// <c>return (<paramref name="enum" /> | <paramref name="flag" />);</c>
+    /// <c>return (<paramref name="enum"/> | <paramref name="flag"/>);</c>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TEnum Or<TEnum>(this TEnum @enum, TEnum flag)
@@ -73,14 +73,14 @@ public static class FlagsEnumExtensions
     }
 
     /// <summary>
-    /// Returns a bitwise XOR (<c>^</c>) of the <paramref name="enum" /> and the <paramref name="flag" />
+    /// Returns a bitwise XOR (<c>^</c>) of the <paramref name="enum"/> and the <paramref name="flag"/>
     /// </summary>
-    /// <typeparam name="TEnum">The <see cref="Type" /> of <see langword="enum" /> being XOR'd</typeparam>
-    /// <param name="enum">The first <typeparamref name="TEnum" /> to XOR</param>
-    /// <param name="flag">The second <typeparamref name="TEnum" /> to XOR</param>
-    /// <returns>The two <see langword="enum" />s XOR'd together</returns>
+    /// <typeparam name="TEnum">The <see cref="Type"/> of <see langword="enum"/> being XOR'd</typeparam>
+    /// <param name="enum">The first <typeparamref name="TEnum"/> to XOR</param>
+    /// <param name="flag">The second <typeparamref name="TEnum"/> to XOR</param>
+    /// <returns>The two <see langword="enum"/>s XOR'd together</returns>
     /// <remarks>
-    /// <c>return (<paramref name="enum" /> ^ <paramref name="flag" />);</c>
+    /// <c>return (<paramref name="enum"/> ^ <paramref name="flag"/>);</c>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TEnum Xor<TEnum>(this TEnum @enum, TEnum flag)

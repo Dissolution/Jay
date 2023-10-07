@@ -1,13 +1,13 @@
 ﻿namespace Jay.Extensions;
 
 /// <summary>
-/// Extensions for <see cref="TimeSpan" />
+/// Extensions for <see cref="TimeSpan"/>
 /// </summary>
 public static class TimeSpanExtensions
 {
 #region Multiply
     /// <summary>
-    /// Multiply this <see cref="TimeSpan" /> value by the specified amount.
+    /// Multiply this <see cref="TimeSpan"/> value by the specified amount.
     /// </summary>
     /// <param name="timeSpan"></param>
     /// <param name="multiplier"></param>
@@ -24,7 +24,7 @@ public static class TimeSpanExtensions
     }
     
     /// <summary>
-    /// Multiply this <see cref="TimeSpan" /> value by the specified amount.
+    /// Multiply this <see cref="TimeSpan"/> value by the specified amount.
     /// </summary>
     /// <param name="timeSpan"></param>
     /// <param name="multiplier"></param>
@@ -43,7 +43,7 @@ public static class TimeSpanExtensions
 
 #region Divide
     /// <summary>
-    /// Multiply this <see cref="TimeSpan" /> value by the specified amount.
+    /// Multiply this <see cref="TimeSpan"/> value by the specified amount.
     /// </summary>
     /// <param name="timeSpan"></param>
     /// <param name="divider"></param>
@@ -63,7 +63,7 @@ public static class TimeSpanExtensions
     }
 
     /// <summary>
-    /// Multiply this <see cref="TimeSpan" /> value by the specified amount.
+    /// Multiply this <see cref="TimeSpan"/> value by the specified amount.
     /// </summary>
     /// <param name="timeSpan"></param>
     /// <param name="divider"></param>
@@ -86,7 +86,7 @@ public static class TimeSpanExtensions
 
 #region Rounding
     /// <summary>
-    /// Drop this <see cref="TimeSpan" /> to the earliest <see cref="TimeSpan" /> precision floor.
+    /// Drop this <see cref="TimeSpan"/> to the earliest <see cref="TimeSpan"/> precision floor.
     /// </summary>
     /// <param name="timeSpan"></param>
     /// <param name="precision"></param>
@@ -98,7 +98,7 @@ public static class TimeSpanExtensions
     }
 
     /// <summary>
-    /// Round this <see cref="TimeSpan" /> to the specified <see cref="TimeSpan" /> precision.
+    /// Round this <see cref="TimeSpan"/> to the specified <see cref="TimeSpan"/> precision.
     /// </summary>
     /// <param name="timeSpan"></param>
     /// <param name="precision"></param>
@@ -112,7 +112,7 @@ public static class TimeSpanExtensions
     }
 
     /// <summary>
-    /// Raise this <see cref="TimeSpan" /> to the latest <see cref="TimeSpan" /> precision ceiling.
+    /// Raise this <see cref="TimeSpan"/> to the latest <see cref="TimeSpan"/> precision ceiling.
     /// </summary>
     /// <param name="timeSpan"></param>
     /// <param name="precision"></param>

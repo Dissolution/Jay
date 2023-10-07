@@ -4,7 +4,7 @@ using Jay.Collections.Pooling;
 namespace Jay.Text;
 
 /// <summary>
-/// A pool of <see cref="StringBuilder" /> instances that can be reused
+/// A pool of <see cref="StringBuilder"/> instances that can be reused
 /// </summary>
 public static class StringBuilderPool
 {

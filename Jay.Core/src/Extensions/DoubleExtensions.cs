@@ -1,7 +1,7 @@
 ﻿namespace Jay.Extensions;
 
 /// <summary>
-/// Extensions for <see cref="double" />
+/// Extensions for <see cref="double"/>
 /// </summary>
 public static class DoubleExtensions
 {

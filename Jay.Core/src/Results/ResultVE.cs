@@ -95,7 +95,7 @@ public readonly struct Result<TValue, TException> :
     public static bool operator ^(bool pass, Result<TValue, TException> fullResult) => pass ^ fullResult.IsOk();
 
     /// <summary>
-    /// Get a successful <see cref="Result{T}" /> with the given <paramref name="value" />
+    /// Get a successful <see cref="Result{T}"/> with the given <paramref name="value"/>
     /// </summary>
     public static Result<TValue, TException> Ok(TValue value)
     {
@@ -165,16 +165,16 @@ public readonly struct Result<TValue, TException> :
     }
 
     /// <summary>
-    /// Is this a failed <see cref="Result" />?
+    /// Is this a failed <see cref="Result"/>?
     /// </summary>
     /// <returns>true if this is a failed result; otherwise, false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsError() => !_ok;
 
     /// <summary>
-    /// Is this a failed <see cref="Result" />?
+    /// Is this a failed <see cref="Result"/>?
     /// </summary>
-    /// <param name="error">If this is a failed <see cref="Result" />, the attached <see cref="Exception" />; otherwise <see langword="null" /></param>
+    /// <param name="error">If this is a failed <see cref="Result"/>, the attached <see cref="Exception"/>; otherwise <see langword="null"/></param>
     /// <returns>true if this is a failed result; otherwise, false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsError([NotNullWhen(true)] out TException? error)

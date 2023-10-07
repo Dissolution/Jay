@@ -11,7 +11,7 @@ namespace Jay.Extensions;
 public static class GenericExtensions
 {
     /// <summary>
-    /// Pushes this <paramref name="value" /> to an <c>out</c> <paramref name="output" />.
+    /// Pushes this <paramref name="value"/> to an <c>out</c> <paramref name="output"/>.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Out<T>(this T value, out T output)
@@ -33,7 +33,7 @@ public static class GenericExtensions
     }
 
     /// <summary>
-    /// Starts an <see cref="IEnumerable{T}" /> that yields this <paramref name="value" />
+    /// Starts an <see cref="IEnumerable{T}"/> that yields this <paramref name="value"/>
     /// </summary>
     public static IEnumerable<T?> StartEnumerable<T>(this T? value)
     {

@@ -1,14 +1,14 @@
 ﻿namespace Jay.Extensions;
 
 /// <summary>
-/// Extensions for <see cref="IComparable{T}" /> and <see cref="IComparable" /> values.
+/// Extensions for <see cref="IComparable{T}"/> and <see cref="IComparable"/> values.
 /// </summary>
 public static class ComparableExtensions
 {
     /// <summary>
-    /// Limit this <see cref="IComparable{T}" /> value between a minimum and maximum value.
+    /// Limit this <see cref="IComparable{T}"/> value between a minimum and maximum value.
     /// </summary>
-    /// <param name="value">The <see cref="IComparable{T}" /> value to limit.</param>
+    /// <param name="value">The <see cref="IComparable{T}"/> value to limit.</param>
     /// <param name="minimum">The minimum inclusive value it can be.</param>
     /// <param name="maximum">The maximum inclusive value it can be.</param>
     public static void Clamp<T>(ref T value, T minimum, T maximum)
@@ -25,10 +25,10 @@ public static class ComparableExtensions
     }
 
     /// <summary>
-    /// Limit this <see cref="IComparable{T}" /> value between a minimum and maximum value.
+    /// Limit this <see cref="IComparable{T}"/> value between a minimum and maximum value.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="value">The <see cref="IComparable{T}" /> value to limit.</param>
+    /// <param name="value">The <see cref="IComparable{T}"/> value to limit.</param>
     /// <param name="minimum">The minimum inclusive value it can be.</param>
     /// <param name="maximum">The maximum inclusive value it can be.</param>
     /// <returns></returns>
@@ -41,10 +41,10 @@ public static class ComparableExtensions
     }
 
     /// <summary>
-    /// Is this <see cref="IComparable{T}" /> value between a minimum and maximum value?
+    /// Is this <see cref="IComparable{T}"/> value between a minimum and maximum value?
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="value">The <see cref="IComparable{T}" /> value to check.</param>
+    /// <param name="value">The <see cref="IComparable{T}"/> value to check.</param>
     /// <param name="minimum">The minimum inclusive value it can be.</param>
     /// <param name="maximum">The maximum inclusive value it can be.</param>
     /// <returns></returns>

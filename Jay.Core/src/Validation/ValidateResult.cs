@@ -1,8 +1,8 @@
-﻿using static Jay.Import_Results;
+﻿using static Jay.Utilities.StaticImports;
 
 namespace Jay.Validation;
 
-public class ValidateResult
+public static class ValidateResult
 {
     public static Result IsNotNull<T>(
         [AllowNull, NotNullWhen(true)] T? value,

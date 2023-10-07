@@ -18,7 +18,7 @@
 
     <!-- Public Packages  -->
     <ItemGroup>
-        <PackageReference Include="IndexRange" Version="1.0.2" />
+        <PackageReference Include="IndexRange" Version="1.0.2"/>
         <PackageReference Include="PolySharp" Version="1.12.1">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

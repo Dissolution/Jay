@@ -1,12 +1,12 @@
 ﻿namespace Jay.Extensions;
 
 /// <summary>
-/// Extensions for <see cref="DateTime" />
+/// Extensions for <see cref="DateTime"/>
 /// </summary>
 public static class DateTimeExtensions
 {
     /// <summary>
-    /// How much time has elapsed since this <see cref="DateTime" /> occured?
+    /// How much time has elapsed since this <see cref="DateTime"/> occured?
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
@@ -18,7 +18,7 @@ public static class DateTimeExtensions
     }
 
     /// <summary>
-    /// Creates a new <see cref="DateTime" /> that is this <see cref="DateTime" /> as the specified <see cref="DateTimeKind" />
+    /// Creates a new <see cref="DateTime"/> that is this <see cref="DateTime"/> as the specified <see cref="DateTimeKind"/>
     /// </summary>
     /// <param name="dateTime"></param>
     /// <param name="kind"></param>
@@ -118,7 +118,7 @@ public static class DateTimeExtensions
 
 #region Rounding
     /// <summary>
-    /// Drop this <see cref="DateTime" /> to the earliest <see cref="TimeSpan" /> precision floor.
+    /// Drop this <see cref="DateTime"/> to the earliest <see cref="TimeSpan"/> precision floor.
     /// </summary>
     /// <param name="dateTime"></param>
     /// <param name="precision"></param>
@@ -130,7 +130,7 @@ public static class DateTimeExtensions
     }
 
     /// <summary>
-    /// Round this <see cref="DateTime" /> to the specified <see cref="TimeSpan" /> precision.
+    /// Round this <see cref="DateTime"/> to the specified <see cref="TimeSpan"/> precision.
     /// </summary>
     /// <param name="dateTime"></param>
     /// <param name="precision"></param>
@@ -144,7 +144,7 @@ public static class DateTimeExtensions
     }
 
     /// <summary>
-    /// Raise this <see cref="DateTime" /> to the latest <see cref="TimeSpan" /> precision ceiling.
+    /// Raise this <see cref="DateTime"/> to the latest <see cref="TimeSpan"/> precision ceiling.
     /// </summary>
     /// <param name="dateTime"></param>
     /// <param name="precision"></param>

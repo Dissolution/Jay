@@ -64,17 +64,17 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     }
     
     /// <summary>
-    /// Creates a new <see cref="ObjectPool{T}" /> for classes
+    /// Creates a new <see cref="ObjectPool{T}"/> for classes
     /// </summary>
     /// <typeparam name="T">An instance class</typeparam>
     /// <param name="factory">
-    /// A function to create a new <typeparamref name="T" /> instance
+    /// A function to create a new <typeparamref name="T"/> instance
     /// </param>
     /// <param name="clean">
-    /// An optional action to perform on a <typeparamref name="T" /> when it is returned
+    /// An optional action to perform on a <typeparamref name="T"/> when it is returned
     /// </param>
     /// <param name="dispose">
-    /// An optional action to perform on a <typeparamref name="T" /> if it is disposed
+    /// An optional action to perform on a <typeparamref name="T"/> if it is disposed
     /// </param>
     public ObjectPool(
         PoolInstanceFactory<T> factory,
@@ -86,13 +86,13 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
 
 
     /// <summary>
-    /// Creates a new <see cref="ObjectPool{T}" /> for classes with a specified <paramref name="capacity" />.
+    /// Creates a new <see cref="ObjectPool{T}"/> for classes with a specified <paramref name="capacity"/>.
     /// </summary>
     /// <typeparam name="T">An instance class</typeparam>
     /// <param name="capacity">The specific number of items that will ever be retained in the pool.</param>
-    /// <param name="factory">A function to create a new <typeparamref name="T" /> instance.</param>
-    /// <param name="clean">An optional action to perform on a <typeparamref name="T" /> when it is returned.</param>
-    /// <param name="dispose">An optional action to perform on a <typeparamref name="T" /> if it is disposed.</param>
+    /// <param name="factory">A function to create a new <typeparamref name="T"/> instance.</param>
+    /// <param name="clean">An optional action to perform on a <typeparamref name="T"/> when it is returned.</param>
+    /// <param name="dispose">An optional action to perform on a <typeparamref name="T"/> if it is disposed.</param>
     public ObjectPool(
         int capacity,
         PoolInstanceFactory<T> factory,
@@ -118,7 +118,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
    
 
     /// <summary>
-    /// Rent a <typeparamref name="T" /> instance that should be <see cref="Return" />ed.
+    /// Rent a <typeparamref name="T"/> instance that should be <see cref="Return"/>ed.
     /// </summary>
     public T Rent()
     {
@@ -138,7 +138,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     }
 
     /// <summary>
-    /// Returns a <typeparamref name="T" /> instance to the pool to be cleaned and re-used.
+    /// Returns a <typeparamref name="T"/> instance to the pool to be cleaned and re-used.
     /// </summary>
     public void Return(T? instance)
     {
@@ -170,16 +170,16 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     }
 
     /// <summary>
-    /// Rents a <typeparamref name="T" /> <paramref name="instance" />
-    /// that will be returned when the returned <see cref="IDisposable" /> is disposed.
+    /// Rents a <typeparamref name="T"/> <paramref name="instance"/>
+    /// that will be returned when the returned <see cref="IDisposable"/> is disposed.
     /// </summary>
     /// <param name="instance">
-    /// A <typeparamref name="T" /> instance,
-    /// it will be returned to its origin <see cref="ObjectPool{T}" /> when disposed.
+    /// A <typeparamref name="T"/> instance,
+    /// it will be returned to its origin <see cref="ObjectPool{T}"/> when disposed.
     /// </param>
-    /// <returns>An <see cref="IDisposable" /> that will return the <paramref name="instance" />.</returns>
+    /// <returns>An <see cref="IDisposable"/> that will return the <paramref name="instance"/>.</returns>
     /// <remarks>
-    /// <paramref name="instance" /> must not be used after this is disposed.
+    /// <paramref name="instance"/> must not be used after this is disposed.
     /// </remarks>
     public IDisposable GetInstance(out T instance)
     {
@@ -211,7 +211,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     }
 
     /// <summary>
-    /// Frees all stored <typeparamref name="T" /> instances.
+    /// Frees all stored <typeparamref name="T"/> instances.
     /// </summary>
     public void Dispose()
     {
@@ -235,7 +235,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     }
 
     /// <summary>
-    /// When we cannot find an available item quickly with <see cref="Rent()" />, we take this slower path
+    /// When we cannot find an available item quickly with <see cref="Rent()"/>, we take this slower path
     /// </summary>
     private T RentSlow()
     {
@@ -258,7 +258,7 @@ public class ObjectPool<T> : IObjectPool<T>, IDisposable
     }
 
     /// <summary>
-    /// When we cannot return quickly with <see cref="Return" />, we take this slower path.
+    /// When we cannot return quickly with <see cref="Return"/>, we take this slower path.
     /// </summary>
     /// <param name="instance"></param>
     private void ReturnSlow(T instance)

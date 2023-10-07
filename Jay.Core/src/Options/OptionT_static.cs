@@ -22,12 +22,12 @@ partial struct Option<T>
     public static bool operator !=(object? obj, Option<T> option) => !option.Equals(obj);
     
     /// <summary>
-    /// Create an <see cref="Option{T}" /> containing <paramref name="value" />
+    /// Create an <see cref="Option{T}"/> containing <paramref name="value"/>
     /// </summary>
     public static Option<T> Some(T value) => new(true, value);
 
     /// <summary>
-    /// Represents no value, the same as <see cref="Void" />
+    /// Represents no value, the same as <see cref="Void"/>
     /// </summary>
     public static readonly Option<T> None = default;
 }

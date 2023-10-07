@@ -26,23 +26,23 @@ public static class Validate
 
 
     /// <summary>
-    /// Validates <paramref name="value" />:<br />
-    /// If <c>null</c>, throws a <see cref="ArgumentNullException" />
+    /// Validates <paramref name="value"/>:<br />
+    /// If <c>null</c>, throws a <see cref="ArgumentNullException"/>
     /// </summary>
     /// <typeparam name="T">
-    /// The <see cref="Type" /> of <paramref name="value" /> to validate
+    /// The <see cref="Type"/> of <paramref name="value"/> to validate
     /// </typeparam>
     /// <param name="value">
-    /// The <typeparamref name="T" /> value to check for <c>null</c>
+    /// The <typeparamref name="T"/> value to check for <c>null</c>
     /// </param>
     /// <param name="exMessage">
-    /// An optional message for a thrown <see cref="ArgumentNullException" />
+    /// An optional message for a thrown <see cref="ArgumentNullException"/>
     /// </param>
     /// <param name="valueName">
     /// The name of the value argument
     /// </param>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="value" /> is <c>null</c>
+    /// Thrown if <paramref name="value"/> is <c>null</c>
     /// </exception>
     public static void IsNotNull<T>(
         [AllowNull,NotNull]  T value,
@@ -148,13 +148,13 @@ public static class Validate
     
 
     /// <summary>
-    /// Validates that the <paramref name="index" /> fits in <paramref name="available" />
+    /// Validates that the <paramref name="index"/> fits in <paramref name="available"/>
     /// </summary>
     /// <param name="available">The number of items available to be indexed into</param>
     /// <param name="index">The index attempting to be referenced</param>
     /// <param name="indexName">The name of the index parameter</param>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// Thrown if <paramref name="index" /> <c>is</c> &lt; 0 <c>or</c> &gt;= <paramref name="available" />
+    /// Thrown if <paramref name="index"/> <c>is</c> &lt; 0 <c>or</c> &gt;= <paramref name="available"/>
     /// </exception>
     public static void Index(
         int available,

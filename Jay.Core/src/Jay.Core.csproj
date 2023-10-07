@@ -78,6 +78,6 @@
     </ItemGroup>
     
     <ItemGroup>
-      <Folder Include="Scratch\" />
+      <Folder Include="Scratch\"/>
     </ItemGroup>
 </Project>

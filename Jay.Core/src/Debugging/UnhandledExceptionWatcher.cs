@@ -1,7 +1,7 @@
 ﻿namespace Jay.Debugging;
 
 /// <summary>
-/// A utility for subscribing to all types of unhandled <see cref="Exception" />s.
+/// A utility for subscribing to all types of unhandled <see cref="Exception"/>s.
 /// </summary>
 public class UnhandledExceptionWatcher : IDisposable
 {

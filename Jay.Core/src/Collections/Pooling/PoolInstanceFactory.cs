@@ -1,7 +1,7 @@
 ﻿namespace Jay.Collections.Pooling;
 
 /// <summary>
-/// A function which creates a <typeparamref name="T" /> instance
+/// A function which creates a <typeparamref name="T"/> instance
 /// </summary>
 /// <typeparam name="T">An instance class type</typeparam>
 /// <returns>
