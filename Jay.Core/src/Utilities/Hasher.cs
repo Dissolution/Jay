@@ -6,8 +6,8 @@ namespace Jay.Utilities;
 
 /// <summary>
 /// Hasher is a near-copy of <c>System.HashCode</c> for use in
-/// netstandard2.0 and net48 environments.<br />
-/// It also has more methods to ease hashcode generation.
+/// <c>netstandard2.0</c> and <c>net48</c> environments.<br />
+/// It also has extra methods to easy hashcode generation
 /// </summary>
 public ref struct Hasher
 {
@@ -79,12 +79,10 @@ public ref struct Hasher
         return hash;
     }
     
+    
     /// <summary>
-    /// Gets the hash code for a single <paramref name="value"/>
+    /// Gets the hashcode for a single <paramref name="value"/>
     /// </summary>
-    /// <param name="value"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
     public static int GetHashCode<T>(T? value)
     {
         var hc1 = (uint)(value?.GetHashCode() ?? 0);
@@ -98,7 +96,9 @@ public ref struct Hasher
         return (int)hash;
     }
 
-    
+    /// <summary>
+    /// Gets a combined hashcode for the given values
+    /// </summary>
     public static int Combine<T1, T2>(T1? value1, T2? value2)
     {
         var hc1 = (uint)(value1?.GetHashCode() ?? 0);
@@ -277,10 +277,7 @@ public ref struct Hasher
             default:
             {
                 var hasher = new Hasher();
-                for (var i = 0; i < span.Length; i++)
-                {
-                    hasher.Add(span[i]);
-                }
+                hasher.AddAll<T>(span);
                 return hasher.ToHashCode();
             }
         }
@@ -289,14 +286,11 @@ public ref struct Hasher
     public static int Combine<T>(ReadOnlySpan<T> span, IEqualityComparer<T>? comparer)
     {
         var hasher = new Hasher();
-        for (var i = 0; i < span.Length; i++)
-        {
-            hasher.Add(span[i], comparer);
-        }
+        hasher.AddAll<T>(span, comparer);
         return hasher.ToHashCode();
     }
 
-    public static int Combine<T>(params T?[]? array)
+    public static int Combine<T>(params T[]? array)
     {
         if (array is null) return 0;
         switch (array.Length)
@@ -313,23 +307,17 @@ public ref struct Hasher
             default:
             {
                 var hasher = new Hasher();
-                for (var i = 0; i < array.Length; i++)
-                {
-                    hasher.Add(array[i]);
-                }
+                hasher.AddAll<T>(array);
                 return hasher.ToHashCode();
             }
         }
     }
 
-    public static int Combine<T>(T?[]? array, IEqualityComparer<T>? comparer)
+    public static int Combine<T>(T[]? array, IEqualityComparer<T>? comparer)
     {
         if (array is null) return 0;
         var hasher = new Hasher();
-        for (var i = 0; i < array.Length; i++)
-        {
-            hasher.Add(array[i], comparer);
-        }
+        hasher.AddAll<T>(array, comparer);
         return hasher.ToHashCode();
     }
 
@@ -339,7 +327,7 @@ public ref struct Hasher
         var hasher = new Hasher();
         foreach (T value in enumerable)
         {
-            hasher.Add(value);
+            hasher.Add<T>(value);
         }
         return hasher.ToHashCode();
     }
@@ -350,7 +338,7 @@ public ref struct Hasher
         var hasher = new Hasher();
         foreach (T value in enumerable)
         {
-            hasher.Add(value, comparer);
+            hasher.Add<T>(value, comparer);
         }
         return hasher.ToHashCode();
     }
@@ -386,7 +374,7 @@ public ref struct Hasher
         }
     }
 
-    public void Add<T>(T? value)
+    public void Add<T>([AllowNull] T value)
     {
         if (value is null)
         {
@@ -398,7 +386,7 @@ public ref struct Hasher
         }
     }
 
-    public void Add<T>(T? value, IEqualityComparer<T>? comparer)
+    public void Add<T>([AllowNull] T value, IEqualityComparer<T>? comparer)
     {
         if (value is null)
         {
@@ -414,7 +402,39 @@ public ref struct Hasher
         }
     }
 
-    public void AddAll<T>(params T?[]? values)
+    public void AddAll<T>(ReadOnlySpan<T> values)
+    {
+        for (var i = 0; i < values.Length; i++)
+        {
+            Add<T>(values[i]);
+        }
+    }
+
+    public void AddAll<T>(ReadOnlySpan<T> values, IEqualityComparer<T>? comparer)
+    {
+        for (var i = 0; i < values.Length; i++)
+        {
+            Add<T>(values[i], comparer);
+        }
+    }
+    
+    public void AddAll<T>(Span<T> values)
+    {
+        for (var i = 0; i < values.Length; i++)
+        {
+            Add<T>(values[i]);
+        }
+    }
+
+    public void AddAll<T>(Span<T> values, IEqualityComparer<T>? comparer)
+    {
+        for (var i = 0; i < values.Length; i++)
+        {
+            Add<T>(values[i], comparer);
+        }
+    }
+    
+    public void AddAll<T>(params T[]? values)
     {
         if (values is null) return;
         for (var i = 0; i < values.Length; i++)
@@ -423,7 +443,7 @@ public ref struct Hasher
         }
     }
 
-    public void AddAll<T>(T?[]? values, IEqualityComparer<T>? comparer)
+    public void AddAll<T>(T[]? values, IEqualityComparer<T>? comparer)
     {
         if (values is null) return;
         for (var i = 0; i < values.Length; i++)
@@ -432,19 +452,19 @@ public ref struct Hasher
         }
     }
 
-    public void AddAll<T>(IEnumerable<T?>? values)
+    public void AddAll<T>(IEnumerable<T>? values)
     {
         if (values is null) return;
-        foreach (T? value in values)
+        foreach (var value in values)
         {
             Add<T>(value);
         }
     }
 
-    public void AddAll<T>(IEnumerable<T?>? values, IEqualityComparer<T>? comparer)
+    public void AddAll<T>(IEnumerable<T>? values, IEqualityComparer<T>? comparer)
     {
         if (values is null) return;
-        foreach (T? value in values)
+        foreach (var value in values)
         {
             Add<T>(value, comparer);
         }

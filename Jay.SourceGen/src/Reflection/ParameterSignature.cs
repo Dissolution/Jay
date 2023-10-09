@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using static Jay.StaticImports;
 
 namespace Jay.SourceGen.Reflection;
 
@@ -49,11 +50,11 @@ public sealed class ParameterSignature :
         this.ParameterType = new TypeSignature(parameterSymbol.Type);
         if (parameterSymbol.HasExplicitDefaultValue)
         {
-            this.DefaultValue = Option.Some<object?>(parameterSymbol.ExplicitDefaultValue);
+            this.DefaultValue = Some<object?>(parameterSymbol.ExplicitDefaultValue);
         }
         else
         {
-            this.DefaultValue = Option.None<object?>();
+            this.DefaultValue = None<object?>();
         }
         this.IsThis = parameterSymbol.IsThis;
         this.IsParams = parameterSymbol.IsParams;
@@ -74,11 +75,11 @@ public sealed class ParameterSignature :
         this.ParameterType = new TypeSignature(parameterType);
         if (parameterInfo.HasDefaultValue)
         {
-            this.DefaultValue = Option.Some<object?>(parameterInfo.DefaultValue);
+            this.DefaultValue = Some<object?>(parameterInfo.DefaultValue);
         }
         else
         {
-            this.DefaultValue = Option.None<object?>();
+            this.DefaultValue = None<object?>();
         }
         this.IsThis = parameterInfo.Member.HasAttribute<ExtensionAttribute>();
         this.IsParams = parameterInfo.GetCustomAttribute<ParamArrayAttribute>() != null;

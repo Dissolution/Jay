@@ -17,6 +17,9 @@ namespace Jay.Utilities;
 /// </summary>
 public static class Constraints
 {
+    /// <summary>
+    /// Constrains <typeparamref name="T"/> to only non-<c>static</c> types that have a default constructor
+    /// </summary>
     public readonly struct IsNew<T> where T : new()
     {
     }
@@ -40,7 +43,7 @@ public static class Constraints
     public readonly struct IsNewDisposable<T> where T : IDisposable, new()
     {
     }
-
+    
 #if NET7_0_OR_GREATER
     public readonly struct IsSpanParsable<T> where T : ISpanParsable<T>
     {

@@ -1,13 +1,20 @@
-﻿namespace Jay.Utilities;
+﻿namespace Jay;
 
 // ReSharper disable once InconsistentNaming
 public static class StaticImports
 {
+    public static Option<T> None<T>() => Option<T>.None;
+    
+    public static Option<T> Some<T>(T value) => Option<T>.Some(value);
+    
     public static Result Ok() => Result.Ok(); 
+    
     public static Result<TValue> Ok<TValue>(TValue value) => Result<TValue>.Ok(value);
 
     public static Result Error(Exception error) => Result.Error(error);
+    
     public static Result<TValue> Error<TValue>([NotNull] Exception error) => Result<TValue>.Error(error);
+    
     public static Result<TValue, TException> Error<TValue, TException>([NotNull] TException error)
         where TException : Exception
         => Result<TValue, TException>.Error(error);
@@ -98,7 +105,7 @@ public static class StaticImports
             return Result<TValue>.Error(ex);
         }
     }
-    
+
     /// <summary>
     /// Invokes a <paramref name="func"/> and returns its result <br/>
     /// If the function throws an <see cref="Exception"/>, a <paramref name="fallback"/> value will be returned instead
@@ -109,7 +116,7 @@ public static class StaticImports
     /// <returns>The result of <paramref name="func"/> or <paramref name="fallback"/></returns>
     [return: NotNullIfNotNull(nameof(fallback))]
     public static T? InvokeOrDefault<T>(
-        this Func<T>? func, 
+        this Func<T>? func,
         T? fallback = default)
     {
         if (func is null)

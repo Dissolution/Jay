@@ -134,6 +134,9 @@ public static class TypeNames
         return name.ToStringAndReturn();
     }
 
+    /// <summary>
+    /// Gets a <c>C#</c> code representation of this <see cref="Type"/>
+    /// </summary>
     public static string ToCode(this Type? type)
     {
         if (type is null)
@@ -142,6 +145,9 @@ public static class TypeNames
         return _typeNameCache.GetOrAdd(type, GetTypeName);
     }
 
+    /// <summary>
+    /// Gets a <c>C#</c> code representation for <typeparamref name="T"/>
+    /// </summary>
     public static string ToCode<T>()
     {
         return _typeNameCache.GetOrAdd<T>(GetTypeName);

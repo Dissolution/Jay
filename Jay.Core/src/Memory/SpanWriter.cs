@@ -20,13 +20,13 @@ public ref struct SpanWriter<T>
         get => _span.Length;
     }
     
-    public Span<T> WrittenSpan
+    public Span<T> WrittenItems
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _span[.._position];
     }
 
-    public Span<T> RemainingSpan
+    public Span<T> AvailableItems
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _span[_position..];
@@ -160,7 +160,7 @@ public ref struct SpanWriter<T>
     
     public Result TryAllocate(int count, out Span<T> allocated)
     {
-        var remaining = this.RemainingSpan;
+        var remaining = this.AvailableItems;
         if ((uint)count <= remaining.Length)
         {
             allocated = remaining[..count];
@@ -173,7 +173,7 @@ public ref struct SpanWriter<T>
 
     public override string ToString()
     {
-        var written = this.WrittenSpan;
+        var written = this.WrittenItems;
         var writtenCount = written.Length;
         if (writtenCount == 0)
             return string.Empty;

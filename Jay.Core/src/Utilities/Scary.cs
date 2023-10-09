@@ -14,6 +14,7 @@ namespace Jay.Utilities;
 /// Similar to <see cref="System.Runtime.CompilerServices.Unsafe"/>, this helper class is full
 /// of bad things you shouldn't use unless you understand what you are doing.
 /// </summary>
+/// <see href="https://github.com/ltrzesniewski/InlineIL.Fody/blob/master/src/InlineIL.Examples/Unsafe.cs"/>
 public static unsafe class Scary
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -34,7 +35,6 @@ public static unsafe class Scary
 
 
 #region Read / Write
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Read<T>(void* source)
     {
@@ -42,33 +42,32 @@ public static unsafe class Scary
         Emit.Ldobj<T>();
         return Return<T>();
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Read<T>(in byte source)
+    {
+        Emit.Ldarg(nameof(source));
+        Emit.Ldobj<T>();
+        return Return<T>();
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T ReadUnaligned<T>(void* source)
     {
         Emit.Ldarg(nameof(source));
         Emit.Unaligned(1);
-        Emit.Ldobj<T>();
+        Emit.Ldobj(typeof(T));
         return Return<T>();
     }
-
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T ReadUnaligned<T>(in byte source)
     {
         Emit.Ldarg(nameof(source));
         Emit.Unaligned(1);
-        Emit.Ldobj<T>();
+        Emit.Ldobj(typeof(T));
         return Return<T>();
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T ReadUnaligned<T>(ReadOnlySpan<byte> source)
-        where T : struct
-    {
-        return Unsafe.ReadUnaligned<T>(ref Unsafe.AsRef(in source.GetPinnableReference()));
-    }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Write<T>(void* destination, T value)
@@ -97,7 +96,6 @@ public static unsafe class Scary
         Emit.Unaligned(1);
         Emit.Stobj<T>();
     }
-
 #endregion
 
 #region CopyTo
@@ -128,13 +126,10 @@ public static unsafe class Scary
         Emit.Ldobj<TIn>();
         Emit.Stobj<TOut>();
     }
-
 #endregion
 
 #region As / Cast / Box / Unbox
-
 #region To
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T* VoidPointerToPointer<T>(void* voidPtr)
         where T : unmanaged
@@ -319,7 +314,6 @@ public static unsafe class Scary
     {
         return ref MemoryMarshal.GetReference(readOnlySpan);
     }
-
 #endregion
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -373,7 +367,6 @@ public static unsafe class Scary
         Emit.Unbox<T>();
         return ref ReturnRef<T>();
     }
-
 #endregion
 
 
@@ -391,145 +384,117 @@ public static unsafe class Scary
         Emit.Sizeof<T>();
         return Return<int>();
     }
-
-#region Blocks (byte[])
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyBlock(
-        in byte sourceByte, ref byte destByte,
-        int byteCount)
-    {
-        Emit.Ldarg(nameof(destByte));
-        Emit.Ldarg(nameof(sourceByte));
-        Emit.Ldarg(nameof(byteCount));
-        Emit.Cpblk();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyToBlock(
-        void* source, void* destination,
-        uint byteCount)
-    {
-        Emit.Ldarg(nameof(destination));
-        Emit.Ldarg(nameof(source));
-        Emit.Ldarg(nameof(byteCount));
-        Emit.Cpblk();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyToBlock(
-        in byte source, ref byte destination,
-        uint byteCount)
-    {
-        Emit.Ldarg(nameof(destination));
-        Emit.Ldarg(nameof(source));
-        Emit.Ldarg(nameof(byteCount));
-        Emit.Cpblk();
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyToBlockUnaligned(
-        void* source, void* destination,
-        uint byteCount)
-    {
-        Emit.Ldarg(nameof(destination));
-        Emit.Ldarg(nameof(source));
-        Emit.Ldarg(nameof(byteCount));
-        Emit.Unaligned(1);
-        Emit.Cpblk();
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CopyToBlockUnaligned(
-        in byte source, ref byte destination,
-        uint byteCount)
-    {
-        Emit.Ldarg(nameof(destination));
-        Emit.Ldarg(nameof(source));
-        Emit.Ldarg(nameof(byteCount));
-        Emit.Unaligned(1);
-        Emit.Cpblk();
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void InitBlock(
-        void* startAddress, byte value,
-        uint byteCount)
-    {
-        Emit.Ldarg(nameof(startAddress));
-        Emit.Ldarg(nameof(value));
-        Emit.Ldarg(nameof(byteCount));
-        Emit.Initblk();
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void InitBlock(
-        ref byte startAddress, byte value,
-        uint byteCount)
-    {
-        Emit.Ldarg(nameof(startAddress));
-        Emit.Ldarg(nameof(value));
-        Emit.Ldarg(nameof(byteCount));
-        Emit.Initblk();
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void InitBlockUnaligned(
-        void* startAddress, byte value,
-        uint byteCount)
-    {
-        Emit.Ldarg(nameof(startAddress));
-        Emit.Ldarg(nameof(value));
-        Emit.Ldarg(nameof(byteCount));
-        Emit.Unaligned(1);
-        Emit.Initblk();
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void InitBlockUnaligned(
-        ref byte startAddress, byte value,
-        uint byteCount)
-    {
-        Emit.Ldarg(nameof(startAddress));
-        Emit.Ldarg(nameof(value));
-        Emit.Ldarg(nameof(byteCount));
-        Emit.Unaligned(1);
-        Emit.Initblk();
-    }
-
+    
     /// <summary>
-    /// Makes an exact copy of the given <see cref="byte"/> array.
+    /// Methods related to working with byte blocks
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte[] CopyBytes(byte[] bytes)
+    public static class Block
     {
-        DeclareLocals(
-            new LocalVar("len", typeof(int)),
-            new LocalVar("newArray", typeof(byte[])));
-        Emit.Ldarg(nameof(bytes));
-        Emit.Ldlen();
-        Emit.Stloc("len");
-        Emit.Ldloc("len");
-        Emit.Newarr<byte>();
-        Emit.Stloc("newArray");
-        Emit.Ldloca("newArray");
-        Emit.Ldarga(nameof(bytes));
-        Emit.Ldloc("len");
-        Emit.Cpblk();
-        Emit.Ldloc("newArray");
-        return Return<byte[]>();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyTo(void* sourcePtr, void* destPtr, uint byteCount)
+        {
+            Emit.Ldarg(nameof(destPtr));
+            Emit.Ldarg(nameof(sourcePtr));
+            Emit.Ldarg(nameof(byteCount));
+            Emit.Cpblk();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CopyTo(in byte sourceByte, ref byte destByte, int byteCount)
+        {
+            Emit.Ldarg(nameof(destByte));
+            Emit.Ldarg(nameof(sourceByte));
+            Emit.Ldarg(nameof(byteCount));
+            Emit.Cpblk();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UnalignedCopyTo(void* sourcePtr, void* destPtr, uint byteCount)
+        {
+            Emit.Ldarg(nameof(destPtr));
+            Emit.Ldarg(nameof(sourcePtr));
+            Emit.Ldarg(nameof(byteCount));
+            Emit.Unaligned(1);
+            Emit.Cpblk();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UnalignedCopyTo(in byte sourceByte, ref byte destByte, int byteCount)
+        {
+            Emit.Ldarg(nameof(destByte));
+            Emit.Ldarg(nameof(sourceByte));
+            Emit.Ldarg(nameof(byteCount));
+            Emit.Unaligned(1);
+            Emit.Cpblk();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Init(void* startPtr, byte value, uint byteCount)
+        {
+            Emit.Ldarg(nameof(startPtr));
+            Emit.Ldarg(nameof(value));
+            Emit.Ldarg(nameof(byteCount));
+            Emit.Initblk();
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Init(ref byte startByte, byte value, int byteCount)
+        {
+            Emit.Ldarg(nameof(startByte));
+            Emit.Ldarg(nameof(value));
+            Emit.Ldarg(nameof(byteCount));
+            Emit.Initblk();
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UnalignedInit(void* startPtr, byte value, uint byteCount)
+        {
+            Emit.Ldarg(nameof(startPtr));
+            Emit.Ldarg(nameof(value));
+            Emit.Ldarg(nameof(byteCount));
+            Emit.Unaligned(1);
+            Emit.Initblk();
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UnalignedInit(ref byte startByte, byte value, int byteCount)
+        {
+            Emit.Ldarg(nameof(startByte));
+            Emit.Ldarg(nameof(value));
+            Emit.Ldarg(nameof(byteCount));
+            Emit.Unaligned(1);
+            Emit.Initblk();
+        }
+        
+        /// <summary>
+        /// Makes an exact copy of the given <see cref="byte"/> array.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] CopyBytes(byte[] bytes)
+        {
+            DeclareLocals(
+                new LocalVar("len", typeof(int)),
+                new LocalVar("newArray", typeof(byte[])));
+            Emit.Ldarg(nameof(bytes));
+            Emit.Ldlen();
+            Emit.Stloc("len");
+            Emit.Ldloc("len");
+            Emit.Newarr<byte>();
+            Emit.Stloc("newArray");
+            Emit.Ldloca("newArray");
+            Emit.Ldarga(nameof(bytes));
+            Emit.Ldloc("len");
+            Emit.Cpblk();
+            Emit.Ldloc("newArray");
+            return Return<byte[]>();
+        }
     }
 
-#endregion
 
 #region Offsets
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* OffsetBy<T>(void* source, int elementOffset)
     {
@@ -586,7 +551,6 @@ public static unsafe class Scary
         Emit.Add();
         return ReturnPointer();
     }
-
 #endregion
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

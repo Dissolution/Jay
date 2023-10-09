@@ -21,8 +21,16 @@ public ref struct SpanReader<T>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _span;
     }
+    
+    public int Position
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _position;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal set => _position = value;
+    }
 
-    internal int Length
+    public int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _span.Length;
@@ -34,15 +42,13 @@ public ref struct SpanReader<T>
         get => _span.Length - _position;
     }
 
-    public int Position
+    public ReadOnlySpan<T> ReadItems
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _position;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal set => _position = value;
+        get => _span[.._position];
     }
-
-    public ReadOnlySpan<T> Remaining
+    
+    public ReadOnlySpan<T> UnreadItems
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _span[_position..];
@@ -79,15 +85,13 @@ public ref struct SpanReader<T>
 
     public T Peek()
     {
-        var result = TryPeek(out var value);
-        result.ThrowIfError();
+        TryPeek(out var value).ThrowIfError();
         return value!;
     }
 
     public ReadOnlySpan<T> Peek(int count)
     {
-        var result = TryPeek(count, out var values);
-        result.ThrowIfError();
+        TryPeek(count, out var values).ThrowIfError();
         return values;
     }
 #endregion

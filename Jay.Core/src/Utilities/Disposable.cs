@@ -14,15 +14,6 @@ public static class Disposable
         return new ActionDisposable(action);
     }
 
-#if !(NET48 || NETSTANDARD2_0)
-    public static IAsyncDisposable NoneAsync => _unDisposable;
-
-    public static IAsyncDisposable FromTask(Func<Task>? asyncAction)
-    {
-        return new ActionAsyncDisposable(asyncAction);
-    }
-#endif
-
     /// <summary>
     /// An <see cref="IDisposable"/> / <c>IAsyncDisposable</c> that doesn't do anything.
     /// </summary>

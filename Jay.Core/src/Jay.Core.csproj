@@ -76,8 +76,4 @@
             <_Parameter1>Jay.Core.Tests</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
-    
-    <ItemGroup>
-      <Folder Include="Scratch\"/>
-    </ItemGroup>
 </Project>

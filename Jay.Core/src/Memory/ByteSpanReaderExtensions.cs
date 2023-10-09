@@ -2,6 +2,9 @@
 
 namespace Jay.Memory;
 
+/// <summary>
+/// Extensions on <see cref="SpanReader{T}">SpanReader&lt;byte&gt;</see>
+/// </summary>
 public static class ByteSpanReaderExtensions
 {
     public static bool TryPeek<T>(
@@ -11,7 +14,7 @@ public static class ByteSpanReaderExtensions
     {
         if (byteReader.TryPeek(Scary.SizeOf<T>(), out var bytes))
         {
-            value = Scary.ReadUnaligned<T>(bytes);
+            value = Scary.ReadUnaligned<T>(in bytes.GetPinnableReference());
             return true;
         }
         value = default;
@@ -25,7 +28,7 @@ public static class ByteSpanReaderExtensions
     {
         if (byteReader.TryTake(Scary.SizeOf<T>(), out var bytes))
         {
-            value = Scary.ReadUnaligned<T>(bytes);
+            value = Scary.ReadUnaligned<T>(in bytes.GetPinnableReference());
             return true;
         }
         value = default;

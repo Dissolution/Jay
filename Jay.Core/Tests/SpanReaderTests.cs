@@ -11,7 +11,7 @@ public class SpanReaderTests
         ReadOnlySpan<char> text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".AsSpan();
         SpanReader<char> textIterator = new(text);
         Assert.Equal(0, textIterator.Position);
-        Assert.Equal(26, textIterator.Remaining.Length);
+        Assert.Equal(26, textIterator.UnreadItems.Length);
 
         var aTaken = textIterator.TakeWhile(ch => ch == '.');
         Assert.Equal(0, aTaken.Length);
@@ -20,7 +20,7 @@ public class SpanReaderTests
         Assert.Equal(1, bTaken.Length);
         Assert.Equal('A', bTaken[0]);
         Assert.Equal(1,textIterator.Position);
-        Assert.Equal(25, textIterator.Remaining.Length);
+        Assert.Equal(25, textIterator.UnreadItems.Length);
 
         var cTaken = textIterator.TakeWhile(ch => ch != 'F');
         Assert.Equal(4, cTaken.Length);

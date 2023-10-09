@@ -41,26 +41,39 @@ public static class ValidationExtensions
     }
 
     /// <summary>
-    /// Returns this <see cref="object"/> as a <typeparamref name="TOut"/> or throw an <see cref="ArgumentException"/>
+    /// Casts this <see cref="object"/> <c>as</c> a <typeparamref name="TOut"/> value and returns it
     /// </summary>
-    /// <param name="obj"></param>
-    /// <param name="exceptionMessage"></param>
-    /// <param name="valueName"></param>
-    /// <typeparam name="TOut"></typeparam>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
+    /// <param name="obj">
+    /// The <see cref="object"/> to convert to a <typeparamref name="TOut"/> value
+    /// </param>
+    /// <param name="exceptionMessage">
+    /// An optional message for the <see cref="ArgumentException"/> that is thrown if <paramref name="obj"/> is not a valid <typeparamref name="TOut"/> value
+    /// </param>
+    /// <param name="objName">
+    /// The captured name for the <paramref name="obj"/> parameter, used with an <see cref="ArgumentException"/>
+    /// </param>
+    /// <typeparam name="TOut">
+    /// The <see cref="Type"/> of value to cast <paramref name="obj"/> <c>as</c>
+    /// </typeparam>
+    /// <returns>
+    /// <c>obj as TOut</c>
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown is <paramref name="obj"/> is not a valid <typeparamref name="TOut"/> value
+    /// </exception>
     [return: NotNull]
     public static TOut AsValid<TOut>(
+        [AllowNull, NotNull]
         this object? obj,
         string? exceptionMessage = null,
         [CallerArgumentExpression(nameof(obj))]
-        string? valueName = null)
+        string? objName = null)
     {
         if (obj is TOut output)
             return output;
 
         throw new ArgumentException(
-            exceptionMessage ?? $"The given {obj?.GetType().ToCode()} value is not a {typeof(TOut).ToCode()} instance",
-            valueName);
+            exceptionMessage ?? $"The given {obj?.GetType().ToCode()} value is not a valid {typeof(TOut).ToCode()} instance",
+            objName);
     }
 }

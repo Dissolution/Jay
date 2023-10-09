@@ -75,7 +75,7 @@ public class AlignTests
                     textBuilder.Align(testString, testWidth, alignment);
                     wrote = textBuilder.Written[^testWidth..];
                     var reader = new SpanReader<char>(wrote);
-                    Assert.Equal(testWidth, reader.Remaining.Length);
+                    Assert.Equal(testWidth, reader.UnreadItems.Length);
                     
                     var frontSpaces = reader.TakeWhile(static ch => ch == ' ');
                     
@@ -84,7 +84,7 @@ public class AlignTests
                     Assert.True(text.SequenceEqual(testText));
                     
                     var backSpaces = reader.TakeWhile(static ch => ch == ' ');
-                    Assert.Equal(0, reader.Remaining.Length);
+                    Assert.Equal(0, reader.UnreadItems.Length);
 
                     Assert.Equal(spaces, (frontSpaces.Length + backSpaces.Length));
                     
