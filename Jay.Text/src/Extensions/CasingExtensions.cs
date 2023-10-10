@@ -4,7 +4,7 @@ namespace Jay.Text.Extensions;
 
 public static class CasingExtensions
 {
-    public static string ToCasedString(this string? text, Casing casing, CultureInfo? culture = null)
+    public static string ToCase(this string? text, Casing casing, CultureInfo? culture = null)
     {
         if (text is null) return string.Empty;
         int textLen = text.Length;

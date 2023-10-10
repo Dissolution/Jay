@@ -1,4 +1,6 @@
-﻿namespace Jay.Extensions;
+﻿using System.Diagnostics;
+
+namespace Jay.Extensions;
 
 public static class SpanExtensions
 {
@@ -11,6 +13,24 @@ public static class SpanExtensions
             perItem(ref span[i]);
         }
     }
+
+    public static void ExpandAt<T>(this Span<T> span, int index)
+    {
+        Validate.InsertIndex(span.Length, index);
+        var source = span[index..^1];
+        var dest = span[(index + 1)..];
+        Debug.Assert(source.Length == dest.Length);
+        source.CopyTo(dest);
+    }
+    
+    public static void ExpandAt<T>(this Span<T> span, Range range)
+    {
+        var (offset, length) = Validate.RangeResolveOffsetLength(span.Length, range);
+        var source = span[offset..^length];
+        var dest = span[(offset + length)..];
+        Debug.Assert(source.Length == dest.Length);
+        source.CopyTo(dest);
+    }
     
     public static void RemoveAt<T>(this Span<T> span, int index)
     {
@@ -20,6 +40,14 @@ public static class SpanExtensions
         rightSide.CopyTo(leftSide);
     }
 
+    public static void RemoveRange<T>(this Span<T> span, int offset, int length)
+    {
+        Validate.Range(span.Length, offset, length);
+        var leftSide = span.Slice(offset);
+        var rightSide = span.Slice(offset + length);
+        rightSide.CopyTo(leftSide);
+    }
+    
     public static void RemoveRange<T>(this Span<T> span, Range range)
     {
         var (offset, length) = Validate.RangeResolveOffsetLength(span.Length, range);
