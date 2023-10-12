@@ -7,17 +7,27 @@ public static class StaticImports
     
     public static Option<T> Some<T>(T value) => Option<T>.Some(value);
     
-    public static Result Ok() => Result.Ok(); 
     
-    public static Result<TValue> Ok<TValue>(TValue value) => Result<TValue>.Ok(value);
+    public static Result Ok() 
+        => Result.Ok(); 
+    
+    public static Result Error(Exception? error) 
+        => Result.Error(error);
+    
+    
+    public static Result<TValue> Ok<TValue>(TValue value) 
+        => Result<TValue>.Ok(value);
+    
+    public static Result<TValue> Error<TValue>(Exception? error) 
+        => Result<TValue>.Error(error);
 
-    public static Result Error(Exception error) => Result.Error(error);
+
+    public static Result<V, E> Ok<V, E>(V okValue)
+        => Result<V, E>.Ok(okValue);
+
+    public static Result<V, E> Error<V, E>(E? errorValue)
+        => Result<V, E>.Error(errorValue);
     
-    public static Result<TValue> Error<TValue>([NotNull] Exception error) => Result<TValue>.Error(error);
-    
-    public static Result<TValue, TException> Error<TValue, TException>([NotNull] TException error)
-        where TException : Exception
-        => Result<TValue, TException>.Error(error);
     
      /// <summary>
     /// Tries to invoke the <paramref name="action"/> and returns a <see cref="Result"/>

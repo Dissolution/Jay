@@ -24,9 +24,6 @@
 
     <!-- Global Usings -->
     <ItemGroup>
-        <!--        <Using Include="Jay"/>-->
-    </ItemGroup>
-    <ItemGroup>
         <ProjectReference Include="..\Jay.Core\src\Jay.Core.csproj"/>
 <!--        <ProjectReference Include="..\Jay.Reflection\Jay.Reflection\Jay.Reflection.csproj"/>-->
         <ProjectReference Include="..\Jay.Text\src\Jay.Text.csproj"/>

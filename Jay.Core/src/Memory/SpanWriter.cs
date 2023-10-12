@@ -82,81 +82,79 @@ public ref struct SpanWriter<T>
         return new InvalidOperationException($"Cannot add {items.Length} items: Only a capacity of {span.Length - index} remains");
     }
 
-    public Result TryWrite(IEnumerable<T> items)
+    public Result TryWrite(IReadOnlyList<T> list)
     {
         int pos = _position;
         var remaining = _span[pos..];
-        switch (items)
+        int itemsCount = list.Count;
+        int newPos = pos + itemsCount;
+        if (newPos > remaining.Length)
+            return false;
+        for (var i = 0; i < itemsCount; i++)
         {
-            case IReadOnlyList<T> readOnlyList:
-            {
-                int itemsCount = readOnlyList.Count;
-                int newPos = pos + itemsCount;
-                if (newPos > remaining.Length)
-                    return false;
-                for (var i = 0; i < itemsCount; i++)
-                {
-                    remaining[i] = readOnlyList[i];
-                }
-                _position = newPos;
-                return true;
-            }
-            case IList<T> list:
-            {
-                int itemsCount = list.Count;
-                int newPos = pos + itemsCount;
-                if (newPos > remaining.Length)
-                    return false;
-                for (var i = 0; i < itemsCount; i++)
-                {
-                    remaining[i] = list[i];
-                }
-                _position = newPos;
-                return true;
-            }
-            case IReadOnlyCollection<T> readOnlyCollection:
-            {
-                int itemsCount = readOnlyCollection.Count;
-                int newPos = pos + itemsCount;
-                if (newPos > remaining.Length)
-                    return false;
-
-                int r = 0;
-                foreach (var item in readOnlyCollection)
-                {
-                    remaining[r++] = item;
-                }
-                _position = newPos;
-                return true;
-            }
-            case ICollection<T> collection:
-            {
-                int itemsCount = collection.Count;
-                int newPos = pos + itemsCount;
-                if (newPos > remaining.Length)
-                    return false;
-
-                int r = 0;
-                foreach (var item in collection)
-                {
-                    remaining[r++] = item;
-                }
-                _position = newPos;
-                return true;
-            }
-            default:
-                // We cannot write something we don't know the length of
-                return new InvalidOperationException("Cannot try to add an unknown number of items");
+            remaining[i] = list[i];
         }
+        _position = newPos;
+        return true;
     }
+    
+    public Result TryWrite(IList<T> list)
+    {
+        int pos = _position;
+        var remaining = _span[pos..];
+        int itemsCount = list.Count;
+        int newPos = pos + itemsCount;
+        if (newPos > remaining.Length)
+            return false;
+        for (var i = 0; i < itemsCount; i++)
+        {
+            remaining[i] = list[i];
+        }
+        _position = newPos;
+        return true;
+    }
+    
+    public Result TryWrite(IReadOnlyCollection<T> collection)
+    {
+        int pos = _position;
+        var remaining = _span[pos..];
+        int itemsCount = collection.Count;
+        int newPos = pos + itemsCount;
+        if (newPos > remaining.Length)
+            return false;
 
+        int r = 0;
+        foreach (var item in collection)
+        {
+            remaining[r++] = item;
+        }
+        _position = newPos;
+        return true;
+    }
+    
+    public Result TryWrite(ICollection<T> collection)
+    {
+        int pos = _position;
+        var remaining = _span[pos..];
+        int itemsCount = collection.Count;
+        int newPos = pos + itemsCount;
+        if (newPos > remaining.Length)
+            return false;
+
+        int r = 0;
+        foreach (var item in collection)
+        {
+            remaining[r++] = item;
+        }
+        _position = newPos;
+        return true;
+    }
+    
     public void Write(T item) => TryWrite(item).ThrowIfError();
 
     public void Write(params T[]? items) => TryWrite(items).ThrowIfError();
     
     public void Write(ReadOnlySpan<T> items) => TryWrite(items).ThrowIfError();
-    
-    public void Write(IEnumerable<T> items) => TryWrite(items).ThrowIfError();
     
     public Result TryAllocate(int count, out Span<T> allocated)
     {

@@ -20,8 +20,18 @@
         <Using Include="System.Runtime.CompilerServices"/>
         <Using Include="System.Diagnostics.CodeAnalysis"/>
         <Using Include="System.Globalization"/>
+        <Using Include="Jay.Extensions"/>
+        <Using Include="Jay.Utilities"/>
+        <Using Include="Jay.Memory"/>
+        <Using Include="Jay.Text"/>
+        <Using Include="Jay.Text.Extensions"/>
+        <Using Include="Jay.Text.Parsing"/>
+        <Using Remove="System.Net.Http"/>
     </ItemGroup>
 
+    <!-- NuGet Packages -->
+
+    
     <ItemGroup>
       <ProjectReference Include="..\..\Jay.Core\src\Jay.Core.csproj"/>
       <ProjectReference Include="..\..\Jay.Text\src\Jay.Text.csproj"/>

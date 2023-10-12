@@ -6,191 +6,116 @@ namespace Jay;
 
 /// <summary>
 /// Represents the typed result of an operation as either:<br/>
-/// <c>Ok(<typeparamref name="TValue">Value</typeparamref>)</c><br/>
-/// <c>Error(<typeparamref name="TException">Exception</typeparamref>)</c>
+/// <c>Ok(<typeparamref name="V">Value</typeparamref>)</c><br/>
+/// <c>Error(<typeparamref name="E">Error</typeparamref>)</c>
 /// </summary>
-/// <typeparam name="TValue">
-/// The <see cref="Type"/> of Value stored with an <c>Ok</c> Result
+/// <typeparam name="V">
+/// The <see cref="Type"/> of the Value stored with an <c>Ok</c> Result
 /// </typeparam>
-/// <typeparam name="TException">
-/// The <see cref="Type"/> of <see cref="Exception"/> stored with an <c>Error</c> Result 
+/// <typeparam name="E">
+/// The <see cref="Type"/> of the Value stored with an <c>Error</c> Result 
 /// </typeparam>
-public readonly struct Result<TValue, TException> :
+public readonly struct Result<V, E> :
 #if NET7_0_OR_GREATER
-    IEqualityOperators<Result<TValue, TException>, Result<TValue, TException>, bool>,
-    IEqualityOperators<Result<TValue, TException>, Result<TValue>, bool>,
-    IEqualityOperators<Result<TValue, TException>, Result, bool>,
-    IEqualityOperators<Result<TValue, TException>, bool, bool>,
-    IBitwiseOperators<Result<TValue, TException>, Result<TValue, TException>, bool>,
-    IBitwiseOperators<Result<TValue, TException>, Result<TValue>, bool>,
-    IBitwiseOperators<Result<TValue, TException>, Result, bool>,
-    IBitwiseOperators<Result<TValue, TException>, bool, bool>,
+    IEqualityOperators<Result<V, E>, Result<V, E>, bool>,
+    IEqualityOperators<Result<V, E>, bool, bool>,
+    IBitwiseOperators<Result<V, E>, Result<V, E>, bool>,
+    IBitwiseOperators<Result<V, E>, bool, bool>,
 #endif
-    IEquatable<Result<TValue, TException>>,
-    IEquatable<Result<TValue>>,
-    IEquatable<Result>,
-    IEnumerable<TValue>
-    where TException : Exception
+    IEquatable<Result<V, E>>,
+    IEquatable<bool>,
+    IEnumerable<V>
 {
-    public static implicit operator Result<TValue, TException>(TValue value) => Ok(value);
-    public static implicit operator Result<TValue, TException>([NotNull] TException exception) => Error(exception);
-    public static implicit operator bool(Result<TValue, TException> result) => result._ok;
-    public static implicit operator Result(Result<TValue, TException> result) => new(result._ok, result._exception);
-    public static implicit operator Result<TValue>(Result<TValue, TException> result) => new(result._ok, result._value, result._exception);
+    public static implicit operator Result<V, E>(V value) => Ok(value);
+    public static implicit operator Result<V, E>(E error) => Error(error);
+    public static implicit operator bool(Result<V, E> result) => result._ok;
 
-    public static bool operator true(Result<TValue, TException> result) => result._ok;
-    public static bool operator false(Result<TValue, TException> result) => !result._ok;
-    public static bool operator !(Result<TValue, TException> result) => !result._ok;
-    public static bool operator ~(Result<TValue, TException> _)
-    {
-        throw new NotSupportedException($"Cannot apply ~ to a Result<{TypeNames.ToCode<TValue>()},{TypeNames.ToCode<TException>()}>");
-    }
+    public static bool operator true(Result<V, E> result) => result._ok;
+    public static bool operator false(Result<V, E> result) => !result._ok;
+    public static bool operator !(Result<V, E> result) => !result._ok;
+    public static bool operator ~(Result<V, E> _) 
+        => throw new NotSupportedException($"Cannot apply ~ to a Result<{TypeNames.ToCode<V>()},{TypeNames.ToCode<E>()}>");
 
-    public static bool operator ==(Result<TValue, TException> left, Result<TValue, TException> right) => left.Equals(right);
-    public static bool operator ==(Result<TValue, TException> fullResult, Result<TValue> valueResult) => fullResult.Equals(valueResult);
-    public static bool operator ==(Result<TValue, TException> fullResult, Result result) => fullResult.Equals(result);
-    public static bool operator ==(Result<TValue, TException> fullResult, TValue value) => fullResult.Equals(value);
-    public static bool operator ==(Result<TValue, TException> fullResult, [NotNull] TException error) => fullResult.Equals(error);
-    public static bool operator ==(Result<TValue, TException> fullResult, bool pass) => fullResult.Equals(pass);
-    public static bool operator ==(Result<TValue> valueResult, Result<TValue, TException> fullResult) => fullResult.Equals(valueResult);
-    public static bool operator ==(Result result, Result<TValue, TException> fullResult) => fullResult.Equals(result);
-    public static bool operator ==(TValue value, Result<TValue, TException> fullResult) => fullResult.Equals(value);
-    public static bool operator ==([NotNull] TException error, Result<TValue, TException> fullResult) => fullResult.Equals(error);
-    public static bool operator ==(bool pass, Result<TValue, TException> fullResult) => fullResult.Equals(pass);
+    public static bool operator ==(Result<V, E> left, Result<V, E> right) => left.Equals(right);
+    public static bool operator ==(Result<V, E> result, V value) => result.Equals(value);
+    public static bool operator ==(Result<V, E> result, E error) => result.Equals(error);
+    public static bool operator ==(Result<V, E> result, bool pass) => result.Equals(pass);
+    public static bool operator ==(V value, Result<V, E> result) => result.Equals(value);
+    public static bool operator ==(E error, Result<V, E> result) => result.Equals(error);
+    public static bool operator ==(bool pass, Result<V, E> result) => result.Equals(pass);
 
-    public static bool operator !=(Result<TValue, TException> left, Result<TValue, TException> right) => !left.Equals(right);
-    public static bool operator !=(Result<TValue, TException> fullResult, Result<TValue> valueResult) => !fullResult.Equals(valueResult);
-    public static bool operator !=(Result<TValue, TException> fullResult, Result result) => !fullResult.Equals(result);
-    public static bool operator !=(Result<TValue, TException> fullResult, TValue value) => !fullResult.Equals(value);
-    public static bool operator !=(Result<TValue, TException> fullResult, [NotNull] TException error) => !fullResult.Equals(error);
-    public static bool operator !=(Result<TValue, TException> fullResult, bool pass) => !fullResult.Equals(pass);
-    public static bool operator !=(Result<TValue> valueResult, Result<TValue, TException> fullResult) => !fullResult.Equals(valueResult);
-    public static bool operator !=(Result result, Result<TValue, TException> fullResult) => !fullResult.Equals(result);
-    public static bool operator !=(TValue value, Result<TValue, TException> fullResult) => !fullResult.Equals(value);
-    public static bool operator !=([NotNull] TException error, Result<TValue, TException> fullResult) => !fullResult.Equals(error);
-    public static bool operator !=(bool pass, Result<TValue, TException> fullResult) => !fullResult.Equals(pass);
+    public static bool operator !=(Result<V, E> left, Result<V, E> right) => !left.Equals(right);
+    public static bool operator !=(Result<V, E> result, V value) => !result.Equals(value);
+    public static bool operator !=(Result<V, E> result, E error) => !result.Equals(error);
+    public static bool operator !=(Result<V, E> result, bool pass) => !result.Equals(pass);
+    public static bool operator !=(V value, Result<V, E> result) => !result.Equals(value);
+    public static bool operator !=(E error, Result<V, E> result) => !result.Equals(error);
+    public static bool operator !=(bool pass, Result<V, E> result) => !result.Equals(pass);
 
-    public static bool operator |(Result<TValue, TException> left, Result<TValue, TException> right) => left.IsOk() || right.IsOk();
-    public static bool operator |(Result<TValue, TException> fullResult, Result<TValue> valueResult) => fullResult.IsOk() || valueResult.IsOk();
-    public static bool operator |(Result<TValue, TException> fullResult, Result result) => fullResult.IsOk() || result.IsOk();
-    public static bool operator |(Result<TValue, TException> fullResult, bool pass) => pass || fullResult.IsOk();
-    public static bool operator |(Result<TValue> valueResult, Result<TValue, TException> fullResult) => fullResult.IsOk() || valueResult.IsOk();
-    public static bool operator |(Result result, Result<TValue, TException> fullResult) => fullResult.IsOk() || result.IsOk();
-    public static bool operator |(bool pass, Result<TValue, TException> fullResult) => pass || fullResult.IsOk();
+    public static bool operator |(Result<V, E> left, Result<V, E> right) => left.IsOk() || right.IsOk();
+    public static bool operator |(Result<V, E> result, bool pass) => pass || result.IsOk();
+    public static bool operator |(bool pass, Result<V, E> result) => pass || result.IsOk();
     
-    public static bool operator &(Result<TValue, TException> left, Result<TValue, TException> right) => left.IsOk() && right.IsOk();
-    public static bool operator &(Result<TValue, TException> fullResult, Result<TValue> valueResult) => fullResult.IsOk() && valueResult.IsOk();
-    public static bool operator &(Result<TValue, TException> fullResult, Result result) => fullResult.IsOk() && result.IsOk();
-    public static bool operator &(Result<TValue, TException> fullResult, bool pass) => pass && fullResult.IsOk();
-    public static bool operator &(Result<TValue> valueResult, Result<TValue, TException> fullResult) => fullResult.IsOk() && valueResult.IsOk();
-    public static bool operator &(Result result, Result<TValue, TException> fullResult) => fullResult.IsOk() && result.IsOk();
-    public static bool operator &(bool pass, Result<TValue, TException> fullResult) => pass && fullResult.IsOk();
+    public static bool operator &(Result<V, E> left, Result<V, E> right) => left.IsOk() && right.IsOk();
+    public static bool operator &(Result<V, E> result, bool pass) => pass && result.IsOk();
+    public static bool operator &(bool pass, Result<V, E> result) => pass && result.IsOk();
 
-    public static bool operator ^(Result<TValue, TException> left, Result<TValue, TException> right) => left.IsOk() ^ right.IsOk();
-    public static bool operator ^(Result<TValue, TException> fullResult, Result<TValue> valueResult) => fullResult.IsOk() ^ valueResult.IsOk();
-    public static bool operator ^(Result<TValue, TException> fullResult, Result result) => fullResult.IsOk() ^ result.IsOk();
-    public static bool operator ^(Result<TValue, TException> fullResult, bool pass) => pass ^ fullResult.IsOk();
-    public static bool operator ^(Result<TValue> valueResult, Result<TValue, TException> fullResult) => fullResult.IsOk() ^ valueResult.IsOk();
-    public static bool operator ^(Result result, Result<TValue, TException> fullResult) => fullResult.IsOk() ^ result.IsOk();
-    public static bool operator ^(bool pass, Result<TValue, TException> fullResult) => pass ^ fullResult.IsOk();
+    public static bool operator ^(Result<V, E> left, Result<V, E> right) => left.IsOk() ^ right.IsOk();
+    public static bool operator ^(Result<V, E> result, bool pass) => pass ^ result.IsOk();
+    public static bool operator ^(bool pass, Result<V, E> result) => pass ^ result.IsOk();
 
     /// <summary>
-    /// Get a successful <see cref="Result{T}"/> with the given <paramref name="value"/>
+    /// Get an <c>Ok</c> <see cref="Result{V,E}"/> with attached <paramref name="okValue"/>
     /// </summary>
-    public static Result<TValue, TException> Ok(TValue value)
+    public static Result<V, E> Ok(V okValue)
     {
-        return new(true, value, null);
+        return new(true, okValue, default);
     }
-
     
-    public static Result<TValue, TException> Error([NotNull] TException exception)
+    /// <summary>
+    /// Gets an <c>Error</c> <see cref="Result{V,E}"/> with attached <paramref name="errorValue"/>
+    /// </summary>
+    /// <param name="errorValue"></param>
+    /// <returns></returns>
+    public static Result<V, E> Error(E? errorValue)
     {
-        if (exception is null)
-            throw new ArgumentNullException(nameof(exception));
-        return new(false, default!, exception);
+        return new(false, default!, errorValue);
     }
-
+    
     
     private readonly bool _ok;
-    private readonly TValue _value;
-    private readonly TException? _exception;
+    private readonly V _value;
+    private readonly E? _error;
 
-    internal Result(bool ok, TValue value, TException? exception)
+    internal Result(bool ok, V value, E? error)
     {
         _ok = ok;
         _value = value;
-        _exception = exception;
+        _error = error;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private TException GetException()
-    {
-        return _exception ?? Activator.CreateInstance<TException>();
-    }
-
-    /// <summary>
-    /// If this <see cref="Result{TValue,TException}"/> is <c>Ok</c>, returns the <c>Value</c>,<br/>
-    /// otherwise <c>throws</c> the <c>Error</c>'s <see cref="Exception"/>
-    /// </summary>
-    /// <returns>
-    /// The Value from <c>Ok(Value)</c>
-    /// </returns>
-    /// <exception cref="Exception">
-    /// The Exception from <c>Error(Exception)</c>
-    /// </exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TValue OkOrThrowError() => _ok ? _value : throw GetException();
-
-    /// <summary>
-    /// If this <see cref="Result{TValue,TException}"/> is <c>Error(Exception)</c>, <c>throw Exception</c>
-    /// </summary>
-    /// <exception cref="Exception">
-    /// The Exception from <c>Error(Exception)</c>
-    /// </exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ThrowIfError()
-    {
-        if (!_ok)
-            throw GetException();
-    }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsOk() => _ok;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsOk([MaybeNullWhen(false)] out TValue value)
+    public bool IsOk([MaybeNullWhen(false)] out V value)
     {
         value = _value;
         return _ok;
     }
-
-    /// <summary>
-    /// Is this a failed <see cref="Result"/>?
-    /// </summary>
-    /// <returns>true if this is a failed result; otherwise, false</returns>
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsError() => !_ok;
-
-    /// <summary>
-    /// Is this a failed <see cref="Result"/>?
-    /// </summary>
-    /// <param name="error">If this is a failed <see cref="Result"/>, the attached <see cref="Exception"/>; otherwise <see langword="null"/></param>
-    /// <returns>true if this is a failed result; otherwise, false</returns>
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsError([NotNullWhen(true)] out TException? error)
+    public bool IsError(out E? error)
     {
-        if (_ok)
-        {
-            error = null;
-            return false;
-        }
-
-        error = GetException();
-        return true;
+        error = _error;
+        return !_ok;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Match(Action<TValue> onOk, Action<TException> onError)
+    public void Match(Action<V> onOk, Action<E?> onError)
     {
         if (_ok)
         {
@@ -198,12 +123,12 @@ public readonly struct Result<TValue, TException> :
         }
         else
         {
-            onError(GetException());
+            onError(_error);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TReturn Match<TReturn>(Func<TValue, TReturn> onOk, Func<TException, TReturn> onError)
+    public TReturn Match<TReturn>(Func<V, TReturn> onOk, Func<E?, TReturn> onError)
     {
         if (_ok)
         {
@@ -211,18 +136,18 @@ public readonly struct Result<TValue, TException> :
         }
         else
         {
-            return onError(GetException());
+            return onError(_error);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Option<TValue> AsOption()
+    public Option<V> AsOption()
     {
-        return _ok ? Option<TValue>.Some(_value) : Option<TValue>.None;
+        return _ok ? Option<V>.Some(_value) : Option<V>.None;
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    public IEnumerator<TValue> GetEnumerator()
+    public IEnumerator<V> GetEnumerator()
     {
         if (_ok)
         {
@@ -230,51 +155,40 @@ public readonly struct Result<TValue, TException> :
         }
     }
     
-    public bool Equals(Result<TValue, TException> fullResult)
+    public bool Equals(Result<V, E> result)
     {
         if (_ok)
         {
-            return fullResult.IsOk(out var value) && EqualityComparer<TValue>.Default.Equals(_value!, value!);
+            return result.IsOk(out var okValue) && EqualityComparer<V>.Default.Equals(_value!, okValue!);
         }
-        return fullResult.IsError();
-    }
-    
-    public bool Equals(Result<TValue> valueResult)
-    {
-        if (_ok)
+        else
         {
-            return valueResult.IsOk(out var value) && EqualityComparer<TValue>.Default.Equals(_value!, value!);
+            return result.IsError(out var errorValue) && EqualityComparer<E>.Default.Equals(_error!, errorValue!);
         }
-        return valueResult.IsError();
     }
-    
-    public bool Equals(Result result) => _ok == result.IsOk();
-    public bool Equals(TValue? value) => _ok && EqualityComparer<TValue>.Default.Equals(_value!, value!);
-    public bool Equals(TException? _) => !_ok;
-    public bool Equals(Exception? _) => !_ok;
+  
+    public bool Equals(V? okValue) => _ok && EqualityComparer<V>.Default.Equals(_value!, okValue!);
+    public bool Equals(E? errorValue) => !_ok && EqualityComparer<E>.Default.Equals(_error!, errorValue!);
     public bool Equals(bool isOk) => _ok == isOk;
 
     public override bool Equals(object? obj)
     {
         return obj switch
         {
-            Result<TValue, TException> fullResult => Equals(fullResult),
-            Result<TValue> valueResult => Equals(valueResult),
-            Result result => Equals(result),
-            TValue value => Equals(value),
-            TException ex => Equals(ex),
-            Exception ex => Equals(ex),
+            Result<V, E> fullResult => Equals(fullResult),
+            V value => Equals(value),
+            E ex => Equals(ex),
             bool isOk => Equals(isOk),
             _ => false,
         };
     }
 
-    public override int GetHashCode() => _ok ? Hasher.GetHashCode<TValue>(_value) : 0;
+    public override int GetHashCode() => _ok ? Hasher.GetHashCode<V>(_value) : Hasher.GetHashCode<E>(_error);
 
     public override string ToString()
     {
         return Match(
-            value => $"Ok({TypeNames.ToCode<TValue>()}: {value})",
-            error => $"Error({TypeNames.ToCode<TException>()}): {error.Message})");
+            ok => $"Ok({TypeNames.ToCode<V>()}: {ok})",
+            error => $"Error({TypeNames.ToCode<E>()}: {error})");
     }
 }
