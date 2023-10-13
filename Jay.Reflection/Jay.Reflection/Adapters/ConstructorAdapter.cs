@@ -9,7 +9,7 @@ public static class ConstructorAdapter
     private static Construct<TInstance> CreateConstructDelegate<TInstance>(ConstructorInfo ctor)
     {
         return RuntimeBuilder.BuildDelegate<Construct<TInstance>>(
-            $"construct_{ctor.OwnerType().Name}",
+            $"construct_{ctor.OwnerType()}",
             builder => builder
                 .Emitter
                 .EmitLoadParams(builder.FirstParameter!, ctor.GetParameters())

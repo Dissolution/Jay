@@ -32,7 +32,7 @@ public sealed class OnlyApplication : IDisposable
             catch (AbandonedMutexException amex)
             {
                 Console.WriteLine(amex.Message);
-                throw;
+                return amex;
             }
         }
         else
@@ -47,7 +47,7 @@ public sealed class OnlyApplication : IDisposable
                 catch (AbandonedMutexException amex)
                 {
                     Console.WriteLine(amex.Message);
-                    throw;
+                    return amex;
                 }
             }
         }

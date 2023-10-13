@@ -1,4 +1,5 @@
 using System.Collections;
+using System.ComponentModel;
 
 namespace Jay.Extensions;
 
@@ -119,7 +120,7 @@ public static class ArrayExtensions
     /// <summary>
     /// Converts an array of <see cref="object"/>s to an array of their <see cref="Type"/>s.
     /// </summary>
-    public static Type?[] ToTypeArray(this object?[]? objectArray)
+    public static Type?[] ToTypeArray(this object?[]? objectArray, Type? nullType = null)
     {
         if (objectArray is null) return Type.EmptyTypes;
         int len = objectArray.Length;
@@ -127,7 +128,7 @@ public static class ArrayExtensions
         var types = new Type?[len];
         for (var i = 0; i < len; i++)
         {
-            types[i] = objectArray[i]?.GetType();
+            types[i] = objectArray[i]?.GetType() ?? nullType;
         }
         return types;
     }
@@ -163,18 +164,6 @@ public static class ArrayExtensions
         {
             array[i] = value;
         }
-    }
-
-    public static TOut[] SelectToArray<TIn, TOut>(this TIn[] array,
-        Func<TIn, TOut> transform)
-    {
-        int len = array.Length;
-        var output = new TOut[len];
-        for (var i = 0; i < len; i++)
-        {
-            output[i] = transform(array[i]);
-        }
-        return output;
     }
 
     public static IEnumerable<T> Reversed<T>(this T[] array)

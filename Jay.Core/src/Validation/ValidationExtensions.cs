@@ -27,7 +27,7 @@ public static class ValidationExtensions
     /// </exception>
     [return: NotNull]
     public static T ThrowIfNull<T>(
-        [AllowNull, NotNull] this T? value,
+        [AllowNull, NotNull] this T value,
         string? exceptionMessage = null,
         [CallerArgumentExpression(nameof(value))]
         string? valueName = null)

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Jay.Terminals.Native;
 
+/// <see href="https://learn.microsoft.com/en-us/windows/console/char-info-str"/>
 [StructLayout(LayoutKind.Explicit, Size = 4, CharSet = CharSet.Unicode)]
 public struct TerminalCell : IEquatable<TerminalCell>, IEqualityOperators<TerminalCell, TerminalCell, bool>
 {

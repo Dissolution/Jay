@@ -1,6 +1,4 @@
-﻿using Jay.Utilities;
-
-namespace Jay;
+﻿namespace Jay;
 
 /* Static Utilities involving Result, Result<T>, and Result<V,E> */
 partial struct Result
@@ -13,9 +11,7 @@ partial struct Result
         try
         {
             bool ok = tryFunc(out TValue value);
-            if (ok)
-                return value;
-            return default;
+            return new Result<TValue>(ok, value, default);
         }
         catch (Exception ex)
         {
@@ -63,7 +59,7 @@ partial struct Result
         return Ok();
     }
 
-#region Dispose
+
     /// <summary>
     /// Tries to dispose of <paramref name="value"/>.
     /// </summary>
@@ -71,50 +67,33 @@ partial struct Result
     /// <param name="value">The value to dispose.</param>
     public static void Dispose<T>(T? value)
     {
-        // Avoids boxing for disposable structs
-        if (value is IDisposable)
+        if (value is IDisposable disposable)
         {
             try
             {
-                ((IDisposable)value).Dispose();
+                disposable.Dispose();
             }
-            catch // (Exception ex)
+            catch (Exception)
             {
                 // Ignore all exceptions
             }
         }
     }
-
-#if !(NET48 || NETSTANDARD2_0)
-    public static async ValueTask DisposeAsync<T>(T? value)
+    
+    public static void DisposeRef<T>(ref T? value)
     {
-        // Avoids boxing for disposable structs
-        if (value is IAsyncDisposable)
+        var toDispose = value;
+        value = default;
+        if (toDispose is IDisposable)
         {
             try
             {
-                // Avoids boxing for disposable structs
-                await ((IAsyncDisposable)value).DisposeAsync();
+                ((IDisposable)toDispose).Dispose();
             }
-            catch // (Exception ex)
-            {
-                // Ignore all exceptions
-            }
-        }
-        // Avoids boxing for disposable structs
-        else if (value is IDisposable)
-        {
-            try
-            {
-                // Avoids boxing for disposable structs
-                ((IDisposable)value).Dispose();
-            }
-            catch // (Exception ex)
+            catch (Exception)
             {
                 // Ignore all exceptions
             }
         }
     }
-#endif
-#endregion
 }

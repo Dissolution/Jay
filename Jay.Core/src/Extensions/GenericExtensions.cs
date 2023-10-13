@@ -64,8 +64,7 @@ public static class GenericExtensions
             EqualityComparer<T>.Default.Equals(value, second) ||
             EqualityComparer<T>.Default.Equals(value, third);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
     public static bool EqualsAny<T>(this T? value, params T?[] options)
     {
         for (var i = 0; i < options.Length; i++)

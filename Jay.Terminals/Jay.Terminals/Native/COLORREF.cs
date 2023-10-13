@@ -63,12 +63,12 @@ internal struct COLORREF
 
     public bool Equals(Color color) => this.Value == (uint)color.ToArgb();
 
-    public override bool Equals(object? obj)
+    public override bool Equals(object? obj) => obj switch
     {
-        if (obj is COLORREF colorref) return Equals(colorref);
-        if (obj is Color color) return Equals(color);
-        return false;
-    }
+        COLORREF colorref => Equals(colorref),
+        Color color => Equals(color),
+        _ => false,
+    };
 
     public override int GetHashCode()
     {

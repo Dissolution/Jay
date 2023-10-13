@@ -2,16 +2,17 @@
 
 public static class StringExtensions
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrEmpty([NotNullWhen(false)] this string? text)
     {
         return string.IsNullOrEmpty(text);
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? text)
     {
         return string.IsNullOrWhiteSpace(text);
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNonWhiteSpace([NotNullWhen(true)] this string? text)
     {
         return !string.IsNullOrWhiteSpace(text);

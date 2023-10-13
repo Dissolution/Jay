@@ -335,13 +335,12 @@ public static unsafe class Scary
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull(nameof(obj))]
-    // ReSharper disable once ReturnTypeCanBeNotNullable
     public static T? CastClass<T>(object? obj)
         where T : class
     {
         Emit.Ldarg(nameof(obj));
         Emit.Castclass<T>();
-        return Return<T>();
+        return Return<T?>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

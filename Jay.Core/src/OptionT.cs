@@ -101,28 +101,8 @@ public readonly struct Option<T> :
         }
         return none(default);
     }
-
-    public Result<T> AsResult(Exception? error = null)
-    {
-        if (_some)
-        {
-            return Result<T>.Ok(_value);
-        }
-        return Result<T>.Error(error);
-    }
-
-    public Result<T, E> AsResult<E>(Func<E> errorIfNone)
-        where E : Exception
-    {
-        if (_some)
-        {
-            return Result<T, E>.Ok(_value);
-        }
-        return Result<T, E>.Error(errorIfNone());
-    }
-
+    
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
     public IEnumerator<T> GetEnumerator()
     {
         if (_some)

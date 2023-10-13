@@ -6,7 +6,7 @@ namespace Jay.Memory;
 /// <summary>
 /// A <see cref="SpanReader{T}"/> wraps a <see cref="ReadOnlySpan{T}"/>
 /// and provides methods to Peek, Skip, and Take <typeparamref name="T"/> value(s) from it
-/// in forward-only reads
+/// in forward-only reads that 'consume' the span
 /// </summary>
 /// <typeparam name="T">
 /// <see cref="Type"/>s of values stored in the <see cref="ReadOnlySpan{T}"/>
@@ -22,6 +22,9 @@ public ref struct SpanReader<T>
         get => _span;
     }
     
+    /// <summary>
+    /// Gets the current reading position
+    /// </summary>
     public int Position
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -30,30 +33,46 @@ public ref struct SpanReader<T>
         internal set => _position = value;
     }
 
+    /// <summary>
+    /// Gets the total number of values that could be read
+    /// </summary>
     public int Length
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _span.Length;
     }
 
+    /// <summary>
+    /// Gets the total number of values that can yet be read
+    /// </summary>
     public int RemainingLength
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _span.Length - _position;
     }
 
+    /// <summary>
+    /// Gets the <see cref="ReadOnlySpan{T}"/> of items that have already been read
+    /// </summary>
     public ReadOnlySpan<T> ReadItems
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _span[.._position];
     }
     
+    /// <summary>
+    /// Gets the <see cref="ReadOnlySpan{T}"/> of items that have not yet been read
+    /// </summary>
     public ReadOnlySpan<T> UnreadItems
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _span[_position..];
     }
 
+    /// <summary>
+    /// Create a new <see cref="SpanReader{T}"/> that reads from the given <paramref name="span"/>
+    /// </summary>
+    /// <param name="span"></param>
     public SpanReader(ReadOnlySpan<T> span)
     {
         _span = span;
@@ -61,22 +80,42 @@ public ref struct SpanReader<T>
     }
 
 #region Peek
+    /// <summary>
+    /// Tries to peek at the next <paramref name="item"/>
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     public Result TryPeek([MaybeNullWhen(false)] out T item)
     {
-        if (_position < Length)
+        int pos = _position;
+        var span = _span;
+        if (pos < span.Length)
         {
-            item = _span[_position];
+            item = span[pos];
             return true;
         }
         item = default;
-        return new InvalidOperationException("Cannot peek an item: No items remain");
+        return new InvalidOperationException("Cannot peek an item: Zero items remain");
     }
 
+    /// <summary>
+    /// Try to peek at the next <paramref name="count"/> <paramref name="items"/>
+    /// </summary>
+    /// <param name="count"></param>
+    /// <param name="items"></param>
+    /// <returns></returns>
     public Result TryPeek(int count, out ReadOnlySpan<T> items)
     {
-        if ((_position + (uint)count) <= Length)
+        if (count < 0)
         {
-            items = _span.Slice(_position, count);
+            items = default;
+            return new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater");
+        }
+        int pos = _position;
+        var span = _span;
+        if (pos + count <= span.Length)
+        {
+            items = span.Slice(pos, count);
             return true;
         }
         items = default;
@@ -86,7 +125,7 @@ public ref struct SpanReader<T>
     public T Peek()
     {
         TryPeek(out var value).ThrowIfError();
-        return value!;
+        return value;
     }
 
     public ReadOnlySpan<T> Peek(int count)
@@ -241,8 +280,8 @@ public ref struct SpanReader<T>
     public override string ToString()
     {
         /* We want to show our position in the source span like this:
-         * ...a,b,c⌖d,e,f...
-         * For Span<char>, we have special handling to treat it like text and capture more characters
+         * ...,a,b,c ⌖ d,e,f,...
+         * For ReadOnlySpan<char>, we have special handling to treat it like text and capture more characters
          */
 
         string delimiter;
@@ -268,7 +307,7 @@ public ref struct SpanReader<T>
         // If we have more before this, indicate with ellipsis
         if (prevIndex > 0)
         {
-            text.Append('…');
+            text.Append('…').Append(delimiter);
         }
         // Otherwise, cap at a min zero
         else
@@ -286,7 +325,7 @@ public ref struct SpanReader<T>
         }
 
         // position indicator
-        text.Append('⌖');
+        text.Append(" ⌖ ");
 
         // items yet to be read
         int nextIndex = index + capture;
@@ -315,7 +354,8 @@ public ref struct SpanReader<T>
 
         if (postpendEllipsis)
         {
-            text.Append('…');
+            text.Append(delimiter)
+                .Append('…');
         }
 
         return text.ToStringAndReturn();

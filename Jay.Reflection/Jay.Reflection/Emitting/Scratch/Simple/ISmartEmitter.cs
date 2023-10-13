@@ -18,11 +18,10 @@ public interface ISmartEmitter<out Self>
     IMemoryEmitter<Self> Memory { get; }
     ITokenEmitter<Self> Token { get; }
     ITypeEmitter<Self> Type { get; }
-
+    IValueEmitter<Self> Value { get; }
+    
     Self Scoped(Action<Self> scopedBlock);
-
-    Self IsInstance<T>();
-    Self IsInstance(Type instanceType);
+    
     Self LoadInstanceFor(MemberInfo instanceMember, Argument instanceArg);
     Self LoadParamsFor(MethodBase method, Argument paramsArg);
 
@@ -31,16 +30,6 @@ public interface ISmartEmitter<out Self>
     Self Cast(Argument.Stack sourceArg, Argument.Stack destArg);
     Self Store(Argument destArg);
     Self CastStore(Argument.Stack sourceArg, Argument destArg);
-
-    Self Load(int int32);
-    Self Load(long int64);
-    Self Load(float f32);
-    Self Load(double f64);
-    Self Load(string str);
-    // handles null, Type
-    Self Load<T>(T? value);
-    Self LoadDefault<T>();
-    Self LoadDefault(Type type);
 
     Self Construct(ConstructorInfo ctor);
     Self Call(MethodBase method);

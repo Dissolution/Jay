@@ -101,7 +101,7 @@ public static class EnumerableExtensions
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static IEnumerable<T> Double<T>(this IEnumerable<T> source)
+    public static IEnumerable<T> Two<T>(this IEnumerable<T> source)
     {
         using var e = source.GetEnumerator();
         if (!e.MoveNext())
@@ -127,7 +127,7 @@ public static class EnumerableExtensions
         T[] itemOrder)
         where T : IEquatable<T>
     {
-        return enumerable.OrderBy(item => itemOrder.FirstIndexOf(item));
+        return enumerable.OrderBy(itemOrder.FirstIndexOf);
     }
 
     public static IEnumerable<T> OrderBy<T, TSub>(this IEnumerable<T> enumerable,

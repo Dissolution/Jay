@@ -6,8 +6,9 @@ namespace Jay.Utilities;
 
 /// <summary>
 /// Hasher is a near-copy of <c>System.HashCode</c> for use in
-/// <c>netstandard2.0</c> and <c>net48</c> environments.<br />
-/// It also has extra methods to easy hashcode generation
+/// <c>netstandard2.0</c> and <c>net48</c> environments<br />
+/// It has many static methods for getting a single value's hashcode (which can deal with <c>null</c>)
+/// and combining many values into a single hashcode
 /// </summary>
 public ref struct Hasher
 {
@@ -512,18 +513,13 @@ public ref struct Hasher
     }
 
 #pragma warning disable CS0809
-    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.",
-         true),EditorBrowsable(EditorBrowsableState.Never)]
-    public override int GetHashCode()
-    {
-        throw new NotSupportedException();
-    }
+    [Obsolete("Use ToHashCode to retrieve the computed hash code", true)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public override int GetHashCode() => throw new NotSupportedException();
 
-    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes.", true),EditorBrowsable(EditorBrowsableState.Never)]
-    public override bool Equals(object? obj)
-    {
-        throw new NotSupportedException();
-    }
+    [Obsolete("Hasher is a mutable struct and should not be compared", true)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public override bool Equals(object? obj) => throw new NotSupportedException();
 #pragma warning restore CS0809
     
     public override string ToString()
