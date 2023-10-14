@@ -47,7 +47,7 @@ public static class Cloner
         // First, we create DeepClone<T>
         var builder = RuntimeBuilder.CreateRuntimeDelegateBuilder(
             typeof(DeepClone<>).MakeGenericType(type),
-            $"deepclone_{type.FullName}");
+            $"deepclone_{type}");
         var emitter = builder.Emitter;
 
         /* For values that do not contain any references, enums, and strings,
@@ -66,7 +66,7 @@ public static class Cloner
          *
          * We have to start with an empty clone to fill.
          * We can NOT call new() as that may have initialization effects
-         * Instead, we use an uninitialized value (basically just allocates memory for us)
+         * Instead, we use an uninitialized value (allocated memory)
          */
 
         // A place to store the clone
@@ -99,7 +99,7 @@ public static class Cloner
     private static DeepClone<object?> CreateObjectDeepClone(Type type)
     {
         var deepClone = RuntimeBuilder.EmitDelegate<DeepClone<object?>>(
-            $"deepclone_object_{type.FullName}",
+            $"deepclone_object_{type}",
             emitter => emitter
                 .Ldarg_0()
                 .EmitCast(typeof(object), type)

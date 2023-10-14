@@ -23,6 +23,8 @@
       &lt;TestId&gt;xUnit::E5525C16-7719-452A-9E7D-0F749CE53E80::.NETFramework,Version=v4.8::Jay.Tests.EnumTests.GetFlags_Intense&lt;/TestId&gt;&#xD;
       &lt;TestId&gt;xUnit::E5525C16-7719-452A-9E7D-0F749CE53E80::net7.0::Jay.Tests.EnumTests.GetFlags_Intense&lt;/TestId&gt;&#xD;
       &lt;TestId&gt;xUnit::5276A7F6-B754-47AE-B44F-601A6C08BFF0::net7.0::Jay.SourceGen.Tests.SourceCodeBuilderTests.AnythingWorks&lt;/TestId&gt;&#xD;
+      &lt;TestId&gt;xUnit::E5525C16-7719-452A-9E7D-0F749CE53E80::net7.0::Jay.Tests.Comparison.EqualityComparerCacheTests.CheckTEquals&lt;/TestId&gt;&#xD;
+      &lt;TestId&gt;xUnit::E5525C16-7719-452A-9E7D-0F749CE53E80::net7.0::Jay.Tests.Comparison.EqualityComparerCacheTests.CheckObjectEquals&lt;/TestId&gt;&#xD;
     &lt;/TestAncestor&gt;&#xD;
   &lt;/Or&gt;&#xD;
 &lt;/SessionState&gt;</s:String>

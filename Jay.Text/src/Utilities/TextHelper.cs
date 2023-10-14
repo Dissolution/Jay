@@ -221,10 +221,9 @@ public static class TextHelper
         return true;
     }
 #endregion
-
-#region Unsafe
+    
     /// <summary>
-    /// WARNING: All methods in <see cref="Unsafe"/> have no bounds checking!
+    /// WARNING: All methods in <see cref="Unsafe"/> lack bounds checking!
     /// </summary>
     public static class Unsafe
     {
@@ -448,5 +447,4 @@ public static class TextHelper
 #endif
         }
     }
-#endregion
 }

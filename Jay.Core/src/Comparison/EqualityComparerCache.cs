@@ -16,7 +16,7 @@ public sealed class EqualityComparerCache : IEqualityComparer<object?>, IEqualit
 
     internal static IEqualityComparer FindEqualityComparer(Type type)
     {
-        return typeof(IEqualityComparer<>)
+        return typeof(EqualityComparer<>)
             .MakeGenericType(type)
             .GetProperty("Default", BindingFlags.Public | BindingFlags.Static)
             .ThrowIfNull()
@@ -40,7 +40,7 @@ public sealed class EqualityComparerCache : IEqualityComparer<object?>, IEqualit
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Equals<T>(T? left, T? right)
     {
-        return EqualityComparer<T>.Default.Equals(left, right);
+        return Default<T>().Equals(left, right);
     }
 
     public new static bool Equals(object? left, object? right)
