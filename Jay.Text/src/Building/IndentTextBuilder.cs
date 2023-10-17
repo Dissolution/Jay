@@ -3,18 +3,20 @@ using Jay.Text.Splitting;
 
 namespace Jay.Text.Building;
 
-public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
-    where TBuilder : FluentIndentTextBuilder<TBuilder>
+public class IndentTextBuilder<TBuilder> : 
+    TextBuilder<TBuilder>, 
+    IIndentTextBuilder<TBuilder> 
+    where TBuilder : IndentTextBuilder<TBuilder>
 {
     protected static readonly string DefaultIndent = "   ";
     
     protected List<string> _indents;
     
-    public FluentIndentTextBuilder() : base()
+    public IndentTextBuilder() : base()
     {
         _indents = new(0);
     }
-    public FluentIndentTextBuilder(int minCapacity) 
+    public IndentTextBuilder(int minCapacity) 
         : base(minCapacity)
     {
         _indents = new(0);
@@ -94,9 +96,9 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
         }
     }
 
-    public override void Format<T>(T? value, ReadOnlySpan<char> format, IFormatProvider? provider = null) where T : default => Format<T>(value, format.ToString(), provider);
+    public override void Write<T>(T? value, ReadOnlySpan<char> format, IFormatProvider? provider = null) where T : default => Write<T>(value, format.ToString(), provider);
     
-    public override void Format<T>(T? value, string? format, IFormatProvider? provider = null) where T : default
+    public override void Write<T>(T? value, string? format, IFormatProvider? provider = null) where T : default
     {
         switch (value)
         {
@@ -104,7 +106,7 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
             {
                 return;
             }
-            case TBA<TBuilder> tba:
+            case Action<TBuilder> tba:
             {
                 IndentAwareAction(tb => tba(tb));
                 return;
@@ -116,13 +118,13 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
             }
             case IFormattable formattable:
             {
-                base.Format(formattable, format, provider);
+                base.Write(formattable, format, provider);
                 return;
             }
             case IEnumerable enumerable:
             {
                 format ??= ",";
-                Delimit(
+                this.Delimit(
                     format,
                     enumerable.Cast<object?>(),
                     (w, v) => w.Append<object?>(v, format, provider)
@@ -131,19 +133,38 @@ public class FluentIndentTextBuilder<TBuilder> : FluentTextBuilder<TBuilder>
             }
             default:
             {
-                base.Format<T>(value, format, provider);
+                base.Write<T>(value, format, provider);
                 return;
             }
         }
     }
     
-    public TBuilder Indented(string indent, TBA<TBuilder> indentedAction)
+    public TBuilder Indented(char indent, Action<TBuilder> indentedAction)
+    {
+        _indents.Add(indent.ToString());
+        indentedAction(_builder);
+        _indents.RemoveAt(_indents.Count-1);
+        return _builder;
+    }
+    
+    public TBuilder Indented(scoped ReadOnlySpan<char> indent, Action<TBuilder> indentedAction)
+    {
+        _indents.Add(indent.ToString());
+        indentedAction(_builder);
+        _indents.RemoveAt(_indents.Count-1);
+        return _builder;
+    }
+    
+    
+    public TBuilder Indented(string indent, Action<TBuilder> indentedAction)
     {
         _indents.Add(indent);
         indentedAction(_builder);
         _indents.RemoveAt(_indents.Count-1);
         return _builder;
     }
+    
+    
     /*
     public TBuilder IndentBlock(Action<TBuilder> indentBlock)
     {

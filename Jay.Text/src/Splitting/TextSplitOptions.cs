@@ -1,7 +1,7 @@
 ﻿namespace Jay.Text.Splitting;
 
 [Flags]
-public enum TextSplitOptions
+public enum SplitOptions
 {
     None = 0,
     /// <summary>

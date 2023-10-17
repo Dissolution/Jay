@@ -2,7 +2,7 @@
 using Jay.Text.Building;
 using var _ = OnlyApplication.Acquire();
 
-doThing("blah");
+doThing($"blah");
 doThing($"fblah");
 
 
@@ -11,7 +11,7 @@ Console.ReadLine();
 return;
 
 
-void doThing(InterpolatedTextWriter text)
+void doThing(ref InterpolatedTextWriter text)
 {
     string str = text.ToStringAndDispose();
     Console.WriteLine(str);

@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using Jay.Utilities;
 
-namespace Jay.Text.Building;
+namespace Jay.Text;
 
 public static class TextPool
 {

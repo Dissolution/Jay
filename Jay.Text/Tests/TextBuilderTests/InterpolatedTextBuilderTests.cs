@@ -20,7 +20,7 @@ public class InterpolatedTextBuilderTests
 
         text.Clear();
         Assert.Equal(0, text.Length);
-        TBA<TextBuilder> tba = DoThing;
+        Action<TextBuilder> tba = DoThing;
         text.Append($"HEY {tba} YA!");
         Assert.Equal(11, text.Length);
     }

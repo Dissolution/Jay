@@ -33,7 +33,7 @@ public static class TextExtensions
         var sliceIndex = text.Slice(startIndex).IndexOf(ch);
         if (sliceIndex == -1)
             return -1;
-        return (sliceIndex + startIndex);
+        return sliceIndex + startIndex;
     }
 
     public static int NextIndexOf(
@@ -48,7 +48,7 @@ public static class TextExtensions
         var sliceIndex = text.Slice(startIndex).IndexOf(searchText, comparison);
         if (sliceIndex == -1)
             return -1;
-        return (sliceIndex + startIndex);
+        return sliceIndex + startIndex;
     }
 
     public static int NextIndexOf(this Span<char> text, char ch, int startIndex) =>

@@ -28,12 +28,12 @@ public class SplitTests
         "\r\n"
     };
 
-    public static IReadOnlyList<TextSplitOptions> TestOptions { get; } = new[]
+    public static IReadOnlyList<SplitOptions> TestOptions { get; } = new[]
     {
-        TextSplitOptions.None,
-        TextSplitOptions.RemoveEmptyLines,
-        TextSplitOptions.TrimLines,
-        TextSplitOptions.RemoveEmptyLines | TextSplitOptions.TrimLines
+        SplitOptions.None,
+        SplitOptions.RemoveEmptyLines,
+        SplitOptions.TrimLines,
+        SplitOptions.RemoveEmptyLines | SplitOptions.TrimLines
     };
 
     public static IEnumerable<object?[]> CanSplitData()
@@ -47,7 +47,7 @@ public class SplitTests
     }
 
     [Theory,MemberData(nameof(CanSplitData))]
-    public void CanSplitText(string? input, string? separator, TextSplitOptions splitOptions)
+    public void CanSplitText(string? input, string? separator, SplitOptions splitOptions)
     {
         // We're comparing to (string)input.Split(separator, splitOptions);
         // If you pass a `null` separator, it converts it to `""` (empty)
@@ -77,13 +77,11 @@ public class SplitTests
         var inputSpan = input.AsSpan();
         var separatorSpan = separator.AsSpan();
 
-        // Have to be able to create a splitter, _always_
-        TextSplitEnumerable textSplitter = new TextSplitEnumerable(
-            inputText: inputSpan,
+        // Have to be able to create an enumerator, _always_
+        TextSplitEnumerator textSplitEnumerator = new TextSplitEnumerator(
+            sourceText: inputSpan,
             separator: separatorSpan,
             splitOptions: splitOptions);
-        // And get the enumerator
-        var textSplitEnumerator = textSplitter.GetEnumerator();
 
         // For debugging
         //var testSplitStrings = textSplitter.ListStrings();
@@ -102,7 +100,7 @@ public class SplitTests
             // Their values have to be exactly the same
             Assert.NotNull(stringSplitEnumerator.Current);
             string stringSplitString = stringSplitEnumerator.Current!;
-            string textSplitString = textSplitEnumerator.CurrentString;
+            string textSplitString = textSplitEnumerator.Text.ToString()!;
             Assert.Equal(stringSplitString, textSplitString);
             if (stringSplitString != textSplitString) return;
 

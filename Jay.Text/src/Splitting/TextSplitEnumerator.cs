@@ -1,103 +1,103 @@
-﻿namespace Jay.Text.Splitting;
+﻿using System.ComponentModel;
+using Jay.Enums;
+
+namespace Jay.Text.Splitting;
 
 /// <summary>
 /// An <see cref="IEnumerator{T}">IEnumerator&lt;ReadOnlySpan&lt;char&gt;&gt;</see>
+/// that enumerates over a <see cref="ReadOnlySpan{T}">ReadOnlySpan&lt;char&gt;</see>
+/// split by a <see cref="ReadOnlySpan{T}">Separator</see>
+/// with 
 /// </summary>
 public ref struct TextSplitEnumerator
     //: IEnumerator<ReadOnlySpan<char>>, IEnumerator
 {
-    private readonly ReadOnlySpan<char> _inputText;
-    private readonly ReadOnlySpan<char> _separator;
-    private readonly TextSplitOptions _splitOptions;
-    private readonly StringComparison _stringComparison;
+    public readonly ReadOnlySpan<char> SourceText;
+    public readonly ReadOnlySpan<char> Separator;
+    public readonly SplitOptions SplitOptions;
+    public readonly StringComparison StringComparison;
 
-    // current read position in <se 
+    // current read position in SourceText 
     private int _position = 0;
-    private ReadOnlySpan<char> _currentTextSlice = default;
     private Range _currentRange = default;
-
-    /// <inheritdoc cref="IEnumerator{T}"/>
-    public ReadOnlySpan<char> Current
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _currentTextSlice;
-    }
-
-    public ReadOnlySpan<char> Text => _currentTextSlice;
-
-    public string CurrentString => _currentTextSlice.ToString();
-
+    
+    // just for IEnumerator support
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public ReadOnlySpan<char> Current => Text;
+    
+    /// <summary>
+    /// Current slice's <see cref="Range"/> in <see cref="SourceText"/>
+    /// </summary>
     public Range Range => _currentRange;
 
-    public TextSplitEnumerator(TextSplitEnumerable splitEnumerable)
-    {
-        _inputText = splitEnumerable.InputText;
-        _separator = splitEnumerable.Separator;
-        _splitOptions = splitEnumerable.SplitOptions;
-        _stringComparison = splitEnumerable.StringComparison;
-    }
-
+    /// <summary>
+    /// Current slice's <see cref="ReadOnlySpan{T}">ReadOnlySpan&lt;char&gt;</see> from <see cref="SourceText"/>
+    /// </summary>
+    public ReadOnlySpan<char> Text => SourceText[_currentRange];
+    
     public TextSplitEnumerator(
-        ReadOnlySpan<char> inputText,
+        ReadOnlySpan<char> sourceText,
         ReadOnlySpan<char> separator,
-        TextSplitOptions splitOptions = TextSplitOptions.None,
+        SplitOptions splitOptions = SplitOptions.None,
         StringComparison stringComparison = StringComparison.Ordinal)
     {
-        _inputText = inputText;
-        _separator = separator;
-        _splitOptions = splitOptions;
-        _stringComparison = stringComparison;
+        this.SourceText = sourceText;
+        this.Separator = separator;
+        this.SplitOptions = splitOptions;
+        this.StringComparison = stringComparison;
     }
     
     public bool MoveNext()
     {
-        int inputTextLen = _inputText.Length;
+        int sourceLength = SourceText.Length;
         // inclusive start index
         int sliceStart;
         // exclusive end index
         int sliceEnd;
 
+        // scan
         while (true)
         {
+            // slice starts where we left off
             sliceStart = _position;
 
             // After the end = done enumerating
-            if (sliceStart > inputTextLen)
+            if (sliceStart > sourceLength)
             {
-                _currentTextSlice = default; // clear after enumeration ends
+                // clear after enumeration ends
                 _currentRange = default;
                 return false;
             }
 
-            // If our position is at the end, we might need to yield the last bit
-            if (sliceStart == inputTextLen)
+            // At end = might need to yield a last empty slice
+            if (sliceStart == sourceLength)
             {
                 // Finish enumeration                 
                 _position = sliceStart + 1;
-                if (!_splitOptions.HasFlag(TextSplitOptions.RemoveEmptyLines))
+                
+                // If we are not removing empty lines
+                if (!SplitOptions.HasFlags(SplitOptions.RemoveEmptyLines))
                 {
                     // Empty
-                    _currentTextSlice = ReadOnlySpan<char>.Empty;
                     _currentRange = new Range(start: sliceStart, end: sliceStart);
                     return true;
                 }
 
                 // clear
-                _currentTextSlice = default;
                 _currentRange = default;
                 return false;
             }
 
             // Scan for next separator
-            var separatorIndex = _inputText.NextIndexOf(
-                _separator,
+            var separatorIndex = SourceText.NextIndexOf(
+                Separator,
                 _position,
-                _stringComparison);
+                StringComparison);
             // None found or an empty separator yield the original
-            if (separatorIndex == -1 || _separator.Length == 0)
+            if (separatorIndex == -1 || Separator.Length == 0)
             {
                 // End of slice is end of text
-                sliceEnd = _inputText.Length;
+                sliceEnd = SourceText.Length;
                 // We're done enumerating
                 _position = sliceEnd + 1;
             }
@@ -106,17 +106,16 @@ public ref struct TextSplitEnumerator
                 // This slice ends where the separator starts
                 sliceEnd = separatorIndex;
                 // We'll start again where the separator ends
-                _position = sliceEnd + _separator.Length;
+                _position = sliceEnd + Separator.Length;
             }
-
-
+            
             // Respect StringSplitOptions
-            if (_splitOptions.HasFlag(TextSplitOptions.TrimLines))
+            if (SplitOptions.HasFlags(SplitOptions.TrimLines))
             {
                 // Copied from ReadOnlySpan<char>.Trim()
                 for (; sliceStart < sliceEnd; sliceStart++)
                 {
-                    if (!char.IsWhiteSpace(_inputText[sliceStart]))
+                    if (!char.IsWhiteSpace(SourceText[sliceStart]))
                     {
                         break;
                     }
@@ -124,13 +123,12 @@ public ref struct TextSplitEnumerator
 
                 for (; sliceEnd > sliceStart; sliceEnd--)
                 {
-                    if (!char.IsWhiteSpace(_inputText[(sliceEnd - 1)]))
+                    if (!char.IsWhiteSpace(SourceText[sliceEnd - 1]))
                     {
                         break;
                     }
                 }
             }
-
 
             _currentRange = new Range(
                 /* inclusive */
@@ -139,10 +137,10 @@ public ref struct TextSplitEnumerator
                 end: sliceEnd);
 
             // Respect StringSplitOptions
-            _currentTextSlice = _inputText[_currentRange];
-            if (_currentTextSlice.Length > 0 || !_splitOptions.HasFlag(TextSplitOptions.RemoveEmptyLines))
+            if ((sliceEnd-sliceStart) > 0 || !SplitOptions.HasFlags(SplitOptions.RemoveEmptyLines))
             {
                 // This is a valid return slice
+                return true;
             }
             // We're not going to return this slice, told not to
 
@@ -153,6 +151,9 @@ public ref struct TextSplitEnumerator
     public void Reset()
     {
         _position = 0;
-        _currentTextSlice = default;
+        _currentRange = default;
     }
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public TextSplitEnumerator GetEnumerator() => this;
 }

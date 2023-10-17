@@ -31,14 +31,15 @@
         <Using Include="System.Diagnostics.CodeAnalysis"/>
         <Using Include="Jay.Validation"/>
         <Using Include="Jay.Extensions"/>
+        <Using Include="Jay.Utilities"/>
         <Using Include="Jay.Text.Extensions"/>
         <Using Include="Jay.Text.Utilities"/>
+
+        <Using Remove="System.Net.Http"/>
     </ItemGroup>
 
     <!-- NuGet Packages -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
-        <Using Remove="System.Net.Http"/>
-
         <PackageReference Include="System.Memory" Version="4.5.5"/>
         <PackageReference Include="System.Buffers" Version="4.5.1"/>
     </ItemGroup>

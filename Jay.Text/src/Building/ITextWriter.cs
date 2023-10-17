@@ -1,4 +1,5 @@
-﻿namespace Jay.Text.Scratch;
+﻿namespace Jay.Text.Building;
+
 
 public interface ITextWriter : IBuildingText
 {

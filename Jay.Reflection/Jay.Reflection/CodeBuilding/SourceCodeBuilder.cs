@@ -17,12 +17,12 @@ public class CodeBuilder : IBuildingText
     public static CodeBuilder New => new();
     
     
-    private readonly TextWriter _textWriter;
+    private readonly ITextBuffer _textBuffer;
     private NewLineIndents _newLineIndents;
 
     public CodeBuilder()
     {
-        _textWriter = new();
+        _textBuffer = new TextBuilder();
         _newLineIndents = new();
     }
 
@@ -31,7 +31,7 @@ public class CodeBuilder : IBuildingText
         // what we think a newline is
         var newline = _newLineIndents.NewLine;
         // find the last occurrence of this in written
-        var written = _textWriter.Written;
+        var written = _textBuffer.Written;
         var finalNewlineIndex = written.LastIndexOf(newline.AsSpan());
         // if we didn't find one, we use what we've written thus far
         if (finalNewlineIndex == -1)
@@ -63,7 +63,7 @@ public class CodeBuilder : IBuildingText
 
     public CodeBuilder Write(char ch)
     {
-        _textWriter.Write(ch);
+        _textBuffer.Write(ch);
         return this;
     }
     
@@ -71,7 +71,7 @@ public class CodeBuilder : IBuildingText
 
     public CodeBuilder Write(scoped ReadOnlySpan<char> text)
     {
-        _textWriter.Write(text);
+        _textBuffer.Write(text);
         return this;
     }
     
@@ -79,7 +79,7 @@ public class CodeBuilder : IBuildingText
 
     public CodeBuilder Write(string? str)
     {
-        _textWriter.Write(str);
+        _textBuffer.Write(str);
         return this;
     }
     
@@ -88,32 +88,30 @@ public class CodeBuilder : IBuildingText
 
     public CodeBuilder Code(scoped ReadOnlySpan<char> text)
     {
-        var lines = text.TextSplit(_newLineIndents.NewLine)
-            .GetEnumerator();
+        var lines = text.Split(_newLineIndents.NewLine);
         if (!lines.MoveNext())
             return this;
 
-        _textWriter.Write(lines.Text);
+        _textBuffer.Write(lines.Text);
         while (lines.MoveNext())
         {
-            _textWriter.Write(_newLineIndents.AsSpan());
-            _textWriter.Write(lines.Text);
+            _textBuffer.Write(_newLineIndents.AsSpan());
+            _textBuffer.Write(lines.Text);
         }
         return this;
     }
 
     public CodeBuilder Code(string? str)
     {
-        var lines = str.TextSplit(_newLineIndents.NewLine)
-            .GetEnumerator();
+        var lines = SplitExtensions.Split(str, _newLineIndents.NewLine);
         if (!lines.MoveNext())
             return this;
 
-        _textWriter.Write(lines.Text);
+        _textBuffer.Write(lines.Text);
         while (lines.MoveNext())
         {
-            _textWriter.Write(_newLineIndents.AsSpan());
-            _textWriter.Write(lines.Text);
+            _textBuffer.Write(_newLineIndents.AsSpan());
+            _textBuffer.Write(lines.Text);
         }
         return this;
     }
@@ -151,12 +149,12 @@ public class CodeBuilder : IBuildingText
             case string str:
             {
                 Debugger.Break();
-                _textWriter.Write(str);
+                _textBuffer.Write(str);
                 return this;
             }
             case IFormattable:
             {
-                _textWriter.Format<T>(value);
+                _textBuffer.Write<T>(value);
                 return this;
             }
             case IEnumerable enumerable:
@@ -167,7 +165,7 @@ public class CodeBuilder : IBuildingText
             }
             default:
             {
-                CodeManager.WriteCodeTo<T>(value, _textWriter);
+                CodeManager.WriteCodeTo<T>(value, _textBuffer);
                 return this;
             }
         }
@@ -189,7 +187,7 @@ public class CodeBuilder : IBuildingText
 
     public CodeBuilder NewLine()
     {
-        _textWriter.Write(_newLineIndents.AsSpan());
+        _textBuffer.Write(_newLineIndents.AsSpan());
         return this;
     }
 
@@ -235,12 +233,12 @@ public class CodeBuilder : IBuildingText
 
     #region Enumerate
     public CodeBuilder Enumerate(
-        TextSplitEnumerable splitEnumerable,
+        TextSplitEnumerator textSplitEnumerator,
         Scbta perSplitSection)
     {
-        foreach (var splitSection in splitEnumerable)
+        while (textSplitEnumerator.MoveNext())
         {
-            perSplitSection(this, splitSection);
+            perSplitSection(this, textSplitEnumerator.Text);
         }
         return this;
     }
@@ -284,16 +282,15 @@ public class CodeBuilder : IBuildingText
 #region Delimit
     public CodeBuilder Delimit(
         ReadOnlySpan<char> delimiter,
-        TextSplitEnumerable splitEnumerable,
+        TextSplitEnumerator textSplitEnumerator,
         Scbta perSplitSection)
     {
-        var splitEnumerator = splitEnumerable.GetEnumerator();
-        if (!splitEnumerator.MoveNext()) return this;
-        perSplitSection(this, splitEnumerator.Current);
-        while (splitEnumerator.MoveNext())
+        if (!textSplitEnumerator.MoveNext()) return this;
+        perSplitSection(this, textSplitEnumerator.Text);
+        while (textSplitEnumerator.MoveNext())
         {
             Write(delimiter);
-            perSplitSection(this, splitEnumerator.Current);
+            perSplitSection(this, textSplitEnumerator.Text);
         }
         return this;
     }
@@ -403,7 +400,7 @@ public class CodeBuilder : IBuildingText
         }
 
         WriteLine("// <auto-generated>");
-        foreach (var line in comment.TextSplit(NewLineIndents._defaultNewline))
+        foreach (var line in SplitExtensions.Split(comment, NewLineIndents._defaultNewline))
         {
             Write("// ").WriteLine(line);
         }
@@ -493,7 +490,7 @@ public class CodeBuilder : IBuildingText
          * But we do want to watch out for newline characters to turn
          * this into a multi-line comment */
 
-        var comments = comment.TextSplit(NewLineIndents._defaultNewline)
+        var comments = SplitExtensions.Split(comment, NewLineIndents._defaultNewline)
             .GetEnumerator();
         if (!comments.MoveNext())
         {
@@ -521,7 +518,7 @@ public class CodeBuilder : IBuildingText
 
     public CodeBuilder Comment(string? comment, CommentType commentType)
     {
-        var splitEnumerable = comment.TextSplit(NewLineIndents._defaultNewline);
+        var splitEnumerable = SplitExtensions.Split(comment, NewLineIndents._defaultNewline);
         switch (commentType)
         {
             case CommentType.SingleLine:
@@ -544,7 +541,7 @@ public class CodeBuilder : IBuildingText
             }
             case CommentType.MultiLine:
             {
-                var comments = comment.TextSplit(NewLineIndents._defaultNewline)
+                var comments = SplitExtensions.Split(comment, NewLineIndents._defaultNewline)
                     .GetEnumerator();
                 if (!comments.MoveNext())
                 {
@@ -581,7 +578,7 @@ public class CodeBuilder : IBuildingText
 
     public void Dispose()
     {
-        _textWriter.Dispose();
+        _textBuffer.Dispose();
         _newLineIndents.Dispose();
     }
 
@@ -594,6 +591,6 @@ public class CodeBuilder : IBuildingText
 
     public override string ToString()
     {
-        return _textWriter.ToString();
+        return _textBuffer.ToString()!;
     }
 }

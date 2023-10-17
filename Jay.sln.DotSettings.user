@@ -26,6 +26,7 @@
       &lt;TestId&gt;xUnit::E5525C16-7719-452A-9E7D-0F749CE53E80::net7.0::Jay.Tests.Comparison.EqualityComparerCacheTests.CheckTEquals&lt;/TestId&gt;&#xD;
       &lt;TestId&gt;xUnit::E5525C16-7719-452A-9E7D-0F749CE53E80::net7.0::Jay.Tests.Comparison.EqualityComparerCacheTests.CheckObjectEquals&lt;/TestId&gt;&#xD;
     &lt;/TestAncestor&gt;&#xD;
+    &lt;Project Location="C:\git\Jay\Jay.Text\Tests" Presentation="&amp;lt;Jay.Text.Tests&amp;gt;" /&gt;&#xD;
   &lt;/Or&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=3de38267_002D2648_002D4630_002D94c2_002Dae3fc9c195ba_0023Jay_002ESourceGen_002ENeo/@EntryIndexedValue">True</s:Boolean>

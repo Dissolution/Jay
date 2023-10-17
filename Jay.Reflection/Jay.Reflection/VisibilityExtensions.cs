@@ -38,11 +38,10 @@ public static class VisibilityExtensions
         if (Enum.TryParse(str, true, out visibility))
             return true;
         visibility = default;
-        TextSplitEnumerable split = new(str.AsSpan(), " ".AsSpan(), TextSplitOptions.RemoveEmptyLines);
-        var e = split.GetEnumerator();
+        var e = new TextSplitEnumerator(str.AsSpan(), " ".AsSpan(), SplitOptions.RemoveEmptyLines);
         while (e.MoveNext())
         {
-            if (!Enum.TryParse<Visibility>(e.CurrentString, true, out var flag))
+            if (!Enum.TryParse<Visibility>(e.Text.ToString(), true, out var flag))
             {
                 Debugger.Break();
                 visibility = default;
