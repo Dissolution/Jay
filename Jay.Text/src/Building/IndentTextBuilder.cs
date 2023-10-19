@@ -1,104 +1,84 @@
-﻿using System.Collections;
-using Jay.Text.Splitting;
+﻿using Jay.Text.Splitting;
 
 namespace Jay.Text.Building;
 
-public class IndentTextBuilder<TBuilder> : 
-    TextBuilder<TBuilder>, 
-    IIndentTextBuilder<TBuilder> 
-    where TBuilder : IndentTextBuilder<TBuilder>
+public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
+    where B : IndentTextBuilder<B>
 {
-    protected static readonly string DefaultIndent = "   ";
-    
-    protected List<string> _indents;
-    
-    public IndentTextBuilder() : base()
-    {
-        _indents = new(0);
-    }
+    protected IndentManager _indents;
+
+    public IndentTextBuilder()
+        : this(TextPool.MINIMUM_CAPACITY)
+    { }
+
     public IndentTextBuilder(int minCapacity) 
         : base(minCapacity)
     {
-        _indents = new(0);
+        _indents = new();
     }
 
-    protected internal string GetCurrentPositionAsIndent()
+    protected ReadOnlySpan<char> GetArgIndent()
     {
-        // Start searching all Written for the last newline
-        var lastNewLineIndex = Written.LastIndexOf(_newline.AsSpan());
-        // If we never wrote one, there's no indent
+        /* When we want to capture a new indent for a formatting argument,
+         * we're looking for the last NewLine. Everything after that is the
+         * indent to this position.*/
+
+        var written = this.Written;
+        var lastNewLineIndex = written.LastIndexOf<char>(_newline.AsSpan());
+        // If we never wrote one, there is no indent
         if (lastNewLineIndex == -1)
-            return string.Empty;
-        /* everything after is our indent
-         * it would seem we might only want to capture whitespace
-         * but this lets us do hacks like indent('-') or indent('*')
-         */
-        var after = Written.Slice(lastNewLineIndex + _newline.Length);
-        return after.ToString();
+            return default;
+        var after = written.Slice(lastNewLineIndex + _newline.Length);
+        return after;
     }
-    
-    protected internal TBuilder IndentAwareAction(Action<TBuilder> action)
+
+    protected B IndentAwareInvoke(Action<B> build)
     {
         // Capture our original indents
-        var originalIndents = _indents;
+        var original = _indents;
         // Replace them with a single indent based upon this position
-        _indents = new List<string>(1) { GetCurrentPositionAsIndent() };
+        var argIndent = GetArgIndent();
+        _indents = new();
+        _indents.AddIndent(argIndent);
         // perform the action
-        action(_builder);
+        build(_builder);
         // restore the indents
-        _indents = originalIndents;
+        _indents.Dispose();
+        _indents = original;
+        // fluent
         return _builder;
     }
 
-    public override TBuilder NewLine()
+    protected void IndentAwareWrite(scoped ReadOnlySpan<char> text)
     {
-        // newline
+        var e = text.Split(_newline);
+        if (!e.MoveNext()) return;
+        base.Write(e.Text);
+        while (e.MoveNext())
+        {
+            base.Write(_newline);
+            base.Write(e.Text);
+        }
+    }
+    
+    
+    public override B NewLine()
+    {
         base.Write(_newline);
-        // all indents
-        foreach (var indent in _indents)
-        {
-            base.Write(indent);
-        }
+        base.Write(_indents.CurrentIndent);
         return _builder;
     }
-    
-    public override void Write(string? str)
-    {
-        if (string.IsNullOrEmpty(str)) return;
-        // We're going to be splitting on NewLine
-        var e = new TextSplitEnumerator(str.AsSpan(), _newline.AsSpan());
-        if (!e.MoveNext()) return;
-        this.Write(e.Text);
-        while (e.MoveNext())
-        {
-            // Delimit with NewLine
-            this.NewLine();
-            // Write this slice
-            this.Write(e.Text);
-        }
-    }
 
-    public override void Write(scoped ReadOnlySpan<char> text)
-    {
-        int textLen = text.Length;
-        if (textLen == 0) return;
+    public override void Write(params char[]? characters) 
+        => IndentAwareWrite(characters.AsSpan());
 
-        // We're going to be splitting on NewLine
-        var e = new TextSplitEnumerator(text, _newline.AsSpan());
-        if (!e.MoveNext()) return;
-        this.Write(e.Text);
-        while (e.MoveNext())
-        {
-            // Delimit with NewLine
-            this.NewLine();
-            // Write this slice
-            this.Write(e.Text);
-        }
-    }
+    public override void Write(scoped ReadOnlySpan<char> text) 
+        => IndentAwareWrite(text);
 
-    public override void Write<T>(T? value, ReadOnlySpan<char> format, IFormatProvider? provider = null) where T : default => Write<T>(value, format.ToString(), provider);
-    
-    public override void Write<T>(T? value, string? format, IFormatProvider? provider = null) where T : default
+    public override void Write(string? str) 
+        => IndentAwareWrite(str.AsSpan());
+
+    public override void Write<T>([AllowNull] T value)
     {
         switch (value)
         {
@@ -106,9 +86,9 @@ public class IndentTextBuilder<TBuilder> :
             {
                 return;
             }
-            case Action<TBuilder> tba:
+            case Action<B> build:
             {
-                IndentAwareAction(tb => tba(tb));
+                IndentAwareInvoke(build);
                 return;
             }
             case string str:
@@ -116,107 +96,62 @@ public class IndentTextBuilder<TBuilder> :
                 this.Write(str);
                 return;
             }
-            case IFormattable formattable:
-            {
-                base.Write(formattable, format, provider);
-                return;
-            }
-            case IEnumerable enumerable:
-            {
-                format ??= ",";
-                this.Delimit(
-                    format,
-                    enumerable.Cast<object?>(),
-                    (w, v) => w.Append<object?>(v, format, provider)
-                );
-                return;
-            }
             default:
             {
-                base.Write<T>(value, format, provider);
+                this.Write(value.ToString());
                 return;
             }
         }
     }
-    
-    public TBuilder Indented(char indent, Action<TBuilder> indentedAction)
+
+    public B AddIndent(char indent)
     {
-        _indents.Add(indent.ToString());
-        indentedAction(_builder);
-        _indents.RemoveAt(_indents.Count-1);
+        _indents.AddIndent(indent);
         return _builder;
     }
-    
-    public TBuilder Indented(scoped ReadOnlySpan<char> indent, Action<TBuilder> indentedAction)
+
+    public B AddIndent(string indent)
     {
-        _indents.Add(indent.ToString());
-        indentedAction(_builder);
-        _indents.RemoveAt(_indents.Count-1);
+        _indents.AddIndent(indent);
         return _builder;
     }
-    
-    
-    public TBuilder Indented(string indent, Action<TBuilder> indentedAction)
+
+    public B AddIndent(scoped ReadOnlySpan<char> indent)
     {
-        _indents.Add(indent);
-        indentedAction(_builder);
-        _indents.RemoveAt(_indents.Count-1);
+        _indents.AddIndent(indent);
         return _builder;
     }
-    
-    
-    /*
-    public TBuilder IndentBlock(Action<TBuilder> indentBlock)
+
+    public B RemoveIndent()
     {
-        return IndentBlock(DefaultIndent, indentBlock);
+        _indents.RemoveIndent();
+        return _builder;
     }
 
-    public TBuilder IndentBlock(string indent, Action<TBuilder> indentBlock)
+    public B RemoveIndent(out ReadOnlySpan<char> lastIndent)
     {
-        var oldIndent = _newLineIndent;
-        // We might be on a new line, but not yet indented
-        if (TextHelper.Equals(CurrentLine, oldIndent))
-        {
-            Append(indent);
-        }
-
-        var newIndent = oldIndent + indent;
-        _newLineIndent = newIndent;
-        indentBlock(this);
-        _newLineIndent = oldIndent;
-        // Did we do a newline that we need to decrease?
-        if (Written.EndsWith(newIndent.AsSpan()))
-        {
-            _position -= newIndent.Length;
-            Append(oldIndent);
-        }
-        return this;
+        _indents.RemoveIndent(out lastIndent);
+        return _builder;
     }
 
-    public TBuilder EnsureOnStartOfNewLine()
-    {
-        if (!Written.EndsWith(_newLineIndent.AsSpan()))
-        {
-            return NewLine();
-        }
-        return this;
-    }
+    public B Indented(char indent, Action<B> buildIndentedText) 
+        => AddIndent(indent)
+            .Invoke(buildIndentedText)
+            .RemoveIndent();
 
-    public TBuilder BracketBlock(Action<TBuilder> bracketBlock, string? indent = null)
+    public B Indented(string indent, Action<B> buildIndentedText)
+        => AddIndent(indent)
+            .Invoke(buildIndentedText)
+            .RemoveIndent();
+
+    public B Indented(scoped ReadOnlySpan<char> indent, Action<B> buildIndentedText)
+        => AddIndent(indent)
+            .Invoke(buildIndentedText)
+            .RemoveIndent();
+
+    public override void Dispose()
     {
-        indent ??= DefaultIndent;
-        // Trim all trailing whitespace
-        return TrimEnd()
-            // Start a new line
-            .NewLine()
-            // Starting bracket
-            .AppendLine('{')
-            // Starts an indented block inside of that bracket
-            .IndentBlock(indent, bracketBlock)
-            // Be sure that we're not putting the end bracket at the end of text
-            .EnsureOnStartOfNewLine()
-            // Ending bracket
-            .Append('}');
+        _indents.Dispose();
+        base.Dispose();
     }
-    */
 }

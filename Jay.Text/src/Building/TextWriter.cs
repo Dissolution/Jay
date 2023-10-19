@@ -146,6 +146,8 @@ public class TextWriter : ITextWriter
     {
         // by the time we get into the method, the interpolated text writer
         // has already written to us
+        // and since we were passed in to its constructor
+        // we do not want / need to dispose it
     }
 
     public virtual void Write<T>(T? value)
@@ -161,7 +163,7 @@ public class TextWriter : ITextWriter
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(_chars.AsSpan(_length), out charsWritten, default, default))
                 {
-                    GrowBy(TextPool.MINIMUM_CAPACITY);
+                    GrowBy(1);
                 }
                 _length += charsWritten;
                 return;
@@ -192,7 +194,7 @@ public class TextWriter : ITextWriter
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(_chars.AsSpan(_length), out charsWritten, format, provider))
                 {
-                    GrowBy(TextPool.MINIMUM_CAPACITY);
+                    GrowBy(1);
                 }
                 _length += charsWritten;
                 return;
@@ -223,7 +225,7 @@ public class TextWriter : ITextWriter
                 // constrained call avoiding boxing for value types
                 while (!((ISpanFormattable)value).TryFormat(_chars.AsSpan(_length), out charsWritten, format, provider))
                 {
-                    GrowBy(TextPool.MINIMUM_CAPACITY);
+                    GrowBy(1);
                 }
                 _length += charsWritten;
                 return;
