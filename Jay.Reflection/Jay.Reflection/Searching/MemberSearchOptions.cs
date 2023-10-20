@@ -199,23 +199,23 @@ public sealed record class MemberSearchOptions : ICodePart
     {
         if (Visibility != Visibility.None)
         {
-            codeBuilder.Code(Visibility);
+            codeBuilder.Append(Visibility);
         }
         if (ReturnType != null)
         {
-            codeBuilder.Write(' ').Code(ReturnType);
+            codeBuilder.Append(' ').Append(ReturnType);
         }
         if (Name is not null)
         {
-            codeBuilder.Write($" \"{Name}\"");
+            codeBuilder.Append($" \"{Name}\"");
             if (NameMatch != NameMatchOptions.Exact)
             {
-                codeBuilder.Write($"({NameMatch})");
+                codeBuilder.Append($"({NameMatch})");
             }
         }
         if (ParameterTypes is not null)
         {
-            codeBuilder.Write(" (").DelimitCode<Type>(", ", ParameterTypes);
+            codeBuilder.Append(" (").Delimit(static c => c.Write(", "), ParameterTypes, static (c,p) => c.Write(p));
         }
     }
 

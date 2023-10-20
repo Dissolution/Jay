@@ -40,10 +40,11 @@ public class RuntimeDelegateBuilder : ICodePart
 
     public void DeclareTo(CodeBuilder codeBuilder)
     {
-        codeBuilder.Write("Building a ")
-            .Code(_delegateInfo)
-            .WriteLine(':')
-            .Code(_emitter);
+        codeBuilder
+            .Append("Building a ")
+            .Append(_delegateInfo)
+            .AppendLine(':')
+            .Append(_emitter);
     }
 }
 

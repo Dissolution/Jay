@@ -96,14 +96,14 @@ public sealed class FieldSignature : MemberSignature,
 
     public override void DeclareTo(CodeBuilder code)
     {
-        code.Code(Attributes)
-            .Code(Visibility)
-            .Write(' ')
-            .Code(Keywords)
-            .Write(' ')
-            .Code(FieldType)
-            .Write(' ')
-            .Write(Name)
-            .Write(';');
+        code.Append(Attributes)
+            .Append(Visibility)
+            .Append(' ')
+            .Append(Keywords)
+            .Append(' ')
+            .Append(FieldType)
+            .Append(' ')
+            .Append(Name)
+            .Append(';');
     }
 }

@@ -38,8 +38,8 @@ public class EmissionStream : LinkedList<EmissionLine>, ICodePart
         foreach (var node in this)
         {
             codeBuilder
-                .Write($"IL_{node.Offset:x4}: ")
-                .Code(node.Emission)
+                .Append($"IL_{node.Offset:x4}: ")
+                .Append(node.Emission)
                 .NewLine();
         }
     }

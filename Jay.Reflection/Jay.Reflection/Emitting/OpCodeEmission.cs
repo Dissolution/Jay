@@ -62,10 +62,9 @@ public sealed class OpCodeEmission : Emission
     public override void DeclareTo(CodeBuilder codeBuilder)
     {
         codeBuilder
-            .Write(Name)
-            .If(
-                HasArgs, cb => cb
-                    .Write("    ")
-                    .Code(this.Arg));
+            .Append(Name)
+            .If(HasArgs, cb => cb
+                    .Append("    ")
+                    .Append(this.Arg));
     }
 }

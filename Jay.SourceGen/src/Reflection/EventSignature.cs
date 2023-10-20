@@ -114,14 +114,14 @@ public sealed class EventSignature : MemberSignature,
 
     public override void DeclareTo(CodeBuilder code)
     {
-        code.Code(Attributes)
-            .Code(Visibility)
-            .Write(' ')
-            .Code(Keywords)
-            .Write(' ')
-            .Code(EventType)
-            .Write(' ')
-            .Write(Name)
-            .Write(';');
+        code.Append(Attributes)
+            .Append(Visibility)
+            .Append(' ')
+            .Append(Keywords)
+            .Append(' ')
+            .Append(EventType)
+            .Append(' ')
+            .Append(Name)
+            .Append(';');
     }
 }

@@ -93,8 +93,8 @@ public sealed class AttributeSignature : Signature,
         code.Write(Name);
         if (Arguments.Count > 0)
         {
-            code.Write('(')
-                .Delimit(", ", Arguments, static (cb, a) => cb.Write(a.Key).Write(" = ").Code(a.Value))
+            code.Append('(')
+                .Delimit(static c => c.Write(", "), Arguments, static (cb, a) => cb.Append(a.Key).Append(" = ").Append(a.Value))
                 .Write(')');
         }
     }

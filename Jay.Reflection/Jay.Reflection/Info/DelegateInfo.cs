@@ -112,17 +112,17 @@ public sealed class DelegateInfo : ICodePart,
         for (var i = 0; i < ParameterCount; i++)
         {
             if (i > 0) 
-                codeBuilder.Write(',');
+                codeBuilder.Append(',');
             var param = Parameters[i];
             var access = param.GetAccess(out var parameterType);
-            codeBuilder.Code(access);
-            codeBuilder.Write(' ');
-            codeBuilder.Code(parameterType);
-            codeBuilder.Write(param.Name);
+            codeBuilder.Append(access);
+            codeBuilder.Append(' ');
+            codeBuilder.Append(parameterType);
+            codeBuilder.Append(param.Name);
             if (param.HasDefaultValue)
             {
-                codeBuilder.Write(" = ");
-                codeBuilder.Code(param.DefaultValue);
+                codeBuilder.Append(" = ");
+                codeBuilder.Append(param.DefaultValue);
             }
         }
         codeBuilder.Write(')');

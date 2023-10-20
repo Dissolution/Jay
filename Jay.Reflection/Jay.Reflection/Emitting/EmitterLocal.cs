@@ -105,7 +105,7 @@ public readonly struct EmitterLocal :
     public void DeclareTo(CodeBuilder codeBuilder)
     {
         codeBuilder
-            .Write($"[{Index}] {Type} {Name}")
+            .Append($"[{Index}] {Type} {Name}")
             .If(IsPinned, cb => cb.Write(" 📌"));
     }
 

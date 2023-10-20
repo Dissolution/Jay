@@ -325,7 +325,7 @@ public readonly struct Result<TValue> :
         }
         else
         {
-            return $"Result<{TypeNames.ToCode<TValue>()}>.Error({_exception?.GetType().ToCode()}): {_exception?.Message})";
+            return $"Result<{TypeNames.ToCode<TValue>()}>.Error({_exception?.GetType().NameOf()}): {_exception?.Message})";
         }
     }
 
@@ -337,7 +337,7 @@ public readonly struct Result<TValue> :
         }
         else
         {
-            return $"Result<{TypeNames.ToCode<TValue>()}>.Error({_exception?.GetType().ToCode()}): {_exception?.Message})";
+            return $"Result<{TypeNames.ToCode<TValue>()}>.Error({_exception?.GetType().NameOf()}): {_exception?.Message})";
         }
     }
 }

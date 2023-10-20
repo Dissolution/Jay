@@ -107,14 +107,14 @@ public sealed class PropertySignature : MemberSignature,
 
     public override void DeclareTo(CodeBuilder code)
     {
-        code.Code(Attributes)
-            .Code(Visibility)
-            .Write(' ')
-            .Code(Keywords)
-            .Write(' ')
-            .Code(PropertyType)
-            .Write(' ')
-            .Write(Name);
+        code.Append(Attributes)
+            .Append(Visibility)
+            .Append(' ')
+            .Append(Keywords)
+            .Append(' ')
+            .Append(PropertyType)
+            .Append(' ')
+            .Append(Name);
         if (!HasGetter && !HasSetter)
         {
             code.Write(';');
@@ -127,8 +127,8 @@ public sealed class PropertySignature : MemberSignature,
             {
                 if (getter.Visibility != Visibility)
                 {
-                    code.Code(getter.Visibility)
-                        .Write(' ');
+                    code.Append(getter.Visibility)
+                        .Append(' ');
                 }
                 code.Write("get; ");
             }
@@ -137,8 +137,8 @@ public sealed class PropertySignature : MemberSignature,
             {
                 if (setter.Visibility != Visibility)
                 {
-                    code.Code(setter.Visibility)
-                        .Write(' ');
+                    code.Append(setter.Visibility)
+                        .Append(' ');
                 }
                 if (setter.Keywords.HasFlags(Keywords.Init))
                 {

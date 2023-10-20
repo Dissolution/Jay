@@ -37,7 +37,7 @@ public static class ValidationExtensions
 
         throw new ArgumentNullException(
             valueName,
-            exceptionMessage ?? $"The given {typeof(T).ToCode()} value must not be null");
+            exceptionMessage ?? $"The given {typeof(T).NameOf()} value must not be null");
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public static class ValidationExtensions
             return output;
 
         throw new ArgumentException(
-            exceptionMessage ?? $"The given {obj?.GetType().ToCode()} value is not a valid {typeof(TOut).ToCode()} instance",
+            exceptionMessage ?? $"The given {obj?.GetType().NameOf()} value is not a valid {typeof(TOut).NameOf()} instance",
             objName);
     }
 }

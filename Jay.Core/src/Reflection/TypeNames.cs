@@ -53,7 +53,7 @@ public static class TypeNames
         {
             underType = type.GetElementType()
                 .ThrowIfNull();
-            return $"ref {ToCode(underType)}";
+            return $"ref {NameOf(underType)}";
         }
 
         // Array
@@ -61,7 +61,7 @@ public static class TypeNames
         {
             underType = type.GetElementType()
                 .ThrowIfNull();
-            return $"{ToCode(underType)}[]";
+            return $"{NameOf(underType)}[]";
         }
 
         // Pointer
@@ -69,14 +69,14 @@ public static class TypeNames
         {
             underType = type.GetElementType()
                 .ThrowIfNull();
-            return $"{ToCode(underType)}*";
+            return $"{NameOf(underType)}*";
         }
 
         // Nullable
         underType = Nullable.GetUnderlyingType(type);
         if (underType is not null)
         {
-            return $"{ToCode(underType)}?";
+            return $"{NameOf(underType)}?";
         }
 
         // After this point, we're building up the name
@@ -86,7 +86,7 @@ public static class TypeNames
         if (type.IsNested && !type.IsGenericParameter)
         {
             underType = type.DeclaringType.ThrowIfNull();
-            name.Append(ToCode(underType))
+            name.Append(NameOf(underType))
                 .Append('.');
         }
 
@@ -124,11 +124,11 @@ public static class TypeNames
         name.Append('<');
         var genericTypes = type.GetGenericArguments();
         Debug.Assert(genericTypes.Length > 0);
-        name.Append(ToCode(genericTypes[0]));
+        name.Append(NameOf(genericTypes[0]));
         for (i = 1; i < genericTypes.Length; i++)
         {
             name.Append(", ")
-                .Append(ToCode(genericTypes[i]));
+                .Append(NameOf(genericTypes[i]));
         }
         name.Append('>');
         return name.ToStringAndReturn();
@@ -137,7 +137,7 @@ public static class TypeNames
     /// <summary>
     /// Gets a <c>C#</c> code representation of this <see cref="Type"/>
     /// </summary>
-    public static string ToCode(this Type? type)
+    public static string NameOf(this Type? type)
     {
         if (type is null)
             return "null";

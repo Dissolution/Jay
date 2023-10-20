@@ -45,9 +45,9 @@ public sealed class SignatureAttributes : IReadOnlyList<AttributeSignature>, ICo
     {
         if (_attributes.Count == 0) return;
 
-        code.Write('[')
-            .Delimit(", ", _attributes, static (cb, a) => a.DeclareTo(cb))
-            .Write(']');
+        code.Append('[')
+            .Delimit(static cb => cb.Write(", "), _attributes, static (cb, a) => a.DeclareTo(cb))
+            .Append(']');
     }
 
     public override string ToString() => CodePart.ToDeclaration(this);

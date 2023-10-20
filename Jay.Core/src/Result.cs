@@ -243,5 +243,5 @@ public readonly partial struct Result :
 
     public override int GetHashCode() => _ok ? 1 : 0;
 
-    public override string ToString() => _ok ? "Ok()" : $"Error({_exception?.GetType().ToCode()}): {_exception?.Message})";
+    public override string ToString() => _ok ? "Ok()" : $"Error({_exception?.GetType().NameOf()}): {_exception?.Message})";
 }

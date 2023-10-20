@@ -136,11 +136,11 @@ public sealed class ParameterSignature :
         }
         if (IsParams)
             code.Write("params ");
-        code.Code(ParameterType);
+        code.Append(ParameterType);
         if (DefaultValue.IsSome(out var defaultValue))
         {
-            code.Write(" = ")
-                .Code(defaultValue);
+            code.Append(" = ")
+                .Append(defaultValue);
         }
     }
 }

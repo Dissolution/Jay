@@ -121,7 +121,7 @@ public class ArrayWrapper :
         // 1D array is much easier
         if (Rank == 1)
         {
-            codeBuilder.Write('[').DelimitCode(", ", this).Write(']');
+            codeBuilder.Append('[').Delimit(static c => c.Write(", "), this, static (c,o) => c.Write(o)).Write(']');
         }
         else
         {

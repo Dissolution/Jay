@@ -86,10 +86,11 @@ public sealed class GeneratorEmission : Emission
 
     public override void DeclareTo(CodeBuilder codeBuilder)
     {
-        codeBuilder.Write(Name)
+        codeBuilder
+            .Append(Name)
             .If(HasArgs, cb => cb
-                    .Write('(')
-                    .DelimitCode(", ", Arguments)
-                    .Write(')'));
+            .Append('(')
+            .Delimit(static c => c.Write(", "), Arguments, static (c,a) => c.Write(a))
+            .Append(')'));
     }
 }

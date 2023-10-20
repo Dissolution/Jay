@@ -6,8 +6,8 @@
 public interface ICodePart
 {
     /// <summary>
-    /// Declare this thing to the <see cref="CodeBuilder"/>
+    /// Declare this <see cref="ICodePart"/> to the <see cref="CodeBuilder"/>
     /// </summary>
-    /// <param name="code"></param>
-    void DeclareTo(CodeBuilder code);
+    /// <param name="codeBuilder"></param>
+    void DeclareTo(CodeBuilder codeBuilder);
 }

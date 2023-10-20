@@ -103,16 +103,16 @@ public sealed class MethodSignature :
 
     public override void DeclareTo(CodeBuilder code)
     {
-        code.Code(Attributes)
-            .Code(Visibility)
-            .Write(' ')
-            .Code(Keywords)
-            .Write(' ')
-            .Code(ReturnType)
-            .Write(' ')
-            .Write(Name)
-            .Write('(')
-            .Delimit(", ", Parameters, static (cb, p) => cb.Code(p))
-            .Write(");");
+        code.Append(Attributes)
+            .Append(Visibility)
+            .Append(' ')
+            .Append(Keywords)
+            .Append(' ')
+            .Append(ReturnType)
+            .Append(' ')
+            .Append(Name)
+            .Append('(')
+            .Delimit(static cb => cb.Write(", "), Parameters, static (cb, p) => cb.Write(p))
+            .Append(");");
     }
 }
