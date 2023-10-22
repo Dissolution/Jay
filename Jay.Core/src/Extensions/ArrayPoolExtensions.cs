@@ -4,6 +4,8 @@ namespace Jay.Extensions;
 
 public static class ArrayPoolExtensions
 {
+    public static T[] Rent<T>(this ArrayPool<T> arrayPool) => arrayPool.Rent(minimumLength: 64);
+
     public static IDisposable Rent<T>(this ArrayPool<T> arrayPool,
         int minimumLength,
         out T[] tempArray,

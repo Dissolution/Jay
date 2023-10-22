@@ -1,4 +1,4 @@
-﻿using System.Buffers.Text;
+﻿using Jay.Reflection;
 using Jay.Utilities;
 
 namespace Jay.Memory;
@@ -8,7 +8,7 @@ namespace Jay.Memory;
 /// </summary>
 public static class ByteSpanReaderExtensions
 {
-    public static bool TryPeek<T>(
+    public static Result TryPeek<T>(
         this ref SpanReader<byte> byteReader,
         out T value)
         where T : unmanaged
@@ -19,10 +19,10 @@ public static class ByteSpanReaderExtensions
             return true;
         }
         value = default;
-        return false;
+        return new InvalidOperationException($"Cannot peek for a {typeof(T).NameOf()}: Only {byteReader.UnreadCount} bytes remain");
     }
     
-    public static bool TryRead<T>(
+    public static Result TryTake<T>(
         this ref SpanReader<byte> byteReader,
         out T value)
         where T : unmanaged
@@ -33,27 +33,12 @@ public static class ByteSpanReaderExtensions
             return true;
         }
         value = default;
-        return false;
+        return new InvalidOperationException($"Cannot take a {typeof(T).NameOf()}: Only {byteReader.UnreadCount} bytes remain");
     }
 
-    public static T Read<T>(this ref SpanReader<byte> byteReader)
+    public static T Take<T>(this ref SpanReader<byte> byteReader)
         where T : unmanaged
-    {
-        if (TryRead<T>(ref byteReader, out T value))
-            return value;
-
-        throw new InvalidOperationException();
-    }
-    
-    public static bool TryReadInto(
-        this ref SpanReader<byte> byteReader,
-        Span<byte> buffer)
-    {
-        if (byteReader.TryTake(buffer.Length, out var taken))
-        {
-            Easy.CopyTo(taken, buffer);
-            return true;
-        }
-        return false;
-    }
+        => TryTake<T>(ref byteReader, out T value)
+            .WithValue(value)
+            .OkValueOrThrowError();
 }

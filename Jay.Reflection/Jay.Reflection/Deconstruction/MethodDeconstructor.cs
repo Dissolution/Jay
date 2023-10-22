@@ -66,74 +66,74 @@ public class MethodDeconstructor
         {
             case OperandType.InlineField:
             {
-                int metadataToken = ilBytes.Read<int>();
+                int metadataToken = ilBytes.Take<int>();
                 FieldInfo? field = module.ResolveField(metadataToken);
                 return field;
             }
             case OperandType.InlineMethod:
             {
-                int metadataToken = ilBytes.Read<int>();
+                int metadataToken = ilBytes.Take<int>();
                 MethodBase? method = module.ResolveMethod(metadataToken);
                 return method;
             }
             case OperandType.InlineTok:
             {
-                int metadataToken = ilBytes.Read<int>();
+                int metadataToken = ilBytes.Take<int>();
                 MemberInfo? member = module.ResolveMember(metadataToken);
                 return member;
             }
             case OperandType.InlineType:
             {
-                int metadataToken = ilBytes.Read<int>();
+                int metadataToken = ilBytes.Take<int>();
                 Type type = module.ResolveType(metadataToken);
                 return type;
             }
             case OperandType.InlineSig:
             {
-                int metadataToken = ilBytes.Read<int>();
+                int metadataToken = ilBytes.Take<int>();
                 byte[] signature = module.ResolveSignature(metadataToken);
                 return signature;
             }
             case OperandType.InlineString:
             {
-                int metadataToken = ilBytes.Read<int>();
+                int metadataToken = ilBytes.Take<int>();
                 string str = module.ResolveString(metadataToken);
                 return str;
             }
             case OperandType.InlineVar:
             {
-                short index = ilBytes.Read<short>();
+                short index = ilBytes.Take<short>();
                 var variable = GetVariable(methodDeconstruction, opCode, index);
                 return variable;
             }
             case OperandType.ShortInlineVar:
             {
-                sbyte index = ilBytes.Read<sbyte>();
+                sbyte index = ilBytes.Take<sbyte>();
                 var variable = GetVariable(methodDeconstruction, opCode, index);
                 return variable;
             }
             case OperandType.InlineI:
-                return ilBytes.Read<int>();
+                return ilBytes.Take<int>();
             case OperandType.ShortInlineI:
-                return ilBytes.Read<sbyte>();
+                return ilBytes.Take<sbyte>();
             case OperandType.InlineI8:
-                return ilBytes.Read<long>();
+                return ilBytes.Take<long>();
             case OperandType.ShortInlineR:
-                return ilBytes.Read<float>();
+                return ilBytes.Take<float>();
             case OperandType.InlineR:
-                return ilBytes.Read<double>();
+                return ilBytes.Take<double>();
             case OperandType.InlineBrTarget:
-                return ilBytes.Read<int>() + ilBytes.Position;
+                return ilBytes.Take<int>() + ilBytes.ReadCount;
             case OperandType.ShortInlineBrTarget:
-                return ilBytes.Read<sbyte>() + ilBytes.Position;
+                return ilBytes.Take<sbyte>() + ilBytes.ReadCount;
             case OperandType.InlineSwitch:
             {
-                int count = ilBytes.Read<int>();
-                int offset = ilBytes.Position + (4 * count);
+                int count = ilBytes.Take<int>();
+                int offset = ilBytes.ReadCount + (4 * count);
                 int[] branches = new int[count];
                 for (var i = 0; i < count; i++)
                 {
-                    branches[i] = ilBytes.Read<int>() + offset;
+                    branches[i] = ilBytes.Take<int>() + offset;
                 }
                 return branches;
             }
@@ -186,9 +186,9 @@ public class MethodDeconstructor
         var emissions = new EmissionStream();
         
         // Read all of our emissions
-        while (ilReader.RemainingLength > 0)
+        while (ilReader.UnreadCount > 0)
         {
-            int pos = ilReader.Position;
+            int pos = ilReader.ReadCount;
             var opCode = ReadOpCode(ref ilReader);
             object? operand = ReadOperand(methodDeconstruction, opCode, ref ilReader);
             var emission = new OpCodeEmission(opCode, operand);

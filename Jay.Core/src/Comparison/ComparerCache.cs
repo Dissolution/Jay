@@ -12,7 +12,7 @@ namespace Jay.Comparison;
 
 public sealed class ComparerCache : IComparer<object?>, IComparer
 {
-    private static readonly ConcurrentTypeMap<IComparer> _comparers = new();
+    private static readonly ConcurrentTypeMap<object> _comparers = new();
 
     private static IComparer FindComparer(Type type)
     {
@@ -27,7 +27,8 @@ public sealed class ComparerCache : IComparer<object?>, IComparer
     public static IComparer Default(Type type)
     {
         return _comparers
-            .GetOrAdd(type, static t => FindComparer(t));
+            .GetOrAdd(type, static t => FindComparer(t))
+            .AsValid<IComparer>();
     }
 
     public static IComparer<T> Default<T>()
@@ -40,7 +41,7 @@ public sealed class ComparerCache : IComparer<object?>, IComparer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Compare<T>(T? left, T? right)
     {
-        return Comparer<T>.Default.Compare(left, right);
+        return Default<T>().Compare(left, right);
     }
     
     public static int Compare(object? left, object? right)
@@ -48,10 +49,11 @@ public sealed class ComparerCache : IComparer<object?>, IComparer
         if (ReferenceEquals(left, right)) return 0;
         if (left is not null)
         {
-            return Default(left.GetType()).Compare(left, right);
+            return Default(left.GetType())
+                .Compare(left, right);
         }
-        // Right cannot be null, we checked refequals
-        return Default(right!.GetType()).Compare(left, right);
+        return Default(right!.GetType())
+            .Compare(left, right);
     }
 
     public static IComparer<T> Create<T>(Comparison<T> compare) => Comparer<T>.Create(compare);

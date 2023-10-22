@@ -24,7 +24,9 @@ public static class AttributeExtensions
         // Collect pertinent syntax trees from these attributes
         var acceptedTrees = new HashSet<SyntaxTree>();
         foreach (var attribute in attributes.Attributes)
+        {
             acceptedTrees.Add(attribute.SyntaxTree);
+        }
 
         var parentSymbol = attributes.Parent!.GetDeclaredSymbol(compilation)!;
         var parentAttributes = parentSymbol.GetAttributes();

@@ -12,22 +12,23 @@ namespace Jay.Comparison;
 
 public sealed class EqualityComparerCache : IEqualityComparer<object?>, IEqualityComparer
 {
-    private static readonly ConcurrentTypeMap<IEqualityComparer> _equalityComparers = new();
+    private static readonly ConcurrentTypeMap<object> _equalityComparers = new();
 
-    internal static IEqualityComparer FindEqualityComparer(Type type)
+    private static object FindEqualityComparer(Type type)
     {
         return typeof(EqualityComparer<>)
             .MakeGenericType(type)
             .GetProperty("Default", BindingFlags.Public | BindingFlags.Static)
             .ThrowIfNull()
             .GetValue(null)
-            .AsValid<IEqualityComparer>();
+            .ThrowIfNull();
     }
 
     public static IEqualityComparer Default(Type type)
     {
         return _equalityComparers
-            .GetOrAdd(type, static t => FindEqualityComparer(t));
+            .GetOrAdd(type, static t => FindEqualityComparer(t))
+            .AsValid<IEqualityComparer>();
     }
 
     public static IEqualityComparer<T> Default<T>()
@@ -47,14 +48,11 @@ public sealed class EqualityComparerCache : IEqualityComparer<object?>, IEqualit
     {
         if (ReferenceEquals(left, right)) 
             return true;
-
         if (left is not null)
         {
             return Default(left.GetType())
                 .Equals(left, right);
         }
-        
-        // right cannot be null
         return Default(right!.GetType())
             .Equals(right, left);
     }

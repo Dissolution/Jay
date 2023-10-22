@@ -31,6 +31,7 @@ public static class ValidationExtensions
         string? exceptionMessage = null,
         [CallerArgumentExpression(nameof(value))]
         string? valueName = null)
+        where T : class
     {
         if (value is not null)
             return value;

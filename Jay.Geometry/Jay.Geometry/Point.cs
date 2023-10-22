@@ -81,7 +81,7 @@ public readonly struct Point<T> :
         if (!T.TryParse(yText, provider, out var y))
             return false;
 
-        if (!reader.TryTake(out ch) || ch != ')' || reader.RemainingLength != 0)
+        if (!reader.TryTake(out ch) || ch != ')' || reader.UnreadCount != 0)
             return false;
 
         point = new(x, y);
@@ -107,7 +107,7 @@ public readonly struct Point<T> :
         if (!T.TryParse(yText, numberStyle, provider, out var y))
             return false;
 
-        if (!reader.TryTake(out ch) || ch != ')' || reader.RemainingLength != 0)
+        if (!reader.TryTake(out ch) || ch != ')' || reader.UnreadCount != 0)
             return false;
 
         point = new(x, y);

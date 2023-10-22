@@ -14,15 +14,15 @@ public static class SpanReaderExtensions
         ReadOnlySpan<T> match)
         where T : IEquatable<T>
     {
-        var span = spanReader.Span;
-        var i = spanReader.Position;
-        var capacity = spanReader.Length;
+        int readCount = spanReader.ReadCount;
+        ReadOnlySpan<T> span = spanReader.Span[readCount..];
+        int i = 0;
+        int capacity = span.Length;
         while (i < capacity && span[i..].StartsWith(match))
         {
             i += match.Length;
         }
-
-        spanReader.Position = i;
+        spanReader.ReadCount = readCount + i;
     }
     
     public static ReadOnlySpan<T> TakeWhile<T>(
@@ -30,17 +30,17 @@ public static class SpanReaderExtensions
         ReadOnlySpan<T> match)
         where T : IEquatable<T>
     {
-        var span = spanReader.Span;
-        var i = spanReader.Position;
-        var start = i;
-        var capacity = spanReader.Length;
+        int readCount = spanReader.ReadCount;
+        ReadOnlySpan<T> span = spanReader.Span[readCount..];
+        int i = 0;
+        int capacity = span.Length;
         while (i < capacity && span[i..].StartsWith(match))
         {
             i += match.Length;
         }
 
-        spanReader.Position = i;
-        return span[start..i];
+        spanReader.ReadCount = readCount + i;
+        return span[..i];
     }
     
     public static void SkipUntil<T>(
@@ -48,15 +48,15 @@ public static class SpanReaderExtensions
         ReadOnlySpan<T> match)
         where T : IEquatable<T>
     {
-        var span = spanReader.Span;
-        var i = spanReader.Position;
-        var capacity = spanReader.Length;
+        int readCount = spanReader.ReadCount;
+        ReadOnlySpan<T> span = spanReader.Span[readCount..];
+        int i = 0;
+        int capacity = span.Length;
         while (i < capacity && !span[i..].StartsWith(match))
         {
             i += match.Length;
         }
-
-        spanReader.Position = i;
+        spanReader.ReadCount = readCount + i;
     }
     
     public static ReadOnlySpan<T> TakeUntil<T>(
@@ -64,16 +64,16 @@ public static class SpanReaderExtensions
         ReadOnlySpan<T> match)
         where T : IEquatable<T>
     {
-        var span = spanReader.Span;
-        var i = spanReader.Position;
-        var start = i;
-        var capacity = spanReader.Length;
+        int readCount = spanReader.ReadCount;
+        ReadOnlySpan<T> span = spanReader.Span[readCount..];
+        int i = 0;
+        int capacity = span.Length;
         while (i < capacity && !span[i..].StartsWith(match))
         {
             i += match.Length;
         }
 
-        spanReader.Position = i;
-        return span[start..i];
+        spanReader.ReadCount = readCount + i;
+        return span[..i];
     }
 }

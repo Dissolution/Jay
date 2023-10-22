@@ -98,7 +98,7 @@ public readonly struct Rectangle<T> :
         if (!T.TryParse(heightText, provider, out var height))
             return false;
 
-        if (!reader.TryTake(out ch) || ch != '×' || reader.RemainingLength != 0) 
+        if (!reader.TryTake(out ch) || ch != '×' || reader.UnreadCount != 0) 
             return false;
 
         rectangle = FromLTWH(x, y, width, height);
@@ -134,7 +134,7 @@ public readonly struct Rectangle<T> :
         if (!T.TryParse(heightText, numberStyle, provider, out var height))
             return false;
 
-        if (!reader.TryTake(out ch) || ch != '×' || reader.RemainingLength != 0) 
+        if (!reader.TryTake(out ch) || ch != '×' || reader.UnreadCount != 0) 
             return false;
 
         rectangle = FromLTWH(x, y, width, height);

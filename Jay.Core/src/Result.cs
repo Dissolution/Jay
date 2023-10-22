@@ -207,6 +207,11 @@ public readonly partial struct Result :
         }
     }
 
+    public Result<TValue> WithValue<TValue>(TValue value)
+    {
+        return new Result<TValue>(_ok, value, _exception);
+    }
+    
     /// <summary>
     /// Indicates if this <see cref="Result"/> and the given <paramref name="result"/> are both <c>Ok</c> or <c>Error</c>
     /// </summary>
