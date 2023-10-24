@@ -1,9 +1,9 @@
 ﻿namespace Jay.Concurrency;
 
 /// <summary>
-/// Utilities for working with <see cref="Task"/> and <c>ValueTask</c>
+/// Extensions on <see cref="Task"/> and <c>ValueTask</c>
 /// </summary>
-public static class TaskHelper
+public static class TaskExtensions
 {
     /// <summary>
     /// Synchronously consume a <see cref="Task"/>
@@ -30,7 +30,7 @@ public static class TaskHelper
     {
         if (valueTask.IsCompleted)
             return;
-        valueTask.AsTask().GetAwaiter().GetResult();
+        valueTask.GetAwaiter().GetResult();
     }
 
     public static TResult Consume<TResult>(this ValueTask<TResult> valueTask)
@@ -38,7 +38,6 @@ public static class TaskHelper
         if (valueTask.IsCompleted)
             return valueTask.Result;
         return valueTask
-            .AsTask()
             .GetAwaiter()
             .GetResult();
     }

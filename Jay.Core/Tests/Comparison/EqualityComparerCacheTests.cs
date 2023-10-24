@@ -1,4 +1,5 @@
 ﻿using Jay.Comparison;
+using Jay.Testing;
 
 namespace Jay.Tests.Comparison;
 
@@ -28,11 +29,11 @@ public class EqualityComparerCacheTests
         DateTime dateTime = new DateTime(1955, 11, 25, 8, 0, 0);
         Assert.True(EqualityComparerCache.Equals<DateTime>(dateTime, dateTime));
         Assert.False(EqualityComparerCache.Equals<DateTime>(dateTime, DateTime.Now));
-        TestingClass testClass = new(guid, nonNullString);
-        Assert.True(EqualityComparerCache.Equals<TestingClass>(testClass, testClass));
-        Assert.True(EqualityComparerCache.Equals<TestingClass>(testClass, new(guid, "joe")));
-        Assert.False(EqualityComparerCache.Equals<TestingClass>(testClass, new()));
-        Assert.False(EqualityComparerCache.Equals<TestingClass>(testClass, null));
+        ComplexEntity testClass = new(guid, nonNullString);
+        Assert.True(EqualityComparerCache.Equals<ComplexEntity>(testClass, testClass));
+        Assert.True(EqualityComparerCache.Equals<ComplexEntity>(testClass, new ComplexEntity(guid, "joe")));
+        Assert.False(EqualityComparerCache.Equals<ComplexEntity>(testClass, new ComplexEntity()));
+        Assert.False(EqualityComparerCache.Equals<ComplexEntity>(testClass, null));
     }
     
     [Fact]
@@ -59,10 +60,10 @@ public class EqualityComparerCacheTests
         DateTime dateTime = new DateTime(1955, 11, 25, 8, 0, 0);
         Assert.True(EqualityComparerCache.Equals((object?)dateTime, (object?)dateTime));
         Assert.False(EqualityComparerCache.Equals((object?)dateTime, (object?)DateTime.Now));
-        TestingClass testClass = new(guid, nonNullString);
+        ComplexEntity testClass = new(guid, nonNullString);
         Assert.True(EqualityComparerCache.Equals((object?)testClass, (object?)testClass));
-        Assert.True(EqualityComparerCache.Equals((object?)testClass, (object?)new TestingClass(guid, "joe")));
-        Assert.False(EqualityComparerCache.Equals((object?)testClass, (object?)new TestingClass()));
+        Assert.True(EqualityComparerCache.Equals((object?)testClass, (object?)new ComplexEntity(guid, "joe")));
+        Assert.False(EqualityComparerCache.Equals((object?)testClass, (object?)new ComplexEntity()));
         Assert.False(EqualityComparerCache.Equals((object?)testClass, (object?)null));
     }
 }

@@ -32,7 +32,26 @@ public static class ReaderWriterLockSlimExtensions
     /// </summary>
     public static IDisposable GetReadLock(this ReaderWriterLockSlim slimLock)
     {
-        return ReadLock.Acquire(slimLock);
+        while (!slimLock.TryEnterReadLock(1))
+        {
+            Thread.SpinWait(1);
+        }
+        return new ReadLock(slimLock);
+    }
+    
+    private sealed class ReadLock : IDisposable
+    {
+        private readonly ReaderWriterLockSlim _slimLock;
+
+        public ReadLock(ReaderWriterLockSlim slimLock)
+        {
+            _slimLock = slimLock;
+        }
+
+        public void Dispose()
+        {
+            _slimLock.ExitReadLock();
+        }
     }
     
     /// <summary>
@@ -40,6 +59,25 @@ public static class ReaderWriterLockSlimExtensions
     /// </summary>
     public static IDisposable GetWriteLock(this ReaderWriterLockSlim slimLock)
     {
-        return WriteLock.Acquire(slimLock);
+        while (!slimLock.TryEnterWriteLock(1))
+        {
+            Thread.SpinWait(1);
+        }
+        return new WriteLock(slimLock);
+    }
+    
+    private sealed class WriteLock : IDisposable
+    {
+        private readonly ReaderWriterLockSlim _slimLock;
+
+        public WriteLock(ReaderWriterLockSlim slimLock)
+        {
+            _slimLock = slimLock;
+        }
+
+        public void Dispose()
+        {
+            _slimLock.ExitWriteLock();
+        }
     }
 }

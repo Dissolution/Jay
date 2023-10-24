@@ -175,4 +175,57 @@ public static class EnumerableExtensions
         return false;
     }
 #endif
+    
+    /// <summary>
+    /// A deep wrapper for <see cref="IEnumerable{T}"/> that ignores all thrown exceptions
+    /// at every level of enumeration, only returning values that could be acquired without error
+    /// </summary>
+    public static IEnumerable<T> Swallowed<T>(this IEnumerable<T>? enumerable)
+    {
+        if (enumerable is null) yield break;
+        IEnumerator<T> enumerator;
+        try
+        {
+            enumerator = enumerable.GetEnumerator();
+        }
+        catch (Exception)
+        {
+            yield break;
+        }
+       
+        while (true)
+        {
+            // try to move next
+            try
+            {
+                if (!enumerator.MoveNext())
+                {
+                    // stop enumerating
+                    enumerator.Dispose();
+                    yield break;
+                }
+            }
+            catch (Exception)
+            {
+                // ignore this, stop enumerating
+                enumerator.Dispose();
+                yield break;
+            }
+
+            // try to get current value
+            T current;
+            try
+            {
+                current = enumerator.Current;
+            }
+            catch (Exception)
+            {
+                // ignore this, continue enumerating
+                continue;
+            }
+
+            // finally, yield the next value
+            yield return current;
+        }
+    }
 }

@@ -1,9 +1,9 @@
 ﻿using System.Buffers;
 using System.Collections;
 
-namespace Jay.Collections.Pooling;
+namespace Jay.Collections;
 
-public sealed class PoolArray<T> :
+public sealed class PooledList<T> :
     IList<T>, IReadOnlyList<T>,
     ICollection<T>, IReadOnlyCollection<T>,
     IEnumerable<T>,
@@ -33,12 +33,12 @@ public sealed class PoolArray<T> :
         }
     }
 
-    public PoolArray()
+    public PooledList()
     {
         _array = null;
     }
 
-    public PoolArray(int minCapacity)
+    public PooledList(int minCapacity)
     {
         _array = ArrayPool<T>.Shared.Rent(minCapacity);
     }

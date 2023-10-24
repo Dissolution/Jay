@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using Jay.Collections.Pooling;
+using Jay.Collections;
 
 namespace Jay.Text;
 
@@ -20,14 +20,26 @@ public static class StringBuilderPool
 
     public static StringBuilder Rent() => _pool.Rent();
     
-    public static void Return(StringBuilder? builder) => _pool.Return(builder);
-
     public static string Borrow(Action<StringBuilder> build)
     {
         var builder = _pool.Rent();
         build(builder);
         string str = builder.ToString();
         _pool.Return(builder);
+        return str;
+    }
+    
+    public static void Return(this StringBuilder? builder) => _pool.Return(builder);
+  
+    /// <summary>
+    /// Returns this <see cref="StringBuilder"/> instance to the <see cref="StringBuilderPool"/>
+    /// and then returns the <see cref="string"/> it built.
+    /// </summary>
+    public static string ToStringAndReturn(this StringBuilder? builder)
+    {
+        if (builder is null) return "";
+        var str = builder.ToString();
+        Return(builder);
         return str;
     }
 }

@@ -29,7 +29,7 @@
         <Using Include="Jay.Validation"/>
         <Using Include="Jay.Extensions"/>
     </ItemGroup>
-    
+
     <!-- NuGet Packages -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
         <PackageReference Include="System.Memory" Version="4.5.5"/>
@@ -58,7 +58,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\Jay.Core.csproj"/>
+        <ProjectReference Include="..\src\Jay.Core.csproj"/>
+        <ProjectReference Include="..\..\Jay.Testing\Jay.Testing.csproj"/>
     </ItemGroup>
 
 </Project>

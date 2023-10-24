@@ -26,6 +26,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.Terminals", "Jay.Termin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.Geometry", "Jay.Geometry\Jay.Geometry\Jay.Geometry.csproj", "{6294C4E5-1B0C-4508-9A2E-447A19F40363}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.Testing", "Jay.Testing\Jay.Testing.csproj", "{804B2BFE-ACDD-4F52-8C0F-DFE4546423ED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,5 +86,9 @@ Global
 		{6294C4E5-1B0C-4508-9A2E-447A19F40363}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6294C4E5-1B0C-4508-9A2E-447A19F40363}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6294C4E5-1B0C-4508-9A2E-447A19F40363}.Release|Any CPU.Build.0 = Release|Any CPU
+		{804B2BFE-ACDD-4F52-8C0F-DFE4546423ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{804B2BFE-ACDD-4F52-8C0F-DFE4546423ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{804B2BFE-ACDD-4F52-8C0F-DFE4546423ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{804B2BFE-ACDD-4F52-8C0F-DFE4546423ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -42,16 +42,4 @@ public static class StringBuilderExtensions
         }
         return builder.Append(str);
     }
-    
-    
-    /// <summary>
-    /// Returns this <see cref="StringBuilder"/> instance to the <see cref="StringBuilderPool"/>
-    /// and then returns the <see cref="string"/> it built.
-    /// </summary>
-    public static string ToStringAndReturn(this StringBuilder builder)
-    {
-        var str = builder.ToString();
-        StringBuilderPool.Return(builder);
-        return str;
-    }
 }

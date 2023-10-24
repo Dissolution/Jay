@@ -81,14 +81,14 @@ partial struct Result
     }
     
     public static void DisposeRef<T>(ref T? value)
+        where T : class
     {
-        var toDispose = value;
-        value = default;
-        if (toDispose is IDisposable)
+        var toDispose = Interlocked.Exchange(ref value, null);
+        if (toDispose is IDisposable disposable)
         {
             try
             {
-                ((IDisposable)toDispose).Dispose();
+                disposable.Dispose();
             }
             catch (Exception)
             {

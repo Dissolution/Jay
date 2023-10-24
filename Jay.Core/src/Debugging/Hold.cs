@@ -2,6 +2,10 @@
 
 namespace Jay.Debugging;
 
+/// <summary>
+/// Provides a reference to values at DEBUG time<br/>
+/// So that they are not compiled out nor triggering compiler warnings
+/// </summary>
 public static class Hold
 {
     [Conditional("DEBUG")]
