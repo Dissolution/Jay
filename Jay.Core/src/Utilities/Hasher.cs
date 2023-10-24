@@ -17,8 +17,8 @@ public ref struct Hasher
     private const uint PRIME1 = 2_654_435_761U;
     private const uint PRIME2 = 2_246_822_519U;
     private const uint PRIME3 = 3_266_489_917U;
-    private const uint PRIME4 = 668_265_263U;
-    private const uint PRIME5 = 374_761_393U;
+    private const uint PRIME4 = 0_668_265_263U;
+    private const uint PRIME5 = 0_374_761_393U;
 
     private static uint CreateSeed()
     {
@@ -504,7 +504,9 @@ public ref struct Hasher
             {
                 hash = QueueRound(hash, _queue2);
                 if (position > 2)
+                {
                     hash = QueueRound(hash, _queue3);
+                }
             }
         }
 
@@ -524,6 +526,6 @@ public ref struct Hasher
     
     public override string ToString()
     {
-        return $"{ToHashCode():X}";
+        return ToHashCode().ToString();
     }
 }

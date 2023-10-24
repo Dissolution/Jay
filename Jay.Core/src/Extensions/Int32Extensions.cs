@@ -26,6 +26,41 @@ public static class Int32Extensions
         > -10000000 => 8,
         > -100000000 => 9,
         > -1000000000 => 10,
-        _ => 11
+        _ => 11,
     };
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Clamp(this int value, int min)
+    {
+        if (value >= min)
+        {
+            return value;
+        }
+        return min;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Clamp(this int value, int min, int max)
+    {
+#if NET48 || NETSTANDARD2_0
+        if (min > max)
+        {
+            throw new ArgumentException("Max must not be greater than min", nameof(max));
+        }
+
+        if (value < min)
+        {
+            return min;
+        }
+
+        if (value > max)
+        {
+            return max;
+        }
+
+        return value;
+#else
+        return Math.Clamp(value, min, max);
+#endif
+    }
 }

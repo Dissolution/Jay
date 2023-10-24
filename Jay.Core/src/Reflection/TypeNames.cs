@@ -14,7 +14,6 @@ public static class TypeNames
         _typeNameCache = new()
         {
             [typeof(bool)] = "bool",
-            [typeof(DBNull)] = "DBNull",
             [typeof(bool)] = "bool",
             [typeof(char)] = "char",
             [typeof(sbyte)] = "sbyte",
@@ -33,10 +32,6 @@ public static class TypeNames
             [typeof(void)] = "void",
             [typeof(nint)] = "nint",
             [typeof(nuint)] = "nuint",
-            [typeof(DateTime)] = "DateTime",
-            [typeof(DateTimeOffset)] = "DateTimeOffset",
-            [typeof(TimeSpan)] = "TimeSpan",
-            [typeof(Guid)] = "Guid",
 #if NET6_0_OR_GREATER
             [typeof(TimeOnly)] = "TimeOnly",
             [typeof(DateOnly)] = "DateOnly",
@@ -141,15 +136,14 @@ public static class TypeNames
     {
         if (type is null)
             return "null";
-
-        return _typeNameCache.GetOrAdd(type, GetTypeName);
+        return _typeNameCache.GetOrAdd(type, static t => GetTypeName(t));
     }
 
     /// <summary>
     /// Gets a <c>C#</c> code representation for <typeparamref name="T"/>
     /// </summary>
-    public static string ToCode<T>()
+    public static string NameOf<T>()
     {
-        return _typeNameCache.GetOrAdd<T>(GetTypeName);
+        return _typeNameCache.GetOrAdd<T>(static t => GetTypeName(t));
     }
 }

@@ -141,7 +141,6 @@ public static unsafe class Scary
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref T VoidPointerToRef<T>(void* voidPtr)
-        //where T : unmanaged
     {
         Emit.Ldarg(nameof(voidPtr));
         Emit.Conv_I();
@@ -150,7 +149,6 @@ public static unsafe class Scary
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Span<T> VoidPointerToSpan<T>(void* voidPtr, int length)
-        //where T : unmanaged
     {
         return new Span<T>(voidPtr, length);
     }
@@ -181,7 +179,6 @@ public static unsafe class Scary
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* InToVoidPointer<T>(in T inValue)
-        //where T : unmanaged
     {
         Emit.Ldarg(nameof(inValue));
         Emit.Conv_U();
@@ -216,7 +213,6 @@ public static unsafe class Scary
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* RefToVoidPointer<T>(ref T refValue)
-        //where T : unmanaged
     {
         Emit.Ldarg(nameof(refValue));
         Emit.Conv_U();

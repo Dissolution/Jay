@@ -19,7 +19,8 @@ public static class TypeExtensions
         {
             // Check interface generic types
             // e.g. List<int> : IList<>
-            if (type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == otherType))
+            if (type.GetInterfaces()
+                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == otherType))
                 return true;
         }
         return false;
@@ -72,7 +73,8 @@ public static class TypeExtensions
 
         if (type.IsByRef)
         {
-            underlyingType = type.GetElementType()
+            underlyingType = type
+                .GetElementType()
                 .ThrowIfNull();
             return true;
         }
@@ -133,12 +135,5 @@ public static class TypeExtensions
             baseType = type.BaseType;
         }
         return types;
-    }
-
-    public static object? GetDefaultValue(this Type? type)
-    {
-        if (type is null || type.CanContainNull())
-            return null;
-        return Activator.CreateInstance(type);
     }
 }

@@ -6,7 +6,6 @@
 using System.Runtime.InteropServices;
 #endif
 using Jay.Text.Building;
-using Jay.Utilities;
 using static InlineIL.IL;
 
 namespace Jay.Text.Utilities;

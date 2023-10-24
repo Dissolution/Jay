@@ -30,6 +30,7 @@
     <ItemGroup>
         <Using Include="System.Runtime.CompilerServices"/>
         <Using Include="System.Diagnostics.CodeAnalysis"/>
+        <Using Include="System.Collections"/>
         <Using Include="Jay.Validation"/>
         <Using Include="Jay.Extensions"/>
     </ItemGroup>

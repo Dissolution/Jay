@@ -182,4 +182,18 @@ public static class TypeExtensions
 
         return (false, type);
     }
+    
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    /// <see href="https://gist.github.com/Splamy/6c79cfc85a911dc54c5aae96f86c59fe"/>
+    public static object? GetDefaultValue(this Type? type)
+    {
+        if (type is null || type.CanContainNull())
+            return null;
+        return Scary.GetUninitializedObject(type);
+    }
 }

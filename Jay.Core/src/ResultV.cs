@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Jay.Reflection;
+﻿using Jay.Reflection;
 using Jay.Utilities;
 
 namespace Jay;
@@ -37,7 +36,7 @@ public readonly struct Result<TValue> :
     public static bool operator !(Result<TValue> result) => !result._ok;
     [Obsolete("Do not use ~ with Result<TValue>", true)]
     public static bool operator ~(Result<TValue> _) 
-        => throw new NotSupportedException($"Cannot apply ~ to a Result<{TypeNames.ToCode<TValue>()}>");
+        => throw new NotSupportedException($"Cannot apply ~ to a Result<{TypeNames.NameOf<TValue>()}>");
 
     public static bool operator ==(Result<TValue> valueResult, Result<TValue> otherValueResult) => valueResult.Equals(otherValueResult);
     public static bool operator ==(Result<TValue> valueResult, Result result) => valueResult.Equals(result);
@@ -321,11 +320,11 @@ public readonly struct Result<TValue> :
             {
                 valueStr = _value?.ToString();
             }
-            return $"Result<{TypeNames.ToCode<TValue>()}>.Ok({valueStr})";
+            return $"Result<{TypeNames.NameOf<TValue>()}>.Ok({valueStr})";
         }
         else
         {
-            return $"Result<{TypeNames.ToCode<TValue>()}>.Error({_exception?.GetType().NameOf()}): {_exception?.Message})";
+            return $"Result<{TypeNames.NameOf<TValue>()}>.Error({_exception?.GetType().NameOf()}): {_exception?.Message})";
         }
     }
 
@@ -333,11 +332,11 @@ public readonly struct Result<TValue> :
     {
         if (_ok)
         {
-            return $"Result<{TypeNames.ToCode<TValue>()}>.Ok({_value})";
+            return $"Result<{TypeNames.NameOf<TValue>()}>.Ok({_value})";
         }
         else
         {
-            return $"Result<{TypeNames.ToCode<TValue>()}>.Error({_exception?.GetType().NameOf()}): {_exception?.Message})";
+            return $"Result<{TypeNames.NameOf<TValue>()}>.Error({_exception?.GetType().NameOf()}): {_exception?.Message})";
         }
     }
 }

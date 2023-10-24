@@ -2,7 +2,7 @@
 
 public static class EnumHelper
 {
-    private static readonly char[] _splitChars = new char[3] { ' ', ',', '|', };
+    private static readonly char[] _splitChars = new char[3] { ' ', ',', '|' };
 
     public static bool TryParse<TEnum>(
         [AllowNull, NotNullWhen(true)] string? str,

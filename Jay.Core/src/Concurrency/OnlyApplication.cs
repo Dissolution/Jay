@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Jay.Utilities;
+namespace Jay.Concurrency;
 
 /// <summary>
 /// A simple <see cref="Mutex"/> that ensures only a single instance of this Application can be running<br/>

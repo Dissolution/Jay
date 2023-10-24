@@ -1,5 +1,4 @@
-using System.Collections;
-using System.ComponentModel;
+using Jay.Utilities;
 
 namespace Jay.Extensions;
 
@@ -139,7 +138,7 @@ public static class ArrayExtensions
     /// <param name="array"></param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public static IEnumerable<T[]> GetPairs<T>(this T[] array)
+    public static IEnumerable<T[]> GetPossiblePairs<T>(this T[] array)
     {
         int len = array.Length;
         if (len < 2)
@@ -174,7 +173,7 @@ public static class ArrayExtensions
         }
     }
 
-    internal sealed class ArrayEnumerator<T> : 
+    private sealed class ArrayEnumerator<T> : 
         IEnumerator<T>, 
         IEnumerator,
         IDisposable
@@ -202,7 +201,7 @@ public static class ArrayExtensions
 
         public void Dispose()
         {
-            Result.Dispose(_arrayEnumerator);
+            Disposable.Dispose(_arrayEnumerator);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using Jay.Utilities;
 
 namespace Jay.Terminals;
 

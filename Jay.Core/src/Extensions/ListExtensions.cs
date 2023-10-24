@@ -4,7 +4,7 @@ public static class ListExtensions
 {
     public static bool TryGetItem<T>(this IList<T> list,
         int index,
-        [NotNullWhen(true)] out T? value)
+        [MaybeNullWhen(false)] out T value)
     {
         if (index < 0 || index >= list.Count)
         {
@@ -12,20 +12,9 @@ public static class ListExtensions
             return false;
         }
 
-        value = list[index]!;
+        value = list[index];
         return true;
     }
-
-    // public static int IndexOf<T>(this IReadOnlyList<T> list,
-    //     T value)
-    // {
-    //     for (var i = 0; i < list.Count; i++)
-    //     {
-    //         if (EqualityComparer<T>.Default.Equals(list[i], value))
-    //             return i;
-    //     }
-    //     return -1;
-    // }
 
     public static IEnumerable<T> Reversed<T>(this IReadOnlyList<T>? readOnlyList)
     {
@@ -46,7 +35,7 @@ public static class ListExtensions
         }
     }
 
-    public static bool TryRemoveAt<T>(this List<T> list, int index, [MaybeNullWhen(false)] out T? value)
+    public static bool TryRemoveAt<T>(this List<T> list, int index, [MaybeNullWhen(false)] out T value)
     {
         int count = list.Count;
         if ((uint)index < count)
@@ -60,7 +49,7 @@ public static class ListExtensions
         return false;
     }
     
-    public static bool TryRemoveAt<T>(this List<T> list, Index index, [MaybeNullWhen(false)] out T? value)
+    public static bool TryRemoveAt<T>(this List<T> list, Index index, [MaybeNullWhen(false)] out T value)
     {
         int count = list.Count;
         int offset = index.GetOffset(count);

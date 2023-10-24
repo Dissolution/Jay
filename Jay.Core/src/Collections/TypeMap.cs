@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-
-namespace Jay.Collections;
+﻿namespace Jay.Collections;
 
 /// <summary>
 /// A <see cref="Dictionary{TKey,TValue}">Dictionary&lt;Type,TValue&gt;</see>

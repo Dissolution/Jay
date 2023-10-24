@@ -1,4 +1,5 @@
-﻿using static InlineIL.IL;
+﻿// ReSharper disable EntityNameCapturedOnly.Global
+using static InlineIL.IL;
 
 namespace Jay.Extensions;
 

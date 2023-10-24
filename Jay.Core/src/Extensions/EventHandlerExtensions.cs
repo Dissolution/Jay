@@ -9,12 +9,16 @@ public static class EventHandlerExtensions
         // No subscribers?
         if (eventHandler is null)
             return;
-        
-        // Grab a local copy of our invocation list for thread safety
-        var registeredHandlers = eventHandler.GetInvocationList();
-        foreach (var registeredHandler in registeredHandlers)
+
+        // get all the multicast delegates
+        var handlers = eventHandler.GetInvocationList();
+        int handlerCount = handlers.Length;
+        // none, fast exit
+        if (handlerCount == 0) return;
+        // execute each
+        for (var i = 0; i < handlerCount; i++)
         {
-            if (registeredHandler is EventHandler<TArgs> handler)
+            if (handlers[i] is EventHandler<TArgs> handler)
             {
                 try
                 {
@@ -38,13 +42,12 @@ public static class EventHandlerExtensions
 
         // capture a local copy
         var handlers = eventHandler.GetInvocationList();
-        int count = handlers.Length;
+        int handlerCount = handlers.Length;
         // No subscribers?
-        if (count == 0)
-            return;
+        if (handlerCount == 0) return;
         // We know how many we're returning
-        var tasks = new Task[count];
-        for (var i = 0; i < count; i++)
+        var tasks = new Task[handlerCount];
+        for (var i = 0; i < handlerCount; i++)
         {
             // Use the old FromAsync pattern to convert this to a Task!
             Task task = Task.Factory.FromAsync(
@@ -69,7 +72,7 @@ public static class EventHandlerExtensions
             tasks[i] = task;
         }
 
-        // They've all been started
+        // they've all been started, wait for them to finish
         await Task.WhenAll(tasks);
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Jay.Reflection;
+﻿using Jay.Reflection;
 using Jay.Utilities;
 
 namespace Jay;
@@ -34,7 +33,7 @@ public readonly struct Result<V, E> :
     public static bool operator false(Result<V, E> result) => !result._ok;
     public static bool operator !(Result<V, E> result) => !result._ok;
     public static bool operator ~(Result<V, E> _) 
-        => throw new NotSupportedException($"Cannot apply ~ to a Result<{TypeNames.ToCode<V>()},{TypeNames.ToCode<E>()}>");
+        => throw new NotSupportedException($"Cannot apply ~ to a Result<{TypeNames.NameOf<V>()},{TypeNames.NameOf<E>()}>");
 
     public static bool operator ==(Result<V, E> left, Result<V, E> right) => left.Equals(right);
     public static bool operator ==(Result<V, E> result, V value) => result.Equals(value);
@@ -188,7 +187,7 @@ public readonly struct Result<V, E> :
     public override string ToString()
     {
         return Match(
-            ok => $"Ok({TypeNames.ToCode<V>()}: {ok})",
-            error => $"Error({TypeNames.ToCode<E>()}: {error})");
+            ok => $"Ok({TypeNames.NameOf<V>()}: {ok})",
+            error => $"Error({TypeNames.NameOf<E>()}: {error})");
     }
 }

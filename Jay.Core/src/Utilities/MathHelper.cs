@@ -98,10 +98,10 @@ public static class MathHelper
 
         static int softwareFallback(ulong value)
         {
-            const ulong C1 = 0x_55555555_55555555ul;
-            const ulong C2 = 0x_33333333_33333333ul;
-            const ulong C3 = 0x_0F0F0F0F_0F0F0F0Ful;
-            const ulong C4 = 0x_01010101_01010101ul;
+            const ulong C1 = 0b1010101010101010101010101010101_01010101010101010101010101010101UL;
+            const ulong C2 = 0b0110011001100110011001100110011_00110011001100110011001100110011UL;
+            const ulong C3 = 0b0001111000011110000111100001111_00001111000011110000111100001111UL;
+            const ulong C4 = 0b0000001000000010000000100000001_00000001000000010000000100000001UL;
 
             value -= (value >> 1) & C1;
             value = (value & C2) + ((value >> 2) & C2);
@@ -223,40 +223,5 @@ public static class MathHelper
     public static int PowerOfTwo(int exponent)
     {
         return 1 << exponent;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int Clamp(this int value, int min)
-    {
-        if (value >= min)
-        {
-            return value;
-        }
-        return min;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int Clamp(this int value, int min, int max)
-    {
-#if NET48 || NETSTANDARD2_0
-        if (min > max)
-        {
-            throw new ArgumentException("Max must not be greater than min", nameof(max));
-        }
-
-        if (value < min)
-        {
-            return min;
-        }
-
-        if (value > max)
-        {
-            return max;
-        }
-
-        return value;
-#else
-        return Math.Clamp(value, min, max);
-#endif
     }
 }

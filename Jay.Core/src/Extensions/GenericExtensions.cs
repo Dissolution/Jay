@@ -1,10 +1,11 @@
-﻿#if !NETCOREAPP3_1_OR_GREATER
+﻿// ReSharper disable EntityNameCapturedOnly.Global
+// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+
+#if !NETCOREAPP3_1_OR_GREATER
 #pragma warning disable CS8604
 #endif
 
 using static InlineIL.IL;
-
-// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 
 namespace Jay.Extensions;
 

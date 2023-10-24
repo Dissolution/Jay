@@ -4,7 +4,6 @@
 #pragma warning disable CS8604
 #endif
 
-using System.Collections;
 using System.Reflection;
 using Jay.Collections;
 

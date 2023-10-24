@@ -1,6 +1,8 @@
 ﻿
 // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 
+using Jay.Comparison;
+
 namespace Jay.Extensions;
 
 public static class EnumerableExtensions
@@ -136,8 +138,12 @@ public static class EnumerableExtensions
         where TSub : IEquatable<TSub>
     {
         return enumerable
-            .OrderBy(selectSub, Comparer<TSub>.Create((x, y) => 
-                subItemOrder.FirstIndexOf(x).CompareTo(subItemOrder.FirstIndexOf(y))));
+            .OrderBy(selectSub, ComparerCache.Create<TSub>((x, y) =>
+            {
+                var xIndex = subItemOrder.FirstIndexOf(x);
+                var yIndex = subItemOrder.FirstIndexOf(y);
+                return xIndex.CompareTo(yIndex);
+            }));
     }
 
     public static void Consume<T>(this IEnumerable<T> enumerable, Action<T> perItem)

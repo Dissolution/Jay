@@ -2,35 +2,45 @@
 
 public static class Disposable
 {
-    private static readonly UnDisposable _unDisposable = new();
-
-    /// <summary>
-    /// An <see cref="IDisposable"/> that does nothing when <see cref="M:IDisposable.Dispose"/> is called.
-    /// </summary>
-    public static IDisposable None => _unDisposable;
-
     public static IDisposable FromAction(Action? action)
     {
         return new ActionDisposable(action);
     }
 
     /// <summary>
-    /// An <see cref="IDisposable"/> / <c>IAsyncDisposable</c> that doesn't do anything.
+    /// Tries to dispose of <paramref name="value"/>.
     /// </summary>
-    internal sealed class UnDisposable : IDisposable
-#if !(NET48 || NETSTANDARD2_0)
-        , IAsyncDisposable
+    /// <typeparam name="T">The <see cref="Type"/> of <paramref name="value"/> to dispose</typeparam>
+    /// <param name="value">The value to dispose.</param>
+    public static void Dispose<T>(T? value)
     {
-        public ValueTask DisposeAsync()
+        if (value is IDisposable disposable)
         {
-            return default; // == ValueTask.CompletedTask;
+            try
+            {
+                disposable.Dispose();
+            }
+            catch (Exception)
+            {
+                // Ignore all exceptions
+            }
         }
-#else
+    }
+
+    public static void DisposeRef<T>(ref T? value)
+        where T : class
     {
-#endif
-        public void Dispose()
+        var toDispose = Interlocked.Exchange(ref value, null);
+        if (toDispose is IDisposable disposable)
         {
-            // Do nothing
+            try
+            {
+                disposable.Dispose();
+            }
+            catch (Exception)
+            {
+                // Ignore all exceptions
+            }
         }
     }
 }
