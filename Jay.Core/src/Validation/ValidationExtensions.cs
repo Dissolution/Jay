@@ -20,7 +20,7 @@ public static class ValidationExtensions
     /// The name of the <paramref name="value"/> argument, passed to <see cref="ArgumentNullException"/>
     /// </param>
     /// <returns>
-    /// Returns a non-<c>null</c> <paramref name="value"/>
+    /// A non-<c>null</c> <typeparamref name="T"/> <paramref name="value"/>
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="value"/> is <c>null</c>

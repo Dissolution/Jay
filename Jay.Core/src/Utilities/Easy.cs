@@ -1,6 +1,8 @@
 ﻿// ReSharper disable InvokeAsExtensionMethod
 
 using Jay.Comparison;
+using Jay.Reflection;
+using Jay.Utilities;
 
 #if !NETCOREAPP3_1_OR_GREATER
 #pragma warning disable CS8604
@@ -11,6 +13,37 @@ namespace Jay;
 
 public static class Easy
 {
+#region Unbox
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Unbox<T>(object? obj, [CallerArgumentExpression(nameof(obj))] string? objName = null)
+    {
+        if (obj is T)
+            return (T)obj;
+        throw new ArgumentException($"Object '{obj}' is not a {typeof(T).NameOf()}", objName);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref T UnboxRef<T>(object? obj, [CallerArgumentExpression(nameof(obj))] string? objName = null)
+    {
+        if (obj is T)
+            return ref Scary.UnboxRef<T>(obj);
+        throw new ArgumentException($"Object '{obj}' is not a {typeof(T).NameOf()}", objName);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static T? CastClass<T>(object? obj, [CallerArgumentExpression(nameof(obj))] string? objName = null)
+        where T : class
+    {
+        if (obj is null)
+            return null;
+        if (obj is T)
+            return (T)obj;
+        throw new ArgumentException($"Object '{obj}' is not a {typeof(T).NameOf()}", objName);
+    }
+#endregion
+
+
 #region CopyTo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CopyTo<T>(T[]? source, T[]? dest)

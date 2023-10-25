@@ -251,7 +251,7 @@ public static class Validate
     }
 
 
-    public static void CanCopyTo(int count, Array? array, int arrayIndex = 0)
+    public static void CanCopyTo(int count, [AllowNull, NotNull] Array? array, int arrayIndex = 0)
     {
         if (array is null)
             throw new ArgumentNullException(nameof(array));
@@ -260,12 +260,12 @@ public static class Validate
         if (array.GetLowerBound(0) != 0)
             throw new ArgumentException("Array must have a lower bound of 0", nameof(array));
         if ((uint)arrayIndex > array.Length)
-            throw new IndexOutOfRangeException($"Array Index '{arrayIndex}' must be between 0 and {array.Length - 1}");
+            throw new IndexOutOfRangeException($"Array Index '{arrayIndex}' must be between 0 and {array.Length}");
         if (array.Length - arrayIndex < count)
             throw new ArgumentException($"Array must have a capacity of at least {arrayIndex + count}", nameof(array));
     }
 
-    public static void CanCopyTo<T>(int count, T[]? array, int arrayIndex = 0)
+    public static void CanCopyTo<T>(int count, [AllowNull, NotNull] T[]? array, int arrayIndex = 0)
     {
         if (array is null)
             throw new ArgumentNullException(nameof(array));
@@ -274,46 +274,4 @@ public static class Validate
         if (array.Length - arrayIndex < count)
             throw new ArgumentException($"Array must have at a capacity of at least {arrayIndex + count}", nameof(array));
     }
-
-    public static void CanCopyTo<T>(int count, Span<T> span, int spanIndex = 0)
-    {
-        if ((uint)spanIndex > span.Length)
-            throw new IndexOutOfRangeException($"Span Index '{spanIndex}' must be between 0 and {span.Length - 1}");
-        if (span.Length - spanIndex < count)
-            throw new ArgumentException($"Span must have at a capacity of at least {spanIndex + count}", nameof(span));
-    }
-
-#region Validate + Return
-    public static ref T RefIndex<T>(
-        Span<T> span,
-        int index,
-        [CallerArgumentExpression(nameof(index))]
-        string? indexName = null)
-    {
-        if ((uint)index < span.Length)
-            return ref span[index];
-
-        throw new ArgumentOutOfRangeException(
-            indexName,
-            index,
-            span.Length == 0 ? "There are no items" : $"{indexName} {index} must be between 0 and {span.Length - 1}");
-    }
-
-    public static Span<T> RetSlice<T>(
-        Span<T> span,
-        Range range,
-        [CallerArgumentExpression(nameof(range))]
-        string? rangeName = null)
-    {
-        int spanLen = span.Length;
-        (int offset, int length) = FastOffsetLength(spanLen, range);
-        if ((uint)offset + (uint)length <= spanLen)
-            return span[range];
-
-        throw new ArgumentOutOfRangeException(
-            rangeName,
-            range,
-            $"{rangeName} must be in [0..{spanLen - 1})");
-    }
-#endregion
 }

@@ -8,15 +8,27 @@ public class TextBuffer : TextWriter, ITextBuffer, ITextWriter, IBuildingText
     public ref char this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref Validate.RefIndex<char>(Written, index);
+        get
+        {
+            Validate.Index(_length, index);
+            return ref _chars[index];
+        }
     }
 
     public Span<char> this[Range range]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Validate.RetSlice<char>(Written, range);
+        get
+        {
+            Validate.Range(_length, range);
+            return _chars.AsSpan(range);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => TextHelper.CopyTo(value, Validate.RetSlice<char>(Written, range));
+        set
+        {
+            Validate.Range(_length, range);
+            TextHelper.CopyTo(value, _chars.AsSpan(range));
+        }
     }
 
     public int Length

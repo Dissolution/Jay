@@ -42,7 +42,7 @@ public static unsafe class Scary
         Emit.Ldobj<T>();
         return Return<T>();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Read<T>(in byte source)
     {
@@ -50,7 +50,7 @@ public static unsafe class Scary
         Emit.Ldobj<T>();
         return Return<T>();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T ReadUnaligned<T>(void* source)
     {
@@ -59,7 +59,7 @@ public static unsafe class Scary
         Emit.Ldobj(typeof(T));
         return Return<T>();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T ReadUnaligned<T>(in byte source)
     {
@@ -128,8 +128,29 @@ public static unsafe class Scary
     }
 #endregion
 
-#region As / Cast / Box / Unbox
+
 #region To
+    /* XToY indicates a direct cast between X -> Y that does not perform any allocations
+     * These methods are Scary/Unsafe because they perform no checking of any kind
+     *
+     * ___Inputs___
+     * void*
+     * unmanaged T*
+     * in T
+     * ref T
+     * Span<T>
+     * ReadOnlySpan<T>
+     *
+     * ___Outputs___
+     * void*
+     * unmanaged T*
+     * ref T
+     * Span<T>
+     * ReadOnlySpan<T>
+     */
+
+    // void* ->
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T* VoidPointerToPointer<T>(void* voidPtr)
         where T : unmanaged
@@ -152,6 +173,14 @@ public static unsafe class Scary
     {
         return new Span<T>(voidPtr, length);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<T> VoidPointerToReadOnlySpan<T>(void* voidPtr, int length)
+    {
+        return new ReadOnlySpan<T>(voidPtr, length);
+    }
+
+    // unmanaged T* ->
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* PointerToVoidPointer<T>(T* valuePtr)
@@ -178,6 +207,15 @@ public static unsafe class Scary
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<T> PointerToReadOnlySpan<T>(T* valuePtr, int length)
+        where T : unmanaged
+    {
+        return new ReadOnlySpan<T>(valuePtr, length);
+    }
+
+    // in T -> 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* InToVoidPointer<T>(in T inValue)
     {
         Emit.Ldarg(nameof(inValue));
@@ -200,7 +238,6 @@ public static unsafe class Scary
         return ref ReturnRef<T>();
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Span<T> InToSpan<T>(in T inValue, int length)
     {
@@ -210,6 +247,18 @@ public static unsafe class Scary
         return MemoryMarshal.CreateSpan(ref InToRef<T>(in inValue), length);
 #endif
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<T> InToReadOnlySpan<T>(in T inValue, int length)
+    {
+#if NET48 || NETSTANDARD2_0
+        return new ReadOnlySpan<T>(InToVoidPointer<T>(in inValue), length);
+#else
+        return MemoryMarshal.CreateReadOnlySpan(ref InToRef<T>(in inValue), length);
+#endif
+    }
+
+    // ref T ->
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* RefToVoidPointer<T>(ref T refValue)
@@ -237,20 +286,20 @@ public static unsafe class Scary
 #endif
     }
 
-    /// <remarks>
-    /// This is stupid and dangerous!
-    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref T OutToRef<T>(out T outValue)
+    public static ReadOnlySpan<T> RefToReadOnlySpan<T>(ref T refValue, int length)
     {
-        Emit.Ldarg(nameof(outValue));
-        Emit.Ret();
-        throw Unreachable();
+#if NET48 || NETSTANDARD2_0
+        return new ReadOnlySpan<T>(RefToVoidPointer<T>(ref refValue), length);
+#else
+        return MemoryMarshal.CreateReadOnlySpan<T>(ref refValue, length);
+#endif
     }
+
+    // Span<T> ->
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void* SpanToVoidPointer<T>(Span<T> span)
-        where T : unmanaged
     {
         return RefToVoidPointer(ref span.GetPinnableReference());
     }
@@ -268,9 +317,36 @@ public static unsafe class Scary
         return ref span.GetPinnableReference();
     }
 
-    /// <summary>
-    /// This is dangerous!
-    /// </summary>
+    /*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<T> SpanToReadOnlySpan<T>(Span<T> span)
+    {
+        return span;
+    }
+    */
+
+    // ReadOnlySpan<T> ->
+    // These are all _really_ dangerous!
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void* ReadOnlySpanToVoidPointer<T>(ReadOnlySpan<T> span)
+    {
+        return RefToVoidPointer<T>(ref ReadOnlySpanToRef<T>(span));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* ReadOnlySpanToPointer<T>(ReadOnlySpan<T> span)
+        where T : unmanaged
+    {
+        return RefToPointer<T>(ref ReadOnlySpanToRef(span));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref T ReadOnlySpanToRef<T>(ReadOnlySpan<T> readOnlySpan)
+    {
+        return ref MemoryMarshal.GetReference(readOnlySpan);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Span<T> ReadOnlySpanToSpan<T>(ReadOnlySpan<T> readOnlySpan)
     {
@@ -282,36 +358,19 @@ public static unsafe class Scary
 #endif
     }
 
-    /// <summary>
-    /// This is dangerous!
-    /// </summary>
+    // out T ->
+    // These are all _really_ stupid + dangerous!
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void* ReadOnlySpanToVoidPointer<T>(ReadOnlySpan<T> span)
-        where T : unmanaged
+    public static ref T OutToRef<T>(out T outValue)
     {
-        return RefToVoidPointer<T>(ref ReadOnlySpanToRef<T>(span));
-    }
-
-    /// <summary>
-    /// This is dangerous!
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T* ReadOnlySpanToPointer<T>(ReadOnlySpan<T> span)
-        where T : unmanaged
-    {
-        return RefToPointer<T>(ref ReadOnlySpanToRef(span));
-    }
-
-    /// <summary>
-    /// This is dangerous!
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref T ReadOnlySpanToRef<T>(ReadOnlySpan<T> readOnlySpan)
-    {
-        return ref MemoryMarshal.GetReference(readOnlySpan);
+        Emit.Ldarg(nameof(outValue));
+        Emit.Ret();
+        throw Unreachable();
     }
 #endregion
 
+#region As / Cast / Box / Unbox
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ReadOnlySpan<byte> UnmanagedToByteSpan<T>(ref T value)
         where T : unmanaged
@@ -329,15 +388,7 @@ public static unsafe class Scary
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [return: NotNullIfNotNull(nameof(obj))]
-    public static T? CastClass<T>(object? obj)
-        where T : class
-    {
-        Emit.Ldarg(nameof(obj));
-        Emit.Castclass<T>();
-        return Return<T?>();
-    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TOut DirectCast<TIn, TOut>(TIn value)
@@ -354,14 +405,33 @@ public static unsafe class Scary
     }
 
 
+#region Unbox
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref T UnboxToRef<T>(object box)
-        where T : struct
+    public static T Unbox<T>([DisallowNull] object obj)
     {
-        Emit.Ldarg(nameof(box));
+        Emit.Ldarg(nameof(obj));
+        Emit.Unbox_Any<T>();
+        return Return<T>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref T UnboxRef<T>([DisallowNull] object obj)
+    {
+        Emit.Ldarg(nameof(obj));
         Emit.Unbox<T>();
         return ref ReturnRef<T>();
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static T? CastClass<T>(object? obj)
+        where T : class
+    {
+        Emit.Ldarg(nameof(obj));
+        Emit.Castclass<T>();
+        return Return<T?>();
+    }
+#endregion
 #endregion
 
 
@@ -379,7 +449,7 @@ public static unsafe class Scary
         Emit.Sizeof<T>();
         return Return<int>();
     }
-    
+
     /// <summary>
     /// Methods related to working with byte blocks
     /// </summary>
@@ -393,7 +463,7 @@ public static unsafe class Scary
             Emit.Ldarg(nameof(byteCount));
             Emit.Cpblk();
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CopyTo(in byte sourceByte, ref byte destByte, int byteCount)
         {
@@ -402,7 +472,7 @@ public static unsafe class Scary
             Emit.Ldarg(nameof(byteCount));
             Emit.Cpblk();
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UnalignedCopyTo(void* sourcePtr, void* destPtr, uint byteCount)
         {
@@ -422,7 +492,7 @@ public static unsafe class Scary
             Emit.Unaligned(1);
             Emit.Cpblk();
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Init(void* startPtr, byte value, uint byteCount)
         {
@@ -463,7 +533,7 @@ public static unsafe class Scary
             Emit.Unaligned(1);
             Emit.Initblk();
         }
-        
+
         /// <summary>
         /// Makes an exact copy of the given <see cref="byte"/> array.
         /// </summary>
