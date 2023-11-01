@@ -9,8 +9,7 @@ namespace Jay.Reflection.Utilities;
 /// A wrapper around an <see cref="Array"/> that provides clean access to N-dimensional arrays.
 /// </summary>
 public class ArrayWrapper : 
-    IEnumerable<object?>, IEnumerable,
-    ICodePart
+    IEnumerable<object?>, IEnumerable
 {
     protected readonly Array _array;
 
@@ -115,13 +114,13 @@ public class ArrayWrapper :
         return hasher.ToHashCode();
     }
 
-    public void DeclareTo(CodeBuilder codeBuilder)
+    public override string ToString()
     {
         Debug.Assert(Rank > 0);
         // 1D array is much easier
         if (Rank == 1)
         {
-            codeBuilder.Append('[').Delimit(static c => c.Write(", "), this, static (c,o) => c.Write(o)).Write(']');
+            return TextBuilder.New.Append('[').Delimit(static c => c.Write(", "), this, static (c, o) => c.Write(o)).ToStringAndDispose();
         }
         else
         {

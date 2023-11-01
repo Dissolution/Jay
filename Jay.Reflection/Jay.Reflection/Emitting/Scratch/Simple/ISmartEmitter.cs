@@ -1,6 +1,6 @@
 ﻿using Argument = Jay.Reflection.Emitting.Args.Argument;
 
-namespace Jay.Reflection.Emitting.Scratch;
+namespace Jay.Reflection.Emitting.Scratch.Simple;
 
 public interface ISmartEmitter<out Self>
     where Self : ISmartEmitter<Self>

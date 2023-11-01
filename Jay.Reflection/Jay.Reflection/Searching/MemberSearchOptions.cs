@@ -1,6 +1,6 @@
 ﻿namespace Jay.Reflection.Searching;
 
-public sealed record class MemberSearchOptions : ICodePart
+public sealed record class MemberSearchOptions
 {
     public Visibility Visibility { get; init; } = Visibility.Any;
 
@@ -195,8 +195,9 @@ public sealed record class MemberSearchOptions : ICodePart
         throw new NotImplementedException();
     }
 
-    public void DeclareTo(CodeBuilder codeBuilder)
+    public override string ToString()
     {
+        var codeBuilder = new TextBuilder();
         if (Visibility != Visibility.None)
         {
             codeBuilder.Append(Visibility);
@@ -217,10 +218,7 @@ public sealed record class MemberSearchOptions : ICodePart
         {
             codeBuilder.Append(" (").Delimit(static c => c.Write(", "), ParameterTypes, static (c,p) => c.Write(p));
         }
-    }
 
-    public override string ToString()
-    {
-        return CodePart.ToDeclaration(this);
+        return codeBuilder.ToStringAndDispose();
     }
 }

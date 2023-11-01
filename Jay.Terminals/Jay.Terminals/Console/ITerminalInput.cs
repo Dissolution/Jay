@@ -9,22 +9,22 @@ public interface ITerminalInput
     /// Gets or sets the <see cref="TextReader"/> the input reads from.
     /// </summary>
     TextReader Reader { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the <see cref="System.Text.Encoding"/> the <see cref="Terminal"/> uses to read input.
     /// </summary>
     Encoding Encoding { get; set; }
-    
+
     /// <summary>
     /// Has the input stream been redirected from standard?
     /// </summary>
     bool IsRedirected { get; }
-    
+
     /// <summary>
     /// Gets or sets whether Ctrl+C should be treated as input or as a break command.
     /// </summary>
     bool TreatCtrlCAsInput { get; set; }
-    
+
     /// <summary>
     /// Gets a value indicating whether a key press is available in the input stream.
     /// </summary>
@@ -33,13 +33,13 @@ public interface ITerminalInput
     /// <summary>
     /// Gets a value indicating whether CAPS LOCK is toggled on or off.
     /// </summary>
-    bool CapsLock  { get; }
+    bool CapsLock { get; }
 
     /// <summary>
     /// Gets a value indicating whether NUMBER LOCK is toggled on or off.
     /// </summary>
-    bool NumberLock  { get; }
-    
+    bool NumberLock { get; }
+
     /// <summary>
     /// Occurs when the <see cref="ConsoleModifiers.Control"/> modifier key (ctrl) and
     /// either the <see cref="ConsoleKey.C"/> console key (C) or
@@ -47,60 +47,64 @@ public interface ITerminalInput
     /// (Ctrl+C or Ctrl+Break).
     /// </summary>
     event ConsoleCancelEventHandler? CancelKeyPress;
-    
+
     /// <summary>
     /// Acquires the standard input <see cref="Stream"/>.
     /// </summary>
     /// <returns></returns>
     Stream OpenStream();
-    
+
     /// <summary>
     /// Acquires the standard input <see cref="Stream"/>, which is set to a specified buffer size.
     /// </summary>
     /// <param name="bufferSize"></param>
     /// <returns></returns>
     Stream OpenStream(int bufferSize);
-    
+
 
     /// <summary>
-    /// Reads the next <see cref="char"/>acter from the standard <see cref="Input"/> stream.
+    /// Reads the next <see cref="char">character</see> from the input stream.
     /// </summary>
     /// <returns></returns>
     char ReadChar();
 
     /// <summary>
-    /// Reads the next <see cref="char"/>acter or function key pressed by the user.
-    /// The pressed key is displayed in the <see cref="Terminal"/> window.
+    /// Reads the next <see cref="char">character</see> or function key pressed by the user.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The read <see cref="ConsoleKeyInfo"/>.</returns>
     ConsoleKeyInfo ReadKey();
 
     /// <summary>
-    /// Reads the next <see cref="char"/>acter or function key pressed by the user.
+    /// Reads the next <see cref="char">character</see> or function key pressed by the user.
     /// The pressed key is optionally displayed in the <see cref="Terminal"/> window.
     /// </summary>
-    /// <param name="intercept"></param>
-    /// <returns></returns>
+    /// <param name="intercept">
+    /// If <c>true</c>, the character will not be displayed in the <see cref="ITerminalDisplay"/>;<br/>
+    /// If <c>false</c>, the character will be displayed
+    /// </param>
+    /// <returns>The read <see cref="ConsoleKeyInfo"/>.</returns>
     ConsoleKeyInfo ReadKey(bool intercept);
 
     /// <summary>
-    /// Reads the next line of characters from the standard <see cref="Input"/> stream.
+    /// Reads the next line of characters from the standard input stream
     /// </summary>
     /// <returns></returns>
     string? ReadLine();
 
     /// <summary>
-    /// Reads the next line of characters from the standard <see cref="Input"/> stream into a <see cref="SecureString"/>, displaying an asterisk (*) instead of the pressed characters.
+    /// Reads the next line of characters from the standard input stream into a <see cref="SecureString"/>,
+    /// displaying asterisks (*) instead of the typed characters
     /// </summary>
-    /// <param name="password"></param>
-    /// <returns></returns>
+    /// <returns>
+    /// A <see cref="SecureString"/> containing the captured characters
+    /// </returns>
     SecureString ReadPassword();
 }
 
 internal partial class TerminalInstance : ITerminalInput
 {
     public ITerminalInput Input => this;
-    
+
     TextReader ITerminalInput.Reader
     {
         get => ConsoleFunc(() => SystemConsole.In);
@@ -120,11 +124,11 @@ internal partial class TerminalInstance : ITerminalInput
         get => ConsoleFunc(() => SystemConsole.TreatControlCAsInput);
         set => ConsoleAction(() => SystemConsole.TreatControlCAsInput = value);
     }
-    
-    Stream ITerminalInput.OpenStream() 
+
+    Stream ITerminalInput.OpenStream()
         => ConsoleFunc(() => SystemConsole.OpenStandardInput());
 
-    Stream ITerminalInput.OpenStream(int bufferSize) 
+    Stream ITerminalInput.OpenStream(int bufferSize)
         => ConsoleFunc(() => SystemConsole.OpenStandardInput(bufferSize));
 
     bool ITerminalInput.KeyAvailable => ConsoleFunc(() => SystemConsole.KeyAvailable);
@@ -138,28 +142,29 @@ internal partial class TerminalInstance : ITerminalInput
         add => _cancelEventHandler = Delegate.Combine(_cancelEventHandler, value) as ConsoleCancelEventHandler;
         remove => _cancelEventHandler = Delegate.Remove(_cancelEventHandler, value) as ConsoleCancelEventHandler;
     }
-    
+
     char ITerminalInput.ReadChar()
     {
         int unicodeChar = ConsoleFunc(() => SystemConsole.Read());
         return Convert.ToChar(unicodeChar);
     }
-    
+
     ConsoleKeyInfo ITerminalInput.ReadKey() => ConsoleFunc(() => SystemConsole.ReadKey());
-    
+
     ConsoleKeyInfo ITerminalInput.ReadKey(bool intercept) => ConsoleFunc(() => SystemConsole.ReadKey(intercept));
-    
+
     string? ITerminalInput.ReadLine() => ConsoleFunc(() => SystemConsole.ReadLine());
-  
-    SecureString ITerminalInput.ReadPassword() => ConsoleFunc(() =>
-    {
-        var secureString = new SecureString();
-        while (SystemConsole.KeyAvailable)
+
+    SecureString ITerminalInput.ReadPassword() => ConsoleFunc(
+        () =>
         {
-            var key = SystemConsole.ReadKey();
-            if (char.IsWhiteSpace(key.KeyChar)) break;
-            secureString.AppendChar(key.KeyChar);
-        }
-        return secureString;
-    });
+            var secureString = new SecureString();
+            while (SystemConsole.KeyAvailable)
+            {
+                var key = SystemConsole.ReadKey();
+                if (char.IsWhiteSpace(key.KeyChar)) break;
+                secureString.AppendChar(key.KeyChar);
+            }
+            return secureString;
+        });
 }

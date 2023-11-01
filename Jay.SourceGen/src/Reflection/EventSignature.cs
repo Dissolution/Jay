@@ -112,9 +112,10 @@ public sealed class EventSignature : MemberSignature,
         return Hasher.Combine(base.GetHashCode(), EventType, HandlerSig, AddMethod, RemoveMethod, RaiseMethod);
     }
 
-    public override void DeclareTo(CodeBuilder code)
+    public override string ToString()
     {
-        code.Append(Attributes)
+        return TextBuilder.New
+            .Append(Attributes)
             .Append(Visibility)
             .Append(' ')
             .Append(Keywords)
@@ -122,6 +123,7 @@ public sealed class EventSignature : MemberSignature,
             .Append(EventType)
             .Append(' ')
             .Append(Name)
-            .Append(';');
+            .Append(';')
+            .ToStringAndDispose();
     }
 }

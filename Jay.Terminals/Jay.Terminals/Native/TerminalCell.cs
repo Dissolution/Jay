@@ -25,6 +25,9 @@ public struct TerminalCell : IEquatable<TerminalCell>, IEqualityOperators<Termin
     [FieldOffset(3)] 
     public CommonLvb CommonLvb;
 
+    [FieldOffset(2)]
+    public CharacterAttributes Attributes;
+
     [SkipLocalsInit]
     public TerminalCell(char unicodeChar, TerminalColor foreColor, TerminalColor backColor)
     {

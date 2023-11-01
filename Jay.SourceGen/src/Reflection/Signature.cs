@@ -1,6 +1,6 @@
 ﻿namespace Jay.SourceGen.Reflection;
 
-public abstract class Signature : IEquatable<Signature>, ICodePart
+public abstract class Signature : IEquatable<Signature>
 {
     public static implicit operator Signature(FieldInfo fieldInfo) => new FieldSignature(fieldInfo);
     public static implicit operator Signature(PropertyInfo propertyInfo) => new PropertySignature(propertyInfo);
@@ -95,8 +95,4 @@ public abstract class Signature : IEquatable<Signature>, ICodePart
     {
         return Hasher.Combine(GetType(), Name, Visibility, Keywords);
     }
-
-    public abstract void DeclareTo(CodeBuilder code);
-
-    public sealed override string ToString() => CodePart.ToDeclaration(this);
 }

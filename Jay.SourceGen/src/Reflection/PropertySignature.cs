@@ -105,8 +105,9 @@ public sealed class PropertySignature : MemberSignature,
         return Hasher.Combine(base.GetHashCode(), PropertyType, GetMethod, SetMethod);
     }
 
-    public override void DeclareTo(CodeBuilder code)
+    public override string ToString()
     {
+        using var code = new TextBuilder();
         code.Append(Attributes)
             .Append(Visibility)
             .Append(' ')
@@ -151,5 +152,6 @@ public sealed class PropertySignature : MemberSignature,
             }
             code.Write('}');
         }
+        return code.ToString();
     }
 }

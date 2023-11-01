@@ -94,9 +94,10 @@ public sealed class FieldSignature : MemberSignature,
         return Hasher.Combine(GetType(), Name, Visibility, Keywords, FieldType);
     }
 
-    public override void DeclareTo(CodeBuilder code)
+    public override string ToString()
     {
-        code.Append(Attributes)
+        return TextBuilder.New
+            .Append(Attributes)
             .Append(Visibility)
             .Append(' ')
             .Append(Keywords)
@@ -104,6 +105,7 @@ public sealed class FieldSignature : MemberSignature,
             .Append(FieldType)
             .Append(' ')
             .Append(Name)
-            .Append(';');
+            .Append(';')
+            .ToStringAndDispose();
     }
 }

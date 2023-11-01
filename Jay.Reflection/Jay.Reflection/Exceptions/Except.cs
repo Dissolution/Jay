@@ -34,7 +34,7 @@ public static class Except
         return del;
     }
     
-    public static TException New<TException>(ref InterpolatedCode message, Exception? innerException = null)
+    public static TException New<TException>(ref InterpolatedText message, Exception? innerException = null)
         where TException : Exception
     {
         var ctor = GetCtor<TException, Func<string?, Exception?, TException>>();

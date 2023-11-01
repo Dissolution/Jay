@@ -92,7 +92,7 @@ public sealed class AttributeArguments : Dictionary<string, object?>
 
     public override string ToString()
     {
-        return CodeBuilder
+        return TextBuilder
             .New
             .Append($"{Count} Attribute Arguments:")
             .NewLine()

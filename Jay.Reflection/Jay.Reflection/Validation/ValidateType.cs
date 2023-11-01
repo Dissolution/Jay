@@ -10,7 +10,7 @@ internal static class ValidateType
         }
         if (!type.Implements<Delegate>())
         {
-            throw new ArgumentException(CodePart.ToCode($"The specified type '{type}' is not a Delegate"), typeParamName);
+            throw new ArgumentException($"The specified type '{type}' is not a Delegate", typeParamName);
         }
     }
 
@@ -22,7 +22,7 @@ internal static class ValidateType
         }
         if (!type.Implements<Exception>())
         {
-            throw new ArgumentException(CodePart.ToCode($"The specified type '{type}' is not an Exception"), typeParamName);
+            throw new ArgumentException($"The specified type '{type}' is not an Exception", typeParamName);
         }
     }
 
@@ -34,7 +34,7 @@ internal static class ValidateType
         }
         if (!type.Implements<Attribute>())
         {
-            throw new ArgumentException(CodePart.ToCode($"The specified type '{type}' is not an Attribute"), typeParamName);
+            throw new ArgumentException($"The specified type '{type}' is not an Attribute", typeParamName);
         }
     }
 
@@ -46,7 +46,7 @@ internal static class ValidateType
         }
         if (!type.IsValueType)
         {
-            throw new ArgumentException(CodePart.ToCode($"The given type '{type}' must be a value type"), typeParamName);
+            throw new ArgumentException($"The given type '{type}' must be a value type", typeParamName);
         }
     }
 
@@ -59,7 +59,7 @@ internal static class ValidateType
         }
         if (!type.IsClass && !type.IsInterface)
         {
-            throw new ArgumentException(CodePart.ToCode($"The given type '{type}' must be a class or interface type"), typeParamName);
+            throw new ArgumentException($"The given type '{type}' must be a class or interface type", typeParamName);
         }
     }
 
@@ -71,7 +71,7 @@ internal static class ValidateType
         }
         if (!type.IsStatic())
         {
-            throw new ArgumentException(CodePart.ToCode($"The given type '{type}' must be a static type"), typeParamName);
+            throw new ArgumentException($"The given type '{type}' must be a static type", typeParamName);
         }
     }
 
@@ -87,7 +87,7 @@ internal static class ValidateType
         if (!type.IsValueType || !type.IsEnum)
         {
             throw new ArgumentException(
-                CodePart.ToCode($"The given type '{type}' must be an enum type"), 
+                $"The given type '{type}' must be an enum type", 
                 typeParameterName);
         }
     }
@@ -103,7 +103,7 @@ internal static class ValidateType
         }
         if (array.Length != length)
         {
-            throw new ArgumentException(CodePart.ToCode($"The given {array.GetType()} does not have {length} items"), arrayParamName);
+            throw new ArgumentException($"The given {array.GetType()} does not have {length} items", arrayParamName);
         }
         return array;
     }

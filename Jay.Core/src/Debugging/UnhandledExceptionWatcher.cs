@@ -31,7 +31,7 @@ public class UnhandledExceptionWatcher : IDisposable
         var unhandledExArgs = new UnhandledExceptionArgs
         {
             Source = nameof(TaskScheduler), 
-            Exception = args.Exception, 
+            Exception = args.Exception!, 
             IsObserved = args.Observed,
         };
         UnhandledException?.Invoke(sender, unhandledExArgs);

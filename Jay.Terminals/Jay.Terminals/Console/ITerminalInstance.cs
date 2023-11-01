@@ -11,9 +11,9 @@ public interface ITerminalInstance : IDisposable
     ITerminalErrorOutput Error { get; }
     
     ITerminalBuffer Buffer { get; }
+    ITerminalWindow Window { get; }
     ITerminalCursor Cursor { get; }
     ITerminalDisplay Display { get; }
-    ITerminalWindow Window { get; }
 
     IDisposable Reset();
 }

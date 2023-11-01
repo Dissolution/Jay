@@ -2,7 +2,7 @@
 
 partial record Argument
 {
-    partial record Field : ICodePart
+    partial record Field
     {
         private void EmitLoadInstance<TEmitter>(TEmitter emitter)
             where TEmitter : FluentEmitter<TEmitter>
@@ -30,9 +30,9 @@ partial record Argument
             emitter.Stfld(this.FieldInfo);
         }
 
-        public override void DeclareTo(CodeBuilder codeBuilder)
+        public override string ToString()
         {
-            CodePart.DeclareTo(this.FieldInfo, codeBuilder);
+            return $"{Instance}.{FieldInfo}";
         }
     }
 }

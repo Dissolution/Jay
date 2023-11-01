@@ -59,12 +59,14 @@ public sealed class OpCodeEmission : Emission
         this.OpCode = opCode;
     }
 
-    public override void DeclareTo(CodeBuilder codeBuilder)
+    public override string ToString()
     {
-        codeBuilder
+        return TextBuilder.New
             .Append(Name)
-            .If(HasArgs, cb => cb
+            .If(
+                HasArgs, cb => cb
                     .Append("    ")
-                    .Append(this.Arg));
+                    .Append(this.Arg))
+            .ToStringAndDispose();
     }
 }

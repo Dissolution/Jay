@@ -1,6 +1,6 @@
 ﻿namespace Jay.Reflection.Emitting;
 
-public class EmissionStream : LinkedList<EmissionLine>, ICodePart
+public class EmissionStream : LinkedList<EmissionLine>
 {
     public bool TryFindByOffset(int offset, out EmissionLine emissionLine)
     {
@@ -22,10 +22,11 @@ public class EmissionStream : LinkedList<EmissionLine>, ICodePart
         emissionLine = default;
         return false;
     }
-    
+
     public void RemoveAfter(LinkedListNode<EmissionLine>? node)
     {
         if (node is null) return;
+
         var last = Last;
         if (last is not null && last.Value != node.Value)
         {
@@ -33,16 +34,13 @@ public class EmissionStream : LinkedList<EmissionLine>, ICodePart
         }
     }
 
-    public void DeclareTo(CodeBuilder codeBuilder)
+    public override string ToString()
     {
-        foreach (var node in this)
-        {
-            codeBuilder
+        return TextBuilder.New
+            .Enumerate(this, (tb, node) => tb
                 .Append($"IL_{node.Offset:x4}: ")
                 .Append(node.Emission)
-                .NewLine();
-        }
+                .NewLine())
+            .ToStringAndDispose();
     }
-
-    public override string ToString() => CodePart.ToDeclaration(this);
 }

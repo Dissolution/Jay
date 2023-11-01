@@ -51,7 +51,7 @@ public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
 
     protected void IndentAwareWrite(scoped ReadOnlySpan<char> text)
     {
-        var e = text.Split(_newline);
+        var e = text.TextSplit(_newline);
         if (!e.MoveNext()) return;
         base.Write(e.Text);
         while (e.MoveNext())

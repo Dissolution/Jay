@@ -24,10 +24,10 @@ partial record Argument
         {
             // already on the stack
         }
-        
-        public override void DeclareTo(CodeBuilder codeBuilder)
+
+        public override string ToString()
         {
-            CodePart.DeclareTo(this.Type, codeBuilder);
+            return this.Type.NameOf();
         }
     }
 }

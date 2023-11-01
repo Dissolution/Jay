@@ -18,10 +18,10 @@ partial record Argument
         {
             emitter.Stloc(this.EmitterLocal);
         }
-        
-        public override void DeclareTo(CodeBuilder codeBuilder)
+
+        public override string ToString()
         {
-            this.EmitterLocal.DeclareTo(codeBuilder);
+            return this.EmitterLocal.ToString();
         }
     }
 }

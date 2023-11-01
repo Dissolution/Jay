@@ -4,8 +4,6 @@
 
 using System.Buffers;
 using System.ComponentModel;
-using Jay.Text.Building;
-using Jay.Utilities;
 
 namespace Jay.Text;
 

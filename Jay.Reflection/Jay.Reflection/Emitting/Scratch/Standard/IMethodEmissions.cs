@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
+using Jay.Reflection.Emitting.Scratch.Simple;
 
-namespace Jay.Reflection.Emitting.Scratch;
+namespace Jay.Reflection.Emitting.Scratch.Standard;
 
 public interface IMethodEmissions<out Self>
     where Self : IEmitter<Self>

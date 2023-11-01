@@ -28,7 +28,8 @@
         <Using Include="Jay.Reflection.Extensions"/>
         <Using Include="Jay.SourceGen.Extensions"/>
         <Using Include="Jay.Reflection.CodeBuilding"/>
-        
+        <Using Include="Jay.Text"/>
+        <Using Include="Jay.Text.Building"/>
         <Using Include="Jay.Easy" Static="true"/>
     </ItemGroup>
     
@@ -50,5 +51,11 @@
       <ProjectReference Include="..\..\Jay.Core\src\Jay.Core.csproj"/>
       <ProjectReference Include="..\..\Jay.Reflection\Jay.Reflection\Jay.Reflection.csproj"/>
       <ProjectReference Include="..\..\Jay.Text\src\Jay.Text.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Jay.SourceGen.Tests</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 </Project>

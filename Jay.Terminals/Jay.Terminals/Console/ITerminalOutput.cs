@@ -8,19 +8,19 @@ namespace Jay.Terminals.Console;
 public interface ITerminalOutput
 {
     TerminalColor DefaultForeColor { get; }
-    
+
     TerminalColor DefaultBackColor { get; }
-    
+
     /// <summary>
     /// Gets or sets the <see cref="TextWriter"/> used for output.
     /// </summary>
     TextWriter Writer { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the <see cref="System.Text.Encoding"/> the <see cref="Terminal"/> uses to output.
     /// </summary>
     Encoding Encoding { get; set; }
-    
+
     /// <summary>
     /// Has the output stream been redirected from standard?
     /// </summary>
@@ -45,13 +45,13 @@ public interface ITerminalOutput
     /// Gets an <see cref="IDisposable"/> that, when disposed, resets the <see cref="Terminal"/>'s colors back to what they were when the <see cref="ColorReset"/> was taken.
     /// </summary>
     IDisposable ColorReset { get; }
-    
+
     /// <summary>
     /// Acquires the standard output <see cref="Stream"/>.
     /// </summary>
     /// <returns></returns>
     Stream OpenStream();
-    
+
     /// <summary>
     /// Acquires the standard output <see cref="Stream"/>, which is set to a specified buffer size.
     /// </summary>
@@ -72,7 +72,7 @@ public interface ITerminalOutput
     /// <param name="backColor"></param>
     /// <returns></returns>
     void SetBackColor(TerminalColor backColor);
-    
+
     /// <summary>
     /// Sets the foreground and background <see cref="System.Drawing.Color"/>s for the <see cref="Terminal"/>.
     /// </summary>
@@ -101,13 +101,13 @@ public interface ITerminalOutput
     /// <param name="interpolatedText"></param>
     /// <returns></returns>
     void Write(ref DefaultInterpolatedStringHandler interpolatedText);
-    
+
     /// <summary>
     /// Writes the text representation of the given <paramref name="value"/> to the standard <see cref="Output"/> stream.
     /// </summary>
     void Write<T>(T? value);
-    
-    
+
+
     /// <summary>
     /// Writes the current line terminator (<see cref="Environment.NewLine"/>) to the standard output stream.
     /// </summary>
@@ -119,6 +119,7 @@ public interface ITerminalOutput
         Write(ch);
         WriteLine();
     }
+
     void WriteLine(string? str) => WriteLine(str.AsSpan());
     void WriteLine(params char[]? chars) => WriteLine(chars.AsSpan());
 
@@ -138,7 +139,7 @@ public interface ITerminalOutput
         Write(ref interpolatedText);
         WriteLine();
     }
-    
+
     /// <summary>
     /// Writes the text representation of the given <paramref name="value"/> followed by the current line terminator, to the standard <see cref="Output"/> stream.
     /// </summary>
@@ -147,29 +148,28 @@ public interface ITerminalOutput
         Write<T>(value);
         WriteLine();
     }
-
 }
 
 internal partial class TerminalInstance : ITerminalOutput
 {
     public ITerminalOutput Output => this;
-    
+
     TextWriter ITerminalOutput.Writer
     {
         get => ConsoleFunc(() => SystemConsole.Out);
         set => ConsoleAction(() => SystemConsole.SetOut(value));
     }
-    
+
     Encoding ITerminalOutput.Encoding
     {
         get => ConsoleFunc(() => SystemConsole.OutputEncoding);
         set => ConsoleAction(() => SystemConsole.OutputEncoding = value);
     }
-    
+
     bool ITerminalOutput.IsRedirected => ConsoleFunc(() => SystemConsole.IsOutputRedirected);
-    
+
     Stream ITerminalOutput.OpenStream() => ConsoleFunc(() => SystemConsole.OpenStandardOutput());
-    
+
     Stream ITerminalOutput.OpenStream(int bufferSize) => ConsoleFunc(() => SystemConsole.OpenStandardOutput(bufferSize));
 
     TerminalColor ITerminalOutput.DefaultForeColor => TerminalColors.Default.Foreground;
@@ -199,11 +199,13 @@ internal partial class TerminalInstance : ITerminalOutput
         get
         {
             var (fore, back) = (SystemConsole.ForegroundColor, SystemConsole.BackgroundColor);
-            return new ActionDisposable(() => ConsoleAction(() =>
-            {
-                SystemConsole.ForegroundColor = fore;
-                SystemConsole.BackgroundColor = back;
-            }));
+            return new ActionDisposable(
+                () => ConsoleAction(
+                    () =>
+                    {
+                        SystemConsole.ForegroundColor = fore;
+                        SystemConsole.BackgroundColor = back;
+                    }));
         }
     }
 
@@ -211,10 +213,12 @@ internal partial class TerminalInstance : ITerminalOutput
     {
         this.Output.ForegroundColor = foreColor;
     }
+
     void ITerminalOutput.SetBackColor(TerminalColor backColor)
     {
         this.Output.BackgroundColor = backColor;
     }
+
     void ITerminalOutput.SetColors(TerminalColor? foreColor, TerminalColor? backColor)
     {
         if (foreColor.HasValue)
@@ -223,7 +227,7 @@ internal partial class TerminalInstance : ITerminalOutput
             this.Output.BackgroundColor = backColor.Value;
     }
 
-    void ITerminalOutput.Write(char ch) 
+    void ITerminalOutput.Write(char ch)
         => ConsoleAction(() => SystemConsole.Write(ch));
 
     void ITerminalOutput.Write(scoped ReadOnlySpan<char> text)

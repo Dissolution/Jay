@@ -20,9 +20,9 @@ partial record Argument
             emitter.Starg(this.ParameterInfo.Position);
         }
 
-        public override void DeclareTo(CodeBuilder codeBuilder)
+        public override string ToString()
         {
-            CodePart.DeclareTo(this.ParameterInfo, codeBuilder);
+            return this.ParameterInfo.ToString();
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 #endif
 using Jay.Text.Building;
 using static InlineIL.IL;
+// ReSharper disable EntityNameCapturedOnly.Global
 
 namespace Jay.Text.Utilities;
 

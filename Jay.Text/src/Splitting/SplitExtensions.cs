@@ -17,7 +17,7 @@ public static class SplitExtensions
         return ranges;
     }
     
-    public static TextSplitEnumerator Split(
+    public static TextSplitEnumerator TextSplit(
         this ReadOnlySpan<char> text,
         ReadOnlySpan<char> separator,
         SplitOptions splitOptions = SplitOptions.None,
@@ -26,48 +26,48 @@ public static class SplitExtensions
         return new TextSplitEnumerator(text, separator, splitOptions, stringComparison);
     }
 
-    public static TextSplitEnumerator Split(
+    public static TextSplitEnumerator TextSplit(
         this ReadOnlySpan<char> text,
         string? separator,
         SplitOptions splitOptions = SplitOptions.None,
         StringComparison stringComparison = StringComparison.Ordinal)
     {
-        return Split(text, separator.AsSpan(), splitOptions, stringComparison);
+        return TextSplit(text, separator.AsSpan(), splitOptions, stringComparison);
     }
 
-    public static TextSplitEnumerator Split(
+    public static TextSplitEnumerator TextSplit(
         this Span<char> text,
         ReadOnlySpan<char> separator,
         SplitOptions splitOptions = SplitOptions.None,
         StringComparison stringComparison = StringComparison.Ordinal)
     {
-        return Split((ReadOnlySpan<char>)text, separator, splitOptions, stringComparison);
+        return TextSplit((ReadOnlySpan<char>)text, separator, splitOptions, stringComparison);
     }
 
-    public static TextSplitEnumerator Split(
+    public static TextSplitEnumerator TextSplit(
         this Span<char> text,
         string? separator,
         SplitOptions splitOptions = SplitOptions.None,
         StringComparison stringComparison = StringComparison.Ordinal)
     {
-        return Split((ReadOnlySpan<char>)text, separator.AsSpan(), splitOptions, stringComparison);
+        return TextSplit((ReadOnlySpan<char>)text, separator.AsSpan(), splitOptions, stringComparison);
     }
 
-    public static TextSplitEnumerator Split(
+    public static TextSplitEnumerator TextSplit(
         this string? text,
         string? separator,
         SplitOptions splitOptions = SplitOptions.None,
         StringComparison stringComparison = StringComparison.Ordinal)
     {
-        return Split(text.AsSpan(), separator.AsSpan(), splitOptions, stringComparison);
+        return TextSplit(text.AsSpan(), separator.AsSpan(), splitOptions, stringComparison);
     }
     
-    public static TextSplitEnumerator Split(
+    public static TextSplitEnumerator TextSplit(
         this string? text,
         ReadOnlySpan<char> separator,
         SplitOptions splitOptions = SplitOptions.None,
         StringComparison stringComparison = StringComparison.Ordinal)
     {
-        return Split(text.AsSpan(), separator, splitOptions, stringComparison);
+        return TextSplit(text.AsSpan(), separator, splitOptions, stringComparison);
     }
 }

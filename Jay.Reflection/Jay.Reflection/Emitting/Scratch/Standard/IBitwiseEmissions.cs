@@ -1,4 +1,6 @@
-﻿namespace Jay.Reflection.Emitting.Scratch;
+﻿using Jay.Reflection.Emitting.Scratch.Simple;
+
+namespace Jay.Reflection.Emitting.Scratch.Standard;
 
 public interface IBitwiseEmissions<out Self>
     where Self : IEmitter<Self>

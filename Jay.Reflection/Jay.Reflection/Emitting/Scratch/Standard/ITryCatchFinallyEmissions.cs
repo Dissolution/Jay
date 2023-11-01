@@ -1,4 +1,7 @@
-﻿namespace Jay.Reflection.Emitting.Scratch;
+﻿using Jay.Reflection.Emitting.Scratch.Simple;
+// ReSharper disable InvalidXmlDocComment
+
+namespace Jay.Reflection.Emitting.Scratch.Standard;
 
 public interface ITryCatchFinallyEmissions<out Self>
     where Self : IEmitter<Self>
@@ -47,7 +50,7 @@ public interface ITryCatchFinallyEmissions<out Self>
     /// Begins an exception block for a filtered exception.
     /// </summary>
     /// <exception cref="NotSupportedException">The stream being emitted is not currently in an exception block.</exception>
-    /// <exception cref="NotSupportedException">This <see cref="Emission.IILGenerator{TGenerator}"/> belongs to a <see cref="DynamicMethod"/>.</exception>
+    /// <exception cref="NotSupportedException">An underlying <see cref="ILGenerator"/> belongs to a <see cref="DynamicMethod"/></exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.beginexceptfilterblock"/>
     Self BeginExceptFilterBlock();
 
@@ -55,7 +58,7 @@ public interface ITryCatchFinallyEmissions<out Self>
     /// Begins an exception fault block in the stream.
     /// </summary>
     /// <exception cref="NotSupportedException">The stream being emitted is not currently in an exception block.</exception>
-    /// <exception cref="NotSupportedException">This <see cref="Emission.IILGenerator{TGenerator}"/> belongs to a <see cref="DynamicMethod"/>.</exception>
+    /// <exception cref="NotSupportedException">An underlying <see cref="ILGenerator"/> belongs to a <see cref="DynamicMethod"/></exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.beginfaultblock"/>
     Self BeginFaultBlock();
 

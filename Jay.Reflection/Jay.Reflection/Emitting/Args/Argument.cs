@@ -3,7 +3,7 @@
 namespace Jay.Reflection.Emitting.Args;
 
 [Union]
-public partial record Argument : ICodePart
+public partial record Argument
 {
     public static implicit operator Argument(Type? type) => new Argument.Stack { Type = type ?? typeof(void) };
     public static implicit operator Argument(EmitterLocal local) => new Argument.Local(local) { Type = local.Type };
@@ -36,6 +36,4 @@ public partial record Argument : ICodePart
 
     public abstract void EmitStore<TEmitter>(TEmitter emitter)
         where TEmitter : FluentEmitter<TEmitter>;
-
-    public abstract void DeclareTo(CodeBuilder codeBuilder);
 }

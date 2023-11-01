@@ -1,7 +1,8 @@
-﻿namespace Jay.Text.Extensions;
+﻿namespace Jay.Text;
 
 public enum Casing
 {
+    Default = 0,
     Lower,
     Upper,
     Camel,

@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using Jay.Collections;
-using Jay.Debugging;
 using Jay.Text;
 
 namespace Jay.Reflection;
@@ -74,17 +73,29 @@ public static class TypeNames
             return $"{NameOf(underType)}?";
         }
 
+        // A parameter?
+        if (type.IsGenericParameter)
+        {
+            var constraints = type.GetGenericParameterConstraints();
+            if (constraints.Length > 0)
+            {
+                Debugger.Break();
+            }
+            // Print nothing, we want List<>, not List<T>
+            return string.Empty;
+        }
+        
         // After this point, we're building up the name
         var name = StringBuilderPool.Rent();
 
         // Nested Type?
-        if (type.IsNested && !type.IsGenericParameter)
+        if (type.IsNested)
         {
             underType = type.DeclaringType.ThrowIfNull();
             name.Append(NameOf(underType))
                 .Append('.');
         }
-
+        
         // Fast non-generic return
         if (!type.IsGenericType)
         {
@@ -95,14 +106,6 @@ public static class TypeNames
 
         // Process complex name
         ReadOnlySpan<char> typeName = type.Name.AsSpan();
-
-        // A parameter?
-        if (type.IsGenericParameter)
-        {
-            var constraints = type.GetGenericParameterConstraints();
-            Hold.Onto(constraints);
-            Debugger.Break();
-        }
 
         // Name is often something like NAME`2 for NAME<,>, so we want to strip that off
         var i = typeName.IndexOf('`');
@@ -122,7 +125,7 @@ public static class TypeNames
         name.Append(NameOf(genericTypes[0]));
         for (i = 1; i < genericTypes.Length; i++)
         {
-            name.Append(", ")
+            name.Append(',')
                 .Append(NameOf(genericTypes[i]));
         }
         name.Append('>');

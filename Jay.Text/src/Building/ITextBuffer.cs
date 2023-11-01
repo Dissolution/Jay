@@ -20,7 +20,7 @@ public interface ITextBuffer : ITextWriter, IBuildingText
     /// <summary>
     /// Allocates a new <see cref="char"/> at <paramref name="index"/>,
     /// shifts existing chars to make an empty hole,
-    /// increases <see cref="TextWriter.Length"/> by 1,
+    /// increases <see cref="Length"/> by 1,
     /// and returns a <c>ref</c> to that <see cref="char"/>
     /// </summary>
     /// <param name="index">The index to allocate a character at</param>
@@ -38,7 +38,7 @@ public interface ITextBuffer : ITextWriter, IBuildingText
     /// <summary>
     /// Allocates a <c>Span&lt;char&gt;</c> at <paramref name="index"/>,
     /// shifts existing chars to make an empty hole,
-    /// increases <see cref="TextWriter.Length"/> by <paramref name="length"/>
+    /// increases <see cref="Length"/> by <paramref name="length"/>
     /// and returns the allocated <c>Span&lt;char&gt;</c>
     /// </summary>
     /// <param name="index">The index to allocate the span at</param>
@@ -50,14 +50,14 @@ public interface ITextBuffer : ITextWriter, IBuildingText
 
     /// <summary>
     /// Removes the <see cref="char"/> at the given <paramref name="index"/>
-    /// and shifts existing <see cref="TextWriter.Written"/> to cover the hole
+    /// and shifts existing <see cref="Written"/> to cover the hole
     /// </summary>
     /// <param name="index">The index of the char to delete</param>
     void RemoveAt(int index);
 
     /// <summary>
     /// Removes the <see cref="char"/>s from the given <paramref name="index"/> for the given <paramref name="length"/>
-    /// and shifts existing <see cref="TextWriter.Written"/> to cover the hole
+    /// and shifts existing <see cref="Written"/> to cover the hole
     /// </summary>
     /// <param name="index">The index of the first char to delete</param>
     /// <param name="length">The number of chars to delete</param>

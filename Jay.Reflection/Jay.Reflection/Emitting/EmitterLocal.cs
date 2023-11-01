@@ -13,8 +13,7 @@ public readonly struct EmitterLocal :
 #endif
     IEquatable<EmitterLocal>,
     IEquatable<LocalBuilder>,
-    IEquatable<LocalVariableInfo>,
-    ICodePart
+    IEquatable<LocalVariableInfo>
 {
     public static bool operator ==(EmitterLocal left, EmitterLocal right) => left.Equals(right);
     public static bool operator !=(EmitterLocal left, EmitterLocal right) => !left.Equals(right);
@@ -101,13 +100,9 @@ public readonly struct EmitterLocal :
     {
         return Index;
     }
-
-    public void DeclareTo(CodeBuilder codeBuilder)
-    {
-        codeBuilder
-            .Append($"[{Index}] {Type} {Name}")
-            .If(IsPinned, cb => cb.Write(" 📌"));
-    }
-
-    public override string ToString() => CodePart.ToDeclaration(this);
+    
+    public override string ToString() => TextBuilder.New
+        .Append($"[{Index}] {Type} {Name}")
+        .If(IsPinned, cb => cb.Write(" 📌"))
+        .ToStringAndDispose();
 }

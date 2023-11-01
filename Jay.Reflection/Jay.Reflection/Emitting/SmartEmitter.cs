@@ -4,7 +4,7 @@ using Argument = Jay.Reflection.Emitting.Args.Argument;
 
 namespace Jay.Reflection.Emitting;
 
-public sealed class SmartEmitter : ICodePart
+public sealed class SmartEmitter
 {
     private readonly FluentGeneratorEmitter _genEmitter;
 
@@ -200,8 +200,8 @@ public sealed class SmartEmitter : ICodePart
     }
 
 
-    public void DeclareTo(CodeBuilder codeBuilder)
+    public override string ToString()
     {
-        this.Emissions.DeclareTo(codeBuilder);
+        return this.Emissions.ToString();
     }
 }

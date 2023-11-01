@@ -322,7 +322,7 @@ public class TextBuffer : TextWriter, ITextBuffer, ITextWriter, IBuildingText
             // Start writing at the front
             int writePos = 0;
             var splitRangeList = written
-                .Split(oldText, stringComparison: comparison)
+                .TextSplit(oldText, stringComparison: comparison)
                 .RangesToList();
             for (var i = 0; i < splitRangeList.Count; i++)
             {
@@ -364,7 +364,7 @@ public class TextBuffer : TextWriter, ITextBuffer, ITextWriter, IBuildingText
 
             int writePos = 0;
             var splitRangeList = buffer
-                .Split(oldText, stringComparison: comparison)
+                .TextSplit(oldText, stringComparison: comparison)
                 .RangesToList();
             for (var i = 0; i < splitRangeList.Count; i++)
             {

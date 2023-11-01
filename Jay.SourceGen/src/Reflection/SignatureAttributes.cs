@@ -2,7 +2,7 @@
 
 namespace Jay.SourceGen.Reflection;
 
-public sealed class SignatureAttributes : IReadOnlyList<AttributeSignature>, ICodePart
+public sealed class SignatureAttributes : IReadOnlyList<AttributeSignature>
 {
     private readonly List<AttributeSignature> _attributes;
 
@@ -41,14 +41,14 @@ public sealed class SignatureAttributes : IReadOnlyList<AttributeSignature>, ICo
             .GetEnumerator();
     }
 
-    public void DeclareTo(CodeBuilder code)
+    public override string ToString()
     {
-        if (_attributes.Count == 0) return;
+        if (_attributes.Count == 0) return "";
 
-        code.Append('[')
-            .Delimit(static cb => cb.Write(", "), _attributes, static (cb, a) => a.DeclareTo(cb))
-            .Append(']');
+        return TextBuilder.New
+            .Append('[')
+            .Delimit(", ", _attributes, static (cb, a) => cb.Write(a))
+            .Append(']')
+            .ToStringAndDispose();
     }
-
-    public override string ToString() => CodePart.ToDeclaration(this);
 }

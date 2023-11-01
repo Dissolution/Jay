@@ -1,5 +1,4 @@
-﻿
-using Jay.Terminals.Native;
+﻿using Jay.Terminals.Native;
 
 namespace Jay.Terminals.Console;
 
@@ -29,7 +28,7 @@ public interface ITerminalBuffer
     void Copy(RectI16 area, PointI16 position);
 
     /// <summary>
-    /// Clears the <see cref="Terminal"/> buffer and corresponding <see cref="DisplayWindow"/> of display information.
+    /// Clears the <see cref="ITerminalBuffer"/>
     /// </summary>
     void Clear();
 }

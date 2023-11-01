@@ -66,7 +66,7 @@ public partial class ReflectedException : Exception
     }
 
     public ReflectedException(
-        ref InterpolatedCode message,
+        ref InterpolatedText message,
         Exception? innerException = null)
         : base(message.ToStringAndDispose(), innerException)
     {
@@ -82,6 +82,6 @@ public partial class ReflectedException : Exception
 
     public override string ToString()
     {
-        return CodePart.ToCode(this);
+        return Message;
     }
 }

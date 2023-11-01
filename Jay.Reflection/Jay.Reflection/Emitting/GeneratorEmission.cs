@@ -84,13 +84,14 @@ public sealed class GeneratorEmission : Emission
     {
     }
 
-    public override void DeclareTo(CodeBuilder codeBuilder)
+    public override string ToString()
     {
-        codeBuilder
+        return TextBuilder.New
             .Append(Name)
             .If(HasArgs, cb => cb
-            .Append('(')
-            .Delimit(static c => c.Write(", "), Arguments, static (c,a) => c.Write(a))
-            .Append(')'));
+                    .Append('(')
+                    .Delimit(static c => c.Write(", "), Arguments, static (c, a) => c.Write(a))
+                    .Append(')'))
+            .ToStringAndDispose();
     }
 }

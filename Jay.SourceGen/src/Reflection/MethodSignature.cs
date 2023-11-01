@@ -101,9 +101,10 @@ public sealed class MethodSignature :
         return hasher.ToHashCode();
     }
 
-    public override void DeclareTo(CodeBuilder code)
+    public override string ToString()
     {
-        code.Append(Attributes)
+        return TextBuilder.New
+            .Append(Attributes)
             .Append(Visibility)
             .Append(' ')
             .Append(Keywords)
@@ -113,6 +114,7 @@ public sealed class MethodSignature :
             .Append(Name)
             .Append('(')
             .Delimit(static cb => cb.Write(", "), Parameters, static (cb, p) => cb.Write(p))
-            .Append(");");
+            .Append(");")
+            .ToStringAndDispose();
     }
 }

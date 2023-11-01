@@ -3,7 +3,7 @@ using Jay.Reflection.Emitting;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Info;
 using Jay.Reflection.Searching;
-using Jay.Reflection.Text;
+using Jay.Reflection.Utilities;
 using Jay.Reflection.Validation;
 using Jay.Utilities;
 
@@ -35,20 +35,19 @@ public static class RuntimeBuilder
         return name;
     }
     
-    private static string GetMemberName(MemberTypes memberType, InterpolatedCode suggestion)
+    private static string GetMemberName(MemberTypes memberType, string? suggestion)
     {
-        string sugg = suggestion.ToStringAndDispose();
-        string name = MemberNaming.CreateMemberName(memberType, sugg);
+        string name = MemberNaming.CreateMemberName(memberType, suggestion);
         return RegisterName(name);
     }
     
     public static DynamicMethod CreateDynamicMethod(
         DelegateInfo signature,
-        InterpolatedCode name = default)
+        string? methodName = null)
     {
         return new DynamicMethod(
             // ensure we have a valid name
-            name: GetMemberName(MemberTypes.Method, name),
+            name: GetMemberName(MemberTypes.Method, methodName),
             // only valid combination
             attributes: MethodAttributes.Public | MethodAttributes.Static,
             // only valid value
@@ -62,44 +61,51 @@ public static class RuntimeBuilder
             skipVisibility: true);
     }
 
+    public static DynamicMethod CreateDynamicMethod(
+        DelegateInfo signature,
+        ref InterpolatedMemberName memberName)
+    {
+        return CreateDynamicMethod(signature, memberName.ToStringAndDispose());
+    }
+
     public static RuntimeDelegateBuilder CreateRuntimeDelegateBuilder(
         DelegateInfo delegateSig,
-        InterpolatedCode name = default)
+        InterpolatedMemberName name = default)
     {
-        var dynamicMethod = CreateDynamicMethod(delegateSig, name);
+        var dynamicMethod = CreateDynamicMethod(delegateSig, ref name);
         return new RuntimeDelegateBuilder(dynamicMethod, delegateSig);
     }
 
     public static RuntimeDelegateBuilder CreateRuntimeDelegateBuilder(
         Type delegateType,
-        InterpolatedCode name = default) => CreateRuntimeDelegateBuilder(DelegateInfo.For(delegateType), name);
+        InterpolatedMemberName name = default) => CreateRuntimeDelegateBuilder(DelegateInfo.For(delegateType), name);
 
     public static RuntimeDelegateBuilder<TDelegate> CreateRuntimeDelegateBuilder<TDelegate>(
-        InterpolatedCode name = default)
+        InterpolatedMemberName name = default)
         where TDelegate : Delegate
     {
-        var dynamicMethod = CreateDynamicMethod(DelegateInfo.For<TDelegate>(), name);
+        var dynamicMethod = CreateDynamicMethod(DelegateInfo.For<TDelegate>(), ref name);
         return new RuntimeDelegateBuilder<TDelegate>(dynamicMethod);
     }
 
 
     public static Delegate GenerateDelegate(
         DelegateInfo signature,
-        InterpolatedCode name,
+        InterpolatedMemberName name,
         Action<ILGenerator> generateDelegate)
     {
-        var method = CreateDynamicMethod(signature, name);
+        var method = CreateDynamicMethod(signature, ref name);
         var generator = method.GetILGenerator();
         generateDelegate(generator);
         return method.CreateDelegate(signature.DelegateType);
     }
 
     public static TDelegate GenerateDelegate<TDelegate>(
-        InterpolatedCode name,
+        InterpolatedMemberName name,
         Action<ILGenerator> generateDelegate)
         where TDelegate : Delegate
     {
-        var method = CreateDynamicMethod(DelegateInfo.For<TDelegate>(), name);
+        var method = CreateDynamicMethod(DelegateInfo.For<TDelegate>(), ref name);
         var generator = method.GetILGenerator();
         generateDelegate(generator);
         return method.CreateDelegate<TDelegate>();
@@ -107,7 +113,7 @@ public static class RuntimeBuilder
 
     public static Delegate BuildDelegate(
         DelegateInfo signature,
-        InterpolatedCode name,
+        InterpolatedMemberName name,
         Action<RuntimeDelegateBuilder> buildDelegate)
     {
         var runtimeDelegateBuilder = CreateRuntimeDelegateBuilder(signature, name);
@@ -117,14 +123,14 @@ public static class RuntimeBuilder
 
     public static Delegate BuildDelegate(
         Type delegateType,
-        InterpolatedCode name,
+        InterpolatedMemberName name,
         Action<RuntimeDelegateBuilder> buildDelegate) => BuildDelegate(
         DelegateInfo.For(delegateType),
         name,
         buildDelegate);
 
     public static TDelegate BuildDelegate<TDelegate>(
-        InterpolatedCode name,
+        InterpolatedMemberName name,
         Action<RuntimeDelegateBuilder<TDelegate>> buildDelegate)
         where TDelegate : Delegate
     {
@@ -155,7 +161,7 @@ public static class RuntimeBuilder
 
     public static Delegate EmitDelegate(
         DelegateInfo signature,
-        InterpolatedCode name,
+        InterpolatedMemberName name,
         Action<FluentGeneratorEmitter> emitDelegate)
     {
         var runtimeMethod = CreateRuntimeDelegateBuilder(signature, name);
@@ -165,7 +171,7 @@ public static class RuntimeBuilder
 
     public static Delegate EmitDelegate(
         Type delegateType,
-        InterpolatedCode name,
+        InterpolatedMemberName name,
         Action<FluentGeneratorEmitter> emitDelegate)
     {
         if (!delegateType.Implements<Delegate>())
@@ -184,7 +190,7 @@ public static class RuntimeBuilder
     }
 
     public static TDelegate EmitDelegate<TDelegate>(
-        InterpolatedCode name,
+        InterpolatedMemberName name,
         Action<FluentGeneratorEmitter> emitDelegate)
         where TDelegate : Delegate
     {
@@ -195,7 +201,7 @@ public static class RuntimeBuilder
 
     public static TypeBuilder DefineType(
         TypeAttributes typeAttributes,
-        InterpolatedCode name = default)
+        InterpolatedMemberName name = default)
     {
         return ModuleBuilder.DefineType(
             MemberNaming.CreateMemberName(MemberTypes.TypeInfo, name.ToStringAndDispose()),

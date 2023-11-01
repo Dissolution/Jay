@@ -88,8 +88,9 @@ public sealed class AttributeSignature : Signature,
         return Hasher.Combine(AttributeType, Name, Arguments);
     }
 
-    public override void DeclareTo(CodeBuilder code)
+    public override string ToString()
     {
+        using var code = new TextBuilder();
         code.Write(Name);
         if (Arguments.Count > 0)
         {
@@ -97,5 +98,6 @@ public sealed class AttributeSignature : Signature,
                 .Delimit(static c => c.Write(", "), Arguments, static (cb, a) => cb.Append(a.Key).Append(" = ").Append(a.Value))
                 .Write(')');
         }
+        return code.ToString();
     }
 }

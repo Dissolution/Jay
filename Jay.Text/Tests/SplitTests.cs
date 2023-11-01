@@ -111,4 +111,12 @@ public class SplitTests
         }
     }
 
+    // [Theory, MemberData(nameof(CanSplitData))]
+    // public void CanEnumerateTextSplit(string? input, string? separator, SplitOptions splitOptions)
+    // {
+    //     input ??= "";
+    //     separator ??= "";
+    //     
+    // }
+    
 }

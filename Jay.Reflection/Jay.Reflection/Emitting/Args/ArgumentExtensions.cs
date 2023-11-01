@@ -6,7 +6,7 @@ public static class ArgumentExtensions
         string? info = null)
     {
         return new InvalidOperationException(
-            message: CodePart.ToCode($"Cannot load {sourceArgument} and store {destArgument}: {info}"));
+            message: $"Cannot load {sourceArgument} and store {destArgument}: {info}");
     }
 
     public static Result CanCast(Emitting.Args.Argument sourceArgument, Emitting.Args.Argument destArgument)

@@ -1,8 +1,7 @@
 ﻿using System.Globalization;
-using Jay.Text.Building;
 using Jay.Text.Utilities;
 
-namespace Jay.Reflection.Text;
+namespace Jay.Reflection.Utilities;
 
 /// <summary>
 /// Methods to assist with the naming of <c>dynamic</c> and Runtime members

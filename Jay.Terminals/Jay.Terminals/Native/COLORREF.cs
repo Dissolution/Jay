@@ -19,22 +19,21 @@ internal struct COLORREF
 
     public static bool operator ==(COLORREF x, COLORREF y) => x.Value == y.Value;
     public static bool operator !=(COLORREF x, COLORREF y) => x.Value != y.Value;
-    
+
     [FieldOffset(0)]
     public byte Red;
     [FieldOffset(1)]
     public byte Green;
     [FieldOffset(2)]
     public byte Blue;
-
-    [FieldOffset(3)] 
+    [FieldOffset(3)]
     internal byte Alpha;
 
     [FieldOffset(0)]
-    public uint Value;
+    internal uint Value;
 
     [SkipLocalsInit]
-    public COLORREF(byte red, byte green, byte blue) 
+    public COLORREF(byte red, byte green, byte blue)
     {
         Red = red;
         Green = green;
@@ -80,6 +79,4 @@ internal struct COLORREF
         // 0xAABBGGRR
         return $"0x{Value:X8}";
     }
-
-  
 }

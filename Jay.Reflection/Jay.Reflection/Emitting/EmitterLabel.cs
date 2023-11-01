@@ -11,8 +11,7 @@ public readonly struct EmitterLabel :
         IEqualityOperators<EmitterLabel, Label, bool>,
 #endif
     IEquatable<EmitterLabel>,
-    IEquatable<Label>,
-    ICodePart
+    IEquatable<Label>
 {
     public static bool operator ==(EmitterLabel left, EmitterLabel right) => left.Equals(right);
 
@@ -66,11 +65,5 @@ public readonly struct EmitterLabel :
         return Hasher.Combine(Name, Position);
     }
 
-    public void DeclareTo(CodeBuilder codeBuilder)
-    {
-        codeBuilder
-            .Write($"0x{Position:X4} | {Name}:");
-    }
-
-    public override string ToString() => CodePart.ToDeclaration(this);
+    public override string ToString() => $"0x{Position:X4} | {Name}:";
 }

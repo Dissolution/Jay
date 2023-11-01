@@ -17,7 +17,7 @@ public static class TextPool
     
     /// <summary>
     /// The maximum possible capacity of any builder<br/>
-    /// 1_073_741_791 (0x3FFFFFDF)
+    /// 1,073,741,791 (0x3FFFFFDF)
     /// </summary>
     /// <remarks>
     /// This is equal to <c>string.MaxLength</c> (which is lower than <c>Array.MaxLength</c>)<br/>

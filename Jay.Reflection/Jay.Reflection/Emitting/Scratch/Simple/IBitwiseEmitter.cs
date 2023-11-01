@@ -1,4 +1,4 @@
-﻿namespace Jay.Reflection.Emitting.Scratch;
+﻿namespace Jay.Reflection.Emitting.Scratch.Simple;
 
 public interface IBitwiseEmitter<out Self>
     where Self : ISmartEmitter<Self>

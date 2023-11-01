@@ -1,9 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <RootNamespace>Jay</RootNamespace>
-        <AssemblyName>Jay.Core</AssemblyName>
-
         <TargetFrameworks>
             <!-- All Core Versions -->
             net7.0;net6.0;netcoreapp3.1;
@@ -16,13 +13,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
-        <Version>0.2.0</Version>
-        <Authors>TimothyJay</Authors>
+        
+        <AssemblyName>Jay.Core</AssemblyName>
+        <RootNamespace>Jay</RootNamespace>
+        <ApplicationIcon/>
+        <Version>0.3.0</Version>
+        <Authors>Timothy Jay</Authors>
+        <WebPage>https://github.com/Dissolution/Jay/tree/develop</WebPage>
 
         <!-- lambda expression issue -->
         <NoWarn>8622</NoWarn>
-
+        <!-- Make PolySharp's implementations public -->
         <PolySharpUsePublicAccessibilityForGeneratedTypes>true</PolySharpUsePublicAccessibilityForGeneratedTypes>
     </PropertyGroup>
 
@@ -33,14 +34,12 @@
         <Using Include="System.Collections"/>
         <Using Include="Jay.Validation"/>
         <Using Include="Jay.Extensions"/>
-    </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' Or '$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0'">
         <Using Include="System.Numerics"/>
-    </ItemGroup>    
+        <Using Remove="System.Net.Http"/>
+    </ItemGroup>
 
     <!-- NuGet Packages -->
     <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-        <Using Remove="System.Net.Http"/>
         <PackageReference Include="System.Memory" Version="4.5.5">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -72,6 +71,7 @@
         </PackageReference>
     </ItemGroup>
     
+    <!-- Assembly Attributes -->
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>Jay.Core.Tests</_Parameter1>

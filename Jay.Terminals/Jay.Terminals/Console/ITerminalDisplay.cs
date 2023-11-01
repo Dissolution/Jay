@@ -45,7 +45,7 @@ public interface ITerminalDisplay
     int LargestWidth { get; }
     
     /// <summary>
-    /// Clears the <see cref="Terminal"/> buffer and corresponding <see cref="DisplayWindow"/> of display information.
+    /// Clears the <see cref="ITerminalDisplay"/>
     /// </summary>
     void Clear();
 }

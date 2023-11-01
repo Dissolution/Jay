@@ -173,7 +173,7 @@ public sealed class DynamicReflection : DynamicObject
             return RuntimeMethodAdapter.Adapt<ObjectInvoke>(method);
 
         // Nothing matches
-        Debug.WriteLine(CodePart.ToCode($"Nothing found on {_targetType} when searching for {key}"));
+        Debug.WriteLine($"Nothing found on {_targetType} when searching for {key}");
         Debugger.Break();
         return null;
     }
@@ -590,6 +590,6 @@ public sealed class DynamicReflection : DynamicObject
 
     public override string ToString()
     {
-        return CodePart.ToCode($"dynamic<{_targetType}>");
+        return $"dynamic<{_targetType}>";
     }
 }

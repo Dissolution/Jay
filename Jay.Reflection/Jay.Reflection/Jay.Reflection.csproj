@@ -34,10 +34,10 @@
         <Using Include="System.Reflection.Emit"/>
         <Using Include="Jay.Extensions"/>
         <Using Include="Jay.Enums"/>
-        <Using Include="Jay.Reflection.CodeBuilding"/>
         <Using Include="Jay.Reflection.Extensions"/>
         <Using Include="Jay.Text"/>
         <Using Include="Jay.Text.Extensions"/>
+        <Using Include="Jay.Text.Building"/>
         <Using Include="Jay.Validation"/>
     </ItemGroup>
 

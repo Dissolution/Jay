@@ -118,8 +118,9 @@ public sealed class ParameterSignature :
         return Hasher.Combine(base.GetHashCode(), ParameterType, DefaultValue, IsParams);
     }
 
-    public override void DeclareTo(CodeBuilder code)
+    public override string ToString()
     {
+        using var code = new TextBuilder();
         if (IsThis)
             code.Write("this ");
         switch (RefKind)
@@ -142,5 +143,6 @@ public sealed class ParameterSignature :
             code.Append(" = ")
                 .Append(defaultValue);
         }
+        return code.ToString();
     }
 }

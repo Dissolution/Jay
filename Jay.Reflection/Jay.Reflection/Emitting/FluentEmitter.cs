@@ -4,6 +4,7 @@ using Jay.Debugging;
 using Jay.Reflection.Caching;
 using Jay.Reflection.Searching;
 using Jay.Reflection.Validation;
+// ReSharper disable InvalidXmlDocComment
 
 
 // ReSharper disable MemberCanBeProtected.Global
@@ -12,7 +13,7 @@ using Jay.Reflection.Validation;
 
 namespace Jay.Reflection.Emitting;
 
-public class FluentEmitter<TSelf> : ICodePart
+public class FluentEmitter<TSelf>
     where TSelf : FluentEmitter<TSelf>
 {
     [return: NotNullIfNotNull(nameof(name))]
@@ -358,7 +359,7 @@ public class FluentEmitter<TSelf> : ICodePart
     /// <param name="type">The type of the <see cref="LocalBuilder"/>.</param>
     /// <param name="emitterLocal">ns the declared <see cref="LocalBuilder"/>.</param>
     /// <exception cref="ArgumentNullException">If <paramref name="type"/> is <see langword="null"/>.</exception>
-    /// <exception cref="InvalidOperationException">If <paramref name="type"/> was created with <see cref="TypeBuilder.CreateType"/>.</exception>
+    /// <exception cref="InvalidOperationException">If <paramref name="type"/> was created with <see cref="TypeBuilder"/>.</exception>
     /// <see href="https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.ilgenerator.declarelocal#System_Reflection_Emit_ILGenerator_DeclareLocal_System_Type_"/>
     public TSelf DeclareLocal(
         Type type,
@@ -3089,14 +3090,9 @@ public class FluentEmitter<TSelf> : ICodePart
         return _self;
     }
 #endregion
-
-    public void DeclareTo(CodeBuilder codeBuilder)
-    {
-        this.Emissions.DeclareTo(codeBuilder);
-    }
-
+    
     public override string ToString()
     {
-        return CodePart.ToDeclaration(this);
+        return this.Emissions.ToString();
     }
 }

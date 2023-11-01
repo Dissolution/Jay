@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Jay.Collections;
+// ReSharper disable AccessToDisposedClosure
 
 namespace Jay.Tests.Collections.Pooling;
 
@@ -95,9 +96,9 @@ public class PoolTests
     {
         var rand = new Random();
         using var pool = ObjectPool.Create<StringBuilder>(() => new StringBuilder(), sb => sb.Clear());
-        const int count = 100;
-        var tasks = new Task<string>[count];
-        for (var i = 0; i < count; i++)
+        const int COUNT = 100;
+        var tasks = new Task<string>[COUNT];
+        for (var i = 0; i < COUNT; i++)
         {
             tasks[i] = Task.Run<string>(async () =>
                 {
@@ -116,6 +117,6 @@ public class PoolTests
         }
         var results = await Task.WhenAll(tasks);
         Assert.True(results.All(str => !string.IsNullOrWhiteSpace(str)));
-        Assert.Equal(count, results.Distinct().Count());
+        Assert.Equal(COUNT, results.Distinct().Count());
     }
 }
