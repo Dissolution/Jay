@@ -2,7 +2,7 @@
 
 namespace Jay.SourceGen.Tests.Text;
 
-public class SourceCodeBuilderTests
+public class CodeBuilderTests
 {
     [Fact]
     public void CanClearCode()
