@@ -11,6 +11,10 @@
         <RootNamespace>Jay.SourceGen</RootNamespace>
 
         <PolySharpUsePublicAccessibilityForGeneratedTypes>true</PolySharpUsePublicAccessibilityForGeneratedTypes>
+
+        <Configurations>Debug;Release;Attach</Configurations>
+
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,19 +22,19 @@
         <Using Include="System.Diagnostics"/>
         <Using Include="System.Diagnostics.CodeAnalysis"/>
         <Using Include="System.Reflection"/>
+        <Using Include="System.Runtime.CompilerServices"/>
         <Using Include="Microsoft.CodeAnalysis"/>
         <Using Include="Microsoft.CodeAnalysis.CSharp"/>
         <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax"/>
-        <Using Include="Jay.Extensions"/>
-        <Using Include="Jay.Enums"/>
-        <Using Include="Jay.Utilities"/>
-        <Using Include="Jay.Reflection"/>
-        <Using Include="Jay.Reflection.Extensions"/>
+<!--        <Using Include="Jay.Extensions"/>-->
+<!--        <Using Include="Jay.Enums"/>-->
+<!--        <Using Include="Jay.Utilities"/>-->
+<!--        <Using Include="Jay.Reflection"/>-->
+<!--        <Using Include="Jay.Reflection.Extensions"/>-->
         <Using Include="Jay.SourceGen.Extensions"/>
-        <Using Include="Jay.Reflection.CodeBuilding"/>
-        <Using Include="Jay.Text"/>
-        <Using Include="Jay.Text.Building"/>
-        <Using Include="Jay.Easy" Static="true"/>
+<!--        <Using Include="Jay.Text"/>-->
+<!--        <Using Include="Jay.Text.Building"/>-->
+<!--        <Using Include="Jay.Easy" Static="true"/>-->
     </ItemGroup>
     
     <ItemGroup>
@@ -41,17 +45,20 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
         <PackageReference Include="PolySharp" Version="1.13.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
     
-    <ItemGroup>
-      <ProjectReference Include="..\..\Jay.Core\src\Jay.Core.csproj"/>
-      <ProjectReference Include="..\..\Jay.Reflection\Jay.Reflection\Jay.Reflection.csproj"/>
-      <ProjectReference Include="..\..\Jay.Text\src\Jay.Text.csproj"/>
-    </ItemGroup>
+<!--    <ItemGroup>-->
+<!--      <ProjectReference Include="..\..\Jay.Core\src\Jay.Core.csproj"/>-->
+<!--      <ProjectReference Include="..\..\Jay.Reflection\Jay.Reflection\Jay.Reflection.csproj"/>-->
+<!--      <ProjectReference Include="..\..\Jay.Text\src\Jay.Text.csproj"/>-->
+<!--    </ItemGroup>-->
 
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

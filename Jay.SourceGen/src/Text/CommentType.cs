@@ -1,7 +1,10 @@
-﻿namespace Jay.Reflection.CodeBuilding;
+﻿namespace Jay.SourceGen.Text;
 
+[Flags]
 public enum CommentType
 {
+    Any = 0,
+    
     /// <summary>
     /// <c>// comment</c><br/>
     /// <i>or</i><br/>
@@ -10,7 +13,7 @@ public enum CommentType
     /// // comment 2<br/>
     /// </c>
     /// </summary>a
-    SingleLine,
+    SingleLine = 1 << 0,
 
     /// <summary>
     /// <c>/* comment */</c><br/>
@@ -21,7 +24,7 @@ public enum CommentType
     ///  */<br/>
     /// </c>
     /// </summary>
-    MultiLine,
+    MultiLine = 1 << 1,
 
     /// <summary>
     /// <c>/// comment</c><br />
@@ -31,5 +34,5 @@ public enum CommentType
     /// /// comment 2<br />
     /// </c>
     /// </summary>
-    Xml,
+    Xml = 1 << 2,
 }

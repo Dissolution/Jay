@@ -24,11 +24,11 @@ public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
          * indent to this position.*/
 
         var written = this.Written;
-        var lastNewLineIndex = written.LastIndexOf<char>(_newline.AsSpan());
+        var lastNewLineIndex = written.LastIndexOf<char>(Environment.NewLine.AsSpan());
         // If we never wrote one, there is no indent
         if (lastNewLineIndex == -1)
             return default;
-        var after = written.Slice(lastNewLineIndex + _newline.Length);
+        var after = written.Slice(lastNewLineIndex + Environment.NewLine.Length);
         return after;
     }
 
@@ -51,12 +51,12 @@ public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
 
     protected void IndentAwareWrite(scoped ReadOnlySpan<char> text)
     {
-        var e = text.TextSplit(_newline);
+        var e = text.TextSplit(Environment.NewLine);
         if (!e.MoveNext()) return;
         base.Write(e.Text);
         while (e.MoveNext())
         {
-            base.Write(_newline);
+            base.Write(Environment.NewLine);
             base.Write(e.Text);
         }
     }
@@ -64,7 +64,7 @@ public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
     
     public override B NewLine()
     {
-        base.Write(_newline);
+        base.Write(Environment.NewLine);
         base.Write(_indents.CurrentIndent);
         return _builder;
     }

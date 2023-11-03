@@ -1,39 +1,39 @@
 ﻿namespace Jay.SourceGen.Reflection;
 
-public sealed class TypeSignature : MemberSignature,
-    IEquatable<TypeSignature>, IEquatable<ITypeSymbol>, IEquatable<Type>
+public sealed class TypeSig : MemberSig,
+    IEquatable<TypeSig>, IEquatable<ITypeSymbol>, IEquatable<Type>
 {
     [return: NotNullIfNotNull(nameof(type))]
-    public static implicit operator TypeSignature?(Type? type) => type is null ? null : new TypeSignature(type);
+    public static implicit operator TypeSig?(Type? type) => type is null ? null : new TypeSig(type);
 
-    public static bool operator ==(TypeSignature? left, TypeSignature? right) => FastEqual(left, right);
-    public static bool operator !=(TypeSignature? left, TypeSignature? right) => !FastEqual(left, right);
-    public static bool operator ==(TypeSignature? left, ITypeSymbol? right) => FastEquality(left, right);
-    public static bool operator !=(TypeSignature? left, ITypeSymbol? right) => !FastEquality(left, right);
-    public static bool operator ==(TypeSignature? left, Type? right) => FastEquality(left, right);
-    public static bool operator !=(TypeSignature? left, Type? right) => !FastEquality(left, right);
+    public static bool operator ==(TypeSig? left, TypeSig? right) => FastEqual(left, right);
+    public static bool operator !=(TypeSig? left, TypeSig? right) => !FastEqual(left, right);
+    public static bool operator ==(TypeSig? left, ITypeSymbol? right) => FastEquality(left, right);
+    public static bool operator !=(TypeSig? left, ITypeSymbol? right) => !FastEquality(left, right);
+    public static bool operator ==(TypeSig? left, Type? right) => FastEquality(left, right);
+    public static bool operator !=(TypeSig? left, Type? right) => !FastEquality(left, right);
 
     [return: NotNullIfNotNull(nameof(type))]
-    public static TypeSignature? Create(Type? type)
+    public static TypeSig? Create(Type? type)
     {
         if (type is null)
             return null;
-        return new TypeSignature(type);
+        return new TypeSig(type);
     }
     
     [return: NotNullIfNotNull(nameof(typeSymbol))]
-    public static TypeSignature? Create(ITypeSymbol? typeSymbol)
+    public static TypeSig? Create(ITypeSymbol? typeSymbol)
     {
         if (typeSymbol is null)
             return null;
-        return new TypeSignature(typeSymbol);
+        return new TypeSig(typeSymbol);
     }
 
     public string? Namespace { get; init; } = null;
     public string? FullName { get; init; } = null;
     public TypeKind Kind { get; init; } = default;
 
-    public TypeSignature(ITypeSymbol typeSymbol)
+    public TypeSig(ITypeSymbol typeSymbol)
         : base(typeSymbol)
     {
         this.Namespace = typeSymbol.GetNamespace();
@@ -42,7 +42,7 @@ public sealed class TypeSignature : MemberSignature,
     }
     
 
-    public TypeSignature(Type type)
+    public TypeSig(Type type)
         : base(type)
     {
         this.Namespace = type.Namespace;
@@ -67,19 +67,19 @@ public sealed class TypeSignature : MemberSignature,
             throw new NotImplementedException();
     }
 
-    public bool Equals(TypeSignature? typeSig)
+    public bool Equals(TypeSig? typeSig)
     {
         return typeSig is not null && string.Equals(FullName, typeSig.FullName);
     }
 
-    public override bool Equals(MemberSignature? memberSig)
+    public override bool Equals(MemberSig? memberSig)
     {
-        return memberSig is TypeSignature typeSig && Equals(typeSig);
+        return memberSig is TypeSig typeSig && Equals(typeSig);
     }
     
-    public override bool Equals(Signature? signature)
+    public override bool Equals(Sig? signature)
     {
-        return signature is TypeSignature typeSig && Equals(typeSig);
+        return signature is TypeSig typeSig && Equals(typeSig);
     }
 
     public bool Equals(ITypeSymbol? typeSymbol) => Equals(Create(typeSymbol));
@@ -94,7 +94,7 @@ public sealed class TypeSignature : MemberSignature,
     {
         return obj switch
         {
-            TypeSignature typeSig => Equals(typeSig),
+            TypeSig typeSig => Equals(typeSig),
             ITypeSymbol typeSymbol => Equals(typeSymbol),
             Type type => Equals(type),
             _ => false,

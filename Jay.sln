@@ -18,8 +18,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.SourceGen", "Jay.Source
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.SourceGen.Tests", "Jay.SourceGen\Tests\Jay.SourceGen.Tests.csproj", "{5276A7F6-B754-47AE-B44F-601A6C08BFF0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.SourceGen.Neo", "Jay.Implementation\Jay.SourceGen\Jay.SourceGen.Neo.csproj", "{3DE38267-2648-4630-94C2-AE3FC9C195BA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.Reflection.Tests", "Jay.Reflection\Tests\Jay.Reflection.Tests.csproj", "{FE4BBEA8-2925-4853-9B36-19AB8DFD3775}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jay.Terminals", "Jay.Terminals\Jay.Terminals\Jay.Terminals.csproj", "{5DC186CC-279C-4EE8-992D-F95F8A170277}"
@@ -70,10 +68,6 @@ Global
 		{5276A7F6-B754-47AE-B44F-601A6C08BFF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5276A7F6-B754-47AE-B44F-601A6C08BFF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5276A7F6-B754-47AE-B44F-601A6C08BFF0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3DE38267-2648-4630-94C2-AE3FC9C195BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3DE38267-2648-4630-94C2-AE3FC9C195BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3DE38267-2648-4630-94C2-AE3FC9C195BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3DE38267-2648-4630-94C2-AE3FC9C195BA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FE4BBEA8-2925-4853-9B36-19AB8DFD3775}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FE4BBEA8-2925-4853-9B36-19AB8DFD3775}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE4BBEA8-2925-4853-9B36-19AB8DFD3775}.Release|Any CPU.ActiveCfg = Release|Any CPU

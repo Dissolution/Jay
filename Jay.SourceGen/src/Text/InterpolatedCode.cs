@@ -1,6 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using Jay.Text.Extensions;
-
+﻿// ReSharper disable UnusedParameter.Local
+// ReSharper disable StructCanBeMadeReadOnly
 namespace Jay.SourceGen.Text;
 
 /// <summary>
@@ -8,11 +7,10 @@ namespace Jay.SourceGen.Text;
 /// that works with an underlying <see cref="CodeBuilder"/>
 /// </summary>
 [InterpolatedStringHandler]
-// ReSharper disable once StructCanBeMadeReadOnly
 public ref struct InterpolatedCode
 {
     private readonly CodeBuilder _codeBuilder;
-
+    
     public InterpolatedCode(int literalLength, int formattedCount, CodeBuilder codeBuilder)
     {
         _codeBuilder = codeBuilder;
@@ -20,58 +18,21 @@ public ref struct InterpolatedCode
 
     public void AppendLiteral(string str)
     {
-        _codeBuilder.IndentAwareWrite(str.AsSpan());
+        _codeBuilder.WriteIndentAwareText(str.AsSpan());
     }
 
+    public void AppendFormatted(scoped ReadOnlySpan<char> text)
+    {
+        _codeBuilder.WriteIndentAwareText(text);
+    }
+
+    public void AppendFormatted(string? str)
+    {
+        _codeBuilder.WriteIndentAwareText(str.AsSpan());
+    }
+    
     public void AppendFormatted<T>([AllowNull] T value)
     {
-        _codeBuilder.SmartFormat<T>(value);
+        _codeBuilder.WriteIndentAwareValue<T>(value);
     }
-
-    public void AppendFormatted<T>([AllowNull] T value, string? format)
-    {
-        string? str;
-    
-        if (value is IFormattable)
-        {
-            str = ((IFormattable)value).ToString(format, default);
-        }
-        else
-        {
-            Casing casing;
-            if (string.IsNullOrEmpty(format))
-            {
-                casing = Casing.Default;
-            }
-            else if (TextEqual(format, "l", StringComparison.OrdinalIgnoreCase) || TextEqual(format, "lower", StringComparison.OrdinalIgnoreCase))
-            {
-                casing = Casing.Lower;
-            }
-            else if (TextEqual(format, "u", StringComparison.OrdinalIgnoreCase) || TextEqual(format, "upper", StringComparison.OrdinalIgnoreCase))
-            {
-                casing = Casing.Upper;
-            }
-            else if (TextEqual(format, "c", StringComparison.OrdinalIgnoreCase) || TextEqual(format, "camel", StringComparison.OrdinalIgnoreCase))
-            {
-                casing = Casing.Camel;
-            }
-            else if (TextEqual(format, "p", StringComparison.OrdinalIgnoreCase) || TextEqual(format, "pascal", StringComparison.OrdinalIgnoreCase))
-            {
-                casing = Casing.Pascal;
-            }
-            else if (TextEqual(format, "t", StringComparison.OrdinalIgnoreCase) || TextEqual(format, "title", StringComparison.OrdinalIgnoreCase))
-            {
-                casing = Casing.Title;
-            }
-            else
-            {
-                throw new ArgumentException($"Unknown format code: '{format}'", nameof(format));
-            }
-    
-            str = value?.ToString().ToCase(casing);
-        }
-        
-        _codeBuilder.DirectWrite(str);
-    }
-
 }

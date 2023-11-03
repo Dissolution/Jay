@@ -3,51 +3,51 @@ using static Jay.StaticImports;
 
 namespace Jay.SourceGen.Reflection;
 
-public sealed class ParameterSignature :
-    Signature,
-    IEquatable<ParameterSignature>,
+public sealed class ParameterSig :
+    Sig,
+    IEquatable<ParameterSig>,
     IEquatable<IParameterSymbol>,
     IEquatable<ParameterInfo>
 {
     [return: NotNullIfNotNull(nameof(parameterInfo))]
-    public static implicit operator ParameterSignature?(ParameterInfo? parameterInfo) => Create(parameterInfo);
+    public static implicit operator ParameterSig?(ParameterInfo? parameterInfo) => Create(parameterInfo);
 
-    public static bool operator ==(ParameterSignature? left, ParameterSignature? right) => FastEqual(left, right);
-    public static bool operator !=(ParameterSignature? left, ParameterSignature? right) => !FastEqual(left, right);
-    public static bool operator ==(ParameterSignature? left, IParameterSymbol? right) => FastEquality(left, right);
-    public static bool operator !=(ParameterSignature? left, IParameterSymbol? right) => !FastEquality(left, right);
-    public static bool operator ==(ParameterSignature? left, ParameterInfo? right) => FastEquality(left, right);
-    public static bool operator !=(ParameterSignature? left, ParameterInfo? right) => !FastEquality(left, right);
+    public static bool operator ==(ParameterSig? left, ParameterSig? right) => FastEqual(left, right);
+    public static bool operator !=(ParameterSig? left, ParameterSig? right) => !FastEqual(left, right);
+    public static bool operator ==(ParameterSig? left, IParameterSymbol? right) => FastEquality(left, right);
+    public static bool operator !=(ParameterSig? left, IParameterSymbol? right) => !FastEquality(left, right);
+    public static bool operator ==(ParameterSig? left, ParameterInfo? right) => FastEquality(left, right);
+    public static bool operator !=(ParameterSig? left, ParameterInfo? right) => !FastEquality(left, right);
 
     [return: NotNullIfNotNull(nameof(parameterSymbol))]
-    public static ParameterSignature? Create(IParameterSymbol? parameterSymbol)
+    public static ParameterSig? Create(IParameterSymbol? parameterSymbol)
     {
         if (parameterSymbol is null)
             return null;
 
-        return new ParameterSignature(parameterSymbol);
+        return new ParameterSig(parameterSymbol);
     }
 
     [return: NotNullIfNotNull(nameof(parameterInfo))]
-    public static ParameterSignature? Create(ParameterInfo? parameterInfo)
+    public static ParameterSig? Create(ParameterInfo? parameterInfo)
     {
         if (parameterInfo is null)
             return null;
 
-        return new ParameterSignature(parameterInfo);
+        return new ParameterSig(parameterInfo);
     }
 
     public RefKind RefKind { get; }
-    public TypeSignature? ParameterType { get; }
+    public TypeSig? ParameterType { get; }
     public Option<object?> DefaultValue { get; }
     public bool IsThis { get; }
     public bool IsParams { get; }
 
-    public ParameterSignature(IParameterSymbol parameterSymbol)
+    public ParameterSig(IParameterSymbol parameterSymbol)
         : base(parameterSymbol.Name, parameterSymbol.GetVisibility(), parameterSymbol.GetKeywords())
     {
         this.RefKind = parameterSymbol.RefKind;
-        this.ParameterType = new TypeSignature(parameterSymbol.Type);
+        this.ParameterType = new TypeSig(parameterSymbol.Type);
         if (parameterSymbol.HasExplicitDefaultValue)
         {
             this.DefaultValue = Some<object?>(parameterSymbol.ExplicitDefaultValue);
@@ -60,7 +60,7 @@ public sealed class ParameterSignature :
         this.IsParams = parameterSymbol.IsParams;
     }
 
-    public ParameterSignature(ParameterInfo parameterInfo)
+    public ParameterSig(ParameterInfo parameterInfo)
         : base(parameterInfo.Name, default, default)
     {
         var access = parameterInfo.GetAccess(out var parameterType);
@@ -72,7 +72,7 @@ public sealed class ParameterSignature :
             ParameterAccess.Out => RefKind.Out,
             _ => throw new ArgumentOutOfRangeException(),
         };
-        this.ParameterType = new TypeSignature(parameterType);
+        this.ParameterType = new TypeSig(parameterType);
         if (parameterInfo.HasDefaultValue)
         {
             this.DefaultValue = Some<object?>(parameterInfo.DefaultValue);
@@ -85,7 +85,7 @@ public sealed class ParameterSignature :
         this.IsParams = parameterInfo.GetCustomAttribute<ParamArrayAttribute>() != null;
     }
 
-    public bool Equals(ParameterSignature? parameterSig)
+    public bool Equals(ParameterSig? parameterSig)
     {
         return base.Equals(parameterSig)
             && FastEqual(ParameterType, parameterSig.ParameterType)
@@ -93,9 +93,9 @@ public sealed class ParameterSignature :
             && FastEqual(IsParams, parameterSig.IsParams);
     }
 
-    public override bool Equals(Signature? signature)
+    public override bool Equals(Sig? signature)
     {
-        return signature is ParameterSignature parameterSig && Equals(parameterSig);
+        return signature is ParameterSig parameterSig && Equals(parameterSig);
     }
 
     public bool Equals(IParameterSymbol? parameterSymbol) => Equals(Create(parameterSymbol));
@@ -106,7 +106,7 @@ public sealed class ParameterSignature :
     {
         return obj switch
         {
-            ParameterSignature parameterSig => Equals(parameterSig),
+            ParameterSig parameterSig => Equals(parameterSig),
             IParameterSymbol parameterSymbol => Equals(parameterSymbol),
             ParameterInfo parameterInfo => Equals(parameterInfo),
             _ => false

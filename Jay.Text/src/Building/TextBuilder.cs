@@ -29,30 +29,26 @@ public abstract class TextBuilder<B> :
     where B : TextBuilder<B>
 {
     protected readonly B _builder;
-    protected readonly string _newline;
 
     protected TextBuilder()
         : base()
     {
         _builder = (B)this;
-        _newline = Environment.NewLine;
     }
 
     protected TextBuilder(int minCapacity)
         : base(minCapacity)
     {
         _builder = (B)this;
-        _newline = Environment.NewLine;
     }
 
     protected TextBuilder(int literalLength, int formattedCount)
         : base(literalLength, formattedCount)
     {
         _builder = (B)this;
-        _newline = Environment.NewLine;
     }
 
-    public virtual B NewLine() => Append(_newline);
+    public virtual B NewLine() => Append(Environment.NewLine);
 
     public B NewLines(int count)
     {

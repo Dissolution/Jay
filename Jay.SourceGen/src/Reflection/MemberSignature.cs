@@ -1,89 +1,89 @@
 ﻿namespace Jay.SourceGen.Reflection;
 
-public abstract class MemberSignature : Signature,
-    IEquatable<MemberSignature>, IEquatable<ISymbol>, IEquatable<MemberInfo>
+public abstract class MemberSig : Sig,
+    IEquatable<MemberSig>, IEquatable<ISymbol>, IEquatable<MemberInfo>
 {
     [return: NotNullIfNotNull(nameof(memberInfo))]
-    public static implicit operator MemberSignature?(MemberInfo? memberInfo) => MemberSignature.Create(memberInfo);
+    public static implicit operator MemberSig?(MemberInfo? memberInfo) => MemberSig.Create(memberInfo);
 
-    public static bool operator ==(MemberSignature? left, MemberSignature? right) => FastEqual(left, right);
-    public static bool operator !=(MemberSignature? left, MemberSignature? right) => !FastEqual(left, right);
-    public static bool operator ==(MemberSignature? left, ISymbol? right) => FastEquality(left, right);
-    public static bool operator !=(MemberSignature? left, ISymbol? right) => !FastEquality(left, right);
-    public static bool operator ==(MemberSignature? left, MemberInfo? right) => FastEquality(left, right);
-    public static bool operator !=(MemberSignature? left, MemberInfo? right) => !FastEquality(left, right);
+    public static bool operator ==(MemberSig? left, MemberSig? right) => FastEqual(left, right);
+    public static bool operator !=(MemberSig? left, MemberSig? right) => !FastEqual(left, right);
+    public static bool operator ==(MemberSig? left, ISymbol? right) => FastEquality(left, right);
+    public static bool operator !=(MemberSig? left, ISymbol? right) => !FastEquality(left, right);
+    public static bool operator ==(MemberSig? left, MemberInfo? right) => FastEquality(left, right);
+    public static bool operator !=(MemberSig? left, MemberInfo? right) => !FastEquality(left, right);
 
 
     [return: NotNullIfNotNull(nameof(symbol))]
-    public static MemberSignature? Create(ISymbol? symbol)
+    public static MemberSig? Create(ISymbol? symbol)
     {
         switch (symbol)
         {
             case IFieldSymbol fieldSymbol:
-                return new FieldSignature(fieldSymbol);
+                return new FieldSig(fieldSymbol);
             case IPropertySymbol propertySymbol:
-                return new PropertySignature(propertySymbol);
+                return new PropertySig(propertySymbol);
             case IEventSymbol eventSymbol:
-                return new EventSignature(eventSymbol);
+                return new EventSig(eventSymbol);
             case IMethodSymbol methodSymbol:
-                return new MethodSignature(methodSymbol);
+                return new MethodSig(methodSymbol);
             case ITypeSymbol typeSymbol:
-                return new TypeSignature(typeSymbol);
+                return new TypeSig(typeSymbol);
             default:
                 return default;
         }
     }
 
     [return: NotNullIfNotNull(nameof(member))]
-    public static MemberSignature? Create(MemberInfo? member)
+    public static MemberSig? Create(MemberInfo? member)
     {
         switch (member)
         {
             case FieldInfo fieldInfo:
-                return new FieldSignature(fieldInfo);
+                return new FieldSig(fieldInfo);
             case PropertyInfo propertyInfo:
-                return new PropertySignature(propertyInfo);
+                return new PropertySig(propertyInfo);
             case EventInfo eventInfo:
-                return new EventSignature(eventInfo);
+                return new EventSig(eventInfo);
             case MethodBase methodBase:
-                return new MethodSignature(methodBase);
+                return new MethodSig(methodBase);
             case Type type:
-                return new TypeSignature(type);
+                return new TypeSig(type);
             default:
                 return default;
         }
     }
 
-    public static bool TryCreate([AllowNull, NotNullWhen(true)] object? obj, [NotNullWhen(true)] out MemberSignature? memberSignature)
+    public static bool TryCreate([AllowNull, NotNullWhen(true)] object? obj, [NotNullWhen(true)] out MemberSig? memberSignature)
     {
         switch (obj)
         {
             case IFieldSymbol fieldSymbol:
-                memberSignature = new FieldSignature(fieldSymbol);
+                memberSignature = new FieldSig(fieldSymbol);
                 return true;
             case FieldInfo fieldInfo:
-                memberSignature = new FieldSignature(fieldInfo);
+                memberSignature = new FieldSig(fieldInfo);
                 return true;
             case IPropertySymbol propertySymbol:
-                memberSignature = new PropertySignature(propertySymbol);
+                memberSignature = new PropertySig(propertySymbol);
                 return true;
             case PropertyInfo propertyInfo:
-                memberSignature = new PropertySignature(propertyInfo);
+                memberSignature = new PropertySig(propertyInfo);
                 return true;
             case IEventSymbol eventSymbol:
-                memberSignature = new EventSignature(eventSymbol);
+                memberSignature = new EventSig(eventSymbol);
                 return true;
             case EventInfo eventInfo:
-                memberSignature = new EventSignature(eventInfo);
+                memberSignature = new EventSig(eventInfo);
                 return true;
             case IMethodSymbol methodSymbol:
-                memberSignature = new MethodSignature(methodSymbol);
+                memberSignature = new MethodSig(methodSymbol);
                 return true;
             case MethodBase methodBase:
-                memberSignature = new MethodSignature(methodBase);
+                memberSignature = new MethodSig(methodBase);
                 return true;
             case Type type:
-                memberSignature = new TypeSignature(type);
+                memberSignature = new TypeSig(type);
                 return true;
             default:
                 memberSignature = default;
@@ -92,28 +92,28 @@ public abstract class MemberSignature : Signature,
     }
 
 
-    public TypeSignature? ParentType { get; init; }
+    public TypeSig? ParentType { get; init; }
     public SignatureAttributes Attributes { get; init; }
 
-    protected MemberSignature(ISymbol symbol) : base(symbol.Name, symbol.GetVisibility(), symbol.GetKeywords())
+    protected MemberSig(ISymbol symbol) : base(symbol.Name, symbol.GetVisibility(), symbol.GetKeywords())
     {
-        this.ParentType = TypeSignature.Create(symbol.ContainingType);
+        this.ParentType = TypeSig.Create(symbol.ContainingType);
         this.Attributes = new(symbol);
     }
 
-    protected MemberSignature(MemberInfo member) : base(member.Name, member.Visibility(), member.GetKeywords())
+    protected MemberSig(MemberInfo member) : base(member.Name, member.Visibility(), member.GetKeywords())
     {
-        this.ParentType = TypeSignature.Create(member.ReflectedType ?? member.DeclaringType);
+        this.ParentType = TypeSig.Create(member.ReflectedType ?? member.DeclaringType);
         this.Attributes = new(member);
     }
 
 
-    public override bool Equals(Signature? signature)
+    public override bool Equals(Sig? signature)
     {
-        return signature is MemberSignature memberSig && Equals(memberSig);
+        return signature is MemberSig memberSig && Equals(memberSig);
     }
 
-    public virtual bool Equals(MemberSignature? memberSig)
+    public virtual bool Equals(MemberSig? memberSig)
     {
         return base.Equals(memberSig)
             && FastEqual(ParentType, memberSig.ParentType)
@@ -134,7 +134,7 @@ public abstract class MemberSignature : Signature,
     {
         return obj switch
         {
-            MemberSignature memberSig => Equals(memberSig),
+            MemberSig memberSig => Equals(memberSig),
             ISymbol symbol => Equals(symbol),
             MemberInfo member => Equals(member),
             _ => false

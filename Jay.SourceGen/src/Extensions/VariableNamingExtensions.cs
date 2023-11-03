@@ -1,7 +1,4 @@
-﻿
-using Jay.Text.Utilities;
-
-namespace Jay.SourceGen.Extensions;
+﻿namespace Jay.SourceGen.Extensions;
 
 public static class VariableNamingExtensions
 {
@@ -44,13 +41,14 @@ public static class VariableNamingExtensions
                 }
                 if (n < typeNameLen)
                 {
-                    TextHelper.CopyTo(typeName[n..], buffer[b..]);
+                    
+                    typeName.AsSpan(n).CopyTo(buffer[b..]);
                 }
             }
             else
             {
                 buffer[b++] = char.ToLower(ch);
-                TextHelper.CopyTo(typeName[1..], buffer[b..]);
+                typeName.AsSpan(1).CopyTo(buffer[b..]);
             }
 
             varName = buffer.ToString();
@@ -80,7 +78,7 @@ public static class VariableNamingExtensions
         // Convert to camel-case
         Span<char> buffer = stackalloc char[nameLen];
         buffer[0] = char.ToLower(name[0]);
-        TextHelper.CopyTo(name[1..], buffer[1..]);
+        name[1..].CopyTo(buffer[1..]);
         string varName = buffer.ToString();
         // Check if we have to escape the name
         if (!SyntaxFacts.IsValidIdentifier(varName) || _keywords.Contains(varName))

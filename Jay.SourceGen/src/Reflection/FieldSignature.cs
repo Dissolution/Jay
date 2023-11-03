@@ -1,60 +1,60 @@
 ﻿namespace Jay.SourceGen.Reflection;
 
-public sealed class FieldSignature : MemberSignature,
-    IEquatable<FieldSignature>, IEquatable<IFieldSymbol>, IEquatable<FieldInfo>
+public sealed class FieldSig : MemberSig,
+    IEquatable<FieldSig>, IEquatable<IFieldSymbol>, IEquatable<FieldInfo>
 {
     [return: NotNullIfNotNull(nameof(fieldInfo))]
-    public static implicit operator FieldSignature?(FieldInfo? fieldInfo) => Create(fieldInfo);
+    public static implicit operator FieldSig?(FieldInfo? fieldInfo) => Create(fieldInfo);
     
-    public static bool operator ==(FieldSignature? left, FieldSignature? right) => FastEqual(left, right);
-    public static bool operator !=(FieldSignature? left, FieldSignature? right) => !FastEqual(left, right);
-    public static bool operator ==(FieldSignature? left, IFieldSymbol? right) => FastEquality(left, right);
-    public static bool operator !=(FieldSignature? left, IFieldSymbol? right) => !FastEquality(left, right);
-    public static bool operator ==(FieldSignature? left, FieldInfo? right) => FastEquality(left, right);
-    public static bool operator !=(FieldSignature? left, FieldInfo? right) => !FastEquality(left, right);
+    public static bool operator ==(FieldSig? left, FieldSig? right) => FastEqual(left, right);
+    public static bool operator !=(FieldSig? left, FieldSig? right) => !FastEqual(left, right);
+    public static bool operator ==(FieldSig? left, IFieldSymbol? right) => FastEquality(left, right);
+    public static bool operator !=(FieldSig? left, IFieldSymbol? right) => !FastEquality(left, right);
+    public static bool operator ==(FieldSig? left, FieldInfo? right) => FastEquality(left, right);
+    public static bool operator !=(FieldSig? left, FieldInfo? right) => !FastEquality(left, right);
     
     
     [return: NotNullIfNotNull(nameof(fieldSymbol))]
-    public static FieldSignature? Create(IFieldSymbol? fieldSymbol)
+    public static FieldSig? Create(IFieldSymbol? fieldSymbol)
     {
         if (fieldSymbol is null) return null;
-        return new FieldSignature(fieldSymbol);
+        return new FieldSig(fieldSymbol);
     }
     [return: NotNullIfNotNull(nameof(fieldInfo))]
-    public static FieldSignature? Create(FieldInfo? fieldInfo)
+    public static FieldSig? Create(FieldInfo? fieldInfo)
     {
         if (fieldInfo is null) return null;
-        return new FieldSignature(fieldInfo);
+        return new FieldSig(fieldInfo);
     }
 
-    public TypeSignature FieldType { get; init; }
+    public TypeSig FieldType { get; init; }
     
-    internal FieldSignature(IFieldSymbol fieldSymbol)
+    internal FieldSig(IFieldSymbol fieldSymbol)
         : base(fieldSymbol)
     {
-        this.FieldType = TypeSignature.Create(fieldSymbol.Type);
+        this.FieldType = TypeSig.Create(fieldSymbol.Type);
     }
 
-    internal FieldSignature(FieldInfo fieldInfo)
+    internal FieldSig(FieldInfo fieldInfo)
         : base(fieldInfo)
     {
-        this.FieldType = TypeSignature.Create(fieldInfo.FieldType);
+        this.FieldType = TypeSig.Create(fieldInfo.FieldType);
     }
 
-    public bool Equals(FieldSignature? fieldSig)
+    public bool Equals(FieldSig? fieldSig)
     {
         return base.Equals(fieldSig)
             && FastEqual(FieldType, fieldSig.FieldType);
     }
     
-    public override bool Equals(MemberSignature? memberSig)
+    public override bool Equals(MemberSig? memberSig)
     {
-        return memberSig is FieldSignature fieldSig && Equals(fieldSig);
+        return memberSig is FieldSig fieldSig && Equals(fieldSig);
     }
     
-    public override bool Equals(Signature? signature)
+    public override bool Equals(Sig? signature)
     {
-        return signature is FieldSignature fieldSig && Equals(fieldSig);
+        return signature is FieldSig fieldSig && Equals(fieldSig);
     }
 
     public bool Equals(IFieldSymbol? fieldSymbol)
@@ -82,7 +82,7 @@ public sealed class FieldSignature : MemberSignature,
     {
         return obj switch
         {
-            FieldSignature fieldSig => Equals(fieldSig),
+            FieldSig fieldSig => Equals(fieldSig),
             IFieldSymbol fieldSymbol => Equals(fieldSymbol),
             FieldInfo fieldInfo => Equals(fieldInfo),
             _ => false

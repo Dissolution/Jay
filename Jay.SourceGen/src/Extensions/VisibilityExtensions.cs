@@ -20,7 +20,7 @@ public static class VisibilityExtensions
     public static Visibility GetVisibility(this ISymbol? symbol)
     {
         if (symbol is null) return default;
-        var visibility =  symbol.DeclaredAccessibility.ToVisibility();
+        var visibility = symbol.DeclaredAccessibility.ToVisibility();
         if (symbol.IsStatic)
             visibility |= Visibility.Static;
         else

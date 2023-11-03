@@ -1,4 +1,6 @@
-﻿namespace Jay.SourceGen.Collections;
+﻿using System.Text;
+
+namespace Jay.SourceGen.Collections;
 
 public sealed class AttributeArguments : Dictionary<string, object?>
 {
@@ -82,8 +84,9 @@ public sealed class AttributeArguments : Dictionary<string, object?>
     {
         if (name is not null 
             && base.TryGetValue(name, out object? objValue) 
-            && objValue.Is(out value))
+            && objValue is TValue)
         {
+            value = (TValue)objValue;
             return true;
         }
         value = default;
@@ -92,6 +95,7 @@ public sealed class AttributeArguments : Dictionary<string, object?>
 
     public override string ToString()
     {
+        var text = new StringBuilder();
         return TextBuilder
             .New
             .Append($"{Count} Attribute Arguments:")

@@ -8,7 +8,7 @@ public class SourceCodeBuilderTests
     public void CanClearCode()
     {
         using var code = new CodeBuilder();
-        code.IndentAwareWrite("ABC".AsSpan());
+        code.WriteIndentAwareText("ABC".AsSpan());
         Assert.Equal("ABC", code.ToString());
         code.Clear();
         Assert.Equal(string.Empty, code.ToString());

@@ -2,19 +2,19 @@
 
 namespace Jay.SourceGen.Reflection;
 
-public sealed class SignatureAttributes : IReadOnlyList<AttributeSignature>
+public sealed class SignatureAttributes : IReadOnlyList<AttributeSig>
 {
-    private readonly List<AttributeSignature> _attributes;
+    private readonly List<AttributeSig> _attributes;
 
     public int Count => _attributes.Count;
 
-    public AttributeSignature this[int index] => _attributes[index];
+    public AttributeSig this[int index] => _attributes[index];
 
     public SignatureAttributes(ISymbol symbol)
     {
         _attributes = symbol
             .GetAttributes()
-            .Select(a => new AttributeSignature(a))
+            .Select(a => new AttributeSig(a))
             .ToList();
     }
 
@@ -22,7 +22,7 @@ public sealed class SignatureAttributes : IReadOnlyList<AttributeSignature>
     {
         _attributes = member
             .GetCustomAttributesData()
-            .Select(static a => new AttributeSignature(a))
+            .Select(static a => new AttributeSig(a))
             .ToList();
     }
     
@@ -35,7 +35,7 @@ public sealed class SignatureAttributes : IReadOnlyList<AttributeSignature>
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public IEnumerator<AttributeSignature> GetEnumerator()
+    public IEnumerator<AttributeSig> GetEnumerator()
     {
         return _attributes
             .GetEnumerator();

@@ -243,6 +243,11 @@ public class TextWriter : ITextWriter
         Write(str);
     }
 
+    public void WriteLine()
+    {
+        Write(Environment.NewLine);
+    }
+    
     public virtual void Dispose()
     {
         char[] toReturn = _chars;
