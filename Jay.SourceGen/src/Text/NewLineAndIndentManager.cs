@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 
-namespace Jay.Text.Building;
+namespace Jay.SourceGen.Text;
 
 public sealed class NewLineAndIndentManager : IDisposable
 {
@@ -12,8 +12,8 @@ public sealed class NewLineAndIndentManager : IDisposable
     
     public NewLineAndIndentManager()
     {
-        _buffer = TextPool.Rent();
-        var newLine = Environment.NewLine.AsSpan();
+        _buffer = ArrayPool<char>.Shared.Rent(1024);
+        var newLine = CodeBuilder.DefaultNewLine.AsSpan();
         newLine.CopyTo(_buffer);
         _bufferPosition = newLine.Length;
         _indentOffsets = new();
@@ -71,6 +71,9 @@ public sealed class NewLineAndIndentManager : IDisposable
     {
         char[]? toReturn = _buffer;
         _buffer = null!;
-        TextPool.Return(toReturn);
+        if (toReturn is not null)
+        {
+            ArrayPool<char>.Shared.Return(toReturn);
+        }
     }
 }

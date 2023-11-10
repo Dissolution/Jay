@@ -1,4 +1,4 @@
-﻿using Jay.SourceGen.Collections;
+﻿using Jay.SourceGen.Reflection;
 
 namespace Jay.SourceGen.Extensions;
 
@@ -6,13 +6,13 @@ public static class AttributeExtensions
 {
     public static AttributeArguments GetArguments(this AttributeData attributeData)
     {
-        return new AttributeArguments(attributeData);
+        return AttributeArguments.From(attributeData);
     }
 
-    public static AttributeArguments GetArguments(this CustomAttributeData customAttributeData)
-    {
-        return new AttributeArguments(customAttributeData);
-    }
+    // public static AttributeArguments GetArguments(this CustomAttributeData customAttributeData)
+    // {
+    //     return new AttributeArguments(customAttributeData);
+    // }
 
     public static string? GetFullTypeName(this AttributeData attributeData)
     {

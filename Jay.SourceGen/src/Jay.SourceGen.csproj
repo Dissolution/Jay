@@ -11,10 +11,6 @@
         <RootNamespace>Jay.SourceGen</RootNamespace>
 
         <PolySharpUsePublicAccessibilityForGeneratedTypes>true</PolySharpUsePublicAccessibilityForGeneratedTypes>
-
-        <Configurations>Debug;Release;Attach</Configurations>
-
-        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>

@@ -1,5 +1,8 @@
 ﻿namespace Jay.SourceGen.Extensions;
 
+/// <summary>
+/// Extensions upon <see cref="ISymbol"/>
+/// </summary>
 public static class SymbolExtensions
 {
     public static string? GetNamespace(this ISymbol typeSymbol)
@@ -18,8 +21,9 @@ public static class SymbolExtensions
         return nameSpace;
     }
 
-    public static string GetFullName(this ISymbol typeSymbol)
+    public static string GetFullName(this ISymbol? typeSymbol)
     {
+        if (typeSymbol is null) return string.Empty;
         var symbolDisplayFormat = new SymbolDisplayFormat(
             typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
 

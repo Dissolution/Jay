@@ -1,4 +1,4 @@
-﻿namespace Jay.SourceGen;
+﻿namespace Jay.SourceGen.Reflection;
 
 [Flags]
 public enum Visibility

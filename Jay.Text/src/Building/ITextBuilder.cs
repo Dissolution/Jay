@@ -31,7 +31,13 @@ public interface ITextBuilder<out B> : IBuildingText
     B Delimit<T>(Action<B> delimit, IEnumerable<T> values, Action<B, T> perValue);
 
     B If(bool result, Action<B>? ifTrue, Action<B>? ifFalse = null);
+    B IfAppend<T>(T? value, Action<B>? ifAppended, Action<B>? ifNotAppended = null);
+
+    B Case<T>(T? value, Casing casing);
+    
     B Invoke(Action<B> build);
+
+    bool Wrote(Action<B> build);
     B GetWritten(Action<B> build, out Span<char> written);
 }
 

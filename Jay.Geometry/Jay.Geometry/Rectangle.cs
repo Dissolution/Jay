@@ -19,8 +19,7 @@ public readonly struct Rectangle<T> :
     ISpanFormattable,
 #endif
     IFormattable,
-    IEquatable<Rectangle<T>>,
-    ICloneable<Rectangle<T>>
+    IEquatable<Rectangle<T>>
     where T :
 #if NET7_0_OR_GREATER
     INumber<T>, IMinMaxValue<T>
@@ -256,8 +255,7 @@ public readonly struct Rectangle<T> :
         width = this.Width;
         height = this.Height;
     }
-
-    object ICloneable.Clone() => Clone();
+    
     public Rectangle<T> Clone() => new(X, Y, Width, Height);
 
 #if NET7_0_OR_GREATER

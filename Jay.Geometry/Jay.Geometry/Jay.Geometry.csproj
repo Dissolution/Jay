@@ -25,6 +25,7 @@
         <Using Include="Jay.Memory"/>
         <Using Include="Jay.Text"/>
         <Using Include="Jay.Text.Extensions"/>
+        <Using Include="Jay.Text.Memory"/>
         <Using Include="Jay.Text.Parsing"/>
         <Using Remove="System.Net.Http"/>
     </ItemGroup>

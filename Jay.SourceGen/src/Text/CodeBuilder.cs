@@ -2,30 +2,20 @@
 
 namespace Jay.SourceGen.Text;
 
-/// <summary>
-/// <b>C</b>ode <b>B</b>uilder <b>A</b>ction<br/>
-/// <see cref="Action{T}">Action&lt;CodeBuilder&gt;</see>
-/// </summary>
-public delegate void CBA(CodeBuilder codeBuilder);
-
 public sealed class CodeBuilder : IDisposable
 {
+    public static string DefaultNewLine { get; set; } = "\r\n";
+    public static string DefaultIndent { get; set; } = "    "; //4 spaces
+    
+    
     public static CodeBuilder New => new();
-
-
-    private char[] _chars;
-    private int _length;
-    private string _newLineAndIndent;
+    
+    private readonly NewLineAndIndentManager _newLineAndIndentManager = new();
+    private char[] _chars = ArrayPool<char>.Shared.Rent(128 * 1024);
+    private int _length = 0;
 
     internal Span<char> Written => _chars.AsSpan(0, _length);
     internal Span<char> Available => _chars.AsSpan(_length);
-
-    public CodeBuilder()
-    {
-        _chars = ArrayPool<char>.Shared.Rent(128 * 1024);
-        _length = 0;
-        _newLineAndIndent = Environment.NewLine;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void GrowBy(int growCount)
@@ -43,53 +33,58 @@ public sealed class CodeBuilder : IDisposable
     /// Gets the NewLine + Indent that exists at the current position
     /// </summary>
     /// <returns></returns>
-    private string GetCurrentNewLineAndIndent()
+    private ReadOnlySpan<char> GetCurrentIndent()
     {
-        var newLine = Environment.NewLine.AsSpan();
+        var nli = _newLineAndIndentManager.CurrentNewLineAndIndent;
         var written = this.Written;
-        var i = written.LastIndexOf<char>(newLine);
-        return i == -1 ? Environment.NewLine : written.Slice(i).ToString();
+        var i = written.LastIndexOf<char>(nli);
+        if (i == -1)
+        {
+            // No new indent
+            return default;
+        }
+
+        var indent = written.Slice(i + nli.Length);
+        //string ind = indent.ToString();
+        return indent;
     }
 
     internal void IndentAwareAction(CBA cba)
     {
-        var oldIndent = _newLineAndIndent;
-        var newIndent = GetCurrentNewLineAndIndent();
-        if (string.Equals(oldIndent, newIndent))
+        var newIndent = GetCurrentIndent();
+        if (newIndent.Length == 0)
         {
             cba(this);
         }
         else
         {
-            _newLineAndIndent = newIndent.ToString();
+            _newLineAndIndentManager.AddIndent(newIndent);
             cba(this);
-            _newLineAndIndent = oldIndent;
+#if DEBUG
+            _newLineAndIndentManager.RemoveIndent(out var removedIndent);
+            Debug.Assert(newIndent.SequenceEqual(removedIndent));
+
+#else
+            _newLineAndIndentManager.RemoveIndent();
+#endif
         }
     }
 
     internal void WriteIndentAwareText(ReadOnlySpan<char> text)
     {
-        var newLine = Environment.NewLine;
-        var newIndent = GetCurrentNewLineAndIndent();
-        if (string.Equals(newIndent, newLine))
-        {
-            Append(text);
-            return;
-        }
-
-        // Replace embedded NewLines with NewLine+Indent
-        var split = text.TextSplit(newLine);
+        // Replace embedded NewLines with NewLine + Indent
+        var split = text.TextSplit(DefaultNewLine);
         while (split.MoveNext())
         {
-            Append(split.Text);
+            this.Append(split.Text);
             while (split.MoveNext())
             {
-                Append(newIndent).Append(split.Text);
+                this.NewLine().Append(split.Text);
             }
         }
     }
 
-    internal void WriteIndentAwareValue<T>([AllowNull] T value)
+    internal void WriteIndentAwareValue<T>(T? value)
     {
         switch (value)
         {
@@ -158,6 +153,7 @@ public sealed class CodeBuilder : IDisposable
             str.AsSpan().CopyTo(_chars.AsSpan(pos));
             _length = pos + textLen;
         }
+
         return this;
     }
 
@@ -167,29 +163,25 @@ public sealed class CodeBuilder : IDisposable
         return this;
     }
 
-    public CodeBuilder Append<T>([AllowNull] T value)
+    public CodeBuilder Append<T>(T? value)
     {
-        string? str;
-        if (value is string s)
+        // Intercept Code Builder Actions
+        if (value is CBA codeBuilderAction)
         {
-            str = s;
-        }
-        else if (value is IFormattable)
-        {
-            str = ((IFormattable)value).ToString(default, default);
-        }
-        else if (value is CBA codeBuild)
-        {
-            IndentAwareAction(codeBuild);
+            IndentAwareAction(codeBuilderAction);
             return this;
         }
-        else
-        {
-            throw new NotImplementedException();
-        }
 
-        // Write the finalized string
-        return Append(str);
+        // Use the ToCodeHelper
+        ToCodeHelper.WriteValueTo<T>(value, this);
+        return this;
+    }
+
+    public CodeBuilder IfAppend<T>(T? value, char spacer)
+    {
+        if (this.Wrote(cb => cb.Append<T>(value)))
+            return Append(spacer);
+        return this;
     }
 
     public CodeBuilder Append<T>(T? value, string? format, IFormatProvider? provider = null)
@@ -203,12 +195,16 @@ public sealed class CodeBuilder : IDisposable
         {
             str = value?.ToString();
         }
+
         return Append(str);
     }
 
+    public CodeBuilder Append<T>(T? value, Casing casing)
+        => Append(value?.ToString().ToCase(casing));
+
     public CodeBuilder NewLine()
     {
-        return Append(_newLineAndIndent);
+        return Append(_newLineAndIndentManager.CurrentNewLineAndIndent);
     }
 
     /// <summary>
@@ -220,12 +216,13 @@ public sealed class CodeBuilder : IDisposable
          * But we do want to watch out for newline characters to turn
          * this into a multi-line comment */
 
-        var comments = comment.TextSplit(Environment.NewLine).GetEnumerator();
+        var comments = comment.TextSplit(DefaultNewLine).GetEnumerator();
         if (!comments.MoveNext())
         {
             // Null or empty comment is blank
             return this;
         }
+
         // Capture this comment
         var firstComment = comments.Text;
         if (!comments.MoveNext())
@@ -262,28 +259,31 @@ public sealed class CodeBuilder : IDisposable
             }
             case CommentType.SingleLine:
             {
-                foreach (var line in comment.TextSplit(Environment.NewLine))
+                foreach (var line in comment.TextSplit(DefaultNewLine))
                 {
                     Append("// ").Append(line).NewLine();
                 }
+
                 return this;
             }
             case CommentType.Xml:
             {
-                foreach (var line in comment.TextSplit(Environment.NewLine))
+                foreach (var line in comment.TextSplit(DefaultNewLine))
                 {
                     Append("/// ").Append(line).NewLine();
                 }
+
                 return this;
             }
             case CommentType.MultiLine:
             {
-                var comments = comment.TextSplit(Environment.NewLine).GetEnumerator();
+                var comments = comment.TextSplit(DefaultNewLine).GetEnumerator();
                 if (!comments.MoveNext())
                 {
                     // Null or empty comment is blank
                     return Append("/* */").NewLine();
                 }
+
                 // Capture this comment
                 var firstComment = comments.Text;
                 if (!comments.MoveNext())
@@ -317,12 +317,13 @@ public sealed class CodeBuilder : IDisposable
         }
     }
 
-    public CodeBuilder Enumerate<T>(IEnumerable<T> values, Action<CodeBuilder, T> perValue)
+    public CodeBuilder Enumerate<T>(IEnumerable<T> values, CBVA<T> perValue)
     {
         foreach (var value in values)
         {
             perValue(this, value);
         }
+
         return this;
     }
 
@@ -349,10 +350,11 @@ public sealed class CodeBuilder : IDisposable
                 perValueIndex(this, e.Current, i);
             }
         }
+
         return this;
     }
 
-    public CodeBuilder Delimit<T>(Action<CodeBuilder> delimit, IEnumerable<T> values, Action<CodeBuilder, T> perValue)
+    public CodeBuilder Delimit<T>(Action<CodeBuilder> delimit, IEnumerable<T> values, CBVA<T> perValue)
     {
         if (values is IList<T> list)
         {
@@ -384,7 +386,10 @@ public sealed class CodeBuilder : IDisposable
         return this;
     }
 
-    public CodeBuilder If(bool result, Action<CodeBuilder>? ifTrue, Action<CodeBuilder>? ifFalse = null)
+    public CodeBuilder Delimit<T>(string delimiter, IEnumerable<T> values, CBVA<T> perValue)
+        => this.Delimit<T>(b => b.Append(delimiter), values, perValue);
+
+    public CodeBuilder If(bool result, CBA? ifTrue, CBA? ifFalse = null)
     {
         if (result)
         {
@@ -394,15 +399,66 @@ public sealed class CodeBuilder : IDisposable
         {
             ifFalse?.Invoke(this);
         }
+
         return this;
     }
 
-    public CodeBuilder Invoke(Action<CodeBuilder> build)
+    public CodeBuilder Invoke(CBA build)
     {
         build(this);
         return this;
     }
 
+    public bool Wrote(CBA build)
+    {
+        int pos = _length;
+        build(this);
+        return _length > pos;
+    }
+
+    public CodeBuilder Indented(string indent, CBA indentedBuild)
+    {
+        _newLineAndIndentManager.AddIndent(indent);
+        indentedBuild(this);
+        _newLineAndIndentManager.RemoveIndent();
+        return this;
+    }
+
+    private bool IsNewLine()
+    {
+        var written = this.Written;
+        if (written.Length == 0) return true;
+        
+        var cnli = _newLineAndIndentManager.CurrentNewLineAndIndent;
+        var cnliLen = cnli.Length;
+        if (cnliLen > written.Length) return false;
+        if (written[^cnliLen..].SequenceEqual(cnli)) return true;
+        return false;
+    }
+    
+    public CodeBuilder BracketBlock(CBA blockBuild)
+    {
+        return this
+            .If(!IsNewLine(), static b => b.NewLine())
+            .Append('{')
+            .Indented(DefaultIndent, ib => ib.NewLine().Invoke(blockBuild))
+            .If(!IsNewLine(), static b => b.NewLine())
+            .Append('}').NewLine();
+    }
+    
+    
+    public bool TryRemove(Range range)
+    {
+        int pos = _length;
+        (int offset, int length) = range.GetOffsetAndLength(pos);
+        if (offset + length >= pos)
+        {
+            _length = offset;
+            return true;
+        }
+
+        throw new NotImplementedException();
+    }
 
     public void Clear()
     {
@@ -411,6 +467,7 @@ public sealed class CodeBuilder : IDisposable
 
     public void Dispose()
     {
+        _newLineAndIndentManager.Dispose();
         char[]? toReturn = _chars;
         _chars = null!;
         if (toReturn is not null)

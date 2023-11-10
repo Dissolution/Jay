@@ -1,4 +1,7 @@
-﻿namespace Jay.Geometry;
+﻿using Jay.Text.Memory;
+
+namespace Jay.Geometry;
+
 
 /// <summary>
 /// A 2D Point in <typeparamref name="T"/> space
@@ -19,8 +22,7 @@ public readonly struct Point<T> :
     ISpanFormattable,
 #endif
     IFormattable,
-    IEquatable<Point<T>>, 
-    ICloneable<Point<T>>
+    IEquatable<Point<T>>
     where T :
 #if NET7_0_OR_GREATER
     INumberBase<T>
@@ -30,8 +32,8 @@ public readonly struct Point<T> :
     IEquatable<T>, IFormattable
 #endif
 {
-    public static bool operator ==(Point<T> first, Point<T> last) => first.Equals(last);
-    public static bool operator !=(Point<T> first, Point<T> last) => !first.Equals(last);
+    public static bool operator ==(Point<T> first, Point<T> second) => first.Equals(second);
+    public static bool operator !=(Point<T> first, Point<T> second) => !first.Equals(second);
 
 #if NET7_0_OR_GREATER
     public static Point<T> operator +(Point<T> first, Point<T> second) => new Point<T>(first.X + second.X, first.Y + second.Y);
@@ -162,8 +164,7 @@ public readonly struct Point<T> :
         x = this.X;
         y = this.Y;
     }
-
-    object ICloneable.Clone() => Clone();
+    
     public Point<T> Clone() => new(X, Y);
 
     public bool Equals(Point<T> point)

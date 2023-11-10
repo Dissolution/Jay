@@ -1,6 +1,6 @@
 ﻿using Jay.Memory;
 
-namespace Jay.Text.Extensions;
+namespace Jay.Text.Memory;
 
 public static class CharSpanWriterExtensions
 {
@@ -40,4 +40,24 @@ public static class CharSpanWriterExtensions
             $"Cannot write '{value}': Only a capacity of {textWriter.AvailableItems.Length} remains");
     }
 #endif
+
+
+    // public static Result TryWrite(
+    //     this SpanWriter<char> textWriter,
+    //     [InterpolatedStringHandlerArgument(nameof(textWriter))]
+    //     ref InterpolatedSpanWriter interpolatedText)
+    // {
+    //     return true;
+    // }
+}
+
+[InterpolatedStringHandler]
+public ref struct InterpolatedSpanWriter
+{
+    private SpanWriter<char> _textWriter;
+
+    public InterpolatedSpanWriter(SpanWriter<char> textWriter)
+    {
+        _textWriter = textWriter;
+    }
 }

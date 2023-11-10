@@ -1,11 +1,14 @@
-﻿using Jay.Text.Splitting;
+﻿using System.Diagnostics;
+using Jay.Text.Splitting;
 
 namespace Jay.Text.Building;
 
 public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
     where B : IndentTextBuilder<B>
 {
-    protected IndentManager _indents;
+    protected static string DefaultNewLine { get; set; } = Environment.NewLine;
+    protected readonly NewLineAndIndentManager _newLineAndIndentManager = new();
+
 
     public IndentTextBuilder()
         : this(TextPool.MINIMUM_CAPACITY)
@@ -14,69 +17,78 @@ public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
     public IndentTextBuilder(int minCapacity) 
         : base(minCapacity)
     {
-        _indents = new();
     }
 
-    protected ReadOnlySpan<char> GetArgIndent()
+    /// <summary>
+    /// Gets the NewLine + Indent that exists at the current position
+    /// </summary>
+    /// <returns></returns>
+    protected ReadOnlySpan<char> GetCurrentIndent()
     {
-        /* When we want to capture a new indent for a formatting argument,
-         * we're looking for the last NewLine. Everything after that is the
-         * indent to this position.*/
-
+        var nli = _newLineAndIndentManager.CurrentNewLineAndIndent;
         var written = this.Written;
-        var lastNewLineIndex = written.LastIndexOf<char>(Environment.NewLine.AsSpan());
-        // If we never wrote one, there is no indent
-        if (lastNewLineIndex == -1)
-            return default;
-        var after = written.Slice(lastNewLineIndex + Environment.NewLine.Length);
-        return after;
-    }
-
-    protected B IndentAwareInvoke(Action<B> build)
-    {
-        // Capture our original indents
-        var original = _indents;
-        // Replace them with a single indent based upon this position
-        var argIndent = GetArgIndent();
-        _indents = new();
-        _indents.AddIndent(argIndent);
-        // perform the action
-        build(_builder);
-        // restore the indents
-        _indents.Dispose();
-        _indents = original;
-        // fluent
-        return _builder;
-    }
-
-    protected void IndentAwareWrite(scoped ReadOnlySpan<char> text)
-    {
-        var e = text.TextSplit(Environment.NewLine);
-        if (!e.MoveNext()) return;
-        base.Write(e.Text);
-        while (e.MoveNext())
+        var i = written.LastIndexOf<char>(nli);
+        if (i == -1)
         {
-            base.Write(Environment.NewLine);
-            base.Write(e.Text);
+            // No new indent
+            return default;
+        }
+
+        var indent = written.Slice(i + nli.Length);
+        //string ind = indent.ToString();
+        return indent;
+    }
+
+    internal void IndentAwareAction(Action<B> build)
+    {
+        var newIndent = GetCurrentIndent();
+        if (newIndent.Length == 0)
+        {
+            build(_builder);
+        }
+        else
+        {
+            _newLineAndIndentManager.AddIndent(newIndent);
+            build(_builder);
+#if DEBUG
+            _newLineAndIndentManager.RemoveIndent(out var removedIndent);
+            Debug.Assert(newIndent.SequenceEqual(removedIndent));
+
+#else
+            _newLineAndIndentManager.RemoveIndent();
+#endif
+        }
+    }
+
+    internal void WriteIndentAwareText(ReadOnlySpan<char> text)
+    {
+        // Replace embedded NewLines with NewLine + Indent
+        var split = text.TextSplit(DefaultNewLine);
+        while (split.MoveNext())
+        {
+            this.Append(split.Text);
+            while (split.MoveNext())
+            {
+                this.NewLine().Append(split.Text);
+            }
         }
     }
     
     
     public override B NewLine()
     {
-        base.Write(Environment.NewLine);
-        base.Write(_indents.CurrentIndent);
+        base.Write(_newLineAndIndentManager.CurrentNewLineAndIndent);
         return _builder;
     }
 
     public override void Write(params char[]? characters) 
-        => IndentAwareWrite(characters.AsSpan());
+        => WriteIndentAwareText(characters.AsSpan());
 
     public override void Write(scoped ReadOnlySpan<char> text) 
-        => IndentAwareWrite(text);
+        => WriteIndentAwareText(text);
 
     public override void Write(string? str) 
-        => IndentAwareWrite(str.AsSpan());
+        => WriteIndentAwareText(str.AsSpan());
 
     public override void Write<T>([AllowNull] T value)
     {
@@ -88,7 +100,7 @@ public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
             }
             case Action<B> build:
             {
-                IndentAwareInvoke(build);
+                IndentAwareAction(build);
                 return;
             }
             case string str:
@@ -106,31 +118,31 @@ public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
 
     public B AddIndent(char indent)
     {
-        _indents.AddIndent(indent);
+        _newLineAndIndentManager.AddIndent(indent);
         return _builder;
     }
 
     public B AddIndent(string indent)
     {
-        _indents.AddIndent(indent);
+        _newLineAndIndentManager.AddIndent(indent);
         return _builder;
     }
 
     public B AddIndent(scoped ReadOnlySpan<char> indent)
     {
-        _indents.AddIndent(indent);
+        _newLineAndIndentManager.AddIndent(indent);
         return _builder;
     }
 
     public B RemoveIndent()
     {
-        _indents.RemoveIndent();
+        _newLineAndIndentManager.RemoveIndent();
         return _builder;
     }
 
     public B RemoveIndent(out ReadOnlySpan<char> lastIndent)
     {
-        _indents.RemoveIndent(out lastIndent);
+        _newLineAndIndentManager.RemoveIndent(out lastIndent);
         return _builder;
     }
 
@@ -151,7 +163,7 @@ public class IndentTextBuilder<B> : TextBuilder<B>, IIndentTextBuilder<B>
 
     public override void Dispose()
     {
-        _indents.Dispose();
+        _newLineAndIndentManager.Dispose();
         base.Dispose();
     }
 }

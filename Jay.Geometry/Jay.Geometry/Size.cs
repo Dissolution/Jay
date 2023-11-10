@@ -19,8 +19,7 @@ public readonly struct Size<T> :
     ISpanFormattable,
 #endif
     IFormattable,
-    IEquatable<Size<T>>, 
-    ICloneable<Size<T>>
+    IEquatable<Size<T>>
     where T :
 #if NET7_0_OR_GREATER
     INumberBase<T>
@@ -162,8 +161,7 @@ public readonly struct Size<T> :
         width = this.Width;
         height = this.Height;
     }
-
-    object ICloneable.Clone() => Clone();
+    
     public Size<T> Clone() => new(Width, Height);
 
     public bool Equals(Size<T> size)

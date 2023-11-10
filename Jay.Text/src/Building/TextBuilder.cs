@@ -138,6 +138,10 @@ public abstract class TextBuilder<B> :
         }
     }
 
+    public B Case<T>(T? value, Casing casing)
+        => this.Append(value?.ToString().ToCase(casing));
+
+
 #region Align
     public B Align(char ch, int width, Alignment alignment)
     {
@@ -617,7 +621,22 @@ public abstract class TextBuilder<B> :
         }
         return _builder;
     }
-    
+
+    public B IfAppend<T>(T? value, Action<B>? ifAppended, Action<B>? ifNotAppended = null)
+    {
+        if (this.Wrote(b => b.Append<T>(value)))
+            return Invoke(ifAppended);
+        return _builder;
+    }
+
+    public bool Wrote(Action<B>? build)
+    {
+        int pos = _length;
+        build?.Invoke(_builder);
+        return _length > pos;
+    }
+
+
     public B GetWritten(Action<B> build, out Span<char> written)
     {
         int start = Length;
@@ -627,9 +646,9 @@ public abstract class TextBuilder<B> :
         return _builder;
     }
 
-    public B Invoke(Action<B> tba)
+    public B Invoke(Action<B>? tba)
     {
-        tba(_builder);
+        tba?.Invoke(_builder);
         return _builder;
     }
 }

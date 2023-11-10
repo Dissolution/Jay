@@ -68,7 +68,7 @@ public ref struct SpanWriter<T>
         return new InvalidOperationException($"Cannot add {itemsLen} items: Only a capacity of {span.Length - index} remains");
     }
     
-    public Result TryWrite(ReadOnlySpan<T> items)
+    public Result TryWrite(scoped ReadOnlySpan<T> items)
     {
         int index = _position;
         int newIndex = index + items.Length;

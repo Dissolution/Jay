@@ -1,6 +1,6 @@
 ﻿using Jay.Memory;
 
-namespace Jay.Text.Extensions;
+namespace Jay.Text.Memory;
 
 /// <summary>
 /// Extensions on <see cref="SpanReader{T}">SpanReader&lt;char&gt;</see>

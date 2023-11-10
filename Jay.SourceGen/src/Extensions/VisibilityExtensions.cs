@@ -1,4 +1,6 @@
-﻿namespace Jay.SourceGen.Extensions;
+﻿using Jay.SourceGen.Reflection;
+
+namespace Jay.SourceGen.Extensions;
 
 public static class VisibilityExtensions
 {
@@ -26,5 +28,26 @@ public static class VisibilityExtensions
         else
             visibility |= Visibility.Instance;
         return visibility;
+    }
+    
+    public static Visibility GetVisibility(this MemberInfo? member)
+    {
+        Visibility vis = default;
+        if (member is null) return vis;
+        throw new NotImplementedException();
+    }
+
+    public static void WriteTo(this Visibility visibility, CodeBuilder codeBuilder)
+    {
+        if (visibility.HasFlag(Visibility.Static))
+            codeBuilder.Append("static ");
+        if (visibility.HasFlag(Visibility.Private))
+            codeBuilder.Append("private ");
+        if (visibility.HasFlag(Visibility.Protected))
+            codeBuilder.Append("protected ");
+        if (visibility.HasFlag(Visibility.Internal))
+            codeBuilder.Append("internal ");
+        if (visibility.HasFlag(Visibility.Public))
+            codeBuilder.Append("public ");
     }
 }
