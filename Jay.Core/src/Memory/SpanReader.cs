@@ -23,7 +23,7 @@ public ref struct SpanReader<T>
     }
 
     /// <summary>
-    /// Gets the current reading position
+    /// Gets the total number of values that have been read
     /// </summary>
     public int ReadCount
     {
@@ -89,7 +89,7 @@ public ref struct SpanReader<T>
         return new InvalidOperationException("Cannot peek an item: Zero items remain");
     }
 
-    public T Peek() => TryPeek(out var value).WithValue(value!).OkValueOrThrowError();
+    public T Peek() => TryPeek(out var value).WithValue(value).OkValueOrThrowError();
 
     /// <summary>
     /// Try to peek at the next <paramref name="count"/> <paramref name="items"/>

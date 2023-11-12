@@ -1,4 +1,6 @@
-﻿namespace Jay.SourceGen.Reflection;
+﻿using System.Text;
+
+namespace Jay.SourceGen.Reflection;
 
 public abstract record class Signature : IToCode
 {

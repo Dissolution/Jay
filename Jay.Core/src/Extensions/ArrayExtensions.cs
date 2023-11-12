@@ -100,11 +100,6 @@ public static class ArrayExtensions
         return true;
     }
 
-    public static IEnumerator<T> GetEnumerator<T>(this T[] array)
-    {
-        return new ArrayEnumerator<T>(array);
-    }
-
     public static int FirstIndexOf<T>(this T[] array, T value)
     {
         for (var i = 0; i < array.Length; i++)
@@ -170,38 +165,6 @@ public static class ArrayExtensions
         for (int i = array.Length - 1; i >= 0; i--)
         {
             yield return array[i];
-        }
-    }
-
-    private sealed class ArrayEnumerator<T> : 
-        IEnumerator<T>, 
-        IEnumerator,
-        IDisposable
-    {
-        private readonly IEnumerator _arrayEnumerator;
-
-        internal ArrayEnumerator(Array array)
-        {
-            _arrayEnumerator = array.GetEnumerator();
-        }
-
-        public T Current => (T)_arrayEnumerator.Current!;
-
-        object IEnumerator.Current => _arrayEnumerator.Current!;
-
-        public bool MoveNext()
-        {
-            return _arrayEnumerator.MoveNext();
-        }
-
-        public void Reset()
-        {
-            _arrayEnumerator.Reset();
-        }
-
-        public void Dispose()
-        {
-            Disposable.Dispose(_arrayEnumerator);
         }
     }
 }
