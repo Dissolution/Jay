@@ -1,6 +1,4 @@
-﻿using Jay.Text.Memory;
-
-namespace Jay.Geometry;
+﻿namespace Jay.Geometry;
 
 
 /// <summary>

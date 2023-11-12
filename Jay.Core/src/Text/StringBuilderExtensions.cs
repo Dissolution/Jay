@@ -42,4 +42,41 @@ public static class StringBuilderExtensions
         }
         return builder.Append(str);
     }
+
+    
+    public static StringBuilder AppendDelimit<T>(
+        this StringBuilder builder,
+        string delimiter,
+        ReadOnlySpan<T> values)
+    {
+        int count = values.Length;
+        if (count > 0)
+        {
+            builder.Append<T>(values[0]);
+            for (var i = 1; i < count; i++)
+            {
+                builder.Append(delimiter)
+                    .Append<T>(values[i]);
+            }   
+        }
+        return builder;
+    }
+    
+    public static StringBuilder AppendDelimit<T>(
+        this StringBuilder builder,
+        string delimiter,
+        IEnumerable<T> values)
+    {
+        using var e = values.GetEnumerator();
+        if (!e.MoveNext())
+            return builder;
+
+        builder.Append<T>(e.Current);
+        while (e.MoveNext())
+        {
+            builder.Append(delimiter)
+                .Append<T>(e.Current);
+        }
+        return builder;
+    }
 }

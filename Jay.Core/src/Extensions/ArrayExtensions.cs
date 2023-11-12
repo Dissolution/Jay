@@ -1,5 +1,3 @@
-using Jay.Utilities;
-
 namespace Jay.Extensions;
 
 public static class ArrayExtensions

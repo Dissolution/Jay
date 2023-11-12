@@ -98,11 +98,11 @@ public static class ToCodeHelper
             return build(codeBuilder, value);
         }
 
-        if (value is Enum e)
-        {
-            //Console.WriteLine(e);
-            throw new NotImplementedException();
-        }
+        // if (value is Enum e)
+        // {
+        //     //Console.WriteLine(e);
+        //     throw new NotImplementedException();
+        // }
 
         string? str;
         if (value is IFormattable)

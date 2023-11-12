@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace Jay.Text.Building;
+﻿namespace Jay.Text.Building;
 
 public sealed class NewLineAndIndentManager : IDisposable
 {
