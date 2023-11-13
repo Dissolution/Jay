@@ -19,7 +19,7 @@ public sealed class PooledList<T> :
     /// </summary>
     private int _count;
 
-    
+
     /// <inheritdoc cref="ICollection{T}"/>
     bool ICollection<T>.IsReadOnly => false;
 
@@ -32,7 +32,7 @@ public sealed class PooledList<T> :
         get => this[index];
         set => this[index] = value;
     }
-    
+
     /// <summary>
     /// Gets a reference to the item at <paramref name="index"/>
     /// </summary>
@@ -47,13 +47,13 @@ public sealed class PooledList<T> :
             return ref _array[index];
         }
     }
-    
+
     /// <summary>
     /// Gets the number of items in this <see cref="PooledList{T}"/>
     /// </summary>
     public int Count => _count;
-    
-    
+
+
     /// <summary>
     /// Construct a new <see cref="PooledList{T}"/>
     /// </summary>
@@ -75,7 +75,7 @@ public sealed class PooledList<T> :
         }
         _array = newArray;
     }
-    
+
     /// <summary>
     /// Adds a <typeparamref name="T"/> <paramref name="item"/> to this <see cref="PooledList{T}"/>
     /// </summary>
@@ -96,7 +96,7 @@ public sealed class PooledList<T> :
     }
 
     public void AddMany(params T[] items) => AddMany(items.AsSpan());
-    
+
     public void AddMany(ReadOnlySpan<T> items)
     {
         int count = _count;
@@ -140,7 +140,7 @@ public sealed class PooledList<T> :
         }
     }
     // ReSharper restore PossibleMultipleEnumeration
-    
+
     /// <inheritdoc cref="ICollection{T}"/>
     bool ICollection<T>.Contains(T item) => Contains(item, default);
 
@@ -172,7 +172,7 @@ public sealed class PooledList<T> :
         }
         return -1;
     }
-    
+
     public int LastIndexOf(T item, IEqualityComparer<T>? itemComparer = default)
     {
         var array = _array;
@@ -201,7 +201,7 @@ public sealed class PooledList<T> :
         // Copy it one to the right
         var dest = array.AsSpan(index + 1);
         source.CopyTo(dest);
-        
+
         // Then put the new item in the new space
         array[index] = item;
         // one bigger
@@ -220,7 +220,7 @@ public sealed class PooledList<T> :
         int count = _count;
         if (index < 0 || index >= count)
             return false;
-        
+
         // Take everything to the right of index
         int rightStart = index + 1;
         var source = _array.AsSpan(rightStart, count - rightStart);
@@ -239,7 +239,7 @@ public sealed class PooledList<T> :
     {
         if (!ValidateResult.Range(_count, offset, length))
             return false;
-        
+
         // Take everything to the right of the range
         int rightStart = offset + length;
         var source = _array.AsSpan(rightStart, length - rightStart);
@@ -251,7 +251,7 @@ public sealed class PooledList<T> :
         _count -= length;
         return true;
     }
-    
+
     public bool TryRemoveMany(Range range)
     {
         (int offset, int length) = range.GetOffsetAndLength(_count);
@@ -260,7 +260,7 @@ public sealed class PooledList<T> :
 
     /// <inheritdoc cref="ICollection{T}"/>
     bool ICollection<T>.Remove(T item) => TryRemoveFirst(item);
-    
+
     public bool TryRemoveFirst(T item, IEqualityComparer<T>? itemComparer = default)
     {
         var end = _count;
@@ -284,7 +284,7 @@ public sealed class PooledList<T> :
     }
 
     public void CopyTo(Span<T> buffer) => this.AsSpan().CopyTo(buffer);
-    
+
     public bool TryCopyTo(Span<T> buffer) => this.AsSpan().TryCopyTo(buffer);
 
     /// <inheritdoc cref="ICollection{T}"/>
@@ -317,7 +317,7 @@ public sealed class PooledList<T> :
 
     /// <inheritdoc cref="IEnumerator"/>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    
+
     public IEnumerator<T> GetEnumerator()
     {
         var array = _array;
@@ -337,12 +337,14 @@ public sealed class PooledList<T> :
             ArrayPool<T>.Shared.Return(toReturn, true);
         }
     }
-    
+
+#pragma warning disable CS0809
     [Obsolete("Do not compare PooledList<T> to anything. If you want to compare its contents, use AsSpan()", true)]
     public override bool Equals(object? obj) => false;
-    
+
     [Obsolete("Do not store PooledList<T> in a collection, it is intended to be Disposed", true)]
     public override int GetHashCode() => 0;
+#pragma warning restore CS0809
 
     public override string ToString()
     {

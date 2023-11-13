@@ -89,7 +89,7 @@ public ref struct SpanReader<T>
         return new InvalidOperationException("Cannot peek an item: Zero items remain");
     }
 
-    public T Peek() => TryPeek(out var value).WithValue(value).OkValueOrThrowError();
+    public T Peek() => TryPeek(out var value).WithValue(value).OkValueOrThrowError()!;
 
     /// <summary>
     /// Try to peek at the next <paramref name="count"/> <paramref name="items"/>
