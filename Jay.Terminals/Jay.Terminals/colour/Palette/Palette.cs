@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Jay.Collections;
+using Jay.Enums.Scratch;
+
 using ConsoleColor = System.ConsoleColor;
 
 namespace Jay.Consolas.Palette
@@ -158,7 +160,7 @@ namespace Jay.Consolas.Palette
 				throw new ArgumentNullException();
 			_ccToColor = new Dictionary<ConsoleColor, Color>();
 			_colorToCc = new Dictionary<Color, ConsoleColor>(new ColorEqualityComparer());
-			foreach (var cc in Enums<ConsoleColor>.Members)
+			foreach (var cc in EnumTypeInfo<ConsoleColor>.Members)
 			{
 				var color = originalPalette[cc];
 				_ccToColor[cc] = color;
@@ -175,7 +177,7 @@ namespace Jay.Consolas.Palette
 				throw new ArgumentNullException();
 			_ccToColor = new Dictionary<ConsoleColor, Color>();
 			_colorToCc = new Dictionary<Color, ConsoleColor>(new ColorEqualityComparer());
-			foreach (var cc in Enums<ConsoleColor>.Members)
+			foreach (var cc in EnumTypeInfo<ConsoleColor>.Members)
 			{
 				var color = colorMap[cc];
 				_ccToColor[cc] = color;

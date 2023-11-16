@@ -45,7 +45,7 @@ namespace Jay.Consolas.Palette
 		{
 			var mapper = new ColorMapper();
 			var colors = mapper.GetBufferColors();
-			Default = new Palette(colors.ToDictionary(p => p.Key, p => p.Value.GetColor()));
+			Default = new Palette(colors.ToDictionary(p => p.Key, p => p.Value.ToColor()));
 			DefaultLegacyConsole = new DefaultLegacyConsolePalette();
 			DefaultWin10Console = new DefaultWin10ConsolePalette();
 			DefaultColor = new DefaultColorPalette();

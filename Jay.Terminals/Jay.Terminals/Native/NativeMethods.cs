@@ -23,7 +23,7 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool WriteConsoleOutput(
         nint hConsoleOutput,
-        TerminalCell[] lpBuffer,
+        [In] TerminalCell[] lpBuffer,
         SizeI16 dwBufferSize,
         PointI16 dwBufferShortPoint,
         ref RectI16 lpWriteRegion);

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Jay.Enums;
+using Jay.Enums.Scratch;
 
 namespace Jay.Consolas.Palette
 {
@@ -13,7 +15,7 @@ namespace Jay.Consolas.Palette
 		public RotatingPalette()
 		{
 			_availableConsoleColors = new Queue<ConsoleColor>(16);
-			foreach (var cc in Enums<ConsoleColor>.Members)
+			foreach (var cc in EnumTypeInfo<ConsoleColor>.Members)
 			{
 				_availableConsoleColors.Enqueue(cc);
 			}

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Jay.Extensions;
+
 
 namespace Jay.Consolas
 {
