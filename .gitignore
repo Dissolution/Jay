@@ -1,5 +1,8 @@
 .idea/
+.vs/
 [Bb]in
 [Oo]bj
 
 *.DotSettings
+
+VSWorkspaceState.json
