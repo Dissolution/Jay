@@ -5,7 +5,4 @@
 /// (and thus will be ignored for static member interactions)
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
-public sealed class InstanceAttribute : Attribute
-{
-    
-}
+public sealed class InstanceAttribute : Attribute;

@@ -65,6 +65,9 @@ public sealed class EqualityComparerCache : IEqualityComparer<object?>, IEqualit
     public static IEqualityComparer<T> Create<T>(Func<T?, T?, bool> equals, Func<T?, int> getHashCode)
         => new FuncEqualityComparer<T>(equals, getHashCode);
 
+    public static IEqualityComparer<T> CreateKeyComparer<T>(Func<T, T, bool> equals, Func<T, int> getHashCode)
+        => new FuncEqualityComparer<T>(equals!, getHashCode!);
+    
     bool IEqualityComparer<object?>.Equals(object? x, object? y) => Equals(x, y);
     bool IEqualityComparer.Equals(object? x, object? y) => Equals(x, y);
 

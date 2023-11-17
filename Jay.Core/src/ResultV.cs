@@ -101,9 +101,9 @@ public readonly struct Result<TValue> :
     }
 
 
-    internal readonly bool _ok;
-    internal readonly TValue _value;
-    internal readonly Exception? _exception;
+    private readonly bool _ok;
+    private readonly TValue _value;
+    private readonly Exception? _exception;
 
     internal Result(bool ok, TValue value, Exception? exception)
     {
@@ -116,7 +116,7 @@ public readonly struct Result<TValue> :
     /// Gets an attached <see cref="Exception"/> or creates a new <see cref="Exception"/>
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Exception GetException()
+    private Exception GetOrCreateException()
     {
         return _exception ?? new Exception();
     }
@@ -132,7 +132,7 @@ public readonly struct Result<TValue> :
     /// The Exception from <c>Error(Exception)</c>
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TValue OkValueOrThrowError() => _ok ? _value : throw GetException();
+    public TValue OkValueOrThrowError() => _ok ? _value : throw GetOrCreateException();
 
     /// <summary>
     /// If this <see cref="Result{TValue}"/> is <c>Error(Exception)</c>, <c>throw Exception</c>
@@ -144,7 +144,7 @@ public readonly struct Result<TValue> :
     public void ThrowIfError()
     {
         if (!_ok)
-            throw GetException();
+            throw GetOrCreateException();
     }
 
     /// <summary>
@@ -185,7 +185,7 @@ public readonly struct Result<TValue> :
     /// Is this an <c>Error</c> <see cref="Result{T}"/>?
     /// </summary>
     /// <param name="exception">
-    /// If this is an <c>Error</c>, the attached or new <see cref="Exception"/>; otherwise, <c>null</c>
+    /// If this is an <c>Error</c>, the attached or a new <see cref="Exception"/>; otherwise, <c>null</c>
     /// </param>
     /// <returns>
     /// <c>true</c> if this is <c>Result.Error(Exception)</c>; otherwise, <c>false</c>
@@ -199,7 +199,7 @@ public readonly struct Result<TValue> :
             return false;
         }
 
-        exception = GetException();
+        exception = GetOrCreateException();
         return true;
     }
 
@@ -223,7 +223,7 @@ public readonly struct Result<TValue> :
         }
         else
         {
-            onError(GetException());
+            onError(GetOrCreateException());
         }
     }
 
@@ -254,7 +254,7 @@ public readonly struct Result<TValue> :
         }
         else
         {
-            return onError(GetException());
+            return onError(GetOrCreateException());
         }
     }
 

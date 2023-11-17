@@ -13,7 +13,7 @@ public static class MemberNaming
     /// <summary>
     /// Is the given <paramref name="ch"/> a valid <see cref="MemberInfo"/> Name <see cref="char"/>?
     /// </summary>
-    /// <param name="ch">The <see cref="char"/> to validate.</param>
+    /// <param name="ch">The <see cref="char"/> to Throw.</param>
     /// <param name="firstChar">Whether or not you're validating the first character in a Member Name.</param>
     /// <returns><c>true</c> if <paramref name="ch"/> is valid; otherwise <c>false</c></returns>
     /// <see href="https://stackoverflow.com/questions/950616/what-characters-are-allowed-in-c-sharp-class-name"/>

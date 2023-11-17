@@ -1,6 +1,6 @@
 ﻿//     public static RaiseHandler<TInstance> CreateRaiser<TInstance>(EventInfo eventInfo)
 //     {
-//         Validate.IsNotNull(eventInfo);
+//         Throw.IfNull(eventInfo);
 //         var raiser = eventInfo.GetRaiser();
 //         if (raiser is null)
 //         {

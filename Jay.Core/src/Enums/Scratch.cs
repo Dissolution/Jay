@@ -1,4 +1,4 @@
-﻿namespace Jay.Enums.Scratch;
+﻿namespace Jay.Enums;
 
 public static class EnumTypeInfo<TEnum>
     where TEnum : struct, Enum

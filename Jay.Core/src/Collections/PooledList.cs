@@ -43,7 +43,7 @@ public sealed class PooledList<T> :
     {
         get
         {
-            Validate.Index(_count, index);
+            Throw.Index(_count, index);
             return ref _array[index];
         }
     }
@@ -188,7 +188,7 @@ public sealed class PooledList<T> :
     public void Insert(int index, T item)
     {
         int count = _count;
-        Validate.InsertIndex(count, index);
+        Throw.Index(count, index, true);
         int newCount = count + 1;
         var array = _array;
         if (newCount > array.Length)
@@ -211,7 +211,7 @@ public sealed class PooledList<T> :
     /// <inheritdoc cref="IList{T}"/>
     void IList<T>.RemoveAt(int index)
     {
-        Validate.Index(_count, index);
+        Throw.Index(_count, index);
         TryRemoveAt(index);
     }
 
@@ -237,7 +237,7 @@ public sealed class PooledList<T> :
 
     public bool TryRemoveMany(int offset, int length)
     {
-        if (!ValidateResult.Range(_count, offset, length))
+        if (!Check.Range(_count, offset, length))
             return false;
 
         // Take everything to the right of the range

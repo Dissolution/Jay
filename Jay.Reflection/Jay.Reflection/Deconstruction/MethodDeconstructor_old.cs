@@ -48,7 +48,7 @@
 //     
 //     private MethodDeconstructor(MethodBase methodBase)
 //     {
-//         Validate.IsNotNull(methodBase);
+//         Throw.IfNull(methodBase);
 //         this.Method = methodBase;
 //         MethodBody body = methodBase.GetMethodBody() ?? throw new ArgumentException("Method has no Body", nameof(methodBase));
 //         this.Locals = body.LocalVariables;

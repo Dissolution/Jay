@@ -9,7 +9,7 @@ public static class CharExtensions
     /// </summary>
     public static ReadOnlySpan<char> AsSpan(in this char ch)
     {
-#if NET7_0_OR_GREATER
+#if NET7_0 //_OR_GREATER
         return new ReadOnlySpan<char>(in ch);
 #else
         unsafe

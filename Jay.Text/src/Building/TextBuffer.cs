@@ -10,7 +10,7 @@ public class TextBuffer : TextWriter, ITextBuffer, ITextWriter, IBuildingText
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            Validate.Index(_length, index);
+            Throw.Index(_length, index);
             return ref _chars[index];
         }
     }
@@ -20,13 +20,13 @@ public class TextBuffer : TextWriter, ITextBuffer, ITextWriter, IBuildingText
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            Validate.Range(_length, range);
+            Throw.Range(_length, range);
             return _chars.AsSpan(range);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set
         {
-            Validate.Range(_length, range);
+            Throw.Range(_length, range);
             TextHelper.CopyTo(value, _chars.AsSpan(range));
         }
     }
@@ -132,7 +132,7 @@ public class TextBuffer : TextWriter, ITextBuffer, ITextWriter, IBuildingText
     public ref char AllocateAt(int index)
     {
         int curLen = _length;
-        Validate.InsertIndex(curLen, index);
+        Throw.Index(curLen, index, true);
         int newLen = curLen + 1;
 
         // Check for growth
@@ -176,7 +176,7 @@ public class TextBuffer : TextWriter, ITextBuffer, ITextWriter, IBuildingText
     public Span<char> AllocateRange(int index, int length)
     {
         int curLen = _length;
-        Validate.InsertIndex(curLen, index);
+        Throw.Index(curLen, index, true);
         if (length > 0)
         {
             int newLen = curLen + length;
@@ -217,7 +217,7 @@ public class TextBuffer : TextWriter, ITextBuffer, ITextWriter, IBuildingText
 
     public Span<char> AllocateRange(Range range)
     {
-        (int offset, int length) = Validate.RangeResolveOffsetLength(_length, range);
+        (int offset, int length) = Throw.Range(_length, range);
         return AllocateRange(offset, length);
     }
 #endregion

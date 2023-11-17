@@ -242,7 +242,7 @@ public sealed class DynamicReflection : DynamicObject
                 break;
             case ExpressionType.Equal:
                 {
-                    return new("op_Equality", typeof(bool), Validate.LengthIs(argTypes, 2));
+                    return new("op_Equality", typeof(bool), Throw.LengthIs(argTypes, 2));
                 }
             case ExpressionType.ExclusiveOr:
                 break;

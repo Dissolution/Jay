@@ -13,9 +13,6 @@ public static class ValidationExtensions
     /// <param name="value">
     /// The value to check for <c>null</c>
     /// </param>
-    /// <param name="exceptionMessage">
-    /// An optional message to include if a <see cref="ArgumentNullException"/> is thrown
-    /// </param>
     /// <param name="valueName">
     /// The name of the <paramref name="value"/> argument, passed to <see cref="ArgumentNullException"/>
     /// </param>
@@ -28,17 +25,12 @@ public static class ValidationExtensions
     [return: NotNull]
     public static T ThrowIfNull<T>(
         [AllowNull, NotNull] this T value,
-        string? exceptionMessage = null,
         [CallerArgumentExpression(nameof(value))]
         string? valueName = null)
         where T : class?
     {
-        if (value is not null)
-            return value;
-
-        throw new ArgumentNullException(
-            valueName,
-            exceptionMessage ?? $"The given {typeof(T).NameOf()} value must not be null");
+        Throw.IfNull<T>(value, valueName);
+        return value;
     }
 
     /// <summary>
@@ -46,9 +38,6 @@ public static class ValidationExtensions
     /// </summary>
     /// <param name="obj">
     /// The <see cref="object"/> to convert to a <typeparamref name="TOut"/> value
-    /// </param>
-    /// <param name="exceptionMessage">
-    /// An optional message for the <see cref="ArgumentException"/> that is thrown if <paramref name="obj"/> is not a valid <typeparamref name="TOut"/> value
     /// </param>
     /// <param name="objName">
     /// The captured name for the <paramref name="obj"/> parameter, used with an <see cref="ArgumentException"/>
@@ -66,7 +55,6 @@ public static class ValidationExtensions
     public static TOut AsValid<TOut>(
         [AllowNull, NotNull]
         this object? obj,
-        string? exceptionMessage = null,
         [CallerArgumentExpression(nameof(obj))]
         string? objName = null)
     {
@@ -74,7 +62,7 @@ public static class ValidationExtensions
             return output;
 
         throw new ArgumentException(
-            exceptionMessage ?? $"The given {obj?.GetType().NameOf()} value is not a valid {typeof(TOut).NameOf()} instance",
+            $"The given {obj?.GetType().NameOf()} value is not a valid {typeof(TOut).NameOf()} instance",
             objName);
     }
 }

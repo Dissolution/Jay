@@ -95,7 +95,7 @@ public readonly partial struct Result :
     /// Gets an attached <see cref="Exception"/> or creates a new <see cref="Exception"/>
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Exception GetException()
+    private Exception GetOrCreateException()
     {
         return _exception ?? new Exception();
     }
@@ -110,7 +110,7 @@ public readonly partial struct Result :
     public void ThrowIfError()
     {
         if (!_ok)
-            throw GetException();
+            throw GetOrCreateException();
     }
 
     /// <summary>
@@ -148,7 +148,7 @@ public readonly partial struct Result :
             exception = null;
             return false;
         }
-        exception = GetException();
+        exception = GetOrCreateException();
         return true;
     }
 
@@ -172,7 +172,7 @@ public readonly partial struct Result :
         }
         else
         {
-            onError(GetException());
+            onError(GetOrCreateException());
         }
     }
 
@@ -203,7 +203,7 @@ public readonly partial struct Result :
         }
         else
         {
-            return onError(GetException());
+            return onError(GetOrCreateException());
         }
     }
 

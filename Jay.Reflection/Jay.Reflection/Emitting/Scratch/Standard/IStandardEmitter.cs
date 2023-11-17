@@ -16,7 +16,4 @@ public interface IStandardEmitter<TSelf> :
     IPrefixEmissions<TSelf>,
     IScopeEmissions<TSelf>,
     ITryCatchFinallyEmissions<TSelf>
-    where TSelf : IStandardEmitter<TSelf>
-{
-    
-}
+    where TSelf : IStandardEmitter<TSelf>;

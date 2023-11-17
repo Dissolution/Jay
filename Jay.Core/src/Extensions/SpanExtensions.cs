@@ -16,7 +16,7 @@ public static class SpanExtensions
 
     public static void ExpandAt<T>(this Span<T> span, int index)
     {
-        Validate.InsertIndex(span.Length, index);
+        Throw.Index(span.Length, index, true);
         var source = span[index..^1];
         var dest = span[(index + 1)..];
         Debug.Assert(source.Length == dest.Length);
@@ -25,7 +25,7 @@ public static class SpanExtensions
     
     public static void ExpandAt<T>(this Span<T> span, Range range)
     {
-        var (offset, length) = Validate.RangeResolveOffsetLength(span.Length, range);
+        var (offset, length) = Throw.Range(span.Length, range);
         var source = span[offset..^length];
         var dest = span[(offset + length)..];
         Debug.Assert(source.Length == dest.Length);
@@ -34,7 +34,7 @@ public static class SpanExtensions
     
     public static void RemoveAt<T>(this Span<T> span, int index)
     {
-        Validate.Index(span.Length, index);
+        Throw.Index(span.Length, index);
         var leftSide = span.Slice(index);
         var rightSide = span.Slice(index + 1);
         rightSide.CopyTo(leftSide);
@@ -42,7 +42,7 @@ public static class SpanExtensions
 
     public static void RemoveRange<T>(this Span<T> span, int offset, int length)
     {
-        Validate.Range(span.Length, offset, length);
+        Throw.Range(span.Length, offset, length);
         var leftSide = span.Slice(offset);
         var rightSide = span.Slice(offset + length);
         rightSide.CopyTo(leftSide);
@@ -50,7 +50,7 @@ public static class SpanExtensions
     
     public static void RemoveRange<T>(this Span<T> span, Range range)
     {
-        var (offset, length) = Validate.RangeResolveOffsetLength(span.Length, range);
+        var (offset, length) = Throw.Range(span.Length, range);
         var leftSide = span.Slice(offset);
         var rightSide = span.Slice(offset + length);
         rightSide.CopyTo(leftSide);

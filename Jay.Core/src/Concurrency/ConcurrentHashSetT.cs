@@ -40,13 +40,13 @@ public class ConcurrentHashSet<T> :
 
     public void CopyTo(T[] array, int arrayIndex = default)
     {
-        Validate.CanCopyTo(base.Count, array, arrayIndex);
+        Throw.CanCopyTo(base.Count, array, arrayIndex);
         base.Keys.CopyTo(array, arrayIndex);
     }
 
     IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.GetEnumerator();
-
+    
     public new IEnumerator<T> GetEnumerator() => base.Keys.GetEnumerator();
 }

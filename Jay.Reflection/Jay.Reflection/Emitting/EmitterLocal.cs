@@ -1,5 +1,4 @@
-﻿using Validate = Jay.Validation.Validate;
-#if NET7_0_OR_GREATER
+﻿#if NET7_0_OR_GREATER
 using System.Numerics;
 #endif
 
@@ -30,22 +29,22 @@ public readonly struct EmitterLocal :
 
     public EmitterLocal(string name, ushort index, Type type, bool isPinned = false)
     {
-        Validate.IsNotNullOrEmpty(name);
+        Throw.IfNullOrEmpty(name);
         this.Name = name;
         if (index == ushort.MaxValue)
             throw new ArgumentException("65535 maximum indexes supported", nameof(index));
 
         this.Index = index;
-        Validate.IsNotNull(type);
+        Throw.IfNull(type);
         this.Type = type;
         this.IsPinned = isPinned;
     }
 
     public EmitterLocal(string name, LocalBuilder localBuilder)
     {
-        Validate.IsNotNullOrEmpty(name);
+        Throw.IfNullOrEmpty(name);
         this.Name = name;
-        Validate.IsNotNull(localBuilder);
+        Throw.IfNull(localBuilder);
         this.Index = (ushort)localBuilder.LocalIndex;
         this.Type = localBuilder.LocalType.ThrowIfNull();
         this.IsPinned = localBuilder.IsPinned;
@@ -53,9 +52,9 @@ public readonly struct EmitterLocal :
 
     public EmitterLocal(string name, LocalVariableInfo localVariableInfo)
     {
-        Validate.IsNotNullOrEmpty(name);
+        Throw.IfNullOrEmpty(name);
         this.Name = name;
-        Validate.IsNotNull(localVariableInfo);
+        Throw.IfNull(localVariableInfo);
         this.Index = (ushort)localVariableInfo.LocalIndex;
         this.Type = localVariableInfo.LocalType.ThrowIfNull();
         this.IsPinned = localVariableInfo.IsPinned;

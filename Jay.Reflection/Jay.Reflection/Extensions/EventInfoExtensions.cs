@@ -72,7 +72,7 @@ public static class EventInfoExtensions
     public static EventAdder<TInstance, THandler> CreateAdder<TInstance, THandler>(this EventInfo eventInfo)
         where THandler : Delegate
     {
-        Validate.IsNotNull(eventInfo);
+        Throw.IfNull(eventInfo);
         var adder = eventInfo.GetAdder();
         if (adder is null) throw new ReflectionException("Cannot");
         return adder.CreateDelegate<EventAdder<TInstance, THandler>>();
@@ -81,7 +81,7 @@ public static class EventInfoExtensions
     public static EventRemover<TInstance, THandler> CreateRemover<TInstance, THandler>(this EventInfo eventInfo)
         where THandler : Delegate
     {
-        Validate.IsNotNull(eventInfo);
+        Throw.IfNull(eventInfo);
         var remover = eventInfo.GetRemover();
         if (remover is null) throw new ReflectionException("Cannot");
         return remover.CreateDelegate<EventRemover<TInstance, THandler>>();
@@ -90,7 +90,7 @@ public static class EventInfoExtensions
     public static EventRaiser<TInstance, TEventArgs> CreateRaiser<TInstance, TEventArgs>(this EventInfo eventInfo)
         where TEventArgs : EventArgs
     {
-        Validate.IsNotNull(eventInfo);
+        Throw.IfNull(eventInfo);
         var raiser = eventInfo.GetRaiser();
         if (raiser is null)
         {
@@ -195,7 +195,7 @@ public static class EventInfoExtensions
 
     public static EventDisposer<TInstance> CreateDisposer<TInstance>(this EventInfo eventInfo)
     {
-        Validate.IsNotNull(eventInfo);
+        Throw.IfNull(eventInfo);
         // We're just going to set the backing field to null
         var backingField = eventInfo.GetBackingField();
         if (backingField is null)
