@@ -26,7 +26,7 @@ public record class EventSignature : MemberSignature
         var sig = new EventSignature()
         {
             Name = eventInfo.Name,
-            Visibility = eventInfo.GetVisibility(),
+            Visibility = eventInfo.Visibility(),
             Keywords = eventInfo.GetKeywords(),
             Attributes = Attributes.From(eventInfo),
             BaseType = TypeSignature.Create(eventInfo.DeclaringType),

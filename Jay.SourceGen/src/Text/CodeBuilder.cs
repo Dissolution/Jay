@@ -1,8 +1,9 @@
 ﻿using System.Buffers;
+using Jay.Text.Building;
 
 namespace Jay.SourceGen.Text;
 
-public sealed class CodeBuilder : IDisposable
+public sealed class CodeBuilder : IBuildingText
 {
     public static string DefaultNewLine { get; set; } = "\r\n";
     public static string DefaultIndent { get; set; } = "    "; //4 spaces

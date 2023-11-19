@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Jay.Collections;
 using Jay.Reflection.Emitting;
 using Jay.Reflection.Exceptions;
 using Jay.Reflection.Info;
@@ -11,7 +12,7 @@ namespace Jay.Reflection.Builders;
 
 public static class RuntimeBuilder
 {
-    private static readonly ConcurrentDictionary<string, Nothing> _memberNames = new(Environment.ProcessorCount, 0);
+    private static readonly ConcurrentHashSet<string> _memberNames = new(StringComparer.Ordinal);
     
     public static AssemblyBuilder AssemblyBuilder { get; }
 
@@ -27,7 +28,7 @@ public static class RuntimeBuilder
     private static string RegisterName(string name)
     {
         int ctr = 1;
-        while (!_memberNames.TryAdd(name, default))
+        while (!_memberNames.TryAdd(name))
         {
             name = $"{name}_{ctr}";
             ctr += 1;

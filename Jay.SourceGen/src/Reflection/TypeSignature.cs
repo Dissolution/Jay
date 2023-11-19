@@ -24,7 +24,7 @@ public record class TypeSignature : MemberSignature
         TypeSignature signature = new()
         {
             Name = type.ToString(),
-            Visibility = type.GetVisibility(),
+            Visibility = type.Visibility(),
             Keywords = type.GetKeywords(),
             Namespace = type.Namespace,
             Kind = type.TypeKind(),

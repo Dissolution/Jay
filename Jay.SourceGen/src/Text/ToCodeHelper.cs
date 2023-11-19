@@ -1,4 +1,5 @@
-﻿using Jay.SourceGen.Reflection;
+﻿using Jay.Enums;
+using Jay.SourceGen.Reflection;
 using Jay.SourceGen.Utilities;
 
 namespace Jay.SourceGen.Text;
@@ -39,7 +40,7 @@ public static class ToCodeHelper
         AddToCode<Keywords>(static (cb, keywords) =>
         {
             var flags = keywords.GetFlags();
-            if (flags.Count == 0) return false;
+            if (flags.Length == 0) return false;
             cb.Delimit(" ", keywords.GetFlags(), static (cb, k) => cb.Append(k, Casing.Lower));
             return true;
         });

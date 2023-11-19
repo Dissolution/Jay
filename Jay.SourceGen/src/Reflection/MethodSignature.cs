@@ -22,7 +22,7 @@ public record class MethodSignature : MemberSignature
         return new MethodSignature()
         {
             Name = methodBase.Name,
-            Visibility = methodBase.GetVisibility(),
+            Visibility = methodBase.Visibility(),
             Keywords = methodBase.GetKeywords(),
             Attributes = Attributes.From(methodBase),
             Parameters = Parameters.From(methodBase.GetParameters()),

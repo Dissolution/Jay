@@ -22,6 +22,11 @@
         <Using Include="Microsoft.CodeAnalysis"/>
         <Using Include="Microsoft.CodeAnalysis.CSharp"/>
         <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax"/>
+        <Using Include="Jay.Extensions"/>
+        <Using Include="Jay.Text"/>
+        <Using Include="Jay.Text.Extensions"/>
+        <Using Include="Jay.Reflection"/>
+        <Using Include="Jay.Reflection.Extensions"/>
         <Using Include="Jay.SourceGen.Extensions"/>
         <Using Include="Jay.SourceGen.Text"/>
     </ItemGroup>
@@ -47,5 +52,11 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>Jay.SourceGen.Tests</_Parameter1>
         </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Jay.Core\src\Jay.Core.csproj" />
+      <ProjectReference Include="..\..\Jay.Reflection\Jay.Reflection\Jay.Reflection.csproj" />
+      <ProjectReference Include="..\..\Jay.Text\src\Jay.Text.csproj" />
     </ItemGroup>
 </Project>

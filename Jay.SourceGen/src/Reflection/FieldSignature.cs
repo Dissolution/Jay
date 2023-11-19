@@ -21,7 +21,7 @@ public record class FieldSignature : MemberSignature
         return new FieldSignature()
         {
             Name = fieldInfo.Name,
-            Visibility = fieldInfo.GetVisibility(),
+            Visibility = fieldInfo.Visibility(),
             Keywords = fieldInfo.GetKeywords(),
             Attributes = Attributes.From(fieldInfo),
             ValueType = TypeSignature.Create(fieldInfo.FieldType),

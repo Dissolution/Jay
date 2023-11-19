@@ -25,7 +25,7 @@ public record class PropertySignature : MemberSignature
         return new PropertySignature()
         {
             Name = propertyInfo.Name,
-            Visibility = propertyInfo.GetVisibility(),
+            Visibility = propertyInfo.Visibility(),
             Keywords = propertyInfo.GetKeywords(),
             Attributes = Attributes.From(propertyInfo),
             ValueType = TypeSignature.Create(propertyInfo.PropertyType),
