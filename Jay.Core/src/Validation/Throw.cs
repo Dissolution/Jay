@@ -21,7 +21,9 @@ public static class Throw
         [AllowNull, NotNull] T? value,
         [CallerArgumentExpression(nameof(value))]
         string? valueName = null)
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting.
         => Check.IfNull<T>(value, valueName).ThrowIfError();
+#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     public static void IfNullOrEmpty(
         [AllowNull, NotNull] string? str,
