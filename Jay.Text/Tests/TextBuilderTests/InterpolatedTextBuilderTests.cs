@@ -27,6 +27,6 @@ public class InterpolatedTextBuilderTests
 
     protected static void DoThing(TextBuilder textBuilder)
     {
-        textBuilder.Write("ABC");
+        textBuilder.Append("ABC");
     }
 }

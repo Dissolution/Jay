@@ -2,7 +2,7 @@
 namespace Jay.Text.Building;
 
 [InterpolatedStringHandler]
-public ref struct InterpolatedTextWriter
+public ref struct InterpolatedTextBuilder
 {
     // public static implicit operator InterpolatedTextWriter(string? text)
     // {
@@ -12,80 +12,82 @@ public ref struct InterpolatedTextWriter
     // }
     //
     //
-    private readonly ITextWriter _textWriter;
+    //private readonly dynamic _textWriter;
 
-    public InterpolatedTextWriter()
+    public InterpolatedTextBuilder()
     {
-        _textWriter = new TextWriter();
+        //_textWriter = new TextWriter();
     }
     
-    public InterpolatedTextWriter(int literalLength, int formattedCount)
+    public InterpolatedTextBuilder(int literalLength, int formattedCount)
     {
-        _textWriter = new TextWriter(literalLength, formattedCount);
+        //_textWriter = new TextWriter(literalLength, formattedCount);
     }
     
-    public InterpolatedTextWriter(int literalLength, int formattedCount, ITextWriter textWriter)
-    {
-        _textWriter = textWriter;
-    }
+    // public InterpolatedTextBuilder(int literalLength, int formattedCount, ITextWriter textWriter)
+    // {
+    //     //_textWriter = textWriter;
+    // }
     
     public void AppendLiteral(string literal)
     {
-        _textWriter.Write(literal);
+        //_textWriter.Write(literal);
     }
 
     public void AppendFormatted(char ch)
     {
-        _textWriter.Write(ch);
+        //_textWriter.Write(ch);
     }
     
     public void AppendFormatted(scoped ReadOnlySpan<char> text)
     {
-        _textWriter.Write(text);
+        //_textWriter.Write(text);
     }
     
     public void AppendFormatted(params char[]? chars)
     {
-        _textWriter.Write(chars);
+        //_textWriter.Write(chars);
     }
     
     public void AppendFormatted(string? str)
     {
-        _textWriter.Write(str);
+        //_textWriter.Write(str);
     }
     
     public void AppendFormatted<T>(T? value)
     {
-        _textWriter.Write<T>(value);
+        //_textWriter.Write<T>(value);
     }
     
     public void AppendFormatted<T>(T? value, string? format)
     {
-        _textWriter.Write<T>(value, format);
+        //_textWriter.Write<T>(value, format);
     }
     
     public void AppendFormatted<T>(T? value, ReadOnlySpan<char> format)
     {
-        _textWriter.Write<T>(value, format);
+        //_textWriter.Write<T>(value, format);
     }
 
     public void Dispose()
     {
-        ITextWriter? toReturn = _textWriter;
-        this = default;
-        toReturn?.Dispose();
+        // var toReturn = _textWriter;
+        // this = default;
+        // toReturn?.Dispose();
     }
 
     public string ToStringAndDispose()
     {
-        var str = _textWriter.ToString()!;
-        this.Dispose();
-        return str;
+        // var str = _textWriter.ToString()!;
+        // this.Dispose();
+        // return str;
+        return default!;
     }
     
     public override string ToString()
     {
-        return _textWriter.ToString()!;
+        //return _textWriter.ToString()!;
+        return default!;
     }
 
     public override bool Equals(object? obj) => throw new NotSupportedException();

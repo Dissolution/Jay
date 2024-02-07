@@ -21,9 +21,9 @@ namespace Jay.Text.Utilities;
 public static class TextHelper
 {
     /// <summary>
-    /// Use an <see cref="InterpolatedTextWriter"/> to render a formattable string
+    /// Use an <see cref="InterpolatedTextBuilder"/> to render a formattable string
     /// </summary>
-    public static string Interpolate(this ref InterpolatedTextWriter text)
+    public static string Interpolate(this ref InterpolatedTextBuilder text)
     {
         return text.ToStringAndDispose();
     }

@@ -102,6 +102,6 @@ public readonly struct EmitterLocal :
     
     public override string ToString() => TextBuilder.New
         .Append($"[{Index}] {Type} {Name}")
-        .If(IsPinned, cb => cb.Write(" 📌"))
+        .If(IsPinned, cb => cb.Append(" 📌"))
         .ToStringAndDispose();
 }

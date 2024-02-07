@@ -57,13 +57,13 @@ public class AlignTests
                 
                 // Left
                 textBuilder.Align(testString, testWidth, Alignment.Left);
-                wrote = textBuilder.Written[^testWidth..];
+                wrote = textBuilder.AsSpan()[^testWidth..];
                 Assert.Equal(testWidth, wrote.Length);
                 Assert.True(wrote.StartsWith(testText));
                 
                 // Right
                 textBuilder.Align(testString, testWidth, Alignment.Right);
-                wrote = textBuilder.Written[^testWidth..];
+                wrote = textBuilder.AsSpan()[^testWidth..];
                 Assert.Equal(testWidth, wrote.Length);
                 Assert.True(wrote.EndsWith(testText));
                 
@@ -73,7 +73,7 @@ public class AlignTests
                 foreach (Alignment alignment in new[] { Alignment.Center, Alignment.Center | Alignment.Left, Alignment.Center | Alignment.Right })
                 {
                     textBuilder.Align(testString, testWidth, alignment);
-                    wrote = textBuilder.Written[^testWidth..];
+                    wrote = textBuilder.AsSpan()[^testWidth..];
                     var reader = new SpanReader<char>(wrote);
                     Assert.Equal(testWidth, reader.UnreadItems.Length);
                     

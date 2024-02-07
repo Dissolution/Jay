@@ -73,7 +73,7 @@ public static class MemberNaming
             return $"{memberType}_{Guid.NewGuid():N}";
         }
 
-        var builder = new InterpolatedTextWriter();
+        var builder = new InterpolatedTextBuilder();
         char ch = name[0];
         bool appendedBadChar = false;
         if (!IsValidNameCharacter(ch, true))

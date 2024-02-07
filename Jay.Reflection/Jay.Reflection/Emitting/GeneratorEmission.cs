@@ -90,7 +90,7 @@ public sealed class GeneratorEmission : Emission
             .Append(Name)
             .If(HasArgs, cb => cb
                     .Append('(')
-                    .Delimit(static c => c.Write(", "), Arguments, static (c, a) => c.Write(a))
+                    .Delimit(static c => c.Append(", "), Arguments, static (c, a) => c.Append(a))
                     .Append(')'))
             .ToStringAndDispose();
     }

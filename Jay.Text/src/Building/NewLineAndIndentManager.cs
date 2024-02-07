@@ -2,6 +2,9 @@
 
 public sealed class NewLineAndIndentManager : IDisposable
 {
+    public static string DefaultNewLine { get; set; } = Environment.NewLine;
+    public static string DefaultIndent { get; set; } = "    "; // 4 spaces
+    
     private char[] _buffer;
     private int _bufferPosition;
     private readonly Stack<int> _indentOffsets;

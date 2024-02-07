@@ -12,19 +12,26 @@ namespace Jay.Collections;
 /// <typeparam name="T">
 /// The <see cref="Type"/> of items stored in the <see cref="Buffer{T}"/>
 /// </typeparam>
-public sealed class Buffer<T> :
+public class Buffer<T> :
     IList<T>, IReadOnlyList<T>,
     ICollection<T>, IReadOnlyCollection<T>,
     IEnumerable<T>,
-    IDisposable
+    IDisposable,
+    IBuffer<T>,
+    IUnsafeBuffer<T>
 {
+    /// <summary>
+    /// The minimum capacity for any Buffer
+    /// </summary>
     private static int MinCapacity
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => typeof(T).IsClass ? 64 : 1024;
     }
-
-    private const int MaxCapacity = 0x3FFFFFDF;
+    /// <summary>
+    /// The maximum capacity for any Buffer
+    /// </summary>
+    private const int MAX_CAPACITY = 0x3FFFFFDF;
 
 
     /// <summary>
@@ -102,16 +109,30 @@ public sealed class Buffer<T> :
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _count;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set => _count = value.Clamp(0, Capacity);
     }
 
     /// <summary>
     /// Gets the current capacity for this <see cref="Buffer{T}"/><br/>
     /// It will automatically be increased as needed
     /// </summary>
-    public int CurrentCapacity
+    public int Capacity
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _array.Length;
+        set
+        {
+            int newCapacity = value.Clamp(MinCapacity, MAX_CAPACITY);
+            var newArray = ArrayPool<T>.Shared.Rent(newCapacity);
+            AsSpan().CopyTo(newArray);
+            var toReturn = _array;
+            _array = newArray;
+            if (toReturn.Length > 0)
+            {
+                ArrayPool<T>.Shared.Return(toReturn, true);
+            }
+        }
     }
 
 
@@ -131,14 +152,15 @@ public sealed class Buffer<T> :
     /// </param>
     public Buffer(int minCapacity)
     {
-        _array = ArrayPool<T>.Shared.Rent(Math.Max(MinCapacity, minCapacity));
+        _array = ArrayPool<T>.Shared.Rent(minCapacity.Clamp(MinCapacity, MAX_CAPACITY));
     }
+    
 
 #region Grow
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void GrowBy(int adding)
     {
-        int newCapacity = ((_array.Length + adding) * 2).Clamp(MinCapacity, MaxCapacity);
+        int newCapacity = ((_array.Length + adding) * 2).Clamp(MinCapacity, MAX_CAPACITY);
         T[] newArray = ArrayPool<T>.Shared.Rent(newCapacity);
         _array.AsSpan(0, _count).CopyTo(newArray);
 
@@ -168,6 +190,8 @@ public sealed class Buffer<T> :
     }
 #endregion
 
+    public void IncreaseCapacity() => GrowBy(Capacity);
+
     /// <summary>
     /// Adds an <paramref name="item"/> to the end of this <see cref="Buffer{T}"/>
     /// </summary>
@@ -188,9 +212,9 @@ public sealed class Buffer<T> :
         }
     }
 
-    public void AddMany(params T[] items) => AddMany(items.AsSpan());
+    public void AddMany(params T[]? items) => AddMany(items.AsSpan());
 
-    public void AddMany(ReadOnlySpan<T> items)
+    public void AddMany(scoped ReadOnlySpan<T> items)
     {
         int count = _count;
         int newCount = count + items.Length;
@@ -332,6 +356,12 @@ public sealed class Buffer<T> :
         return ref _array[index];
     }
 
+    public ref T AllocateAt(Index index)
+    {
+        int offset = Throw.Index(_count, index);
+        return ref AllocateAt(offset);
+    }
+    
     public Span<T> AllocateRange(int index, int length)
     {
         int curLen = _count;
@@ -377,7 +407,19 @@ public sealed class Buffer<T> :
         return AllocateRange(offset, length);
     }
 #endregion
-
+    
+    public bool TryAdd(SpanFunc<T, int> availableBufferUse)
+    {
+        var available = _array.AsSpan(_count);
+        int used = availableBufferUse(available);
+        if (used > 0)
+        {
+            _count += used;
+            return true;
+        }
+        return false;
+    }
+    
     /// <inheritdoc cref="ICollection{T}"/>
     bool ICollection<T>.Contains(T item) => Contains(item, default);
 
@@ -394,32 +436,101 @@ public sealed class Buffer<T> :
         return false;
     }
 
-    /// <inheritdoc cref="IList{T}"/>
-    int IList<T>.IndexOf(T item) => FirstIndexOf(item);
-
-    public int FirstIndexOf(T item, IEqualityComparer<T>? itemComparer = default)
+    public bool Contains(scoped ReadOnlySpan<T> items, IEqualityComparer<T>? itemComparer = default)
     {
+        int itemCount = items.Length;
+        if (itemCount == 0) return true;
+        if (itemCount == 1) return Contains(items[0], itemComparer);
+
         var array = _array;
-        var end = _count;
+        var arrayCount = _count;
+        int exclusion = arrayCount - itemCount;
         var comparer = itemComparer ?? EqualityComparer<T>.Default;
-        for (var i = 0; i < end; i++)
+
+        T firstItem = items[0];
+
+        for (var arrayIndex = 0; arrayIndex < exclusion; arrayIndex++)
         {
-            if (comparer.Equals(array[i], item))
+            if (comparer.Equals(firstItem, array[arrayIndex]))
+            {
+                // Due to exclusion, we know that we can index safely
+                if (array.AsSpan(arrayIndex + 1).SequenceEqual(items[1..], comparer))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+
+    /// <inheritdoc cref="IList{T}"/>
+    int IList<T>.IndexOf(T item) => FindIndex(item);
+
+    private (int Start, int End, int Mod) Resolve(Index? scanIndex, bool fromEnd)
+    {
+        if (!scanIndex.TryGetValue(out var index))
+        {
+            if (!fromEnd)
+            {
+                return (0, _count - 1, +1);
+            }
+            else
+            {
+                return (_count - 1, 0, -1);
+            }
+        }
+        else
+        {
+            int scan = index.GetOffset(_count);
+            if (!fromEnd)
+            {
+                return (scan, _count - 1, +1);
+            }
+            else
+            {
+                return (scan, 0, -1);
+            }
+        }
+    }
+    
+    public int FindIndex(T item, IEqualityComparer<T>? itemComparer = default, Index? startIndex = default, bool fromEnd = false)
+    {
+        var comparer = itemComparer ?? EqualityComparer<T>.Default;
+        var array = _array;
+        var (start, end, mod) = Resolve(startIndex, fromEnd);
+        for (var i = start; i <= end; i += mod)
+        {
+            if (comparer.Equals(item, array[i]))
+            {
                 return i;
+            }
         }
         return -1;
     }
-
-    public int LastIndexOf(T item, IEqualityComparer<T>? itemComparer = default)
+    
+    public int FindIndex(scoped ReadOnlySpan<T> items, IEqualityComparer<T>? itemComparer = default, Index? startIndex = default, bool fromEnd = false)
     {
+        int itemCount = items.Length;
+        if (itemCount == 0) return -1;
+        if (itemCount == 1) return FindIndex(items[0], itemComparer, startIndex, fromEnd);
+
+
         var array = _array;
+        var arrayCount = _count;
+        int exclusion = arrayCount - itemCount;
         var comparer = itemComparer ?? EqualityComparer<T>.Default;
-        for (var i = _count - 1; i >= 0; i--)
+
+        T firstItem = items[0];
+
+        for (var arrayIndex = 0; arrayIndex < exclusion; arrayIndex++)
         {
-            if (comparer.Equals(array[i], item))
-                return i;
+            if (comparer.Equals(firstItem, array[arrayIndex]))
+            {
+                // Due to exclusion, we know that we can index safely
+                if (array.AsSpan(arrayIndex + 1).SequenceEqual(items[1..], comparer))
+                    return true;
+            }
         }
-        return -1;
+        return false;
     }
 
     /// <inheritdoc cref="IList{T}"/>
@@ -429,11 +540,11 @@ public sealed class Buffer<T> :
         TryRemoveAt(index);
     }
 
-    public bool TryRemoveAt(int index)
+    public Result TryRemoveAt(int index)
     {
         int count = _count;
         if (index < 0 || index >= count)
-            return false;
+            return new ArgumentOutOfRangeException(nameof(index), index, $"{nameof(index)} must be in [0..{count})");
 
         // Take everything to the right of index
         int rightStart = index + 1;
@@ -447,12 +558,12 @@ public sealed class Buffer<T> :
         return true;
     }
 
-    public bool TryRemoveAt(Index index) => TryRemoveAt(index.GetOffset(_count));
+    public Result TryRemoveAt(Index index) => TryRemoveAt(index.GetOffset(_count));
 
-    public bool TryRemoveMany(int offset, int length)
+    public Result TryRemoveRange(int offset, int length)
     {
-        if (!Check.Range(_count, offset, length))
-            return false;
+        var checkResult = Check.Range(_count, offset, length);
+        if (!checkResult) return checkResult;
 
         // Take everything to the right of the range
         int rightStart = offset + length;
@@ -466,16 +577,16 @@ public sealed class Buffer<T> :
         return true;
     }
 
-    public bool TryRemoveMany(Range range)
+    public Result TryRemoveRange(Range range)
     {
         (int offset, int length) = range.GetOffsetAndLength(_count);
-        return TryRemoveMany(offset, length);
+        return TryRemoveRange(offset, length);
     }
 
     /// <inheritdoc cref="ICollection{T}"/>
     bool ICollection<T>.Remove(T item) => TryRemoveFirst(item);
 
-    public bool TryRemoveFirst(T item, IEqualityComparer<T>? itemComparer = default)
+    public Result TryRemoveFirst(T item, IEqualityComparer<T>? itemComparer = default)
     {
         var end = _count;
         var written = _array.AsSpan(0, end);
@@ -490,7 +601,7 @@ public sealed class Buffer<T> :
         return false;
     }
 
-    public bool TryRemoveLast(T item, IEqualityComparer<T>? itemComparer = default)
+    public Result TryRemoveLast(T item, IEqualityComparer<T>? itemComparer = default)
     {
         var end = _count;
         var written = _array.AsSpan(0, end);
@@ -514,35 +625,34 @@ public sealed class Buffer<T> :
 
     public void CopyTo(Span<T> buffer) => this.AsSpan().CopyTo(buffer);
 
-    public bool TryCopyTo(Span<T> buffer) => this.AsSpan().TryCopyTo(buffer);
-
-    /// <inheritdoc cref="ICollection{T}"/>
-    void ICollection<T>.Clear()
-    {
-        _count = 0;
-    }
-
+    public Result TryCopyTo(Span<T> buffer) => this.AsSpan().TryCopyTo(buffer);
+    
     /// <summary>
     /// Removes all items from this <see cref="Buffer{T}"/>
     /// </summary>
-    /// <param name="derefItems"><i>Optional</i><br/>
-    /// <c>false</c> <i>(default)</i><br/>
-    /// Sets the <see cref="Count"/> to 0, but does not de-reference any items<br/>
-    /// They will not be de-referenced until overwritten or <see cref="Dispose"/> is called<br/>
-    /// <c>true</c><br/>
-    /// Sets the <see cref="Count"/> to 0 and sets all items to <c>default(T)</c>
-    /// </param>
-    public void Clear(bool derefItems = false)
+    public void Clear()
     {
-        if (derefItems)
-        {
-            AsSpan().Clear();
-        }
         _count = 0;
     }
 
+
+    public IList<T> AsList() => this;
+
+    public ICollection<T> AsCollection() => this;
+
+    public List<T> ToList() => new(this);
+
+    public T[] ToArray() => AsSpan().ToArray();
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> AsSpan() => _array.AsSpan(0, _count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> GetUnwrittenSpan() => _array.AsSpan(_count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T[] GetArray() => _array;
 
     /// <inheritdoc cref="IEnumerator"/>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

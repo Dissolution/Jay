@@ -1,48 +1,49 @@
-﻿namespace Jay.Text.Scratch;
+﻿namespace Jay.Text.Building;
 
 [InterpolatedStringHandler]
-public ref struct InterpolatedTextBuffer
+public ref struct InterpolatedFluentTextBuilder<B>
+    where B : FluentTextBuilder<B>
 {
-    private readonly TextBuffer _textBuffer;
+    private readonly B _textBuilder;
     
-    internal InterpolatedTextBuffer(int literalLength, int formattedCount, TextBuffer textBuffer)
+    public InterpolatedFluentTextBuilder(int literalLength, int formattedCount, B textBuilder)
     {
-        _textBuffer = textBuffer;
+        _textBuilder = textBuilder;
     }
     
     public void AppendLiteral(string literal)
     {
-        _textBuffer.Write(literal.AsSpan());
+        _textBuilder.Append(literal);
     }
 
     public void AppendFormatted(char ch)
     {
-        _textBuffer.Write(ch);
+        _textBuilder.Append(ch);
     }
     
     public void AppendFormatted(scoped ReadOnlySpan<char> text)
     {
-        _textBuffer.Write(text);
+        _textBuilder.Append(text);
     }
    
     public void AppendFormatted(string? str)
     {
-        _textBuffer.Write(str.AsSpan());
+        _textBuilder.Append(str.AsSpan());
     }
     
     public void AppendFormatted<T>(T? value)
     {
-        _textBuffer.Format<T>(value);
+        _textBuilder.Append<T>(value);
     }
     
     public void AppendFormatted<T>(T? value, string? format)
     {
-        _textBuffer.Format<T>(value, format);
+        _textBuilder.Append<T>(value, format);
     }
     
     public void AppendFormatted<T>(T? value, ReadOnlySpan<char> format)
     {
-        _textBuffer.Format<T>(value, format);
+        _textBuilder.Append<T>(value, format);
     }
     
     public override bool Equals(object? obj) => throw new NotSupportedException();
@@ -51,6 +52,6 @@ public ref struct InterpolatedTextBuffer
     
     public override string ToString()
     {
-        return _textBuffer.ToString();
+        return _textBuilder.ToString();
     }
 }

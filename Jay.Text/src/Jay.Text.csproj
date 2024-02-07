@@ -70,5 +70,9 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Jay.Core\src\Jay.Core.csproj"/>
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Scratch\" />
+    </ItemGroup>
 
 </Project>

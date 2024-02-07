@@ -1,7 +1,4 @@
-﻿using Jay.Reflection;
-using Jay.SourceGen.Reflection;
-
-namespace Jay.SourceGen.Extensions;
+﻿namespace Jay.SourceGen.Extensions;
 
 public static class VisibilityExtensions
 {

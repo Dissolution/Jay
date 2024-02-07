@@ -1,20 +1,24 @@
-﻿namespace Jay.Validation;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+
+namespace Jay.Validation;
 
 public static class Throw
 {
     /// <summary>
-    /// Throws an <see cref="ArgumentNullException"/> if <paramref name="value"/> is <c>null</c>
+    /// Throws an <see cref="System.ArgumentNullException"/> if <paramref name="value"/> is <c>null</c>
     /// </summary>
     /// <typeparam name="T">
-    /// The <see cref="Type"/> of <paramref name="value"/>
+    /// The <see cref="System.Type"/> of <paramref name="value"/>
     /// </typeparam>
     /// <param name="value">
     /// The <typeparamref name="T"/> value to check for <c>null</c>
     /// </param>
     /// <param name="valueName">
-    /// The name of the value argument, passed to a thrown <see cref="ArgumentNullException"/>
+    /// The name of the value argument, passed to a thrown <see cref="System.ArgumentNullException"/>
     /// </param>
-    /// <exception cref="ArgumentNullException">
+    /// <exception cref="System.ArgumentNullException">
     /// Thrown if <paramref name="value"/> is <c>null</c>
     /// </exception>
     public static void IfNull<T>(
@@ -55,7 +59,7 @@ public static class Throw
 
     public static int Index(
         int available,
-        Index index,
+        System.Index index,
         bool insert = false,
         [CallerArgumentExpression(nameof(index))]
         string? indexName = null)
@@ -73,7 +77,7 @@ public static class Throw
 
     public static (int Start, int Length) Range(
         int available,
-        Range range,
+        System.Range range,
         [CallerArgumentExpression(nameof(range))]
         string? rangeName = null)
         => Check.Range(available, range, rangeName).OkValueOrThrowError();

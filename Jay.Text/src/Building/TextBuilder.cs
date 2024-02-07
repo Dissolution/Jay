@@ -2,11 +2,13 @@
 
 namespace Jay.Text.Building;
 
-public sealed class TextBuilder :
-    TextBuilder<TextBuilder>
+public sealed class TextBuilder : FluentTextBuilder<TextBuilder>
 {
     public static TextBuilder New => new();
 
+    public ref char this[int index] => ref _textBuffer[index];
+    public Span<char> this[Range range] => _textBuffer[range];
+    
     public TextBuilder()
     {
     }
@@ -20,135 +22,196 @@ public sealed class TextBuilder :
     }
 }
 
-public abstract class TextBuilder<B> :
-    TextBuffer,
-    ITextBuilder<B>,
-    ITextBuffer,
-    ITextWriter,
-    IBuildingText
-    where B : TextBuilder<B>
+public abstract class FluentTextBuilder<TBuilder> : IBuildingText
+    where TBuilder : FluentTextBuilder<TBuilder>
 {
-    protected readonly B _builder;
+    protected readonly TextBuffer _textBuffer;
+    protected readonly TBuilder _self;
 
-    protected TextBuilder()
-        : base()
+    public int Length => _textBuffer.Count;
+    
+    protected FluentTextBuilder()
     {
-        _builder = (B)this;
+        _textBuffer = new();
+        _self = (TBuilder)this;
     }
 
-    protected TextBuilder(int minCapacity)
-        : base(minCapacity)
+    protected FluentTextBuilder(int minCapacity)
     {
-        _builder = (B)this;
+        _textBuffer = new(minCapacity);
+        _self = (TBuilder)this;
     }
 
-    protected TextBuilder(int literalLength, int formattedCount)
-        : base(literalLength, formattedCount)
+    protected FluentTextBuilder(int literalLength, int formattedCount)
     {
-        _builder = (B)this;
+        _textBuffer = new(literalLength, formattedCount);
+        _self = (TBuilder)this;
     }
 
-    public virtual B NewLine() => Append(Environment.NewLine);
+    public virtual TBuilder NewLine() => Append(NewLineAndIndentManager.DefaultNewLine);
 
-    public B NewLines(int count)
+    public TBuilder NewLines(int count)
     {
         for (var i = 0; i < count; i++)
         {
             this.NewLine();
         }
-        return _builder;
+        return _self;
     }
 
 #region Append
-    public B Append(char ch)
+    public virtual TBuilder Append(char ch)
     {
-        this.Write(ch);
-        return _builder;
+        _textBuffer.Add(ch);
+        return _self;
     }
 
-    public B AppendLine(char ch) => this.Append(ch).NewLine();
+    public TBuilder AppendLine(char ch) => this.Append(ch).NewLine();
 
-    public B Append(scoped ReadOnlySpan<char> text)
+    public virtual TBuilder Append(scoped ReadOnlySpan<char> text)
     {
-        this.Write(text);
-        return _builder;
+        _textBuffer.AddMany(text);
+        return _self;
     }
 
-    public B Append(params char[]? characters)
+    public TBuilder AppendLine(scoped ReadOnlySpan<char> text) => this.Append(text).NewLine();
+
+    public virtual TBuilder Append(params char[]? characters)
     {
-        this.Write(characters);
-        return _builder;
+        _textBuffer.AddMany(characters);
+        return _self;
     }
 
-    public B AppendLine(scoped ReadOnlySpan<char> text) => this.Append(text).NewLine();
+    public TBuilder AppendLine(params char[]? characters) => this.Append(characters).NewLine();
 
-    public B Append(string? str)
+    public virtual TBuilder Append(string? str)
     {
-        this.Write(str);
-        return _builder;
+        _textBuffer.Add(str);
+        return _self;
     }
 
-    public B AppendLine(string? str) => this.Append(str).NewLine();
+    public TBuilder AppendLine(string? str) => this.Append(str).NewLine();
 
-
-    public B Append([InterpolatedStringHandlerArgument("")] ref InterpolatedTextWriter interpolatedText)
+    public TBuilder Append([InterpolatedStringHandlerArgument("")] ref InterpolatedFluentTextBuilder<TBuilder> interpolatedText)
     {
-        this.Write(ref interpolatedText);
-        return _builder;
+        // It has already written to us!
+        return _self;
     }
 
-    public B AppendLine([InterpolatedStringHandlerArgument("")] ref InterpolatedTextWriter text) => this.Append(ref text).NewLine();
+    public TBuilder AppendLine([InterpolatedStringHandlerArgument("")] ref InterpolatedFluentTextBuilder<TBuilder> interpolatedText)
+        => this.Append(ref interpolatedText).NewLine();
 
-    public B Append<T>(T? value)
+    public virtual TBuilder Append<T>(T? value)
     {
-        this.Write<T?>(value);
-        return _builder;
-    }
-
-    public B AppendLine<T>(T? value) => this.Append(value).NewLine();
-
-    public B Append<T>(T? value, string? format, IFormatProvider? provider = null)
-    {
-        this.Write<T?>(value, format, provider);
-        return _builder;
-    }
-
-    public B AppendLine<T>(T? value, string? format, IFormatProvider? provider = null)
-        => this.Append(value, format, provider).NewLine();
-
-    public B Append<T>(T? value, scoped ReadOnlySpan<char> format, IFormatProvider? provider = null)
-    {
-        this.Write<T?>(value, format, provider);
-        return _builder;
-    }
-
-    public B AppendLine<T>(T? value, scoped ReadOnlySpan<char> format, IFormatProvider? provider = null)
-        => this.Append(value, format, provider).NewLine();
-#endregion
-
-    public override void Write<T>([AllowNull] T value)
-    {
-        if (value is Action<B> build)
+        string? str;
+        if (value is IFormattable)
         {
-            build(_builder);
+#if NET6_0_OR_GREATER
+            if (value is ISpanFormattable)
+            {
+                int charsWritten;
+                if (!((ISpanFormattable)value).TryFormat(
+                    _textBuffer.UnwrittenSpan(),
+                    out charsWritten,
+                    default, default))
+                {
+                    _textBuffer.IncreaseCapacity();
+                }
+                _textBuffer.Count += charsWritten;
+                return _self;
+            }
+#endif
+            str = ((IFormattable)value).ToString(default, default);
         }
         else
         {
-            base.Write(value);   
+            str = value?.ToString();
         }
+        _textBuffer.Add(str);
+        return _self;
     }
 
-    public B Case<T>(T? value, Casing casing)
+    public TBuilder AppendLine<T>(T? value) => this.Append(value).NewLine();
+
+    public virtual TBuilder Append<T>(T? value, string? format, IFormatProvider? provider = null)
+    {
+        string? str;
+        if (value is IFormattable)
+        {
+#if NET6_0_OR_GREATER
+            if (value is ISpanFormattable)
+            {
+                int charsWritten;
+                if (!((ISpanFormattable)value).TryFormat(
+                    _textBuffer.UnwrittenSpan(),
+                    out charsWritten,
+                    format, provider))
+                {
+                    _textBuffer.IncreaseCapacity();
+                }
+                _textBuffer.Count += charsWritten;
+                return _self;
+            }
+#endif
+            str = ((IFormattable)value).ToString(format, provider);
+        }
+        else
+        {
+            str = value?.ToString();
+        }
+        _textBuffer.Add(str);
+        return _self;
+    }
+
+    public TBuilder AppendLine<T>(T? value, string? format, IFormatProvider? provider = null)
+        => this.Append(value, format, provider).NewLine();
+
+    public virtual TBuilder Append<T>(T? value, scoped ReadOnlySpan<char> format, IFormatProvider? provider = null)
+    {
+        string? str;
+        if (value is IFormattable)
+        {
+#if NET6_0_OR_GREATER
+            if (value is ISpanFormattable)
+            {
+                int charsWritten;
+                if (!((ISpanFormattable)value).TryFormat(
+                    _textBuffer.UnwrittenSpan(),
+                    out charsWritten,
+                    format, provider))
+                {
+                    _textBuffer.IncreaseCapacity();
+                }
+                _textBuffer.Count += charsWritten;
+                return _self;
+            }
+#endif
+            str = ((IFormattable)value).ToString(format.ToString(), provider);
+        }
+        else
+        {
+            str = value?.ToString();
+        }
+        _textBuffer.Add(str);
+        return _self;
+    }
+
+    public TBuilder AppendLine<T>(T? value, scoped ReadOnlySpan<char> format, IFormatProvider? provider = null)
+        => this.Append(value, format, provider).NewLine();
+#endregion
+
+
+    public TBuilder Case<T>(T? value, Casing casing)
         => this.Append(value?.ToString().ToCase(casing));
 
 
 #region Align
-    public B Align(char ch, int width, Alignment alignment)
+    public TBuilder Align(char ch, int width, Alignment alignment)
     {
         if (width < 1)
             throw new ArgumentOutOfRangeException(nameof(width), width, "Width must be 1 or greater");
 
-        var appendSpan = Allocate(width);
+        var appendSpan = _textBuffer.Allocate(width);
         if (alignment == Alignment.Left)
         {
             appendSpan[0] = ch;
@@ -186,19 +249,19 @@ public abstract class TextBuilder<B> :
             appendSpan[(padding + 1)..]
                 .Fill(' ');
         }
-        return _builder;
+        return _self;
     }
 
-    public B Align(string? str, int width, Alignment alignment) => Align(str.AsSpan(), width, alignment);
+    public TBuilder Align(string? str, int width, Alignment alignment) => Align(str.AsSpan(), width, alignment);
 
-    public B Align(ReadOnlySpan<char> text, int width, Alignment alignment)
+    public TBuilder Align(scoped ReadOnlySpan<char> text, int width, Alignment alignment)
     {
         int textLen = text.Length;
         if (textLen == 0)
         {
-            Allocate(width)
+            _textBuffer.Allocate(width)
                 .Fill(' ');
-            return _builder;
+            return _self;
         }
         int spaces = width - textLen;
         if (spaces < 0)
@@ -206,10 +269,10 @@ public abstract class TextBuilder<B> :
 
         if (spaces == 0)
         {
-            this.Write(text);
-            return _builder;
+            _textBuffer.AddMany(text);
+            return _self;
         }
-        var appendSpan = Allocate(width);
+        var appendSpan = _textBuffer.Allocate(width);
         if (alignment == Alignment.Left)
         {
             TextHelper.Unsafe.CopyBlock(text, appendSpan, textLen);
@@ -247,7 +310,7 @@ public abstract class TextBuilder<B> :
             appendSpan[(frontPadding + textLen)..]
                 .Fill(' ');
         }
-        return _builder;
+        return _self;
     }
 #endregion
 
@@ -276,12 +339,12 @@ public abstract class TextBuilder<B> :
                 int countUntilNextBrace = remainder.IndexOfAny('{', '}');
                 if (countUntilNextBrace < 0)
                 {
-                    this.Write(remainder);
+                    _textBuffer.AddMany(remainder);
                     return;
                 }
 
                 // Append the text until the brace.
-                this.Write(remainder.Slice(0, countUntilNextBrace));
+                _textBuffer.AddMany(remainder.Slice(0, countUntilNextBrace));
                 pos += countUntilNextBrace;
 
                 // Get the brace.
@@ -291,7 +354,7 @@ public abstract class TextBuilder<B> :
                 ch = moveNext(format, ref pos);
                 if (brace == ch)
                 {
-                    this.Write(ch);
+                    _textBuffer.Add(ch);
                     pos++;
                     continue;
                 }
@@ -400,7 +463,7 @@ public abstract class TextBuilder<B> :
             object? arg = args[index];
 
             // Append this arg, allows for overridden behavior
-            Write<object?>(arg, itemFormat);
+            this.Append<object?>(arg, itemFormat);
 
             // Continue parsing the rest of the format string.
         }
@@ -439,22 +502,22 @@ public abstract class TextBuilder<B> :
         }
     }
 
-    public B Format(NonFormattableString format, params object?[] args)
+    public TBuilder Format(NonFormattableString format, params object?[] args)
     {
         WriteFormatLine(format.Text, args);
-        return _builder;
+        return _self;
     }
 
-    public B Format(FormattableString formattableString)
+    public TBuilder Format(FormattableString formattableString)
     {
         WriteFormatLine(formattableString.Format.AsSpan(), formattableString.GetArguments());
-        return _builder;
+        return _self;
     }
 
-    public B Format([InterpolatedStringHandlerArgument("")] ref InterpolatedTextWriter interpolatedText)
+    public TBuilder Format([InterpolatedStringHandlerArgument("")] ref InterpolatedTextBuilder interpolatedText)
     {
         // Exactly like Write, the work is already done
-        return _builder;
+        return _self;
     }
 #endregion
 
@@ -471,56 +534,57 @@ public abstract class TextBuilder<B> :
     //     return _builder;
     // }
 
-    public B Enumerate<T>(ReadOnlySpan<T> values, Action<B, T> perValue)
+    public TBuilder Enumerate<T>(ReadOnlySpan<T> values, Action<TBuilder, T> perValue)
     {
         for (var i = 0; i < values.Length; i++)
         {
-            perValue(_builder, values[i]);
+            perValue(_self, values[i]);
         }
-        return _builder;
+        return _self;
     }
 
-    public B Enumerate<T>(IEnumerable<T> values, Action<B, T> perValue)
+    public TBuilder Enumerate<T>(IEnumerable<T> values, Action<TBuilder, T> perValue)
     {
         foreach (var value in values)
         {
-            perValue(_builder, value);
+            perValue(_self, value);
         }
-        return _builder;
+        return _self;
     }
 
-    public B Iterate<T>(ReadOnlySpan<T> values, Action<B, T, int> perValueIndex)
+    public TBuilder Iterate<T>(ReadOnlySpan<T> values, Action<TBuilder, T, int> perValueIndex)
     {
         for (var i = 0; i < values.Length; i++)
         {
-            perValueIndex(_builder, values[i], i);
+            perValueIndex(_self, values[i], i);
         }
-        return _builder;
+        return _self;
     }
 
-    public B Iterate<T>(IEnumerable<T> values, Action<B, T, int> perValueIndex)
+    public TBuilder Iterate<T>(IEnumerable<T> values, Action<TBuilder, T, int> perValueIndex)
     {
         if (values is IList<T> list)
         {
             for (var i = 0; i < list.Count; i++)
             {
-                perValueIndex(_builder, list[i], i);
+                perValueIndex(_self, list[i], i);
             }
         }
         else
         {
             using var e = values.GetEnumerator();
             if (!e.MoveNext())
-                return _builder;
+                return _self;
+
             int i = 0;
-            perValueIndex(_builder, e.Current, i);
+            perValueIndex(_self, e.Current, i);
             while (e.MoveNext())
             {
                 i++;
-                perValueIndex(_builder, e.Current, i);
+                perValueIndex(_self, e.Current, i);
             }
         }
-        return _builder;
+        return _self;
     }
 #endregion
 
@@ -557,98 +621,120 @@ public abstract class TextBuilder<B> :
     //     return _builder;
     // }
 
-    public B Delimit<T>(Action<B> delimit, ReadOnlySpan<T> values, Action<B, T> perValue)
+    public TBuilder Delimit<T>(Action<TBuilder> delimit, ReadOnlySpan<T> values, Action<TBuilder, T> perValue)
     {
         var count = values.Length;
         if (count == 0)
-            return _builder;
+            return _self;
 
-        perValue(_builder, values[0]);
+        perValue(_self, values[0]);
         for (var i = 1; i < count; i++)
         {
-            delimit(_builder);
-            perValue(_builder, values[i]);
+            delimit(_self);
+            perValue(_self, values[i]);
         }
-        return _builder;
+        return _self;
     }
 
-    public B Delimit<T>(Action<B> delimit, IEnumerable<T> values, Action<B, T> perValue)
+    public TBuilder Delimit<T>(Action<TBuilder> delimit, IEnumerable<T> values, Action<TBuilder, T> perValue)
     {
         if (values is IList<T> list)
         {
             var count = list.Count;
             if (count == 0)
-                return _builder;
+                return _self;
 
-            perValue(_builder, list[0]);
+            perValue(_self, list[0]);
             for (var i = 1; i < count; i++)
             {
-                delimit(_builder);
-                perValue(_builder, list[i]);
+                delimit(_self);
+                perValue(_self, list[i]);
             }
         }
         else
         {
             using var e = values.GetEnumerator();
             if (!e.MoveNext())
-                return _builder;
+                return _self;
 
-            perValue(_builder, e.Current);
+            perValue(_self, e.Current);
             while (e.MoveNext())
             {
-                delimit(_builder);
-                perValue(_builder, e.Current);
+                delimit(_self);
+                perValue(_self, e.Current);
             }
         }
 
-        return _builder;
+        return _self;
     }
 #endregion
 
 
-    public B If(
+    public TBuilder If(
         bool predicateResult,
-        Action<B>? ifTrue,
-        Action<B>? ifFalse = null)
+        Action<TBuilder>? ifTrue,
+        Action<TBuilder>? ifFalse = null)
     {
         if (predicateResult)
         {
-            ifTrue?.Invoke(_builder);
+            ifTrue?.Invoke(_self);
         }
         else
         {
-            ifFalse?.Invoke(_builder);
+            ifFalse?.Invoke(_self);
         }
-        return _builder;
+        return _self;
     }
 
-    public B IfAppend<T>(T? value, Action<B>? ifAppended, Action<B>? ifNotAppended = null)
+    public TBuilder IfAppend<T>(T? value, Action<TBuilder>? ifAppended, Action<TBuilder>? ifNotAppended = null)
     {
         if (this.Wrote(b => b.Append<T>(value)))
             return Invoke(ifAppended);
-        return _builder;
+
+        return _self;
     }
 
-    public bool Wrote(Action<B>? build)
+    public bool Wrote(Action<TBuilder>? build)
     {
-        int pos = _length;
-        build?.Invoke(_builder);
-        return _length > pos;
+        int pos = _textBuffer.Count;
+        build?.Invoke(_self);
+        return _textBuffer.Count > pos;
     }
 
 
-    public B GetWritten(Action<B> build, out Span<char> written)
+    public TBuilder GetWritten(Action<TBuilder> build, out Span<char> written)
     {
-        int start = Length;
-        build(_builder);
-        int end = Length;
-        written = Written[new Range(start: start, end: end)];
-        return _builder;
+        int start = _textBuffer.Count;
+        build(_self);
+        int end = _textBuffer.Count;
+        written = _textBuffer[new Range(start: start, end: end)];
+        return _self;
     }
 
-    public B Invoke(Action<B>? tba)
+    public TBuilder Invoke(Action<TBuilder>? tba)
     {
-        tba?.Invoke(_builder);
-        return _builder;
+        tba?.Invoke(_self);
+        return _self;
+    }
+
+
+    public void Clear() => _textBuffer.Clear();
+
+    public Span<char> AsSpan() => _textBuffer.AsSpan();
+    
+
+    public void Dispose()
+    {
+        _textBuffer.Dispose();
+    }
+
+    public string ToStringAndDispose()
+    {
+        return _textBuffer.ToStringAndDispose();
+    }
+
+    public override string ToString()
+    {
+        return _textBuffer.ToString();
     }
 }

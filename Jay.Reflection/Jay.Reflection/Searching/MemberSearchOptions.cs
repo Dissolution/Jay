@@ -216,7 +216,7 @@ public sealed record class MemberSearchOptions
         }
         if (ParameterTypes is not null)
         {
-            codeBuilder.Append(" (").Delimit(static c => c.Write(", "), ParameterTypes, static (c,p) => c.Write(p));
+            codeBuilder.Append(" (").Delimit(static c => c.Append(", "), ParameterTypes, static (c,p) => c.Append(p));
         }
 
         return codeBuilder.ToStringAndDispose();

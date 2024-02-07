@@ -111,7 +111,7 @@ public sealed class DelegateInfo :
         return TextBuilder.New
             .Append($"{ReturnType} Name (")
             .Delimit(
-                ",", Parameters, (tb, param) =>
+                static b => b.Append(","), Parameters, (tb, param) =>
                 {
                     var access = param.GetAccess(out var parameterType);
                     tb.Append(access).Append(' ').Append(parameterType).Append(param.Name);

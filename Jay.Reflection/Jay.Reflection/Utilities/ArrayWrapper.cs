@@ -120,7 +120,7 @@ public class ArrayWrapper :
         // 1D array is much easier
         if (Rank == 1)
         {
-            return TextBuilder.New.Append('[').Delimit(static c => c.Write(", "), this, static (c, o) => c.Write(o)).ToStringAndDispose();
+            return TextBuilder.New.Append('[').Delimit(static c => c.Append(", "), this, static (c, o) => c.Append(o)).ToStringAndDispose();
         }
         else
         {

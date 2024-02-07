@@ -1,6 +1,4 @@
 ﻿using Jay.Enums;
-using Jay.SourceGen.Reflection;
-using Jay.SourceGen.Utilities;
 
 namespace Jay.SourceGen.Text;
 
